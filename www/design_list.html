@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Design List - TEX FOR EVER</title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        html, body { width: 100%; min-height: 100vh; background: #030712; color: #1E2B23; overflow-x: hidden; }
+        body { padding: 8px; display: flex; flex-direction: column; align-items: center; }
+
+        .container {
+            width: 100%; max-width: 900px; background: #FFFFFF; padding: 14px;
+            border-radius: 16px; box-shadow: 0 10px 35px rgba(0,0,0,0.06);
+            border: 1px solid rgba(82, 110, 81, 0.15); display: flex; flex-direction: column; gap: 12px;
+            flex: 1;
+        }
+
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .back-btn { 
+            display: inline-flex; align-items: center; gap: 4px; color: #FFFFFF; 
+            text-decoration: none; font-weight: 600; font-size: 11px; background: #1A2421; 
+            padding: 6px 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.3s ease; 
+        }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+        .header-section { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid #EAF0EA; padding-bottom: 10px; margin-bottom: 4px; flex-wrap: wrap; gap: 8px;
+        }
+        .page-title { font-size: 14px; font-weight: 800; color: #2F4F38; text-transform: uppercase; margin: 0; }
+        
+        .action-btns { display: flex; gap: 6px; }
+        .btn-action { 
+            color: #FFF; border: none; padding: 6px 10px; border-radius: 6px; 
+            font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: transform 0.2s; 
+        }
+        .btn-action:hover { transform: translateY(-2px); }
+        .btn-print { background: linear-gradient(135deg, #10B981, #059669); }
+        .btn-excel { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+        .summary-box { 
+            background: #F8FAF8; border: 1px solid #E2E8E2; padding: 12px; 
+            border-radius: 10px; font-size: 11px; color: #1E2B23; font-weight: 700; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 8px;
+        }
+        .summary-box span { 
+            color: #4A7C59; font-size: 12px; font-weight: 800; background: #EAF0EA; 
+            padding: 3px 8px; border-radius: 6px; margin-left: 4px;
+        }
+
+        .table-container { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #D1DED1; background: #FFFFFF; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; text-align: center; white-space: nowrap; }
+        th { background: #EAF0EA; color: #2F4F38; padding: 10px 8px; font-weight: 700; border-bottom: 2px solid #D1DED1; font-size: 9px; text-transform: uppercase; }
+        td { padding: 10px 8px; border-bottom: 1px solid #E2E8E2; color: #1E2B23; font-weight: 500; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #F8FAF8; }
+        td b { color: #2F4F38; font-weight: 800; }
+
+        /* Table Bitmap Thumbnail */
+        .table-img {
+            width: 32px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid #4A7C59;
+            cursor: zoom-in; transition: transform 0.2s; vertical-align: middle;
+        }
+        .table-img:hover { transform: scale(1.15); }
+
+        /* Fullscreen Image Popup Modal */
+        .fullscreen-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+            padding: 15px; flex-direction: column;
+        }
+        .fullscreen-modal img {
+            max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        .close-fullscreen {
+            position: absolute; top: 15px; right: 15px; background: #EF4444; color: white;
+            border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 12px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .empty-msg { text-align: center; padding: 30px 15px; color: #64748B; font-weight: 600; font-size: 11px; background: #F8FAF8; border-radius: 8px; border: 1px dashed #D1DED1; }
+        
+        @media print {
+            body { background: #FFF; padding: 0; }
+            .container { box-shadow: none; border: none; padding: 0; width: 100%; max-width: 100%; }
+            .top-nav, .action-btns { display: none !important; }
+            .table-img { border: 1px solid #000; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+    </div>
+    
+    <div class="header-section">
+        <h3 class="<h2 class=.card-header {
+    color: #ffffff; /* Inga unga color-a change pannikalam */
+}" id="pageTitle">TOTAL SAVED DESIGNS</h3>
+        <div class="action-btns">
+            <button class="btn-action btn-print" onclick="window.print()">🖨️ Print</button>
+            <button class="btn-action btn-excel" onclick="exportToExcel()">📥 Excel</button>
+        </div>
+    </div>
+    
+    <div class="summary-box" id="summaryBox" style="display: none;">
+        <div>Total Records: <span id="totRecords">0</span></div>
+        <div>Total Meters / Weight: <span id="totValue">0.00</span></div>
+    </div>
+
+    <div id="listContainer">
+        <!-- Dynamic Table will populate here -->
+    </div>
+</div>
+
+<!-- Fullscreen Image Popup Modal -->
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+function cleanDesignName(str) {
+    return str ? str.toString().replace('#', '').trim().toLowerCase() : '';
+}
+
+function exportToExcel() {
+    let table = document.querySelector("table");
+    if(!table) { alert("No data to export!"); return; }
+    let html = table.outerHTML;
+    let url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
+    let link = document.createElement('a');
+    link.href = url;
+    link.download = 'Design_List_Report.xls';
+    link.click();
+}
+
+window.openFullscreenImage = function(src) {
+    if(!src || src === '' || src === 'null') return;
+    document.getElementById('fullscreenImg').src = src;
+    document.getElementById('fullscreenModal').style.display = 'flex';
+};
+
+window.closeFullscreenImage = function() {
+    document.getElementById('fullscreenModal').style.display = 'none';
+};
+
+window.toggleBaseDesignStatus = async function(dNo, isChecked) {
+    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let clean = cleanDesignName(dNo);
+    let specKey = Object.keys(specs).find(k => cleanDesignName(k) === clean) || dNo;
+    
+    if(!specs[specKey]) specs[specKey] = {};
+    
+    let newStatus = isChecked ? 'completed' : 'running';
+    specs[specKey].status = newStatus;
+    localStorage.setItem('design_specs', JSON.stringify(specs));
+
+    orders.forEach(o => {
+        if(cleanDesignName(o.designNumber || o.designNo) === clean) {
+            o.status = newStatus;
+        }
+    });
+    localStorage.setItem('party_orders_data', JSON.stringify(orders));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('design_specs', specs);
+            await window.supabaseSave('party_orders_data', orders);
+        }
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, specs[specKey]);
+        }
+    } catch (e) {
+        console.warn("supabase sync error in design list:", e);
+    }
+    
+    window.renderDesignList();
+};
+
+window.renderDesignList = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type') || 'all';
+    const statusFilter = (urlParams.get('status') || 'all').toLowerCase();
+    const designFilter = urlParams.get('design') || 'all';
+
+    const pageTitle = document.getElementById('pageTitle');
+    const listContainer = document.getElementById('listContainer');
+    const summaryBox = document.getElementById('summaryBox');
+
+    let titleText = type === 'all' ? "TOTAL SAVED DESIGNS" : `${type.toUpperCase()} DESIGNS - ${statusFilter.toUpperCase()}`;
+    if(designFilter !== 'all' && designFilter !== '') { titleText += ` [ #${designFilter} ]`; }
+    pageTitle.innerText = titleText;
+
+    let theadHtml = '';
+    let tbodyHtml = '';
+    let totalMetersVal = 0;
+    let recordsCount = 0;
+
+    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+
+    if (type === 'all') {
+        theadHtml = `<tr><th>S.No</th><th>Photo</th><th>Design</th><th>Warp / Weft Count</th><th>Reed</th><th>Pick</th><th>Total Order Mtr</th><th>Status</th></tr>`;
+        
+        let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+        let masterNames = Array.isArray(designMasters) ? designMasters.map(d => d.name || d.designNo).filter(Boolean) : [];
+        let keysFromSpecs = Object.keys(specs);
+        let orderDesigns = Array.isArray(orders) ? orders.map(o => o.designNumber || o.designNo).filter(Boolean) : [];
+        
+        let designs = Array.from(new Set([...preDesigns, ...masterNames, ...keysFromSpecs, ...orderDesigns]));
+
+        if(designs.length === 0) {
+            listContainer.innerHTML = '<div class="empty-msg">No Saved Designs Found!</div>';
+            summaryBox.style.display = 'none';
+            return;
+        }
+
+        designs.forEach((dNo) => {
+            if(!dNo) return;
+            if(designFilter !== 'all' && designFilter !== '') {
+                if(cleanDesignName(dNo) !== cleanDesignName(designFilter)) return;
+            }
+
+            let cleanD = cleanDesignName(dNo);
+            let specKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanD) || dNo;
+            let s = specs[specKey] || {};
+            let m = Array.isArray(designMasters) ? designMasters.find(d => cleanDesignName(d.name || d.designNo) === cleanD) || {} : {};
+            let oMatched = Array.isArray(orders) ? orders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanD) || {} : {};
+            
+            let currentStatus = (s.status || oMatched.status || 'running').toLowerCase();
+            if(statusFilter !== 'all' && currentStatus !== statusFilter) return;
+
+            let orderItems = orders.filter(o => cleanDesignName(o.designNo || o.designNumber) === cleanD);
+            let mtrSum = orderItems.reduce((sum, o) => sum + (parseFloat(o.orderMtr || o.productionMeter || o.prodMtr || o.meters) || 0), 0);
+            
+            totalMetersVal += mtrSum;
+            recordsCount++;
+
+            let isCompleted = (currentStatus === 'completed');
+            let imgTag = s.bitmap ? `<img src="${s.bitmap}" class="table-img" onclick="openFullscreenImage(this.src)">` : '-';
+
+            let warpDisplay = oMatched.baseBeamCount || s.baseBeamCount || m.warp1 || s.baseCount || s.warp || '-';
+            let topBeam = oMatched.topBeamCount || s.topBeamCount || m.warp2 || '';
+            if (topBeam && topBeam !== '-') {
+                warpDisplay += ` / ${topBeam}`;
+            }
+            let weftDisplay = oMatched.weftCount || s.weftCount || m.weftCount || s.weft || '-';
+            let combinedCount = `${warpDisplay} x ${weftDisplay}`;
+
+            let reedVal = oMatched.reed || s.reed || m.reed || '-';
+            let pickVal = oMatched.pick || s.pick || m.pick || '-';
+
+            tbodyHtml += `<tr>
+                <td>${recordsCount}</td>
+                <td>${imgTag}</td>
+                <td><b>${dNo}</b></td>
+                <td>${combinedCount}</td>
+                <td>${reedVal}</td>
+                <td>${pickVal}</td>
+                <td>${mtrSum > 0 ? mtrSum.toFixed(2) : '-'}</td>
+                <td>
+                    <label style="cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-weight:700; color:${isCompleted ? '#10B981' : '#F59E0B'};">
+                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleBaseDesignStatus('${dNo}', this.checked)">
+                        ${isCompleted ? 'Completed' : 'Running'}
+                    </label>
+                </td>
+            </tr>`;
+        });
+    } else {
+        theadHtml = `<tr><th>S.No</th><th>Design No</th><th>Party / Unit</th><th>Meters / Wt</th><th>Date</th><th>Status</th></tr>`;
+        let recordKeyMap = {
+            'party_orders': 'party_orders_data',
+            'kora': 'kora_issue_records',
+            'dyeing': 'dyeing_issue_records',
+            'warping': 'warping_issue_records',
+            'weaving': 'weaving_master_data',
+            'washing': 'washing_issue_records'
+        };
+
+        let targetKey = recordKeyMap[type.toLowerCase()] || `${type.toLowerCase()}_records`;
+        let records = JSON.parse(localStorage.getItem(targetKey)) || [];
+
+        records.forEach((r) => {
+            let dNo = r.designNo || r.designNumber || r.design || '-';
+            if(designFilter !== 'all' && designFilter !== '') {
+                if(cleanDesignName(dNo) !== cleanDesignName(designFilter)) return;
+            }
+
+            let curStatus = (r.status || 'running').toLowerCase();
+            if(statusFilter !== 'all' && curStatus !== statusFilter) return;
+
+            let partyUnit = r.partyName || r.dyeingName || r.weaverName || r.supplier || '-';
+            let mtr = parseFloat(r.meters || r.orderMtr || r.productionMeter || r.issueWt || r.weight || 0);
+            
+            totalMetersVal += mtr;
+            recordsCount++;
+
+            tbodyHtml += `<tr>
+                <td>${recordsCount}</td>
+                <td><b>${dNo}</b></td>
+                <td>${partyUnit}</td>
+                <td>${mtr > 0 ? mtr.toFixed(2) : '-'}</td>
+                <td>${r.date || r.orderDate || '-'}</td>
+                <td style="font-weight:bold; text-transform:uppercase; color:${curStatus === 'completed' ? '#10B981' : '#D97706'}">${curStatus}</td>
+            </tr>`;
+        });
+    }
+
+    if(recordsCount === 0) {
+        listContainer.innerHTML = '<div class="empty-msg">No Records Found for the Selected Filter!</div>';
+        summaryBox.style.display = 'none';
+    } else {
+        summaryBox.style.display = 'flex';
+        document.getElementById('totRecords').innerText = recordsCount;
+        document.getElementById('totValue').innerText = totalMetersVal.toFixed(2);
+        listContainer.innerHTML = `<div class="table-container"><table><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>`;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.renderDesignList();
+});
+</script>
+</body>
+</html>

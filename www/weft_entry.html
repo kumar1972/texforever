@@ -1,0 +1,4312 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weft Entry - TEX FOR EVER</title>
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+  <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+      * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            background: #030712;
+            color: #1E2B23;
+        }
+        body {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0;
+            background: #FFFFFF;
+            border: 1px solid rgba(82, 110, 81, 0.15);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 11px;
+            background: #1A1;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: #000000;
+            transform: translateY(-2px);
+        }
+        .completed-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #D8DFD6;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.4);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .completed-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #526E51;
+            margin: 0;
+        }
+        .completed-checkbox label {
+           margin: 0;
+            color: #3F5A3E;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .page-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #DAA520;
+            text-align: left;
+            position: relative;
+            padding-left: 12px;
+            margin-bottom: 5px;
+        }
+        .page-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10%;
+            height: 80%;
+            width: 4px;
+            background: #4A7C59;
+            border-radius: 4px;
+        }
+        .form-section {
+            background: #F8FAF8;
+            border: 1px solid #E2E8E2;
+            border-radius: 14px;
+            padding: 20px 15px 15px 15px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        .section-badge {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #4A7C59;
+            color: #FFF;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
+        }
+        .section-badge.blue {
+            background: linear-gradient(135deg, #3BF6, #1D4ED8);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+        }
+        .section-badge.amber {
+            background: linear-gradient(135deg, #F50B, #D97706);
+            box-shadow: 0 4px 8px rgba(217, 119, 6, 0.25);
+        }
+        .compact-top-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+            background: #FFFFFF;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed #D1DED1;
+            margin-top: 5px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+       .form-group label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #4A554A;
+            white-space: nowrap;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #D1DED1;
+            background: #FFFFFF;
+            color: #1E2B23;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #4A7C59;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
+        }
+
+        .input-group-btn {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .input-group-btn input,
+        .input-group-btn select {
+            flex: 1;
+            background: #FFFFFF;
+            color: #1E2B23;
+        }
+
+        .btn-copy-design {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.25);
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .btn-copy-design:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(139, 92, 246, 0.35);
+        }
+
+        .bulk-color-box {
+            background: #EAF0EA;
+            border: 1px dashed #4A7C59;
+            border-radius: 10px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .bulk-color-box label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #2F4F38;
+            white-space: nowrap;
+        }
+
+        .bulk-color-box select,
+        .bulk-color-box input {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .btn-bulk-change {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .btn-bulk-change:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.35);
+        }
+
+        .header-grid {
+            display: grid;
+            grid-template-columns: 30px 1fr 1.2fr 1fr 65px;
+            gap: 6px;
+            padding: 5px 0;
+            font-size: 10px;
+            font-weight: 700;
+            color: #EF4444;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .row-grid {
+            display: grid;
+            grid-template-columns: 30px 1fr 1.2fr 1fr 65px;
+            gap: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .header-grid-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 35px;
+            gap: 6px;
+            padding: 5px 0;
+            font-size: 10px;
+            font-weight: 700;
+            color: #2F4F38;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .row-grid-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 35px;
+            gap: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .row-grid input,
+        .row-grid select,
+        .row-grid-range input {
+            text-align: center;
+            padding: 8px 4px;
+            font-size: 11px;
+        }
+
+        .line-no {
+            font-size: 10px;
+            font-weight: 800;
+            color: #4A7C59;
+            text-align: center;
+            background: #EAF0EA;
+            padding: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #D1DED1;
+        }
+
+        .btn-add-small {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .action-cell-row {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .btn-insert-small {
+            background: #D1FAE5;
+            color: #059669;
+            border: none;
+            width: 100%;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-insert-small:hover {
+            background: #A7F3D0;
+            transform: scale(1.05);
+        }
+
+        .btn-del-small {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: none;
+            width: 100%;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-del-small:hover {
+            background: #FECACA;
+            transform: scale(1.05);
+        }
+
+        .calc-box {
+            background: #F4F7F4;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #2F4F38;
+            margin-top: 10px;
+            border: 1px solid #D1DED1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-btns-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-preview {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #4A7C59, #33593D);
+            box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25);
+        }
+
+        .btn-list {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            box-shadow: 0 6px 15px rgba(245, 158, 11, 0.25);
+        }
+
+        .overlay-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 25, 20, 0.95);
+            backdrop-filter: blur(6px);
+            z-index: 99999;
+            flex-direction: column;
+            padding: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay-modal.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            background: #F4F7F4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E2E8E2;
+            flex-shrink: 0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #1E2B23;
+            font-weight: 800;
+            border: none;
+            padding: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .close-btn {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .print-btn {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+            background: #FAFCFA;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .table-container {
+            width: 100%;
+            border-radius: 10px;
+            overflow-x: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            border: 1px solid #E2E8E2;
+            background: #FFFFFF;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: center;
+            color: #1E2B23;
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .edit-action-btn {
+            background: #64748B;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .del-action-btn {
+            background: #EF4444;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .action-complete {
+            background: #526E51;
+            color: white;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .action-running {
+            background: #D97706;
+            color: white;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        #bitmapDisplayContainer {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #bitmapDisplayContainer img {
+            max-height: 45px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            cursor: zoom-in;
+            transition: transform 0.3s;
+        }
+
+        #bitmapDisplayContainer img:hover {
+            transform: scale(1.1);
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 5mm 8mm;
+            }
+
+            html,
+            body {
+                width: 100% !important;
+                min-height: 0 !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #FFFFFF !important;
+                color: #000000 !important;
+                overflow: visible !important;
+            }
+
+            body > * {
+                visibility: hidden !important;
+            }
+
+            #previewModal,
+            #previewModal * {
+                visibility: visible !important;
+            }
+
+            #previewModal {
+                display: block !important;
+                position: static !important;
+                left: auto !important;
+                top: auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: #FFFFFF !important;
+                opacity: 1 !important;
+                overflow: visible !important;
+                z-index: auto !important;
+                transform: none !important;
+                backdrop-filter: none !important;
+            }
+
+            #previewModal .modal-content {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                background: #FFFFFF !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                transform: none !important;
+            }
+
+            #previewModal .modal-body {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+                height: auto !important;
+                max-height: none !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                background: #FFFFFF !important;
+            }
+
+            .no-print,
+            #savedListModal,
+            #fullscreenModal {
+                display: none !important;
+                visibility: hidden !important;
+            }
+
+            table {
+                width: 100% !important;
+                max-width: 100% !important;
+                font-size: 10px !important;
+                border-collapse: collapse !important;
+                background: #FFFFFF !important;
+                page-break-inside: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            th,
+            td {
+                padding: 3px 5px !important;
+                line-height: 1.2 !important;
+                background: #FFFFFF;
+                color: #000000;
+                border-left: none !important;
+                border-right: none !important;
+            }
+
+            .print-flex-row {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                width: 100% !important;
+                gap: 8px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                align-items: flex-start !important;
+                justify-content: space-between !important;
+                background: #FFFFFF !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            .print-col-box {
+                flex: 1 1 0 !important;
+                width: 50% !important;
+                min-width: 0 !important;
+                max-width: 50% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #FFFFFF !important;
+                page-break-inside: auto;
+            }
+
+            #previewContent,
+            #previewContent > div,
+            #previewContent > div > div {
+                background: #FFFFFF !important;
+            }
+
+            img {
+                max-width: 100% !important;
+            }
+        }
+
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            flex-direction: column;
+        }
+
+        .fullscreen-modal img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #EF4444;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 14px;
+                border-radius: 16px;
+            }
+
+            .action-btns-row {
+                grid-template-columns: 1fr;
+            }
+
+            .compact-top-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .input-group-btn {
+                flex-direction: column;
+            }
+
+            .bulk-color-box {
+                align-items: stretch;
+            }
+
+            .bulk-color-box label {
+                width: 100%;
+            }
+
+            .calc-box {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <div id="bitmapDisplayContainer"></div>
+    </div>
+
+    <h2 class="page-title">🧶 Weft Pattern Entry</h2>
+
+    <div class="form-section" style="margin-top: 5px;">
+        <div class="section-badge">Weft Specs</div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label>Select Design Number</label>
+
+            <div class="input-group-btn">
+                <select id="designNo" onchange="loadWeftDesignData()">
+                    <option value="">Select Design No</option>
+                </select>
+
+                <button
+                    class="btn-copy-design"
+                    onclick="copyToNewDesign()"
+                    title="Copy current pattern to a new design">
+                    📋 Copy Design
+                </button>
+            </div>
+        </div>
+
+        <div class="compact-top-grid">
+
+            <div class="form-group">
+                <label>Weft Width (Auto)</label>
+                <input type="text"
+                       id="infoWeftWidth"
+                       placeholder="Width"
+                       oninput="calculateWeftValues()">
+            </div>
+
+            <div class="form-group">
+                <label>Weft 1</label>
+                <input type="text"
+                       id="infoWeft1"
+                       placeholder="W1">
+            </div>
+
+            <div class="form-group">
+                <label>Weft 2</label>
+                <input type="text"
+                       id="infoWeft2"
+                       placeholder="W2">
+            </div>
+
+            <div class="form-group">
+                <label>Pick</label>
+                <input type="text"
+                       id="infoPick"
+                       placeholder="Pick"
+                       oninput="calculateWeftValues()">
+            </div>
+
+            <div class="form-group">
+                <label>Weft Mtrs</label>
+                <input type="text"
+                       id="infoWeftMtrs"
+                       placeholder="Mtrs">
+            </div>
+
+            <div class="form-group">
+                <label>Weave</label>
+                <input type="text" id="infoWeave" list="fabricTypeList" value="Plain" placeholder="Select or Type">
+                <datalist id="fabricTypeList">
+                    <option value="Plain"></option>
+                    <option value="Twill"></option>
+                    <option value="Dobby"></option>
+                    <option value="Seersucker"></option>
+                </datalist>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="form-section">
+
+        <div class="section-badge blue">Weft Thread Pattern</div>
+
+        <div class="bulk-color-box">
+
+            <label>🎨 Bulk Color Changer:</label>
+
+            <select id="bulkOldColor">
+                <option value="">Select Old Color</option>
+            </select>
+
+            <label>To ➔</label>
+
+            <input
+                type="text"
+                id="bulkNewColor"
+                placeholder="Type New Color">
+
+            <button
+                class="btn-bulk-change"
+                onclick="applyBulkColorChange()">
+                Change Color
+            </button>
+
+        </div>
+
+        <div style="font-size:9px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">
+            (Press Enter in Picks to add new line below)
+        </div>
+
+        <div style="overflow-x:auto;">
+            <div style="min-width:400px;">
+
+                <div class="header-grid">
+                    <div>#</div>
+                    <div>Count</div>
+                    <div>Colour</div>
+                    <div>Picks</div>
+                    <div>Action</div>
+                </div>
+
+                <div id="weftLinesContainer"></div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="form-section">
+
+        <div class="section-badge amber">Pattern Repeats (Set)</div>
+
+        <div style="text-align:right;margin-bottom:5px;">
+            <button
+                class="btn-add-small"
+                onclick="addWeftRange()">
+                ➕ Add Set
+            </button>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <div style="min-width:350px;">
+
+                <div class="header-grid-range">
+                    <div>Start Line</div>
+                    <div>End Line</div>
+                    <div>Set (Times)</div>
+                    <div></div>
+                </div>
+
+                <div id="weftRangesContainer"></div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div style="margin:10px 0;">
+        <button
+            type="button"
+            class="btn-main"
+            style="background:linear-gradient(135deg,#F59E0B,#D97706);box-shadow:0 6px 15px rgba(217,119,6,0.25);"
+            onclick="reverseWeftEntries()">
+            🔄 Weft Reverse
+        </button>
+    </div>
+
+    <div class="calc-box">
+
+        <span>
+            Total Pattern Picks:
+            <span
+                id="displayTotalPicks"
+                style="color:#D97706;font-weight:800;">
+                0
+            </span>
+        </span>
+
+        <span
+            id="displayTotalCalc"
+            style="color:#10B981;font-weight:800;">
+            Total Pick: 0
+        </span>
+
+    </div>
+
+    <div class="action-btns-row">
+
+        <button
+            class="btn-main btn-preview"
+            onclick="previewWeftPattern()">
+            👁️ Preview
+        </button>
+
+        <button
+            class="btn-main btn-save"
+            onclick="saveWeftDesign()"
+            id="saveBtnTxt">
+            💾 Save
+        </button>
+
+        <button
+            class="btn-main btn-list"
+            onclick="openSavedModal()">
+            📂 Saved List
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= PREVIEW MODAL ================= -->
+
+<div id="previewModal" class="overlay-modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header no-print">
+
+            <h3>👁️ Weft Pattern Full Screen Preview</h3>
+
+            <div class="modal-actions">
+
+                <button
+                    class="print-btn"
+                    onclick="window.print()">
+                    🖨️ Print
+                </button>
+
+                <button
+                    class="close-btn"
+                    onclick="closeModal('previewModal')">
+                    Close ✕
+                </button>
+
+            </div>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="previewContent">
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= SAVED LIST ================= -->
+
+<div id="savedListModal" class="overlay-modal">
+
+    <div
+        class="modal-content"
+        style="max-width:600px;height:90vh;margin:auto;border-radius:16px;">
+
+        <div class="modal-header">
+
+            <h3>📋 Saved Weft Patterns</h3>
+
+            <button
+                class="close-btn"
+                onclick="closeModal('savedListModal')">
+                Close ✕
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Design No</th>
+                            <th>Total Lines</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="savedPatternsBody"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= FULLSCREEN IMAGE ================= -->
+
+<div
+    id="fullscreenModal"
+    class="fullscreen-modal"
+    onclick="closeFullscreenImage()">
+
+    <button
+        class="close-fullscreen"
+        onclick="event.stopPropagation();closeFullscreenImage();">
+        Close ✕
+    </button>
+
+    <img
+        id="fullscreenImg"
+        src=""
+        alt="Fullscreen Preview"
+        onclick="event.stopPropagation();">
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   BASIC HELPERS
+============================================================ */
+
+function safeParseJSON(value, fallback) {
+    try {
+        if (value === null || value === undefined || value === '') {
+            return fallback;
+        }
+
+        const parsed = JSON.parse(value);
+        return parsed ?? fallback;
+
+    } catch (e) {
+        console.error("JSON parse error:", e);
+        return fallback;
+    }
+}
+
+
+function cleanDesignName(str) {
+    return str !== undefined && str !== null
+        ? str.toString()
+            .replace(/[#_]/g, '')
+            .replace(/\s+/g, '')
+            .trim()
+            .toLowerCase()
+        : '';
+}
+
+
+function escapeHTML(value) {
+
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
+/* ============================================================
+   PERMISSION
+============================================================ */
+
+function checkUserPermission() {
+
+    let userRole =
+        localStorage.getItem('erp_logged_role') ||
+        localStorage.getItem('user_role');
+
+    if (
+        userRole !== 'Administrator' &&
+        userRole !== 'Admin'
+    ) {
+
+        let permissions = safeParseJSON(
+            localStorage.getItem('user_permissions'),
+            {}
+        );
+
+        if (
+            permissions['weft_entry.html'] === false ||
+            permissions['weft_entry'] === false
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+/* ============================================================
+   PAGE LOAD
+============================================================ */
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    try {
+
+        if (!checkUserPermission()) {
+
+            authorizationAlert();
+
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 300);
+
+            return;
+        }
+
+        loadDesignDropdown();
+        
+        if (document.getElementById('designNo').value === "") {
+            loadDefaultRow();
+        }
+
+    } catch (error) {
+
+        console.error("Page initialization error:", error);
+
+        alert(
+            "Weft Entry load error. Browser console check pannunga."
+        );
+    }
+});
+
+
+
+/* ============================================================
+   MODALS
+============================================================ */
+
+function openModal(modalId) {
+
+    const modal = document.getElementById(modalId);
+
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+}
+
+
+function closeModal(modalId) {
+
+    const modal = document.getElementById(modalId);
+
+    if (!modal) return;
+
+    modal.classList.remove('show');
+
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+}
+
+
+/* ============================================================
+   FULLSCREEN IMAGE
+============================================================ */
+
+window.openFullscreenImage = function(src) {
+
+    if (
+        !src ||
+        src === '' ||
+        src === 'null' ||
+        src === 'undefined'
+    ) {
+        return;
+    }
+
+    const img = document.getElementById('fullscreenImg');
+
+    if (!img) return;
+
+    img.src = src;
+
+    document.getElementById(
+        'fullscreenModal'
+    ).style.display = 'flex';
+};
+
+
+window.closeFullscreenImage = function() {
+
+    const modal =
+        document.getElementById('fullscreenModal');
+
+    const img =
+        document.getElementById('fullscreenImg');
+
+    if (modal) {
+        modal.style.display = 'none';
+    }
+
+    if (img) {
+        img.src = '';
+    }
+};
+
+
+/* ============================================================
+   BITMAP
+============================================================ */
+
+function loadBitmapImage() {
+
+    let activeDesign =
+        document.getElementById('designNo').value ||
+        localStorage.getItem('selected_design_number');
+
+    let designSpecs = safeParseJSON(
+        localStorage.getItem('design_specs'),
+        {}
+    );
+
+    let bitmapContainer =
+        document.getElementById('bitmapDisplayContainer');
+
+    if (!bitmapContainer) return;
+
+    let clean =
+        activeDesign
+            ? cleanDesignName(activeDesign)
+            : '';
+
+    let specKey =
+        Object.keys(designSpecs).find(
+            k => cleanDesignName(k) === clean
+        ) || activeDesign;
+
+    let imgHtml = '';
+
+    if (
+        activeDesign &&
+        designSpecs[specKey] &&
+        designSpecs[specKey].bitmap
+    ) {
+
+        let b64 = designSpecs[specKey].bitmap;
+
+        imgHtml = `
+            <img
+                id="designBitmapImage"
+                src="${escapeHTML(b64)}"
+                alt="Design Bitmap"
+                title="Click to view full screen">
+        `;
+    }
+
+    let checkboxHtml = `
+        <div class="completed-checkbox">
+
+            <input
+                type="checkbox"
+                id="top_completed_status"
+                onchange="quickCompleteToggle()">
+
+            <label for="top_completed_status">
+                Completed
+            </label>
+
+        </div>
+    `;
+
+    let cb =
+        document.getElementById('top_completed_status');
+
+    let wasChecked =
+        cb ? cb.checked : false;
+
+    bitmapContainer.innerHTML =
+        checkboxHtml + imgHtml;
+
+    if (wasChecked) {
+
+        let newCb =
+            document.getElementById(
+                'top_completed_status'
+            );
+
+        if (newCb) {
+            newCb.checked = true;
+        }
+    }
+
+    const bitmap =
+        document.getElementById(
+            'designBitmapImage'
+        );
+
+    if (bitmap) {
+
+        bitmap.addEventListener(
+            'click',
+            function() {
+                openFullscreenImage(this.src);
+            }
+        );
+    }
+}
+
+
+/* ============================================================
+   DESIGN DROPDOWN (STANDARD SELECT)
+============================================================ */
+
+function loadDesignDropdown() {
+
+    let preDesigns = safeParseJSON(
+        localStorage.getItem('pre_design_numbers'),
+        []
+    );
+
+    let designMasters = safeParseJSON(
+        localStorage.getItem('design_masters_data'),
+        []
+    );
+
+    let designSpecs = safeParseJSON(
+        localStorage.getItem('design_specs'),
+        {}
+    );
+
+    let partyOrders = safeParseJSON(
+        localStorage.getItem('party_orders_data'),
+        []
+    );
+
+    let allDesigns = new Set();
+
+    if (Array.isArray(preDesigns)) {
+
+        preDesigns.forEach(d => {
+
+            if (d !== null && d !== undefined && d !== '') {
+                allDesigns.add(String(d));
+            }
+
+        });
+    }
+
+    if (Array.isArray(designMasters)) {
+
+        designMasters.forEach(d => {
+
+            let value =
+                d.name ||
+                d.designNo;
+
+            if (value) {
+                allDesigns.add(String(value));
+            }
+
+        });
+    }
+
+    Object.keys(designSpecs).forEach(k => {
+
+        if (k) {
+            allDesigns.add(String(k));
+        }
+
+    });
+
+    if (Array.isArray(partyOrders)) {
+
+        partyOrders.forEach(o => {
+
+            let value =
+                o.designNumber ||
+                o.designNo;
+
+            if (value) {
+                allDesigns.add(String(value));
+            }
+
+        });
+    }
+
+    let designElement = document.getElementById('designNo');
+
+    if (!designElement) return;
+
+    designElement.innerHTML = '<option value="">Select Design No</option>';
+
+    Array.from(allDesigns)
+        .filter(Boolean)
+        .sort((a, b) =>
+            a.localeCompare(b, undefined, {
+                numeric: true,
+                sensitivity: 'base'
+            })
+        )
+        .forEach(d => {
+            let option = document.createElement('option');
+            option.value = d;
+            option.textContent = d;
+            designElement.appendChild(option);
+        });
+
+    let activeDesign = localStorage.getItem('selected_design_number');
+
+    if (
+        activeDesign &&
+        Array.from(allDesigns).some(
+            d =>
+                cleanDesignName(d) ===
+                cleanDesignName(activeDesign)
+        )
+    ) {
+
+        designElement.value = Array.from(allDesigns).find(
+            d => cleanDesignName(d) === cleanDesignName(activeDesign)
+        );
+        loadWeftDesignData();
+    } else {
+        loadBitmapImage();
+    }
+}
+
+
+/* ============================================================
+   LOAD DESIGN DATA
+============================================================ */
+
+function loadWeftDesignData() {
+
+    let select =
+        document.getElementById('designNo');
+
+    if (!select) return;
+
+    let dNo = select.value;
+
+    if (dNo) {
+        localStorage.setItem(
+            'selected_design_number',
+            dNo
+        );
+    }
+
+    loadBitmapImage();
+
+    document.getElementById(
+        'weftLinesContainer'
+    ).innerHTML = '';
+
+    document.getElementById(
+        'weftRangesContainer'
+    ).innerHTML = '';
+
+    let saveBtn =
+        document.getElementById('saveBtnTxt');
+
+    document.getElementById(
+        'infoWeftWidth'
+    ).value = '';
+
+    document.getElementById(
+        'infoWeft1'
+    ).value = '';
+
+    document.getElementById(
+        'infoWeft2'
+    ).value = '';
+
+    document.getElementById(
+        'infoPick'
+    ).value = '';
+
+    document.getElementById(
+        'infoWeftMtrs'
+    ).value = '';
+
+    document.getElementById(
+        'infoWeave'
+    ).value = '';
+
+    document.getElementById(
+        'displayTotalPicks'
+    ).innerText = '0';
+
+    document.getElementById(
+        'displayTotalCalc'
+    ).innerText = 'Total Pick: 0';
+
+    if (
+        document.getElementById(
+            'top_completed_status'
+        )
+    ) {
+        document.getElementById(
+            'top_completed_status'
+        ).checked = false;
+    }
+
+    if (!dNo) {
+
+        saveBtn.innerText = "💾 Save";
+
+        loadDefaultRow();
+        refreshBulkColorDropdown();
+
+        return;
+    }
+
+    let cleanDNo =
+        cleanDesignName(dNo);
+
+    let specs = safeParseJSON(
+        localStorage.getItem('design_specs'),
+        {}
+    );
+
+    let specKey =
+        Object.keys(specs).find(
+            k =>
+                cleanDesignName(k) ===
+                cleanDNo
+        );
+
+    let sp =
+        specKey
+            ? specs[specKey]
+            : {};
+
+    let masters = safeParseJSON(
+        localStorage.getItem('design_masters_data'),
+        []
+    );
+
+    let foundMaster =
+        Array.isArray(masters)
+            ? masters.find(
+                m =>
+                    cleanDesignName(
+                        m.name || m.designNo
+                    ) === cleanDNo
+            ) || {}
+            : {};
+
+    // PRIORITY 1: Check weft_entry_data directly
+    let weftEntryList = safeParseJSON(localStorage.getItem('weft_entry_data'), []);
+    let foundWeftEntry = Array.isArray(weftEntryList) 
+        ? weftEntryList.find(w => cleanDesignName(w.name || w.designNo) === cleanDNo) 
+        : null;
+
+    let partyOrders = safeParseJSON(
+        localStorage.getItem('party_orders_data'),
+        []
+    );
+
+    let matchedOrder =
+        Array.isArray(partyOrders)
+            ? partyOrders.find(
+                o =>
+                    cleanDesignName(
+                        o.designNumber ||
+                        o.designNo
+                    ) === cleanDNo
+            ) || {}
+            : {};
+
+    let specStatus =
+        (
+            sp.status ||
+            matchedOrder.status ||
+            foundMaster.status ||
+            ''
+        ).toLowerCase();
+
+    if (specStatus === 'completed') {
+
+        let cb =
+            document.getElementById(
+                'top_completed_status'
+            );
+
+        if (cb) {
+            cb.checked = true;
+        }
+    }
+
+    let onloomWidth = parseFloat(
+        sp.onloomWidth ||
+        foundMaster.onloomWidth ||
+        matchedOrder.onloomWidth ||
+        sp.width ||
+        foundMaster.width ||
+        0
+    ) || 0;
+
+    let onloomPick = parseFloat(
+        sp.onloomPick ||
+        foundMaster.onloomPick ||
+        matchedOrder.onloomPick ||
+        sp.pick ||
+        foundMaster.pick ||
+        0
+    ) || 0;
+
+    let autoWeftWidth = onloomWidth > 0 ? (onloomWidth + 3).toFixed(2) : '';
+    let autoPick = onloomPick > 0 ? onloomPick : '';
+
+    let resolvedWeft1 =
+        sp.weftCount ||
+        sp.weft ||
+        foundMaster.weftCount ||
+        foundMaster.weft ||
+        matchedOrder.weftCount ||
+        '40s';
+
+    let resolvedWeft2 =
+        sp.weft2 ||
+        foundMaster.weft2 ||
+        matchedOrder.weft2 ||
+        '';
+
+    let savedYarnOrderMtr =
+        parseFloat(
+            matchedOrder.orderMtr ||
+            matchedOrder.productionMeter ||
+            sp.yarnOrderMtr ||
+            sp.orderMtr ||
+            foundMaster.orderMtr ||
+            0
+        );
+
+    let savedCrimp =
+        parseFloat(
+            sp.crimpPercentage || 5
+        );
+
+    let calculatedWeftMtrs = '';
+
+    if (savedYarnOrderMtr > 0) {
+
+        calculatedWeftMtrs =
+            (
+                savedYarnOrderMtr -
+                (
+                    savedYarnOrderMtr *
+                    (savedCrimp / 100)
+                )
+            ).toFixed(2);
+    }
+
+    let resolvedWeave =
+        matchedOrder.weaveType ||
+        sp.weaveType ||
+        foundMaster.weaveType ||
+        sp.weave ||
+        foundMaster.weave ||
+        'Plain';
+
+    let effectiveLines = (foundWeftEntry && Array.isArray(foundWeftEntry.weftLines) && foundWeftEntry.weftLines.length > 0)
+        ? foundWeftEntry.weftLines
+        : (Array.isArray(foundMaster.weftLines) ? foundMaster.weftLines : []);
+
+    let effectiveRanges = (foundWeftEntry && Array.isArray(foundWeftEntry.weftRanges))
+        ? foundWeftEntry.weftRanges
+        : (Array.isArray(foundMaster.weftRanges) ? foundMaster.weftRanges : []);
+
+    if (effectiveLines.length > 0) {
+
+        saveBtn.innerText = "✏️ Update";
+
+        let finalWeftWidth =
+            (foundWeftEntry && foundWeftEntry.weftWidth) ||
+            foundMaster.weftWidth ||
+            autoWeftWidth ||
+            '';
+
+        document.getElementById('infoWeftWidth').value = finalWeftWidth;
+        document.getElementById('infoWeft1').value = foundMaster.weftCount || resolvedWeft1;
+        document.getElementById('infoWeft2').value = foundMaster.weft2 || resolvedWeft2;
+        document.getElementById('infoPick').value = foundMaster.weftPick || autoPick;
+        document.getElementById('infoWeftMtrs').value = foundMaster.weftMtrs || sp.weftMtrs || calculatedWeftMtrs;
+        document.getElementById('infoWeave').value = foundMaster.weaveType || resolvedWeave;
+
+        effectiveLines.forEach(l => {
+            addWeftLine(
+                l.count || '',
+                l.color || l.colour || '', 
+                l.picks || l.pick || ''
+            );
+        });
+
+        effectiveRanges.forEach(r => {
+            addWeftRange(
+                r.start,
+                r.end,
+                r.set
+            );
+        });
+
+    } else {
+
+        saveBtn.innerText = "💾 Save";
+
+        document.getElementById('infoWeftWidth').value = autoWeftWidth;
+        document.getElementById('infoWeft1').value = resolvedWeft1;
+        document.getElementById('infoWeft2').value = resolvedWeft2;
+        document.getElementById('infoPick').value = autoPick;
+        document.getElementById('infoWeftMtrs').value = sp.weftMtrs || calculatedWeftMtrs;
+        document.getElementById('infoWeave').value = resolvedWeave;
+
+        loadDefaultRow();
+    }
+
+    updateLineNumbers();
+    calculateWeftValues();
+    refreshBulkColorDropdown();
+}
+
+
+/* ============================================================
+   DEFAULT ROW
+============================================================ */
+
+function loadDefaultRow() {
+
+    const container =
+        document.getElementById(
+            'weftLinesContainer'
+        );
+
+    container.innerHTML = '';
+
+    addWeftLine();
+
+    refreshBulkColorDropdown();
+}
+
+
+/* ============================================================
+   COPY DESIGN
+============================================================ */
+
+async function copyToNewDesign() {
+
+    let currentDNo =
+        document.getElementById(
+            'designNo'
+        ).value;
+
+    if (!currentDNo) {
+
+        alert(
+            "முதலில் எந்த டிசைனை காப்பி செய்ய வேண்டுமோ அதை செலக்ட் செய்யுங்கள் ப்ரோ!"
+        );
+
+        return;
+    }
+
+    let newDNo =
+        prompt(
+            `'${currentDNo}' டிசைனை காப்பி செய்கிறீர்கள்.\n\nபுதிய டிசைன் நம்பரை உள்ளிடவும்:`
+        );
+
+    if (
+        !newDNo ||
+        newDNo.trim() === ''
+    ) {
+        return;
+    }
+
+    newDNo = newDNo.trim();
+
+    let cleanNew =
+        cleanDesignName(newDNo);
+
+    let allExisting =
+        new Set();
+
+    let preDesignList =
+        safeParseJSON(
+            localStorage.getItem(
+                'pre_design_numbers'
+            ),
+            []
+        );
+
+    let masters =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_masters_data'
+            ),
+            []
+        );
+
+    let specs =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_specs'
+            ),
+            {}
+        );
+
+    if (Array.isArray(preDesignList)) {
+
+        preDesignList.forEach(x =>
+            allExisting.add(
+                cleanDesignName(x)
+            )
+        );
+    }
+
+    if (Array.isArray(masters)) {
+
+        masters.forEach(m => {
+
+            if (m.name || m.designNo) {
+
+                allExisting.add(
+                    cleanDesignName(
+                        m.name ||
+                        m.designNo
+                    )
+                );
+            }
+        });
+    }
+
+    Object.keys(specs).forEach(k => {
+
+        allExisting.add(
+            cleanDesignName(k)
+        );
+    });
+
+    if (allExisting.has(cleanNew)) {
+
+        alert(
+            "இந்த டிசைன் நம்பர் ஏற்கனவே உள்ளது! வேறு நம்பரை கொடுக்கவும்."
+        );
+
+        return;
+    }
+
+    let lines = [];
+
+    document
+        .querySelectorAll('.line-item')
+        .forEach(row => {
+
+            let count =
+                row.querySelector(
+                    '.inp-count'
+                ).value.trim();
+
+            let color =
+                row.querySelector(
+                    '.inp-color'
+                ).value.trim();
+
+            let picks =
+                row.querySelector(
+                    '.inp-picks'
+                ).value.trim();
+
+            if (
+                count ||
+                color ||
+                picks
+            ) {
+
+                lines.push({
+                    count: count,
+                    color: color,
+                    picks:
+                        parseFloat(picks) ||
+                        0
+                });
+            }
+        });
+
+
+    let ranges = [];
+
+    document
+        .querySelectorAll('.range-item')
+        .forEach(row => {
+
+            let start =
+                row.querySelector(
+                    '.inp-start'
+                ).value.trim();
+
+            let end =
+                row.querySelector(
+                    '.inp-end'
+                ).value.trim();
+
+            let set =
+                row.querySelector(
+                    '.inp-set'
+                ).value.trim();
+
+            if (
+                start &&
+                end &&
+                set
+            ) {
+
+                ranges.push({
+                    start: parseInt(start),
+                    end: parseInt(end),
+                    set: parseInt(set)
+                });
+            }
+        });
+
+    let copiedMaster = {
+
+        name: newDNo,
+        designNo: newDNo,
+        weftWidth: document.getElementById('infoWeftWidth').value.trim(),
+        weftCount: document.getElementById('infoWeft1').value.trim(),
+        weft2: document.getElementById('infoWeft2').value.trim(),
+        weftPick: document.getElementById('infoPick').value.trim(),
+        weftMtrs: document.getElementById('infoWeftMtrs').value.trim(),
+        weaveType: document.getElementById('infoWeave').value.trim(),
+        weftLines: JSON.parse(JSON.stringify(lines)),
+        weftRanges: JSON.parse(JSON.stringify(ranges)),
+        status: 'running',
+        timestamp: new Date().toISOString()
+    };
+
+    masters.push(copiedMaster);
+
+    if (!Array.isArray(preDesignList)) {
+        preDesignList = [];
+    }
+
+    preDesignList.push(newDNo);
+
+    localStorage.setItem('pre_design_numbers', JSON.stringify(preDesignList));
+    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+
+    let weftEntryList = safeParseJSON(localStorage.getItem('weft_entry_data'), []);
+    if (!Array.isArray(weftEntryList)) weftEntryList = [];
+    weftEntryList = weftEntryList.filter(x => cleanDesignName(x.name || x.designNo) !== cleanNew);
+    weftEntryList.push(copiedMaster);
+    localStorage.setItem('weft_entry_data', JSON.stringify(weftEntryList));
+
+    let cleanCurrent = cleanDesignName(currentDNo);
+    let currentSpecKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanCurrent);
+    let copiedSpec = {};
+
+    if (currentSpecKey && specs[currentSpecKey]) {
+        copiedSpec = JSON.parse(JSON.stringify(specs[currentSpecKey]));
+    }
+
+    copiedSpec.status = 'running';
+    copiedSpec.weftMtrs = document.getElementById('infoWeftMtrs').value.trim();
+    copiedSpec.weft = document.getElementById('infoWeft1').value.trim();
+    copiedSpec.weftCount = document.getElementById('infoWeft1').value.trim();
+    copiedSpec.weft2 = document.getElementById('infoWeft2').value.trim();
+
+    specs[newDNo] = copiedSpec;
+    localStorage.setItem('design_specs', JSON.stringify(specs));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('pre_design_numbers', preDesignList);
+            await window.supabaseSave('design_masters_data', masters);
+            await window.supabaseSave('weft_entry_data', weftEntryList);
+            await window.supabaseSave('design_specs', specs);
+        }
+
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(newDNo, specs[newDNo]);
+        }
+    } catch (error) {
+        console.error("Copy Design supabase Error:", error);
+    }
+
+    const designElement = document.getElementById('designNo');
+    if (designElement) {
+        const option = document.createElement('option');
+        option.value = newDNo;
+        option.textContent = newDNo;
+        designElement.appendChild(option);
+        designElement.value = newDNo;
+    }
+
+    localStorage.setItem('selected_design_number', newDNo);
+    loadWeftDesignData();
+
+    alert(
+        `✅ '${currentDNo}' → '${newDNo}'\n\nWeft Pattern முழுவதும் copy செய்யப்பட்டது.`
+    );
+}
+
+
+/* ============================================================
+   BULK COLOR
+============================================================ */
+
+function refreshBulkColorDropdown() {
+
+    let colorsSet =
+        new Set();
+
+    document
+        .querySelectorAll('.inp-color')
+        .forEach(inp => {
+
+            let val =
+                inp.value.trim();
+
+            if (val) {
+                colorsSet.add(val);
+            }
+        });
+
+    let select =
+        document.getElementById(
+            'bulkOldColor'
+        );
+
+    if (!select) return;
+
+    select.innerHTML =
+        '<option value="">Select Old Color</option>';
+
+    colorsSet.forEach(c => {
+
+        let option =
+            document.createElement(
+                'option'
+            );
+
+        option.value = c;
+        option.textContent = c;
+
+        select.appendChild(option);
+    });
+}
+
+
+function applyBulkColorChange() {
+
+    let oldColor =
+        document.getElementById(
+            'bulkOldColor'
+        ).value;
+
+    let newColor =
+        document.getElementById(
+            'bulkNewColor'
+        ).value.trim();
+
+    if (
+        !oldColor ||
+        !newColor
+    ) {
+
+        alert(
+            "Please select the Old Color and type the New Color!"
+        );
+
+        return;
+    }
+
+    if (
+        !confirm(
+            `Are you sure you want to change all '${oldColor}' to '${newColor}'?`
+        )
+    ) {
+        return;
+    }
+
+    let changedCount = 0;
+
+    document
+        .querySelectorAll('.inp-color')
+        .forEach(inp => {
+
+            if (
+                inp.value.trim() ===
+                oldColor
+            ) {
+
+                inp.value =
+                    newColor;
+
+                changedCount++;
+            }
+        });
+
+    document.getElementById(
+        'bulkOldColor'
+    ).value = '';
+
+    document.getElementById(
+        'bulkNewColor'
+    ).value = '';
+
+    refreshBulkColorDropdown();
+
+    alert(
+        `${changedCount} rows updated successfully! ✅`
+    );
+}
+
+
+/* ============================================================
+   ADD WEFT LINE
+============================================================ */
+
+function addWeftLine(
+    count = '',
+    color = '',
+    picks = '',
+    insertAfterElem = null
+) {
+    if (!count) {
+        const w1 = document.getElementById('infoWeft1');
+        if (w1 && w1.value) {
+            count = w1.value;
+        }
+    }
+
+    let container =
+        document.getElementById(
+            'weftLinesContainer'
+        );
+
+    let row =
+        document.createElement('div');
+
+    row.className =
+        'row-grid line-item';
+
+    row.innerHTML = `
+
+        <div class="line-no"></div>
+
+        <input
+            type="text"
+            class="inp-count"
+            placeholder="Count"
+            value="${escapeHTML(count)}">
+
+        <input
+            type="text"
+            class="inp-color"
+            placeholder="Colour"
+            value="${escapeHTML(color)}">
+
+        <input
+            type="number"
+            class="inp-picks"
+            placeholder="Picks"
+            value="${escapeHTML(picks)}">
+
+        <div class="action-cell-row">
+
+            <button
+                type="button"
+                class="btn-insert-small"
+                title="Insert row below">
+                +
+            </button>
+
+            <button
+                type="button"
+                class="btn-del-small"
+                title="Delete row">
+                ×
+            </button>
+
+        </div>
+    `;
+
+    row.querySelector(
+        '.inp-color'
+    ).addEventListener(
+        'blur',
+        refreshBulkColorDropdown
+    );
+
+    row.querySelector(
+        '.inp-picks'
+    ).addEventListener(
+        'keydown',
+        function(event) {
+
+            if (event.key !== 'Enter') {
+                return;
+            }
+
+            event.preventDefault();
+
+            addWeftLine(
+                '',
+                '',
+                '',
+                row
+            );
+
+            setTimeout(() => {
+
+                let next =
+                    row.nextElementSibling;
+
+                if (next) {
+
+                    let input =
+                        next.querySelector(
+                            '.inp-count'
+                        );
+
+                    if (input) {
+                        input.focus();
+                    }
+                }
+
+            }, 50);
+        }
+    );
+
+    row.querySelector(
+        '.inp-picks'
+    ).addEventListener(
+        'input',
+        calculateWeftValues
+    );
+
+    row.querySelector(
+        '.btn-insert-small'
+    ).addEventListener(
+        'click',
+        function() {
+
+            addWeftLine(
+                '',
+                '',
+                '',
+                row
+            );
+        }
+    );
+
+    row.querySelector(
+        '.btn-del-small'
+    ).addEventListener(
+        'click',
+        function() {
+
+            let allRows =
+                container.querySelectorAll(
+                    '.line-item'
+                );
+
+            if (allRows.length <= 1) {
+
+                row.querySelector(
+                    '.inp-count'
+                ).value = '';
+
+                row.querySelector(
+                    '.inp-color'
+                ).value = '';
+
+                row.querySelector(
+                    '.inp-picks'
+                ).value = '';
+
+            } else {
+
+                row.remove();
+            }
+
+            updateLineNumbers();
+            calculateWeftValues();
+            refreshBulkColorDropdown();
+        }
+    );
+
+    if (
+        insertAfterElem &&
+        insertAfterElem.nextSibling
+    ) {
+
+        container.insertBefore(
+            row,
+            insertAfterElem.nextSibling
+        );
+
+    } else {
+
+        container.appendChild(row);
+    }
+
+    updateLineNumbers();
+    calculateWeftValues();
+    refreshBulkColorDropdown();
+}
+
+
+/* ============================================================
+   ADD RANGE
+============================================================ */
+
+function addWeftRange(
+    start = '',
+    end = '',
+    set = ''
+) {
+
+    let container =
+        document.getElementById(
+            'weftRangesContainer'
+        );
+
+    let row =
+        document.createElement('div');
+
+    row.className =
+        'row-grid-range range-item';
+
+    row.innerHTML = `
+
+        <input
+            type="number"
+            class="inp-start"
+            placeholder="Start"
+            value="${escapeHTML(start)}">
+
+        <input
+            type="number"
+            class="inp-end"
+            placeholder="End"
+            value="${escapeHTML(end)}">
+
+        <input
+            type="number"
+            class="inp-set"
+            placeholder="Set"
+            value="${escapeHTML(set)}">
+
+        <button
+            type="button"
+            class="btn-del-small">
+            ×
+        </button>
+    `;
+
+    row.querySelectorAll(
+        'input'
+    ).forEach(input => {
+
+        input.addEventListener(
+            'input',
+            calculateWeftValues
+        );
+    });
+
+    row.querySelector(
+        '.inp-set'
+    ).addEventListener(
+        'keydown',
+        function(event) {
+
+            if (
+                event.key !==
+                'Enter'
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
+            addWeftRange();
+
+            setTimeout(() => {
+
+                let inputs =
+                    document.querySelectorAll(
+                        '.inp-start'
+                    );
+
+                if (
+                    inputs.length
+                ) {
+
+                    inputs[
+                        inputs.length - 1
+                    ].focus();
+                }
+
+            }, 50);
+        }
+    );
+
+    row.querySelector(
+        '.btn-del-small'
+    ).addEventListener(
+        'click',
+        function() {
+
+            row.remove();
+
+            calculateWeftValues();
+        }
+    );
+
+    container.appendChild(row);
+
+    calculateWeftValues();
+}
+
+
+/* ============================================================
+   LINE NUMBERS
+============================================================ */
+
+function updateLineNumbers() {
+
+    document
+        .querySelectorAll(
+            '.line-item .line-no'
+        )
+        .forEach(
+            (elem, idx) => {
+                elem.innerText =
+                    idx + 1;
+            }
+        );
+}
+
+
+/* ============================================================
+   WEFT REVERSE (bottom to top)
+============================================================ */
+
+function reverseWeftEntries() {
+
+    let container =
+        document.getElementById('weftLinesContainer');
+
+    let rows =
+        Array.from(container.querySelectorAll('.line-item'));
+
+    let total = rows.length;
+
+    if (total < 2) {
+        return;
+    }
+
+    rows.reverse().forEach(row => container.appendChild(row));
+
+    // Mirror set ranges so they stay on the same lines
+    document.querySelectorAll('.range-item').forEach(r => {
+
+        let sEl = r.querySelector('.inp-start');
+        let eEl = r.querySelector('.inp-end');
+
+        let st = parseInt(sEl.value);
+        let en = parseInt(eEl.value);
+
+        if (
+            Number.isFinite(st) &&
+            Number.isFinite(en) &&
+            st > 0 && en >= st && en <= total
+        ) {
+            sEl.value = total - en + 1;
+            eEl.value = total - st + 1;
+        }
+    });
+
+    // Reverse the order of the set rows too (bottom to top)
+    let rangeBox =
+        document.getElementById('weftRangesContainer');
+
+    Array.from(rangeBox.querySelectorAll('.range-item'))
+        .reverse()
+        .forEach(r => rangeBox.appendChild(r));
+
+    updateLineNumbers();
+    calculateWeftValues();
+    refreshBulkColorDropdown();
+}
+
+
+/* ============================================================
+   RANGE VALIDATION
+============================================================ */
+
+function getValidRanges() {
+
+    let ranges = [];
+
+    document
+        .querySelectorAll('.range-item')
+        .forEach(row => {
+
+            let start =
+                parseInt(
+                    row.querySelector(
+                        '.inp-start'
+                    ).value
+                );
+
+            let end =
+                parseInt(
+                    row.querySelector(
+                        '.inp-end'
+                    ).value
+                );
+
+            let set =
+                parseInt(
+                    row.querySelector(
+                        '.inp-set'
+                    ).value
+                );
+
+            if (
+                Number.isFinite(start) &&
+                Number.isFinite(end) &&
+                Number.isFinite(set) &&
+                start > 0 &&
+                end >= start &&
+                set > 0
+            ) {
+
+                ranges.push({
+                    start,
+                    end,
+                    set
+                });
+            }
+        });
+
+    ranges.sort(
+        (a, b) =>
+            a.start - b.start
+    );
+
+    return ranges;
+}
+
+
+/* ============================================================
+   CALCULATION
+============================================================ */
+
+function calculateWeftValues() {
+
+    let width =
+        parseFloat(
+            document.getElementById(
+                'infoWeftWidth'
+            ).value
+        ) || 0;
+
+    let pick =
+        parseFloat(
+            document.getElementById(
+                'infoPick'
+            ).value
+        ) || 0;
+
+    let totalPick =
+        width * pick;
+
+    document.getElementById(
+        'displayTotalCalc'
+    ).innerText =
+        `Total Pick: ${width} x ${pick} = ${totalPick.toFixed(2)}`;
+
+
+    let lines = [];
+
+    document
+        .querySelectorAll(
+            '.line-item'
+        )
+        .forEach(row => {
+
+            let value =
+                parseFloat(
+                    row.querySelector(
+                        '.inp-picks'
+                    ).value
+                );
+
+            lines.push(
+                Number.isFinite(value)
+                    ? value
+                    : 0
+            );
+        });
+
+    let ranges =
+        getValidRanges();
+
+    let totalPatternPicks = 0;
+
+    let i = 0;
+
+    while (
+        i < lines.length
+    ) {
+
+        let currentLine =
+            i + 1;
+
+        let range =
+            ranges.find(
+                r =>
+                    r.start ===
+                    currentLine
+            );
+
+        if (
+            range &&
+            range.end <= lines.length
+        ) {
+
+            let blockPicks = 0;
+
+            for (
+                let j =
+                    range.start;
+                j <= range.end;
+                j++
+            ) {
+
+                blockPicks +=
+                    lines[j - 1] || 0;
+            }
+
+            totalPatternPicks +=
+                blockPicks *
+                range.set;
+
+            i =
+                range.end;
+
+        } else {
+
+            totalPatternPicks +=
+                lines[i] || 0;
+
+            i++;
+        }
+    }
+
+    document.getElementById(
+        'displayTotalPicks'
+    ).innerText =
+        Number.isInteger(
+            totalPatternPicks
+        )
+            ? totalPatternPicks
+            : totalPatternPicks.toFixed(2);
+}
+
+
+/* ============================================================
+   COLLECT FORM DATA
+============================================================ */
+
+function collectWeftLines() {
+
+    let lines = [];
+
+    document
+        .querySelectorAll(
+            '.line-item'
+        )
+        .forEach(row => {
+
+            let count =
+                row.querySelector(
+                    '.inp-count'
+                ).value.trim();
+
+            let color =
+                row.querySelector(
+                    '.inp-color'
+                ).value.trim();
+
+            let picks =
+                row.querySelector(
+                    '.inp-picks'
+                ).value.trim();
+
+            if (
+                count ||
+                color ||
+                picks
+            ) {
+
+                lines.push({
+                    count,
+                    color,
+                    picks:
+                        parseFloat(
+                            picks
+                        ) || 0
+                });
+            }
+        });
+
+    return lines;
+}
+
+
+function collectWeftRanges() {
+
+    let ranges = [];
+
+    document
+        .querySelectorAll(
+            '.range-item'
+        )
+        .forEach(row => {
+
+            let start =
+                parseInt(
+                    row.querySelector(
+                        '.inp-start'
+                    ).value
+                );
+
+            let end =
+                parseInt(
+                    row.querySelector(
+                        '.inp-end'
+                    ).value
+                );
+
+            let set =
+                parseInt(
+                    row.querySelector(
+                        '.inp-set'
+                    ).value
+                );
+
+            if (
+                Number.isFinite(start) &&
+                Number.isFinite(end) &&
+                Number.isFinite(set) &&
+                start > 0 &&
+                end >= start &&
+                set > 0
+            ) {
+
+                ranges.push({
+                    start,
+                    end,
+                    set
+                });
+            }
+        });
+
+    return ranges;
+}
+
+
+/* ============================================================
+   RANGE OVERLAP CHECK
+============================================================ */
+
+function validateRanges(
+    ranges,
+    lineCount
+) {
+
+    for (
+        let r of ranges
+    ) {
+
+        if (
+            r.start < 1 ||
+            r.end > lineCount ||
+            r.end < r.start ||
+            r.set < 1
+        ) {
+
+            alert(
+                `Pattern Set error:\n\nStart: ${r.start}\nEnd: ${r.end}\nSet: ${r.set}\n\nLine number range correct-ஆக கொடுக்கவும்.`
+            );
+
+            return false;
+        }
+    }
+
+
+    for (
+        let i = 0;
+        i < ranges.length;
+        i++
+    ) {
+
+        for (
+            let j = i + 1;
+            j < ranges.length;
+            j++
+        ) {
+
+            let a = ranges[i];
+            let b = ranges[j];
+
+            if (
+                a.start <= b.end &&
+                b.start <= a.end
+            ) {
+
+                alert(
+                    `Pattern Set overlap detected!\n\nSet 1: ${a.start} - ${a.end}\nSet 2: ${b.start} - ${b.end}\n\nOverlap இல்லாமல் Set கொடுக்கவும்.`
+                );
+
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+/* ============================================================
+   QUICK COMPLETE
+============================================================ */
+
+async function quickCompleteToggle() {
+
+    if (!checkUserPermission()) {
+
+        authorizationAlert();
+
+        let cb =
+            document.getElementById(
+                'top_completed_status'
+            );
+
+        if (cb) {
+            cb.checked =
+                !cb.checked;
+        }
+
+        return;
+    }
+
+    let dNo =
+        document.getElementById(
+            'designNo'
+        ).value;
+
+    if (!dNo) {
+
+        alert(
+            "Mudhala Design Number select pannunga bro"
+        );
+
+        document.getElementById(
+            'top_completed_status'
+        ).checked = false;
+
+        return;
+    }
+
+    let isCompleted =
+        document.getElementById(
+            'top_completed_status'
+        ).checked;
+
+    let statusText =
+        isCompleted
+            ? 'completed'
+            : 'running';
+
+    let cleanDNo =
+        cleanDesignName(dNo);
+
+    let masters =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_masters_data'
+            ),
+            []
+        );
+
+    let idx =
+        masters.findIndex(
+            m =>
+                cleanDesignName(
+                    m.name ||
+                    m.designNo
+                ) === cleanDNo
+        );
+
+    if (idx > -1) {
+
+        masters[idx].status =
+            statusText;
+
+    } else {
+
+        masters.push({
+
+            name: dNo,
+            designNo: dNo,
+            status: statusText,
+            weftLines: collectWeftLines(),
+            weftRanges: collectWeftRanges()
+        });
+    }
+
+    localStorage.setItem(
+        'design_masters_data',
+        JSON.stringify(masters)
+    );
+
+    let designSpecs =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_specs'
+            ),
+            {}
+        );
+
+    let specKey =
+        Object.keys(
+            designSpecs
+        ).find(
+            k =>
+                cleanDesignName(k) ===
+                cleanDNo
+        ) || dNo;
+
+    if (!designSpecs[specKey]) {
+        designSpecs[specKey] = {};
+    }
+
+    designSpecs[specKey].status =
+        statusText;
+
+    localStorage.setItem(
+        'design_specs',
+        JSON.stringify(
+            designSpecs
+        )
+    );
+
+    try {
+
+        if (window.supabaseSave) {
+
+            await window.supabaseSave(
+                'design_masters_data',
+                masters
+            );
+
+            await window.supabaseSave(
+                'design_specs',
+                designSpecs
+            );
+        }
+
+        if (
+            window.supabaseSaveIndividual
+        ) {
+
+            await window.supabaseSaveIndividual(
+                specKey,
+                designSpecs[specKey]
+            );
+        }
+
+        renderSavedList();
+
+        alert(
+            `Design ${dNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "supabase sync error:",
+            error
+        );
+
+        renderSavedList();
+
+        alert(
+            `Status local-ஆக update ஆனது.\n\nCloud sync failed. supabase connection check pannunga.`
+        );
+    }
+}
+
+
+/* ============================================================
+   SAVE WEFT DESIGN (ROBUST MULTI-STORE & CLOUD SYNC)
+============================================================ */
+
+async function saveWeftDesign() {
+
+    if (!checkUserPermission()) {
+        authorizationAlert();
+        return;
+    }
+
+    let dNo = document.getElementById('designNo').value;
+
+    if (!dNo) {
+        alert("Please select a Design Number!");
+        return;
+    }
+
+    let lines = collectWeftLines();
+
+    if (lines.length === 0) {
+        alert("Please add at least one Weft Pattern line.");
+        return;
+    }
+
+    let ranges = collectWeftRanges();
+
+    if (!validateRanges(ranges, lines.length)) {
+        return;
+    }
+
+    let cleanDNo = cleanDesignName(dNo);
+
+    let saveBtn = document.getElementById('saveBtnTxt');
+    let originalText = saveBtn.innerText;
+    saveBtn.innerText = "⏳ Saving...";
+
+    let weftMtrsVal = document.getElementById('infoWeftMtrs').value.trim();
+    let completedCheckbox = document.getElementById('top_completed_status');
+    let isCompleted = completedCheckbox ? completedCheckbox.checked : false;
+    let status = isCompleted ? 'completed' : 'running';
+
+    let nowISO = new Date().toISOString();
+
+    let masterData = {
+        name: dNo,
+        designNo: dNo,
+        weftWidth: document.getElementById('infoWeftWidth').value.trim(),
+        weftCount: document.getElementById('infoWeft1').value.trim(),
+        weft2: document.getElementById('infoWeft2').value.trim(),
+        weftPick: document.getElementById('infoPick').value.trim(),
+        weftMtrs: weftMtrsVal,
+        weaveType: document.getElementById('infoWeave').value.trim(),
+        weftLines: lines,
+        weftRanges: ranges,
+        status: status,
+        updated_at: nowISO,
+        timestamp: nowISO
+    };
+
+    // 1. UPDATE DESIGN MASTERS
+    let masters = safeParseJSON(localStorage.getItem('design_masters_data'), []);
+    if (!Array.isArray(masters)) masters = [];
+    let idx = masters.findIndex(m => cleanDesignName(m.name || m.designNo) === cleanDNo);
+    if (idx === -1) {
+        masters.push(masterData);
+    } else {
+        masters[idx] = { ...masters[idx], ...masterData };
+    }
+    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+
+    // 2. 🟢 CRUCIAL FIX: SAVE INTO weft_entry_data WITH EXACT DESIGN NO 🟢
+    let weftEntryList = safeParseJSON(localStorage.getItem('weft_entry_data'), []);
+    if (!Array.isArray(weftEntryList)) weftEntryList = [];
+    weftEntryList = weftEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo);
+    weftEntryList.push(masterData);
+    localStorage.setItem('weft_entry_data', JSON.stringify(weftEntryList));
+
+    // 3. 🟢 CRUCIAL FIX: PURGE STALE CACHES IN LOCAL STORAGE 🟢
+    try {
+        let editsCache = safeParseJSON(localStorage.getItem('local_edits_cache'), {});
+        if (editsCache && typeof editsCache === 'object') {
+            let editKey = Object.keys(editsCache).find(k => cleanDesignName(k) === cleanDNo);
+            if (editKey) {
+                editsCache[editKey].weftLines = lines;
+                editsCache[editKey].weftRanges = ranges;
+                localStorage.setItem('local_edits_cache', JSON.stringify(editsCache));
+            }
+        }
+    } catch(e) {}
+
+    try {
+        let weaveDesigns = safeParseJSON(localStorage.getItem('weave_designs'), []);
+        if (Array.isArray(weaveDesigns)) {
+            let wIdx = weaveDesigns.findIndex(w => cleanDesignName(w.name || w.designNo) === cleanDNo);
+            if (wIdx > -1) {
+                weaveDesigns[wIdx].weftLines = lines;
+                weaveDesigns[wIdx].weftRanges = ranges;
+                localStorage.setItem('weave_designs', JSON.stringify(weaveDesigns));
+            }
+        }
+    } catch(e) {}
+
+    try {
+        let weaveCache = safeParseJSON(localStorage.getItem('weave_designs_cache'), []);
+        if (Array.isArray(weaveCache)) {
+            let cIdx = weaveCache.findIndex(w => cleanDesignName(w.name || w.designNo) === cleanDNo);
+            if (cIdx > -1) {
+                weaveCache[cIdx].weftLines = lines;
+                weaveCache[cIdx].weftRanges = ranges;
+                localStorage.setItem('weave_designs_cache', JSON.stringify(weaveCache));
+            }
+        }
+    } catch(e) {}
+
+    // 4. DESIGN SPECS
+    let designSpecs = safeParseJSON(localStorage.getItem('design_specs'), {});
+    let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
+    if (!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = status;
+    designSpecs[specKey].weftMtrs = weftMtrsVal;
+    designSpecs[specKey].weft = document.getElementById('infoWeft1').value.trim();
+    designSpecs[specKey].weftCount = document.getElementById('infoWeft1').value.trim();
+    designSpecs[specKey].weft2 = document.getElementById('infoWeft2').value.trim();
+    designSpecs[specKey].weftWidth = document.getElementById('infoWeftWidth').value.trim();
+    designSpecs[specKey].weftPick = document.getElementById('infoPick').value.trim();
+    designSpecs[specKey].weaveType = document.getElementById('infoWeave').value.trim();
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+    localStorage.setItem('last_edit_timestamp', Date.now().toString());
+
+    // 5. CLOUD / SUPABASE OVERWRITE (GUARANTEED SYNC)
+    let cloudSuccess = true;
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('design_masters_data', masters);
+            await window.supabaseSave('weft_entry_data', weftEntryList);
+            await window.supabaseSave('design_specs', designSpecs);
+            await window.supabaseSave('design_' + cleanDNo, masterData);
+        }
+
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        }
+    } catch (error) {
+        cloudSuccess = false;
+        console.error("supabase save error:", error);
+    }
+
+    saveBtn.innerText = originalText;
+    renderSavedList();
+
+    if (cloudSuccess) {
+        alert("Weft Pattern Saved Successfully! ✅☁️");
+    } else {
+        alert("Weft Pattern local-ஆக save செய்யப்பட்டது ✅\n\nஆனால் Cloud sync fail ஆனது. Network கிடைத்ததும் auto-sync ஆகும்.");
+    }
+}
+
+
+/* ============================================================
+   TOGGLE STATUS
+============================================================ */
+
+async function toggleStatus(
+    dNo,
+    newStatus
+) {
+
+    if (!checkUserPermission()) {
+
+        authorizationAlert();
+
+        return;
+    }
+
+    if (
+        !confirm(
+            newStatus === 'completed'
+                ? "Change this pattern to Completed?"
+                : "Change this pattern to Running?"
+        )
+    ) {
+        return;
+    }
+
+    let cleanDNo =
+        cleanDesignName(dNo);
+
+    let masters =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_masters_data'
+            ),
+            []
+        );
+
+    let index =
+        masters.findIndex(
+            m =>
+                cleanDesignName(
+                    m.name ||
+                    m.designNo
+                ) === cleanDNo
+        );
+
+    if (index === -1) {
+        return;
+    }
+
+    masters[index].status =
+        newStatus;
+
+    localStorage.setItem(
+        'design_masters_data',
+        JSON.stringify(
+            masters
+        )
+    );
+
+    let designSpecs =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_specs'
+            ),
+            {}
+        );
+
+    let specKey =
+        Object.keys(
+            designSpecs
+        ).find(
+            k =>
+                cleanDesignName(k) ===
+                cleanDNo
+        ) || dNo;
+
+    if (!designSpecs[specKey]) {
+        designSpecs[specKey] = {};
+    }
+
+    designSpecs[specKey].status =
+        newStatus;
+
+    localStorage.setItem(
+        'design_specs',
+        JSON.stringify(
+            designSpecs
+        )
+    );
+
+    try {
+
+        if (window.supabaseSave) {
+
+            await window.supabaseSave(
+                'design_masters_data',
+                masters
+            );
+
+            await window.supabaseSave(
+                'design_specs',
+                designSpecs
+            );
+        }
+
+        if (
+            window.supabaseSaveIndividual
+        ) {
+
+            await window.supabaseSaveIndividual(
+                specKey,
+                designSpecs[specKey]
+            );
+        }
+
+        renderSavedList();
+
+    } catch (error) {
+
+        console.error(
+            "supabase status error:",
+            error
+        );
+
+        renderSavedList();
+
+        alert(
+            "Status local-ஆக update ஆனது.\nCloud sync failed."
+        );
+    }
+}
+
+
+/* ============================================================
+   SAVED MODAL
+============================================================ */
+
+function openSavedModal() {
+
+    renderSavedList();
+
+    openModal(
+        'savedListModal'
+    );
+}
+
+
+/* ============================================================
+   RENDER SAVED LIST
+============================================================ */
+
+function renderSavedList() {
+
+    let masters =
+        safeParseJSON(
+            localStorage.getItem(
+                'design_masters_data'
+            ),
+            []
+        );
+
+    let tbody =
+        document.getElementById(
+            'savedPatternsBody'
+        );
+
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    let hasData = false;
+
+    masters.forEach(m => {
+
+        if (
+            Array.isArray(
+                m.weftLines
+            ) &&
+            m.weftLines.length > 0
+        ) {
+
+            hasData = true;
+
+            if (!m.status) {
+                m.status =
+                    'running';
+            }
+
+            let statusColor =
+                m.status === 'running'
+                    ? '#D97706'
+                    : '#526E51';
+
+            let safeDesign = String(m.name || m.designNo || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
+            let statusBtn = m.status === 'running'
+                ? `<button class="action-complete" onclick="toggleStatus('${safeDesign}', 'completed')">Complete</button>`
+                : `<button class="action-running" onclick="toggleStatus('${safeDesign}', 'running')">Running</button>`;
+
+            tbody.innerHTML += `
+
+                <tr>
+
+                    <td>
+                        <b>
+                            ${escapeHTML(
+                                m.name ||
+                                m.designNo ||
+                                ''
+                            )}
+                        </b>
+                    </td>
+
+                    <td>
+                        ${m.weftLines.length}
+                        Lines
+                    </td>
+
+                    <td
+                        style="
+                            color:${statusColor};
+                            font-weight:bold;
+                            text-transform:uppercase;
+                        ">
+                        ${escapeHTML(
+                            m.status
+                        )}
+                    </td>
+
+                    <td>
+
+                        <div class="action-cell">
+
+                            ${statusBtn}
+
+                            <button
+                                class="edit-action-btn"
+                                onclick="editDesignPattern('${safeDesign}')">
+                                ✏️ Edit
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+            `;
+        }
+    });
+
+    if (!hasData) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="4"
+                    style="
+                        padding:15px;
+                        color:#D97706;
+                    ">
+                    No Weft Patterns saved yet.
+                </td>
+
+            </tr>
+
+        `;
+    }
+}
+
+
+/* ============================================================
+   EDIT
+============================================================ */
+
+function editDesignPattern(dNo) {
+
+    if (!checkUserPermission()) {
+
+        authorizationAlert();
+
+        return;
+    }
+
+    closeModal(
+        'savedListModal'
+    );
+
+    let select = document.getElementById('designNo');
+    
+    if (select) {
+        let optionExists = Array.from(select.options).some(opt => cleanDesignName(opt.value) === cleanDesignName(dNo));
+        if(!optionExists) {
+            let newOption = document.createElement('option');
+            newOption.value = dNo;
+            newOption.textContent = dNo;
+            select.appendChild(newOption);
+        }
+        select.value = dNo;
+    }
+
+    localStorage.setItem('selected_design_number', dNo);
+
+    loadWeftDesignData();
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+
+/* ============================================================
+   PREVIEW
+============================================================ */
+
+function previewWeftPattern() {
+
+    calculateWeftValues();
+
+    let dNo =
+        document.getElementById(
+            'designNo'
+        ).value;
+
+    let weftLines =
+        collectWeftLines();
+
+    let ranges =
+        collectWeftRanges();
+
+    if (
+        weftLines.length === 0
+    ) {
+
+        alert(
+            "No pattern to preview! Please add lines."
+        );
+
+        return;
+    }
+
+    if (
+        !validateRanges(
+            ranges,
+            weftLines.length
+        )
+    ) {
+        return;
+    }
+
+    let wWidth =
+        document.getElementById(
+            'infoWeftWidth'
+        ).value ||
+        '-';
+
+    let wCount1 =
+        document.getElementById(
+            'infoWeft1'
+        ).value ||
+        '-';
+
+    let wCount2 =
+        document.getElementById(
+            'infoWeft2'
+        ).value ||
+        '-';
+
+    let pick =
+        document.getElementById(
+            'infoPick'
+        ).value ||
+        '-';
+
+    let wMtrs =
+        document.getElementById(
+            'infoWeftMtrs'
+        ).value ||
+        '-';
+
+    let weave =
+        document.getElementById(
+            'infoWeave'
+        ).value ||
+        '-';
+
+    let headerHtml = `
+
+        <div
+            style="
+                display:flex;
+                justify-content:space-between;
+                flex-wrap:wrap;
+                background:#F4F7F4;
+                border:1px solid #4A7C59;
+                padding:12px;
+                border-radius:10px;
+                margin-bottom:15px;
+                font-size:12px;
+                font-weight:700;
+                color:#1E2B23;
+            ">
+
+            <span>
+                Design:
+                <span style="color:#4A7C59;">
+                    ${escapeHTML(dNo || '-')}
+                </span>
+            </span>
+
+            <span>
+                Counts:
+                ${escapeHTML(wCount1)},
+                ${escapeHTML(wCount2)}
+            </span>
+
+            <span>
+                Weft Width:
+                ${escapeHTML(wWidth)}"
+            </span>
+
+            <span>
+                Pick:
+                ${escapeHTML(pick)}
+            </span>
+
+            <span>
+                Weft Mtrs:
+                ${escapeHTML(wMtrs)}
+            </span>
+
+            <span>
+                Weave:
+                ${escapeHTML(weave)}
+            </span>
+
+        </div>
+    `;
+
+    let col1Html = '';
+    let col2Html = '';
+
+    let currentLinesInCol1 = 0;
+
+    const MAX_LINES_COL1 = 45;
+
+    let totalPicksPattern = 0;
+
+    let i = 0;
+
+    let tdStyle =
+        "padding:4px 6px;border-bottom:1px dashed #A0AFA0;text-align:center;color:#1E2B23;font-size:11px;";
+
+    let tdStyleColor =
+        "padding:4px 6px;border-bottom:1px dashed #A0AFA0;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;";
+
+    let tdStyleLast =
+        "padding:4px 6px;border-bottom:1px dashed #A0AFA0;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:16px;";
+
+    while (
+        i < weftLines.length
+    ) {
+
+        let start =
+            i + 1;
+
+        let range =
+            ranges.find(
+                r =>
+                    r.start ===
+                    start
+            );
+
+        let blockHtml = '';
+
+        let blockLineCount = 0;
+
+        if (
+            range &&
+            range.end >=
+            range.start
+        ) {
+
+            let end =
+                Math.min(
+                    range.end,
+                    weftLines.length
+                );
+
+            let set =
+                range.set;
+
+            let blockLines = [];
+
+            let blockPicks = 0;
+
+            for (
+                let j =
+                    start - 1;
+                j < end;
+                j++
+            ) {
+
+                if (
+                    weftLines[j]
+                ) {
+
+                    let lineItem =
+                        Object.assign(
+                            {},
+                            weftLines[j]
+                        );
+
+                    lineItem.lineNo =
+                        j + 1;
+
+                    blockLines.push(
+                        lineItem
+                    );
+
+                    blockPicks +=
+                        parseFloat(
+                            weftLines[j].picks
+                        ) || 0;
+                }
+            }
+
+            let total =
+                blockPicks * set;
+
+            totalPicksPattern +=
+                total;
+
+            blockLines.forEach(
+                (item, index) => {
+
+                    let colorTamil =
+                        typeof translateColorToTamil ===
+                        'function'
+
+                            ? translateColorToTamil(
+                                item.color
+                            )
+
+                            : item.color;
+
+                    blockHtml += `
+
+                        <tr>
+
+                            <td
+                                style="${tdStyle}font-weight:700;color:#4A554A;">
+                                ${item.lineNo}
+                            </td>
+
+                            <td style="${tdStyle}">
+                                ${escapeHTML(
+                                    item.count ||
+                                    '-'
+                                )}
+                            </td>
+
+                            <td style="${tdStyleColor}">
+                                ${escapeHTML(
+                                    colorTamil ||
+                                    '-'
+                                )}
+                            </td>
+
+                            <td
+                                style="${tdStyle}font-weight:bold;">
+                                ${item.picks}
+                            </td>
+                    `;
+
+                    if (
+                        index === 0
+                    ) {
+
+                        blockHtml += `
+
+                            <td
+                                rowspan="${blockLines.length}"
+                                style="${tdStyleLast}">
+
+                                <div
+                                    style="
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:flex-start;
+                                        gap:4px;
+                                        font-weight:700;
+                                    ">
+
+                                    <span
+                                        style="
+                                            font-size:${Math.max(
+                                                blockLines.length * 18,
+                                                20
+                                            )}px;
+                                            font-weight:300;
+                                            line-height:0.5;
+                                            display:inline-block;
+                                        ">
+                                        }
+                                    </span>
+
+                                    <span>
+                                        X ${set}
+                                        =
+                                        <span
+                                            style="color:#D97706">
+                                            ${total}
+                                        </span>
+                                    </span>
+
+                                </div>
+
+                            </td>
+                        `;
+                    }
+
+                    blockHtml +=
+                        `</tr>`;
+                }
+            );
+
+            i = end;
+
+            blockLineCount =
+                blockLines.length;
+
+        } else {
+
+            let item =
+                Object.assign(
+                    {},
+                    weftLines[i]
+                );
+
+            item.lineNo =
+                i + 1;
+
+            totalPicksPattern +=
+                parseFloat(
+                    item.picks
+                ) || 0;
+
+            let colorTamil =
+                typeof translateColorToTamil ===
+                'function'
+
+                    ? translateColorToTamil(
+                        item.color
+                    )
+
+                    : item.color;
+
+            blockHtml = `
+
+                <tr>
+
+                    <td
+                        style="${tdStyle}font-weight:700;color:#4A554A;">
+                        ${item.lineNo}
+                    </td>
+
+                    <td style="${tdStyle}">
+                        ${escapeHTML(
+                            item.count ||
+                            '-'
+                        )}
+                    </td>
+
+                    <td style="${tdStyleColor}">
+                        ${escapeHTML(
+                            colorTamil ||
+                            '-'
+                        )}
+                    </td>
+
+                    <td
+                        style="${tdStyle}font-weight:bold;">
+                        ${item.picks}
+                    </td>
+
+                    <td style="${tdStyleLast}"></td>
+
+                </tr>
+            `;
+
+            i++;
+
+            blockLineCount = 1;
+        }
+
+        if (
+            currentLinesInCol1 +
+            blockLineCount <=
+            MAX_LINES_COL1
+        ) {
+
+            col1Html +=
+                blockHtml;
+
+            currentLinesInCol1 +=
+                blockLineCount;
+
+        } else {
+
+            col2Html +=
+                blockHtml;
+        }
+    }
+
+    let html =
+        headerHtml;
+
+    let tableHeader = `
+
+        <tr style="background:#EAF0EA;">
+
+            <th
+                style="
+                    padding:6px;
+                    text-align:center;
+                    color:#2F4F38;
+                    text-transform:uppercase;
+                    font-size:10px;
+                    border-bottom:2px solid #4A7C59;
+                    width:10%;
+                ">
+                No
+            </th>
+
+            <th
+                style="
+                    padding:6px;
+                    text-align:center;
+                    color:#2F4F38;
+                    text-transform:uppercase;
+                    font-size:10px;
+                    border-bottom:2px solid #4A7C59;
+                    width:15%;
+                ">
+                Count
+            </th>
+
+            <th
+                style="
+                    padding:6px;
+                    text-align:left;
+                    color:#2F4F38;
+                    text-transform:uppercase;
+                    font-size:10px;
+                    border-bottom:2px solid #4A7C59;
+                    width:25%;
+                ">
+                Colour
+            </th>
+
+            <th
+                style="
+                    padding:6px;
+                    text-align:center;
+                    color:#2F4F38;
+                    text-transform:uppercase;
+                    font-size:10px;
+                    border-bottom:2px solid #4A7C59;
+                    width:15%;
+                ">
+                Picks
+            </th>
+
+            <th
+                style="
+                    padding:6px;
+                    text-align:left;
+                    padding-left:10px;
+                    color:#2F4F38;
+                    text-transform:uppercase;
+                    font-size:10px;
+                    border-bottom:2px solid #4A7C59;
+                    width:35%;
+                ">
+                Set
+            </th>
+
+        </tr>
+    `;
+
+    html += `
+
+        <div
+            class="print-flex-row"
+            style="
+                display:flex;
+                gap:20px;
+                align-items:flex-start;
+                justify-content:space-between;
+                width:100%;
+            ">
+
+            <div
+                class="print-col-box"
+                style="
+                    flex:1;
+                    width:48%;
+                    background:#FFF;
+                ">
+
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                        font-size:11px;
+                    ">
+
+                    ${tableHeader}
+
+                    ${col1Html}
+
+                </table>
+
+            </div>
+
+            <div
+                class="print-col-box"
+                style="
+                    flex:1;
+                    width:48%;
+                    background:#FFF;
+                ">
+
+                ${
+                    col2Html !== ''
+                        ? `
+                            <table
+                                style="
+                                    width:100%;
+                                    border-collapse:collapse;
+                                    font-size:11px;
+                                ">
+
+                                ${tableHeader}
+
+                                ${col2Html}
+
+                            </table>
+                        `
+                        : ''
+                }
+
+            </div>
+
+        </div>
+    `;
+
+    html += `
+
+        <div
+            style="
+                margin-top:15px;
+                border-top:2px solid #4A7C59;
+                padding-top:5px;
+                page-break-inside:avoid;
+            ">
+
+            <table
+                style="
+                    width:100%;
+                    border-collapse:collapse;
+                    font-size:11px;
+                    background:#FFF;
+                ">
+
+                <tr
+                    style="
+                        font-weight:bold;
+                        font-size:12px;
+                        background:#F8FAF8;
+                        border-bottom:1px dashed #A0AFA0;
+                    ">
+
+                    <td
+                        style="
+                            padding:8px;
+                            text-align:right;
+                            color:#2F4F38;
+                            width:60%;
+                        ">
+                        Total Pattern Picks:
+                    </td>
+
+                    <td
+                        style="
+                            padding:8px;
+                            font-weight:bold;
+                            text-align:left;
+                            padding-left:15px;
+                            color:#10B981;
+                        ">
+                        ${totalPicksPattern}
+                    </td>
+
+                </tr>
+    `;
+
+    let pickNum =
+        parseFloat(pick) || 0;
+
+    let wWidthNum =
+        parseFloat(wWidth) || 0;
+
+    if (
+        pickNum > 0 &&
+        wWidthNum > 0
+    ) {
+
+        let overallCalc =
+            wWidthNum *
+            pickNum;
+
+        html += `
+
+            <tr
+                style="
+                    font-weight:700;
+                    font-size:12px;
+                    background:#FFFFFF;
+                    color:#2F4F38;
+                ">
+
+                <td
+                    colspan="2"
+                    style="
+                        padding:10px;
+                        text-align:center;
+                    ">
+
+                    Weft Width
+                    ${wWidthNum}
+
+                    X Pick
+
+                    ${pickNum}
+
+                    =
+
+                    <span
+                        style="
+                            font-size:13px;
+                            color:#1E2B23;
+                        ">
+
+                        ${overallCalc.toFixed(2)}
+
+                        Total Pick
+
+                    </span>
+
+                </td>
+
+            </tr>
+        `;
+    }
+
+    html +=
+        '</table></div>';
+
+    document.getElementById(
+        'previewContent'
+    ).innerHTML = html;
+
+    openModal(
+        'previewModal'
+    );
+}
+
+
+/* ============================================================
+   AUTHORIZATION
+============================================================ */
+function authorizationAlert() {
+   alert(
+        "Access Denied! You do not have permission to access this page. ❌"
+    );
+}
+</script>
+</body>
+</html>

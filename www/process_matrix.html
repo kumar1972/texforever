@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Matrix - TEX FOR EVER</title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        html, body { width: 100%; min-height: 100vh; background: #030712; color: #1E2B23; }
+        body { padding: 12px; display: flex; flex-direction: column; align-items: center; }
+        
+        .main-card {
+            width: 100%; max-width: 1100px; margin: 0; background: #FFFFFF;
+            border-radius: 20px; padding: 20px; box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
+            border: 1px solid rgba(82, 110, 81, 0.15); display: flex; flex-direction: column; gap: 15px;
+            flex: 1;
+        }
+
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 5px; color: #FFFFFF;
+            text-decoration: none; font-weight: 600; font-size: 12px; background: #1A2421; 
+            padding: 10px 18px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+        h2.card-header {
+            font-size: 18px; font-weight: 800; color: #2F4F38; text-align: left;
+            position: relative; padding-left: 12px; margin-bottom: 5px;
+        }
+        h2.card-header::before {
+            content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 5px;
+            background: #4A7C59; border-radius: 4px;
+        }
+
+        .matrix-container {
+            background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 14px;
+            padding: 15px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .matrix-header-row {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #EAF0EA; padding-bottom: 8px; flex-wrap: wrap; gap: 8px;
+        }
+        .matrix-title {
+            font-size: 11px; font-weight: 800; color: #2F4F38; text-transform: uppercase;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .matrix-table-wrapper {
+            width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid #D1DED1; background: #FFFFFF;
+            -webkit-overflow-scrolling: touch;
+        }
+        .matrix-table {
+            width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; white-space: nowrap;
+        }
+        .matrix-table th {
+            background: #EAF0EA; color: #2F4F38; padding: 12px 10px; font-weight: 700; border-bottom: 2px solid #D1DED1;
+            font-size: 11px; text-transform: uppercase; position: sticky; top: 0; z-index: 10;
+        }
+        .matrix-table td {
+            padding: 10px; border-bottom: 1px solid #E2E8E2; color: #1E2B23; vertical-align: middle;
+        }
+        .matrix-table tr:hover { background: #F4F7F4; }
+        
+        .status-badge {
+            padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; display: inline-block; cursor: pointer; transition: transform 0.2s; text-decoration: none;
+        }
+        .status-badge:hover { transform: scale(1.05); }
+        .status-badge.done { background: #ECFDF5; color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+        .status-badge.run { background: #FFFBEB; color: #D97706; border: 1px solid rgba(245,158,11,0.3); }
+        .status-badge.none { background: #F1F5F9; color: #64748B; border: 1px solid rgba(100,116,139,0.3); }
+
+        .design-row-cell {
+            display: flex; align-items: center; gap: 10px; text-align: left; padding-left: 15px;
+        }
+        .design-thumb {
+            width: 32px; height: 32px; object-fit: cover; border-radius: 6px;
+            border: 1px solid #4A7C59; cursor: zoom-in; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s; background: #F4F7F4; flex-shrink: 0;
+        }
+        .design-thumb:hover { transform: scale(1.15); }
+
+        .fullscreen-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+            padding: 20px; flex-direction: column;
+        }
+        .fullscreen-modal img {
+            max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        .close-fullscreen {
+            position: absolute; top: 20px; right: 20px; background: #EF4444; color: white;
+            border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <h2 class="<h2 class=.card-header {
+    color: #ffffff; /* Inga unga color-a change pannikalam */
+}">📊 Live Multi-Design Process Status</h2>
+
+    <div class="matrix-container">
+        <div class="matrix-header-row">
+            <div class="matrix-title">Click on Status Badges to View Details</div>
+        </div>
+        <div class="matrix-table-wrapper">
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding-left: 15px;">Design No ➔ Live Process Status</th>
+                        <th>🧵 Kora Issue</th>
+                        <th>🎨 Dyeing</th>
+                        <th>📏 Warping</th>
+                        <th>🏭 Weaving</th>
+                        <th>🌊 Washing</th>
+                        <th>🚚 Despatch</th>
+                    </tr>
+                </thead>
+                <tbody id="matrixTableBody">
+                    <tr><td colspan="7" style="padding:20px; color:#64748B;">Loading Process Data... ⏳</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Image Modal -->
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen" onclick="closeFullscreenImage(event)">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+window.openFullscreenImage = function(src) {
+    if(!src || src === '' || src === 'null') return;
+    document.getElementById('fullscreenImg').src = src;
+    document.getElementById('fullscreenModal').style.display = 'flex';
+};
+
+window.closeFullscreenImage = function(event) {
+    if (event) event.stopPropagation();
+    document.getElementById('fullscreenModal').style.display = 'none';
+};
+
+function cleanDesignName(str) {
+    return str ? str.toString().replace('#', '').trim().toLowerCase() : '';
+}
+
+function getProcessStatus(recordKey, designNo) {
+    let records = JSON.parse(localStorage.getItem(recordKey)) || [];
+    let cleanTarget = cleanDesignName(designNo);
+    
+    let matched = records.filter(r => {
+        let d = r.designNo || r.designNumber || r.design || "";
+        return cleanDesignName(d) === cleanTarget;
+    });
+
+    if (matched.length === 0 && recordKey === 'despatch_data') {
+        matched = records.filter(entry => entry.items && entry.items.some(i => cleanDesignName(i.designNo) === cleanTarget));
+    }
+
+    if (matched.length === 0) return { label: 'Pending', cssClass: 'none' };
+
+    let isCompleted = matched.every(r => (r.status || '').toLowerCase() === 'completed');
+    if (isCompleted) {
+        return { label: 'Completed', cssClass: 'done' };
+    } else {
+        return { label: 'Running', cssClass: 'run' };
+    }
+}
+
+function renderMatrix() {
+    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let tbody = document.getElementById('matrixTableBody');
+
+    let allDesignsSet = new Set([...preDesigns]);
+    if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesignsSet.add(d.name || d.designNo); });
+    Object.keys(designSpecs).forEach(k => allDesignsSet.add(k));
+    if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesignsSet.add(o.designNumber || o.designNo); });
+
+    let allDesigns = Array.from(allDesignsSet).filter(Boolean);
+
+    if(allDesigns.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:20px; color:#64748B;">No Designs Found! Please add designs in Design Master.</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    allDesigns.forEach((dNo, index) => {
+        let cleanDNo = dNo.toString().replace('#', '').trim();
+        let cleanLower = cleanDNo.toLowerCase();
+
+        let specKey = Object.keys(designSpecs).find(k => k && cleanDesignName(k) === cleanLower) || dNo;
+        let bitmapHtml = '';
+        
+        if (designSpecs[specKey] && designSpecs[specKey].bitmap) {
+            let b64 = designSpecs[specKey].bitmap;
+            bitmapHtml = `<img src="${b64}" class="design-thumb" onclick="openFullscreenImage('${b64}')" title="View Fullscreen">`;
+        }
+
+        let kora = getProcessStatus('kora_issue_records', cleanDNo);
+        let dyeing = getProcessStatus('dyeing_issue_records', cleanDNo);
+        let warping = getProcessStatus('warping_issue_records', cleanDNo);
+        let weaving = getProcessStatus('weaving_master_data', cleanDNo);
+        let washing = getProcessStatus('washing_issue_records', cleanDNo);
+        let despatch = getProcessStatus('despatch_data', cleanDNo);
+
+        html += `<tr>
+            <td style="text-align: left; padding-left: 15px;">
+                <div class="design-row-cell">
+                    ${bitmapHtml}
+                    <span style="font-weight:700; color:#2F4F38;">${index + 1}. #${cleanDNo}</span>
+                </div>
+            </td>
+            <td><a href="design_list.html?type=kora&design=${encodeURIComponent(cleanDNo)}" class="status-badge ${kora.cssClass}">${kora.label}</a></td>
+            <td><a href="design_list.html?type=dyeing&design=${encodeURIComponent(cleanDNo)}" class="status-badge ${dyeing.cssClass}">${dyeing.label}</a></td>
+            <td><a href="design_list.html?type=warping&design=${encodeURIComponent(cleanDNo)}" class="status-badge ${warping.cssClass}">${warping.label}</a></td>
+            <td><a href="design_list.html?type=weaving&design=${encodeURIComponent(cleanDNo)}" class="status-badge ${weaving.cssClass}">${weaving.label}</a></td>
+            <td><a href="design_list.html?type=washing&design=${encodeURIComponent(cleanDNo)}" class="status-badge ${washing.cssClass}">${washing.label}</a></td>
+            <td><a href="design_list.html?type=despatch&design=${encodeURIComponent(cleanDNo)}" class="status-badge ${despatch.cssClass}">${despatch.label}</a></td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderMatrix();
+});
+</script>
+</body>
+</html>

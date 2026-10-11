@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weaving Fabric Receive - TEX FOR EVER</title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+  <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        html, body { width: 100%; min-height: 100vh; background: #030712; color: #1E2B23; overflow-x: hidden; }
+        body { padding: 8px; display: flex; flex-direction: column; align-items: center; }
+
+        .container {
+            width: 100%; max-width: 1050px; background: #FFFFFF; border-radius: 16px;
+            padding: 12px; box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06); border: 1px solid #E2E8E2;
+        }
+        
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 4px; color: #FFFFFF;
+            text-decoration: none; font-weight: 600; font-size: 11px; background: #1A1; 
+            padding: 6px 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+        .page-title { font-size: 15px; font-weight: 800; color: #2F4F38; margin-bottom: 10px; border-bottom: 2px solid #EAF0EA; padding-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        
+        .form-section { background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 12px; padding: 14px 10px 10px 10px; margin-bottom: 10px; position: relative; }
+        .section-badge {
+            position: absolute; top: -10px; left: 12px; background: #4A7C59; color: #FFF;
+            font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; text-transform: uppercase;
+        }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+        .form-group label { font-size: 10px; font-weight: 700; color: #4A554A; line-height: 1.2; }
+        
+        input, select { padding: 8px 10px; border: 1px solid #D1DED1; border-radius: 8px; font-size: 11px; font-weight: 600; background: #FFF; transition: all 0.2s; width: 100%; }
+        input:focus, select:focus { border-color: #4A7C59; outline: none; box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15); }
+        input[readonly] { background: #EAF0EA; color: #2F4F38; cursor: not-allowed; border: 1px dashed #A0AFA0; }
+        
+        .editable-highlight { border-color: #3B82F6; background: #F0F9FF; }
+
+        .btn-main {
+            padding: 10px 14px; border: none; border-radius: 8px; color: white;
+            font-weight: 700; font-size: 11px; cursor: pointer; transition: all 0.3s;
+            text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-add { background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); margin-top: 10px; width: 100%; }
+        .btn-add:hover { transform: translateY(-2px); }
+        
+        .action-row { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-print { background: linear-gradient(135deg, #3BF6, #1D4ED8); flex: 1; }
+        .btn-report { background: linear-gradient(135deg, #F59B, #D97706); flex: 1; }
+
+        .table-container { margin-top: 10px; border: 1px solid #E2E8E2; border-radius: 8px; overflow-x: auto; background: #FFF; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; white-space: nowrap; }
+        th { background: #EAF0EA; color: #2F4F38; padding: 8px 6px; text-transform: uppercase; font-size: 9px; border-bottom: 2px solid #D1DED1; text-align: center; }
+        td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #E2E8E2; color: #1E2B23; font-weight: 600; }
+        .total-row td { background: #F4F7F4; font-weight: 800; color: #2F4F38; border-top: 2px solid #D1DED1; }
+
+        .btn-action-small { padding: 4px 8px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-edit { background: #3B82F6; }
+        .btn-del { background: #EF4444; }
+
+        .scrollable-grid-wrapper { overflow-x: auto; width: 100%; padding-bottom: 6px; }
+        .scrollable-grid-wrapper::-webkit-scrollbar { height: 6px; }
+        .scrollable-grid-wrapper::-webkit-scrollbar-thumb { background: #D1DED1; border-radius: 4px; }
+        
+        .entry-grid-inner { display: grid; grid-template-columns: 1.1fr 0.9fr 1fr 0.9fr 1fr 1fr 1fr 1fr; gap: 8px; min-width: 820px; }
+
+        .overlay-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 25, 20, 0.95); backdrop-filter: blur(6px); z-index: 99999;
+            flex-direction: column; padding: 0; opacity: 0; transition: opacity 0.3s;
+        }
+        .overlay-modal.show { opacity: 1; }
+        .modal-content { background: #FFFFFF; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        .modal-header { padding: 12px 15px; background: #F4F7F4; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8E2; }
+        .modal-header h3 { margin: 0; font-size: 14px; font-weight: 800; }
+        .modal-actions { display: flex; gap: 6px; }
+        .close-btn { background: #FEE2E2; color: #DC2626; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
+        .print-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
+        .modal-body { padding: 12px; overflow-y: auto; flex: 1; background: #FAFCFA; width: 100%; max-width: 1000px; margin: 0 auto; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .overlay-modal, .overlay-modal * { visibility: visible; }
+            .overlay-modal { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: #FFF; }
+            .modal-content { height: auto !important; overflow: visible !important; box-shadow: none; border: none; }
+            .no-print { display: none !important; }
+            .modal-body { padding: 0 !important; background: #FFF; max-width: 100%; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid #999; padding: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+    </div>
+    
+ <div class="color: #ffffff; /* Inga unga color-a change pannikalam */">🏭 Weaving Fabric Receive   (துணி வரவு)</div>
+   ````````````````````````````````````````````````````````````````````````````````
+    
+   
+    <!-- 1. Selection Header -->
+    <div class="form-section">
+        <div class="section-badge">1. Select Order</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Weaver Name</label>
+                <select id="weaverSelect" onchange="onWeaverChange()">
+                    <option value="">All Weavers</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Design Number</label>
+                <select id="designSelect" onchange="onDesignChange()">
+                    <option value="">Select Design</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Header Stats -->
+    <div class="form-section" id="headerStatsSection" style="display: none; background: #F0F5F0; border-color: #A3C2A4;">
+        <div class="section-badge" style="background: #2F4F38;">2. Order Details</div>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Warping Mtrs (Issued)</label>
+                <input type="number" step="0.01" id="statWarpMtrs" class="editable-highlight" oninput="recalcHeaderStats()" title="Editable">
+            </div>
+            <div class="form-group">
+                <label>Crimp %</label>
+                <input type="number" step="0.01" id="statCrimp" class="editable-highlight" oninput="recalcHeaderStats()" title="Editable">
+            </div>
+            <div class="form-group">
+                <label>Fabric Mtrs (Order)</label>
+                <input type="number" step="0.01" id="statFabricMtrs" class="editable-highlight" oninput="onFabricMtrsEdit()" title="Editable">
+            </div>
+            <div class="form-group">
+                <label>Total Received Mtrs</label>
+                <input type="text" id="statTotalReceived" readonly style="color:#059669; font-weight:bold;">
+            </div>
+            <div class="form-group">
+                <label>Current Pending Mtrs</label>
+                <input type="text" id="statPendingMtrs" readonly style="color:#DC2626; font-weight:900;">
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Entry Form -->
+    <div class="form-section" id="entrySection" style="display: none;">
+        <div class="section-badge" style="background: #3B82F6;">3. Receive Entry</div>
+        
+        <input type="hidden" id="editEntryId" value="">
+
+        <div class="scrollable-grid-wrapper">
+            <div class="entry-grid-inner">
+                <div class="form-group"><label>Date</label><input type="date" id="entDate"></div>
+                <div class="form-group"><label>Slip No</label><input type="text" id="entSlipNo" placeholder="Slip #"></div>
+                <div class="form-group"><label>Received Mtrs</label><input type="number" step="0.01" id="entRecMtrs" placeholder="0.00" oninput="calculateEntry()"></div>
+                <div class="form-group"><label>Pin %</label><input type="number" step="0.01" id="entPinPct" placeholder="0.00" oninput="calculateEntry()"></div>
+                <div class="form-group"><label>Pending Mtrs</label><input type="number" step="0.01" id="entPending" placeholder="0.00" oninput="calculateEntry()"></div>
+                <div class="form-group"><label>OK Mtrs</label><input type="number" step="0.01" id="entOkMtrs" placeholder="0.00" readonly></div>
+                <div class="form-group"><label>Balance Mtrs</label><input type="number" step="0.01" id="entBalance" placeholder="0.00" readonly></div>
+                <div class="form-group"><label>% of Shortage</label><input type="text" id="entShortage" placeholder="0.00%" readonly></div>
+            </div>
+        </div>
+        
+        <button class="btn-main btn-add" id="saveEntryBtn" onclick="saveReceiveEntry()">➕ Add / Save Entry</button>
+    </div>
+
+    <!-- 4. Records Table -->
+    <div id="tableWrapper" style="display: none;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Slip No</th>
+                        <th>Rcvd Mtrs</th>
+                        <th>Pin %</th>
+                        <th>Pending Mtrs</th>
+                        <th>OK Mtrs</th>
+                        <th>Balance Mtrs</th>
+                        <th>% of Shortage</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="receiveTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="action-row">
+            <button class="btn-main btn-print" onclick="openPrintPreview()">🖨️ Print Preview</button>
+            <button class="btn-main btn-report" onclick="openReportTab()">📊 Full Report Tab</button>
+        </div>
+    </div>
+</div>
+
+<!-- Print Preview Modal -->
+<div id="printModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header no-print">
+            <h3>🖨️ Weaving Receive - Print Preview</h3>
+            <div class="modal-actions">
+                <button class="print-btn" onclick="window.print()">Print Now</button>
+                <button class="close-btn" onclick="closeModal('printModal')">Close ✕</button>
+            </div>
+        </div>
+        <div class="modal-body" id="printContent"></div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div id="reportModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📊 Fabric Receive Report (All Weavers)</h3>
+            <div class="modal-actions">
+                <button class="print-btn" onclick="window.print()">Print Now</button>
+                <button class="close-btn" onclick="closeModal('reportModal')">Close ✕</button>
+            </div>
+        </div>
+        <div class="modal-body" id="reportContent">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Weaver Name</th>
+                            <th>Design No</th>
+                            <th>Slip No</th>
+                            <th>Rcvd Mtrs</th>
+                            <th>Pin %</th>
+                            <th>Pending Mtrs</th>
+                            <th>OK Mtrs</th>
+                            <th>Balance Mtrs</th>
+                            <th>% of Shortage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fullReportBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let weavingMasterData = [];
+    let receiveRecords = [];
+
+    function checkUserPermission() {
+        let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+        if (userRole !== 'Administrator' && userRole !== 'Admin') {
+            let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+            return permissions['weaving_receive.html'] !== false && permissions['weaving_receive'] !== false;
+        }
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!checkUserPermission()) { alert("Access Denied! ❌"); window.location.href = "dashboard.html"; return; }
+        
+        weavingMasterData = JSON.parse(localStorage.getItem('weaving_master_data')) || [];
+        receiveRecords = JSON.parse(localStorage.getItem('weaving_receive_records')) || [];
+        
+        document.getElementById('entDate').valueAsDate = new Date();
+        initDropdowns();
+    });
+
+    function cleanDesignName(str) {
+        return str ? str.toString().replace('#', '').trim().toLowerCase() : '';
+    }
+
+    function initDropdowns() {
+        let weaverSelect = document.getElementById('weaverSelect');
+        let designSelect = document.getElementById('designSelect');
+        
+        let weavers = [...new Set(weavingMasterData.map(item => item.weaverName))].filter(Boolean);
+        weaverSelect.innerHTML = '<option value="">All Weavers</option>';
+        weavers.forEach(w => { weaverSelect.innerHTML += `<option value="${w}">${w}</option>`; });
+
+        let allDesigns = new Set();
+        weavingMasterData.forEach(d => { if(d.designNo && d.status !== 'completed') allDesigns.add(d.designNo); });
+        
+        let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+        preDesigns.forEach(d => allDesigns.add(d));
+
+        let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+        orders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
+
+        designSelect.innerHTML = '<option value="">Select Design</option>';
+        Array.from(allDesigns).filter(Boolean).forEach(d => {
+            designSelect.innerHTML += `<option value="${d}">${d}</option>`;
+        });
+    }
+
+    function onWeaverChange() {
+        let weaver = document.getElementById('weaverSelect').value;
+        let designSelect = document.getElementById('designSelect');
+        
+        designSelect.innerHTML = '<option value="">Select Design</option>';
+        hideSections();
+
+        let filteredDesigns = new Set();
+        if(weaver) {
+            weavingMasterData.filter(d => d.weaverName === weaver && d.status !== 'completed').forEach(d => filteredDesigns.add(d.designNo));
+        } else {
+            weavingMasterData.filter(d => d.status !== 'completed').forEach(d => filteredDesigns.add(d.designNo));
+        }
+        
+        Array.from(filteredDesigns).filter(Boolean).forEach(d => {
+            designSelect.innerHTML += `<option value="${d}">${d}</option>`;
+        });
+    }
+
+    function onDesignChange() {
+        try {
+            let design = document.getElementById('designSelect').value;
+            if(!design) { hideSections(); return; }
+
+            let cleanDNo = cleanDesignName(design);
+            let order = weavingMasterData.slice().reverse().find(d => cleanDesignName(d.designNo || d.designNumber) === cleanDNo);
+            let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+            let matchedPartyOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanDNo) : null;
+
+            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || design;
+            let sp = designSpecs[specKey] || {};
+
+            let warpingIssues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+            let matchedWarping = warpingIssues.slice().reverse().find(w => cleanDesignName(w.designNo) === cleanDNo);
+
+            if(order && order.weaverName) { 
+                document.getElementById('weaverSelect').value = order.weaverName; 
+            }
+
+            document.getElementById('headerStatsSection').style.display = 'block';
+            document.getElementById('entrySection').style.display = 'block';
+            document.getElementById('tableWrapper').style.display = 'block';
+
+            let warpIssuedMtrs = 0;
+            let crimp = 5;
+            let fabricMtrs = 0;
+
+            if (order) {
+                warpIssuedMtrs = parseFloat(order.weavingMts) || 0;
+                crimp = parseFloat(order.crimpPerc) !== undefined && order.crimpPerc !== '' ? parseFloat(order.crimpPerc) : 5;
+                fabricMtrs = parseFloat(order.fabricMts) || (warpIssuedMtrs - (warpIssuedMtrs * (crimp / 100)));
+            } else if (matchedWarping && parseFloat(matchedWarping.warpingMts) > 0) {
+                warpIssuedMtrs = parseFloat(matchedWarping.warpingMts);
+                crimp = 5;
+                fabricMtrs = warpIssuedMtrs * 0.95;
+            } else {
+                let totalDyeing = parseFloat(sp.totalDyeingMtr) || parseFloat(matchedPartyOrder && matchedPartyOrder.orderMtr) || 0;
+                warpIssuedMtrs = totalDyeing > 0 ? (totalDyeing * 0.95 * 0.95) : 0;
+                crimp = 5;
+                fabricMtrs = warpIssuedMtrs * 0.95;
+            }
+
+            document.getElementById('statWarpMtrs').value = warpIssuedMtrs > 0 ? warpIssuedMtrs.toFixed(2) : '0.00';
+            document.getElementById('statCrimp').value = crimp;
+            document.getElementById('statFabricMtrs').value = fabricMtrs > 0 ? fabricMtrs.toFixed(2) : '0.00';
+
+            let weaver = document.getElementById('weaverSelect').value;
+            calculatePendingStats(weaver, design, fabricMtrs);
+            renderReceiveTable(weaver, design);
+            clearEntryForm();
+
+        } catch (e) {
+            console.error(e);
+            alert("Error loading stats: " + e.message);
+        }
+    }
+
+    function recalcHeaderStats(isLoading = false) {
+        let wMtrs = parseFloat(document.getElementById('statWarpMtrs').value) || 0;
+        let crimp = parseFloat(document.getElementById('statCrimp').value) || 0;
+        
+        let fMtrs = wMtrs - (wMtrs * (crimp / 100));
+        document.getElementById('statFabricMtrs').value = fMtrs.toFixed(2);
+
+        let weaver = document.getElementById('weaverSelect').value;
+        let design = document.getElementById('designSelect').value;
+        calculatePendingStats(weaver, design, fMtrs);
+
+        if(!isLoading) saveMasterUpdates(wMtrs, crimp, fMtrs);
+    }
+
+    function onFabricMtrsEdit() {
+        let fMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
+        let weaver = document.getElementById('weaverSelect').value;
+        let design = document.getElementById('designSelect').value;
+        calculatePendingStats(weaver, design, fMtrs);
+        
+        let wMtrs = parseFloat(document.getElementById('statWarpMtrs').value) || 0;
+        let crimp = parseFloat(document.getElementById('statCrimp').value) || 0;
+        saveMasterUpdates(wMtrs, crimp, fMtrs);
+    }
+
+    function saveMasterUpdates(wMtrs, crimp, fMtrs) {
+        let design = document.getElementById('designSelect').value;
+        if(!design) return;
+        let cleanDNo = cleanDesignName(design);
+        let orderIndex = weavingMasterData.findIndex(d => cleanDesignName(d.designNo || d.designNumber) === cleanDNo);
+        if(orderIndex > -1) {
+            weavingMasterData[orderIndex].weavingMts = wMtrs;
+            weavingMasterData[orderIndex].crimpPerc = crimp;
+            weavingMasterData[orderIndex].fabricMts = fMtrs;
+            localStorage.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            if(typeof window.supabaseSave === 'function') window.supabaseSave('weaving_master_data', weavingMasterData);
+        }
+    }
+
+    function calculatePendingStats(weaver, design, fabricOrderMtrs) {
+        let cleanD = cleanDesignName(design);
+        let records = receiveRecords.filter(r => (weaver ? r.weaver === weaver : true) && cleanDesignName(r.designNo) === cleanD);
+        
+        let totalReceived = records.reduce((sum, r) => sum + parseFloat(r.okMtrs || 0), 0);
+        let currentPending = fabricOrderMtrs - totalReceived;
+
+        document.getElementById('statTotalReceived').value = totalReceived.toFixed(2);
+        document.getElementById('statPendingMtrs').value = currentPending.toFixed(2);
+        
+        calculateEntry(); 
+    }
+
+    // 🟢 UPDATED LOGIC FOR CALCULATION 🟢
+    function calculateEntry() {
+        let fabricMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
+        let recMtrs = parseFloat(document.getElementById('entRecMtrs').value) || 0;
+        let pinPct = parseFloat(document.getElementById('entPinPct').value) || 0;
+        let pending = parseFloat(document.getElementById('entPending').value) || 0; // Manual entry
+
+        // 1. OK Mtrs = Received - pin % less - pending
+        let pinMtrs = (recMtrs * pinPct) / 100;
+        let okMtrs = (recMtrs - pinMtrs) - pending;
+        if (okMtrs < 0) okMtrs = 0;
+        document.getElementById('entOkMtrs').value = okMtrs.toFixed(2);
+
+        // 2. Balance Mtrs = (Fabric Mtrs - OK Mtrs)
+        let balanceMtrs = fabricMtrs - okMtrs;
+        document.getElementById('entBalance').value = balanceMtrs.toFixed(2);
+
+        // 3. Shortage % = ((Fabric Mtrs - OK Mtrs) / Fabric Mtrs) * 100
+        let shortagePct = 0;
+        if (fabricMtrs > 0) {
+            shortagePct = ((fabricMtrs - okMtrs) / fabricMtrs) * 100;
+        }
+        document.getElementById('entShortage').value = shortagePct.toFixed(2) + '%';
+    }
+
+    async function saveReceiveEntry() {
+        let weaver = document.getElementById('weaverSelect').value;
+        let design = document.getElementById('designSelect').value;
+        
+        let date = document.getElementById('entDate').value;
+        let slipNo = document.getElementById('entSlipNo').value.trim();
+        let recMtrs = parseFloat(document.getElementById('entRecMtrs').value) || 0;
+        let pinPct = parseFloat(document.getElementById('entPinPct').value) || 0;
+        let pending = parseFloat(document.getElementById('entPending').value) || 0;
+        let okMtrs = parseFloat(document.getElementById('entOkMtrs').value) || 0;
+        let balance = parseFloat(document.getElementById('entBalance').value) || 0;
+        let shortage = document.getElementById('entShortage').value || '0.00%';
+
+        let editId = document.getElementById('editEntryId').value;
+
+        if(!design || recMtrs <= 0) {
+            alert("Please select Design and enter valid Received Mtrs!"); return;
+        }
+
+        let newWarpMtrs = document.getElementById('statWarpMtrs').value;
+        let newFabricMtrs = document.getElementById('statFabricMtrs').value;
+        let cleanDNo = cleanDesignName(design);
+        let orderIndex = weavingMasterData.findIndex(d => cleanDesignName(d.designNo || d.designNumber) === cleanDNo);
+        
+        if(orderIndex > -1) {
+            weavingMasterData[orderIndex].weavingMts = newWarpMtrs;
+            weavingMasterData[orderIndex].fabricMts = newFabricMtrs;
+            localStorage.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_master_data', weavingMasterData);
+        }
+
+        let entry = {
+            id: editId ? editId : Date.now().toString(),
+            weaver: weaver || 'Direct Weaver', 
+            designNo: design, 
+            date, 
+            slipNo, 
+            receivedMtrs: recMtrs,
+            pinPct, 
+            pendingMtrs: pending, 
+            okMtrs, 
+            balanceMtrs: balance, 
+            shortageMtrs: shortage
+        };
+
+        if(editId) {
+            let idx = receiveRecords.findIndex(r => String(r.id) === String(editId));
+            if(idx > -1) receiveRecords[idx] = entry;
+        } else {
+            receiveRecords.push(entry);
+        }
+
+        localStorage.setItem('weaving_receive_records', JSON.stringify(receiveRecords));
+        if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_receive_records', receiveRecords);
+
+        alert("Entry Saved Successfully! ✅");
+        
+        let fabricOrderMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
+        calculatePendingStats(weaver, design, fabricOrderMtrs);
+        renderReceiveTable(weaver, design);
+        clearEntryForm();
+    }
+
+    function renderReceiveTable(weaver, design) {
+        let cleanD = cleanDesignName(design);
+        let records = receiveRecords.filter(r => (weaver ? r.weaver === weaver : true) && cleanDesignName(r.designNo) === cleanD);
+        let tbody = document.getElementById('receiveTableBody');
+        tbody.innerHTML = '';
+
+        let totRec = 0, totOk = 0;
+
+        records.forEach(r => {
+            totRec += parseFloat(r.receivedMtrs || 0);
+            totOk += parseFloat(r.okMtrs || 0);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${r.date}</td>
+                    <td>${r.slipNo || '-'}</td>
+                    <td style="color:#059669; font-weight:800;">${parseFloat(r.receivedMtrs).toFixed(2)}</td>
+                    <td>${r.pinPct || 0}%</td>
+                    <td>${parseFloat(r.pendingMtrs || 0).toFixed(2)}</td>
+                    <td style="color:#3B82F6; font-weight:800;">${parseFloat(r.okMtrs).toFixed(2)}</td>
+                    <td>${parseFloat(r.balanceMtrs || 0).toFixed(2)}</td>
+                    <td style="color:#DC2626; font-weight:800;">${r.shortageMtrs || '0.00%'}</td>
+                    <td>
+                        <button class="btn-action-small btn-edit" onclick="editEntry('${r.id}')">Edit</button>
+                        <button class="btn-action-small btn-del" onclick="deleteEntry('${r.id}')">Del</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        if(records.length > 0) {
+            tbody.innerHTML += `
+                <tr class="total-row">
+                    <td colspan="2" style="text-align:right;">TOTAL:</td>
+                    <td style="color:#059669;">${totRec.toFixed(2)}</td>
+                    <td colspan="2">-</td>
+                    <td style="color:#3B82F6;">${totOk.toFixed(2)}</td>
+                    <td colspan="3">-</td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="9">No fabric received yet for this order.</td></tr>`;
+        }
+    }
+
+    function editEntry(id) {
+        let entry = receiveRecords.find(r => String(r.id) === String(id));
+        if(!entry) return;
+
+        document.getElementById('editEntryId').value = entry.id;
+        document.getElementById('entDate').value = entry.date;
+        document.getElementById('entSlipNo').value = entry.slipNo;
+        document.getElementById('entRecMtrs').value = entry.receivedMtrs;
+        document.getElementById('entPinPct').value = entry.pinPct || '';
+        document.getElementById('entPending').value = entry.pendingMtrs || '';
+        document.getElementById('entOkMtrs').value = entry.okMtrs;
+        document.getElementById('entBalance').value = entry.balanceMtrs || '';
+        document.getElementById('entShortage').value = entry.shortageMtrs || '';
+
+        document.getElementById('saveEntryBtn').innerHTML = "💾 Update Entry";
+        document.getElementById('saveEntryBtn').style.background = "linear-gradient(135deg, #3B82F6, #1D4ED8)";
+    }
+
+    async function deleteEntry(id) {
+        if(confirm("Are you sure you want to delete this entry?")) {
+            receiveRecords = receiveRecords.filter(r => String(r.id) !== String(id));
+            localStorage.setItem('weaving_receive_records', JSON.stringify(receiveRecords));
+            if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_receive_records', receiveRecords);
+            
+            let weaver = document.getElementById('weaverSelect').value;
+            let design = document.getElementById('designSelect').value;
+            let fabricOrderMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
+            
+            calculatePendingStats(weaver, design, fabricOrderMtrs);
+            renderReceiveTable(weaver, design);
+        }
+    }
+
+    function clearEntryForm() {
+        document.getElementById('editEntryId').value = '';
+        document.getElementById('entSlipNo').value = '';
+        document.getElementById('entRecMtrs').value = '';
+        document.getElementById('entPinPct').value = '';
+        document.getElementById('entPending').value = ''; // Reset to empty
+        document.getElementById('entOkMtrs').value = '';
+        document.getElementById('entBalance').value = '';
+        document.getElementById('entShortage').value = '';
+        
+        let fabricOrderMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
+        let weaver = document.getElementById('weaverSelect').value;
+        let design = document.getElementById('designSelect').value;
+        calculatePendingStats(weaver, design, fabricOrderMtrs);
+
+        document.getElementById('saveEntryBtn').innerHTML = "➕ Add / Save Entry";
+        document.getElementById('saveEntryBtn').style.background = "linear-gradient(135deg, #10B981, #059669)";
+    }
+
+    function hideSections() {
+        document.getElementById('headerStatsSection').style.display = 'none';
+        document.getElementById('entrySection').style.display = 'none';
+        document.getElementById('tableWrapper').style.display = 'none';
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; setTimeout(() => document.getElementById(id).classList.add('show'), 10); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); setTimeout(() => document.getElementById(id).style.display = 'none', 300); }
+
+    function openPrintPreview() {
+        let weaver = document.getElementById('weaverSelect').value;
+        let design = document.getElementById('designSelect').value;
+        let wMtrs = document.getElementById('statWarpMtrs').value;
+        let fMtrs = document.getElementById('statFabricMtrs').value;
+        let cleanD = cleanDesignName(design);
+        
+        let records = receiveRecords.filter(r => (weaver ? r.weaver === weaver : true) && cleanDesignName(r.designNo) === cleanD);
+        
+        let html = `
+            <div style="text-align:center; margin-bottom: 15px;">
+                <h2 style="margin:0; font-family:sans-serif; font-size:16px;">WEAVING FABRIC RECEIPT</h2>
+                <p style="margin:4px 0; font-family:sans-serif; font-size:12px;"><b>Weaver:</b> ${weaver || '-'} &nbsp;|&nbsp; <b>Design No:</b> ${design}</p>
+                <p style="margin:0; font-family:sans-serif; font-size:11px;">Warping Issued: ${wMtrs} Mtrs &nbsp;|&nbsp; Fabric Order: ${fMtrs} Mtrs</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-family:sans-serif; font-size:11px; text-align:center;">
+                <thead>
+                    <tr style="background:#f2f2f2;">
+                        <th style="border:1px solid #333; padding:6px;">Date</th>
+                        <th style="border:1px solid #333; padding:6px;">Slip No</th>
+                        <th style="border:1px solid #333; padding:6px;">Rcvd Mtrs</th>
+                        <th style="border:1px solid #333; padding:6px;">Pin %</th>
+                        <th style="border:1px solid #333; padding:6px;">Pending Mtrs</th>
+                        <th style="border:1px solid #333; padding:6px;">OK Mtrs</th>
+                        <th style="border:1px solid #333; padding:6px;">Balance Mtrs</th>
+                        <th style="border:1px solid #333; padding:6px;">% of Shortage</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        let totRec = 0, totOk = 0;
+        records.forEach(r => {
+            totRec += parseFloat(r.receivedMtrs || 0); totOk += parseFloat(r.okMtrs || 0);
+            html += `<tr>
+                <td style="border:1px solid #ccc; padding:5px;">${r.date}</td>
+                <td style="border:1px solid #ccc; padding:5px;">${r.slipNo || '-'}</td>
+                <td style="border:1px solid #ccc; padding:5px; font-weight:bold;">${parseFloat(r.receivedMtrs).toFixed(2)}</td>
+                <td style="border:1px solid #ccc; padding:5px;">${r.pinPct || 0}%</td>
+                <td style="border:1px solid #ccc; padding:5px;">${parseFloat(r.pendingMtrs || 0).toFixed(2)}</td>
+                <td style="border:1px solid #ccc; padding:5px; font-weight:bold;">${parseFloat(r.okMtrs).toFixed(2)}</td>
+                <td style="border:1px solid #ccc; padding:5px;">${parseFloat(r.balanceMtrs || 0).toFixed(2)}</td>
+                <td style="border:1px solid #ccc; padding:5px; color:red; font-weight:bold;">${r.shortageMtrs || '0.00%'}</td>
+            </tr>`;
+        });
+        
+        html += `<tr style="font-weight:bold; background:#e8e8e8;">
+            <td colspan="2" style="border:1px solid #333; padding:6px; text-align:right;">TOTAL:</td>
+            <td style="border:1px solid #333; padding:6px;">${totRec.toFixed(2)}</td>
+            <td colspan="2" style="border:1px solid #333; padding:6px;">-</td>
+            <td style="border:1px solid #333; padding:6px;">${totOk.toFixed(2)}</td>
+            <td colspan="3" style="border:1px solid #333; padding:6px;">-</td>
+        </tr></tbody></table>`;
+
+        document.getElementById('printContent').innerHTML = html;
+        openModal('printModal');
+    }
+
+    function openReportTab() {
+        let tbody = document.getElementById('fullReportBody');
+        tbody.innerHTML = '';
+        let totRec = 0, totOk = 0;
+        receiveRecords.slice().reverse().forEach(r => {
+            totRec += parseFloat(r.receivedMtrs || 0); totOk += parseFloat(r.okMtrs || 0);
+            tbody.innerHTML += `<tr>
+                <td>${r.date}</td>
+                <td><b>${r.weaver}</b></td>
+                <td>${r.designNo}</td>
+                <td>${r.slipNo || '-'}</td>
+                <td style="color:#059669; font-weight:bold;">${parseFloat(r.receivedMtrs).toFixed(2)}</td>
+                <td>${r.pinPct || 0}%</td>
+                <td>${parseFloat(r.pendingMtrs || 0).toFixed(2)}</td>
+                <td style="color:#3B82F6; font-weight:bold;">${parseFloat(r.okMtrs).toFixed(2)}</td>
+                <td>${parseFloat(r.balanceMtrs || 0).toFixed(2)}</td>
+                <td style="color:#DC2626; font-weight:bold;">${r.shortageMtrs || '0.00%'}</td>
+            </tr>`;
+        });
+        tbody.innerHTML += `<tr class="total-row">
+            <td colspan="4" style="text-align:right;">OVERALL TOTAL:</td>
+            <td style="color:#059669;">${totRec.toFixed(2)}</td>
+            <td colspan="2">-</td>
+            <td style="color:#3B82F6;">${totOk.toFixed(2)}</td>
+            <td colspan="2">-</td>
+        </tr>`;
+        openModal('reportModal');
+    }
+</script>
+</body>
+</html>

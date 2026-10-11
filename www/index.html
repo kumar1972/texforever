@@ -1,0 +1,3107 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="theme-color" content="#080602">
+
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent">
+
+    <meta name="apple-mobile-web-app-title"
+          content="TEX FOR EVER">
+
+    <meta name="application-name"
+          content="TEX FOR EVER">
+
+    <title>TEX FOR EVER - Premium Portal</title>
+
+    <link rel="manifest" href="manifest.json">
+
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+
+    <style>
+
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: #080602;
+            background-image:
+                radial-gradient(ellipse 65% 55% at 50% -10%, rgba(245, 197, 66, 0.22) 0%, transparent 60%),
+                radial-gradient(ellipse 55% 45% at 85% 95%, rgba(197, 145, 29, 0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 40% at 10% 85%, rgba(255, 223, 128, 0.10) 0%, transparent 50%),
+                linear-gradient(145deg, #060401 0%, #120e06 50%, #050401 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* =====================================================
+           PREMIUM AMBIENT LIGHT
+        ===================================================== */
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                linear-gradient(
+                    115deg,
+                    transparent 0%,
+                    rgba(255, 230, 150, 0.025) 35%,
+                    transparent 52%,
+                    rgba(245, 197, 66, 0.018) 70%,
+                    transparent 100%
+                );
+            animation: ambientSweep 9s ease-in-out infinite alternate;
+        }
+
+        @keyframes ambientSweep {
+            from {
+                opacity: 0.55;
+                transform: translateX(-2%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(2%);
+            }
+        }
+
+        /* =====================================================
+           OFFLINE STATUS
+        ===================================================== */
+
+        #offlineStatus {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            display: none;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        #offlineStatus.offline {
+            display: block;
+            color: #FFFFFF;
+            background: rgba(220, 38, 38, 0.92);
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        #offlineStatus.online {
+            display: block;
+            color: #060401;
+            background: rgba(245, 197, 66, 0.95);
+            border: 1px solid rgba(255, 235, 150, 0.4);
+            font-weight: 900;
+        }
+
+        /* =====================================================
+           AMBIENT BACKGROUND GLOW ORBS
+        ===================================================== */
+
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(85px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.60;
+        }
+
+        .ambient-orb.orb-1 {
+            width: 360px;
+            height: 360px;
+            top: -60px;
+            left: -60px;
+            background: radial-gradient(circle, rgba(245, 197, 66, 0.38), transparent 70%);
+        }
+
+        .ambient-orb.orb-2 {
+            width: 380px;
+            height: 380px;
+            bottom: -90px;
+            right: -90px;
+            background: radial-gradient(circle, rgba(184, 134, 11, 0.42), transparent 70%);
+        }
+
+        .ambient-orb.orb-3 {
+            width: 280px;
+            height: 280px;
+            top: 42%;
+            left: 55%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.22), transparent 70%);
+        }
+
+        /* =====================================================
+           LOGIN CARD — PREMIUM GLASS
+        ===================================================== */
+
+        .login-card {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 480px;
+            min-width: 320px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(38, 29, 12, 0.88) 0%,
+                    rgba(17, 13, 5, 0.94) 48%,
+                    rgba(8, 6, 2, 0.97) 100%
+                );
+
+            backdrop-filter: blur(30px) saturate(125%);
+            -webkit-backdrop-filter: blur(30px) saturate(125%);
+
+            border-radius: 36px;
+            padding: 44px 34px;
+
+            border: 1.5px solid rgba(245, 197, 66, 0.65);
+
+            box-shadow:
+                0 0 0 1px rgba(255, 235, 160, 0.12),
+                0 25px 55px rgba(0, 0, 0, 0.92),
+                0 8px 25px rgba(0, 0, 0, 0.65),
+                inset 0 1px 2px rgba(255, 245, 200, 0.32),
+                inset 0 -18px 35px rgba(0, 0, 0, 0.18);
+
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+
+            overflow: hidden;
+        }
+
+        /* Premium glass reflection */
+
+        .login-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 8%;
+            width: 84%;
+            height: 42%;
+            border-radius: 0 0 60% 60%;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255, 248, 220, 0.075),
+                    rgba(255, 248, 220, 0.018),
+                    transparent
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Metallic outer edge */
+
+        .login-card::after {
+            content: "";
+            position: absolute;
+            inset: -1.5px;
+            border-radius: 37px;
+            padding: 1.5px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #FFF7CC 0%,
+                    #FDE68A 18%,
+                    #B7791F 42%,
+                    #F59E0B 62%,
+                    #FFF4BD 82%,
+                    #8B5A12 100%
+                );
+
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+
+            pointer-events: none;
+            opacity: 0.82;
+            z-index: -1;
+        }
+
+        .login-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* =====================================================
+           LOGO BADGE & HEADINGS
+        ===================================================== */
+
+        .logo-area {
+            text-align: center;
+        }
+
+        .logo-badge {
+            width: 86px;
+            height: 86px;
+
+            background:
+                radial-gradient(
+                    circle at 28% 20%,
+                    rgba(255, 250, 220, 0.38),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 70% 75%,
+                    rgba(120, 70, 5, 0.28),
+                    transparent 50%
+                ),
+                linear-gradient(
+                    145deg,
+                    rgba(78, 60, 22, 0.95),
+                    rgba(25, 18, 5, 0.98)
+                );
+
+            border-radius: 26px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 40px;
+            margin-bottom: 15px;
+
+            border: 1.5px solid rgba(245, 197, 66, 0.72);
+
+            box-shadow:
+                0 14px 30px rgba(0, 0, 0, 0.82),
+                0 3px 10px rgba(245, 197, 66, 0.18),
+                inset 0 2px 2px rgba(255, 245, 200, 0.48),
+                inset 0 -7px 12px rgba(0, 0, 0, 0.35);
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-badge::after {
+            content: "";
+            position: absolute;
+            top: -40%;
+            left: -70%;
+            width: 45%;
+            height: 180%;
+            transform: rotate(25deg);
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.20),
+                transparent
+            );
+            animation: logoShine 5s ease-in-out infinite;
+        }
+
+        @keyframes logoShine {
+            0%, 70% {
+                left: -70%;
+            }
+            100% {
+                left: 125%;
+            }
+        }
+
+        .logo-area h2 {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #FFFDF2 0%,
+                    #FFEEA8 30%,
+                    #FCD34D 58%,
+                    #C27609 100%
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            filter:
+                drop-shadow(0 1px 0 rgba(255,255,255,0.18))
+                drop-shadow(0 0 10px rgba(245, 197, 66, 0.25));
+        }
+
+        .logo-area p {
+            font-size: 11.5px;
+            color: #FCD34D;
+            font-weight: 700;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2.8px;
+            text-shadow: 0 0 10px rgba(245, 197, 66, 0.4);
+        }
+
+        /* =====================================================
+           ROLE TABS
+        ===================================================== */
+
+        .role-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(24, 18, 6, 0.96),
+                    rgba(10, 8, 3, 0.98)
+                );
+
+            border-radius: 20px;
+            padding: 6px;
+            gap: 10px;
+
+            border: 1.5px solid rgba(245, 197, 66, 0.35);
+
+            box-shadow:
+                inset 0 4px 12px rgba(0, 0, 0, 0.9),
+                inset 0 1px 2px rgba(0, 0, 0, 0.8),
+                0 2px 6px rgba(245, 197, 66, 0.12);
+        }
+
+        .role-btn {
+            background: transparent;
+            border: 1.5px solid transparent;
+
+            padding: 13px 10px;
+
+            font-size: 14px;
+            font-weight: 800;
+
+            color: #9C824E;
+
+            border-radius: 15px;
+            cursor: pointer;
+
+            transition:
+                all 0.22s ease-in-out,
+                box-shadow 0.22s ease;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+
+            letter-spacing: 0.4px;
+
+            text-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .role-btn:hover:not(.active) {
+            color: #FDE68A;
+            background: rgba(245, 197, 66, 0.08);
+            border-color: rgba(245, 197, 66, 0.25);
+            box-shadow:
+                inset 0 1px rgba(255,255,255,0.05),
+                0 0 10px rgba(245,197,66,0.08);
+        }
+
+        .role-btn.active {
+            background:
+                linear-gradient(
+                    180deg,
+                    #FFF1A8 0%,
+                    #FDE68A 22%,
+                    #F59E0B 52%,
+                    #A95308 100%
+                ) !important;
+
+            border: 1.5px solid #FFF6D0 !important;
+
+            color: #1a0e00 !important;
+            font-weight: 900 !important;
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 18px rgba(0, 0, 0, 0.7),
+                0 2px 12px rgba(245, 158, 11, 0.38),
+                inset 0 2px 2px rgba(255, 255, 255, 0.85),
+                inset 0 -2px 4px rgba(120, 53, 15, 0.8) !important;
+
+            text-shadow:
+                0 1px 1px rgba(255, 255, 255, 0.6);
+        }
+
+        .role-btn:active {
+            transform: translateY(0);
+        }
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group label {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #FDE68A;
+            letter-spacing: 0.6px;
+        }
+
+        .input-box {
+            width: 100%;
+
+            padding: 16px 20px;
+
+            border-radius: 16px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(25, 18, 6, 0.96),
+                    rgba(13, 9, 3, 0.98)
+                ) !important;
+
+            border: 1.5px solid rgba(245, 197, 66, 0.55) !important;
+
+            box-shadow:
+                inset 0 2px 10px rgba(0, 0, 0, 0.7),
+                inset 0 1px rgba(255,255,255,0.035),
+                0 0 8px rgba(245, 197, 66, 0.06) !important;
+
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            outline: none;
+
+            transition:
+                border-color 0.25s ease,
+                background 0.25s ease,
+                box-shadow 0.25s ease;
+            
+            caret-color: #F59E0B !important;
+        }
+
+        .input-box:hover {
+            border-color: rgba(245, 197, 66, 0.72) !important;
+        }
+
+        .input-box:-webkit-autofill,
+        .input-box:-webkit-autofill:hover,
+        .input-box:-webkit-autofill:focus,
+        .input-box:-webkit-autofill:active {
+            -webkit-box-shadow:
+                0 0 0 50px #140E04 inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            caret-color: #F59E0B !important;
+        }
+
+        .input-box::placeholder {
+            color: #9A7B4F !important;
+            -webkit-text-fill-color: #9A7B4F !important;
+        }
+
+        .input-box:focus {
+            border-color: #FCD34D !important;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #1B1306,
+                    #100B03
+                ) !important;
+
+            box-shadow:
+                0 0 16px rgba(245, 197, 66, 0.22),
+                inset 0 2px 8px rgba(0, 0, 0, 0.6),
+                inset 0 1px rgba(255,255,255,0.06) !important;
+        }
+
+        /* =====================================================
+           PASSWORD TOGGLE
+        ===================================================== */
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper .input-box {
+            padding-right: 52px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 38px;
+            height: 38px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(245, 197, 66, 0.18),
+                    rgba(120, 75, 5, 0.14)
+                );
+
+            border: 1px solid rgba(245, 197, 66, 0.45);
+
+            border-radius: 11px;
+            cursor: pointer;
+
+            color: #FCD34D;
+
+            transition: all 0.2s ease;
+
+            box-shadow:
+                inset 0 1px rgba(255,255,255,0.08);
+        }
+
+        .toggle-password svg {
+            width: 19px;
+            height: 19px;
+            display: block;
+        }
+
+        .toggle-password:hover {
+            background: rgba(245, 197, 66, 0.3);
+            color: #FFFFFF;
+            border-color: #FCD34D;
+            box-shadow:
+                0 0 12px rgba(245,197,66,0.22),
+                inset 0 1px rgba(255,255,255,0.12);
+        }
+
+        /* =====================================================
+           OPTIONS
+        ===================================================== */
+
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            font-size: 13.5px;
+            color: #FDE68A;
+            font-weight: 600;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .remember-me input {
+            width: 18px;
+            height: 18px;
+            accent-color: #F59E0B;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* =====================================================
+           LOGIN BUTTON
+        ===================================================== */
+
+        .login-submit-btn {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #FFF0A8 0%,
+                    #FDE68A 18%,
+                    #F59E0B 52%,
+                    #B45309 100%
+                );
+
+            color: #1F1300;
+
+            border: 1px solid rgba(255, 247, 210, 0.75);
+
+            padding: 17px;
+
+            border-radius: 17px;
+
+            font-size: 15.5px;
+            font-weight: 900;
+
+            cursor: pointer;
+
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+
+            box-shadow:
+                0 10px 28px rgba(245, 158, 11, 0.38),
+                0 2px 6px rgba(0,0,0,0.55),
+                inset 0 1px 2px rgba(255, 255, 255, 0.85),
+                inset 0 -2px 4px rgba(120, 53, 15, 0.45);
+
+            transition: all 0.25s ease;
+
+            margin-top: 4px;
+        }
+
+        .login-submit-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -45%;
+            width: 25%;
+            height: 100%;
+
+            transform: skewX(-22deg);
+
+            background:
+                linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(255,255,255,0.42),
+                    transparent
+                );
+
+            animation: buttonShine 4.5s ease-in-out infinite;
+        }
+
+        @keyframes buttonShine {
+            0%, 62% {
+                left: -45%;
+            }
+            100% {
+                left: 125%;
+            }
+        }
+
+        .login-submit-btn:hover {
+            transform: translateY(-2px);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #FFF8D8 0%,
+                    #FDE68A 20%,
+                    #FBBF24 52%,
+                    #D97706 100%
+                );
+
+            box-shadow:
+                0 14px 34px rgba(245, 158, 11, 0.52),
+                0 4px 10px rgba(0,0,0,0.55),
+                inset 0 1px 2px rgba(255, 255, 255, 0.95);
+        }
+
+        .login-submit-btn:active {
+            transform: translateY(1px);
+        }
+
+        .login-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* =====================================================
+           ERROR MESSAGE
+        ===================================================== */
+
+        .error-msg {
+            color: #FFB0B0;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(220, 38, 38, 0.18),
+                    rgba(90, 12, 12, 0.20)
+                );
+
+            padding: 12px;
+
+            border-radius: 13px;
+
+            font-size: 13.5px;
+            text-align: center;
+            font-weight: 700;
+
+            display: none;
+
+            border: 1px solid rgba(239, 68, 68, 0.4);
+
+            box-shadow:
+                inset 0 1px rgba(255,255,255,0.04),
+                0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 480px) {
+
+            body {
+                padding: 12px;
+            }
+
+            .login-card {
+                min-width: 0;
+                width: 100%;
+                padding: 32px 22px;
+                border-radius: 30px;
+                gap: 19px;
+            }
+
+            .logo-badge {
+                width: 74px;
+                height: 74px;
+                font-size: 34px;
+                border-radius: 22px;
+            }
+
+            .logo-area h2 {
+                font-size: 23px;
+            }
+
+            .input-box {
+                padding: 15px 16px;
+            }
+
+            .login-submit-btn {
+                padding: 16px;
+                font-size: 14.5px;
+            }
+
+            #offlineStatus {
+                top: 8px;
+                font-size: 10px;
+                padding: 7px 12px;
+            }
+        }
+
+        /* =====================================================
+           REDUCED MOTION
+        ===================================================== */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* =========================================================
+           CUSTOM SPLASH SCREEN
+        ========================================================= */
+
+        #customSplash {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+
+            background:
+                radial-gradient(
+                    ellipse at center,
+                    rgba(245, 197, 66, 0.10),
+                    transparent 55%
+                ),
+                #080602;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            gap: 18px;
+
+            z-index: 99999;
+
+            transition: opacity 0.6s ease;
+        }
+
+        #customSplash.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #customSplash img {
+            width: 120px;
+            height: 120px;
+
+            border-radius: 24px;
+
+            box-shadow:
+                0 0 25px rgba(245, 197, 66, 0.40),
+                0 14px 30px rgba(0,0,0,0.75),
+                inset 0 1px 2px rgba(255,255,255,0.3);
+
+            border: 2px solid rgba(245, 197, 66, 0.5);
+        }
+
+        #customSplash h1 {
+            color: #FDE68A;
+            font-size: 26px;
+            letter-spacing: 1px;
+
+            text-shadow:
+                0 0 12px rgba(245, 197, 66, 0.55),
+                0 2px 3px rgba(0,0,0,0.7);
+        }
+
+        #customSplash p {
+            color: #F59E0B;
+            font-size: 13px;
+            letter-spacing: 2px;
+        }
+
+        /* Colorful animated loading line */
+        .splash-loader {
+            position: relative;
+            width: 200px;
+            height: 5px;
+            margin-top: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.10);
+            overflow: hidden;
+        }
+
+        .splash-loader::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -45%;
+            width: 45%;
+            height: 100%;
+            border-radius: 999px;
+
+            background: linear-gradient(
+                90deg,
+                #ef4444,
+                #f59e0b,
+                #fde047,
+                #22c55e,
+                #06b6d4,
+                #3b82f6,
+                #a855f7,
+                #ec4899,
+                #ef4444
+            );
+            background-size: 200% 100%;
+
+            box-shadow: 0 0 12px rgba(253, 224, 71, 0.6);
+
+            animation:
+                splashSlide 1.3s ease-in-out infinite,
+                splashColor 2.4s linear infinite;
+        }
+
+        @keyframes splashSlide {
+            0%   { left: -45%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes splashColor {
+            0%   { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+/* =========================================================
+   TEX FOR EVER — SUPREME ROYAL VISUAL FINISH
+   Layered Glass • Cinematic Depth • Refined Micro UI
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   GLOBAL VISUAL LANGUAGE
+   --------------------------------------------------------- */
+
+:root{
+    --royal-gold:#e5b84b;
+    --royal-gold-light:#fff0b0;
+    --royal-gold-soft:rgba(229,184,75,.20);
+
+    --royal-bg:#050402;
+    --royal-glass:rgba(255,255,255,.055);
+
+    --royal-border:rgba(255,221,135,.30);
+
+    --ui-transition:
+        transform .22s cubic-bezier(.2,.75,.25,1),
+        border-color .22s ease,
+        box-shadow .22s ease,
+        background .22s ease,
+        color .22s ease,
+        opacity .22s ease;
+}
+
+
+/* ---------------------------------------------------------
+   BODY — CINEMATIC STATIC AMBIENT
+   --------------------------------------------------------- */
+
+body{
+
+    background:
+        radial-gradient(
+            circle at 50% 8%,
+            rgba(255,211,105,.105),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 5% 95%,
+            rgba(205,143,24,.065),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 100% 80%,
+            rgba(255,226,145,.045),
+            transparent 28%
+        ),
+
+        linear-gradient(
+            145deg,
+            #010100 0%,
+            #080602 42%,
+            #0c0802 58%,
+            #020201 100%
+        );
+
+    color:#fff;
+
+}
+
+
+/* Remove large moving background sweep */
+
+body::before{
+    animation:none !important;
+    opacity:.55;
+}
+
+
+/* ---------------------------------------------------------
+   AMBIENT LIGHT — CONTROLLED
+   --------------------------------------------------------- */
+
+.ambient-orb{
+    filter:blur(70px);
+    opacity:.13;
+}
+
+.orb-1{
+    background:#c99118;
+}
+
+.orb-2{
+    background:#775000;
+}
+
+.orb-3{
+    opacity:.035;
+}
+
+
+/* ---------------------------------------------------------
+   REFINED ONLINE / OFFLINE STATUS
+   --------------------------------------------------------- */
+
+#offlineStatus{
+
+    top:16px;
+
+    min-width:185px;
+
+    padding:9px 17px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20,17,10,.88),
+            rgba(7,6,3,.78)
+        );
+
+    border:1px solid rgba(255,220,125,.22);
+
+    backdrop-filter:blur(20px) saturate(125%);
+    -webkit-backdrop-filter:blur(20px) saturate(125%);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.38),
+        inset 0 1px 0 rgba(255,255,255,.075),
+        inset 0 -1px 0 rgba(255,205,80,.045);
+
+    color:#d8bf79;
+
+    transition:var(--ui-transition);
+
+}
+
+
+/* Online */
+
+#offlineStatus.online{
+
+    color:#a8eec2;
+
+    border-color:rgba(120,220,155,.28);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(15,38,27,.72),
+            rgba(5,15,10,.82)
+        );
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.38),
+        0 0 18px rgba(75,200,125,.055),
+        inset 0 1px 0 rgba(190,255,215,.10);
+
+}
+
+
+/* Offline */
+
+#offlineStatus.offline{
+
+    color:#e5c678;
+
+    border-color:rgba(229,198,120,.25);
+
+}
+
+
+/* ---------------------------------------------------------
+   MAIN CONTAINER — LAYERED GLASS
+   --------------------------------------------------------- */
+
+.login-card{
+
+    max-width:480px;
+
+    padding:40px 35px 35px;
+
+    border-radius:34px;
+
+    background:
+
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.085) 0%,
+            rgba(255,255,255,.035) 22%,
+            rgba(255,255,255,.018) 48%,
+            rgba(0,0,0,.42) 100%
+        );
+
+    border:1px solid rgba(255,222,137,.40);
+
+    backdrop-filter:
+        blur(30px)
+        saturate(135%);
+
+    -webkit-backdrop-filter:
+        blur(30px)
+        saturate(135%);
+
+    box-shadow:
+
+        0 40px 100px rgba(0,0,0,.72),
+
+        0 18px 45px rgba(0,0,0,.48),
+
+        0 0 0 1px rgba(255,215,110,.045),
+
+        inset 0 1px 0 rgba(255,255,255,.16),
+
+        inset 0 -1px 0 rgba(255,201,70,.07);
+
+}
+
+
+/* Inner glass layer */
+
+.login-card::before{
+
+    inset:1px;
+
+    border-radius:33px;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.105),
+            transparent 18%,
+            transparent 65%,
+            rgba(255,216,110,.028)
+        );
+
+}
+
+
+/* Precision metallic edge */
+
+.login-card::after{
+
+    inset:-1px;
+
+    border-radius:35px;
+
+    opacity:.48;
+
+}
+
+
+/* ---------------------------------------------------------
+   LOGO — PREMIUM BUT CONTROLLED
+   --------------------------------------------------------- */
+
+.logo-badge{
+
+    box-shadow:
+
+        0 16px 36px rgba(0,0,0,.58),
+
+        0 0 26px rgba(255,194,50,.14),
+
+        inset 0 2px 2px rgba(255,255,255,.55),
+
+        inset 0 -5px 10px rgba(92,55,0,.32);
+
+}
+
+
+/* Remove continuous logo animation */
+
+.logo-badge::after{
+    animation:none !important;
+}
+
+
+/* ---------------------------------------------------------
+   TITLE
+   --------------------------------------------------------- */
+
+.logo-title{
+
+    filter:
+        drop-shadow(0 4px 10px rgba(0,0,0,.42));
+
+}
+
+
+/* ---------------------------------------------------------
+   ROLE CONTAINER
+   --------------------------------------------------------- */
+
+.role-tabs{
+
+    padding:6px;
+
+    gap:7px;
+
+    margin-bottom:25px;
+
+    border-radius:18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(0,0,0,.62),
+            rgba(255,255,255,.028)
+        );
+
+    border:1px solid rgba(255,218,125,.16);
+
+    box-shadow:
+
+        inset 0 2px 8px rgba(0,0,0,.68),
+
+        inset 0 1px 0 rgba(255,255,255,.055),
+
+        0 7px 20px rgba(0,0,0,.22);
+
+}
+
+
+/* ---------------------------------------------------------
+   ALL ROLE BUTTONS — SAME MICRO INTERACTION
+   --------------------------------------------------------- */
+
+.role-btn{
+
+    min-height:48px;
+
+    transition:var(--ui-transition);
+
+    will-change:transform;
+
+}
+
+.role-btn:hover{
+
+    transform:translateY(-1px);
+
+}
+
+.role-btn:active{
+
+    transform:
+        translateY(1px)
+        scale(.985);
+
+}
+
+
+/* Active tab */
+
+.role-btn.active{
+
+    box-shadow:
+
+        0 8px 20px rgba(0,0,0,.44),
+
+        0 0 16px rgba(255,196,60,.075),
+
+        inset 0 1px 0 rgba(255,255,255,.68),
+
+        inset 0 -3px 6px rgba(103,58,0,.27);
+
+}
+
+
+/* No continuous shine animation */
+
+.role-btn.active::after{
+    animation:none !important;
+}
+
+
+/* ---------------------------------------------------------
+   FORM GROUP SPACING
+   --------------------------------------------------------- */
+
+.form-group{
+
+    margin-bottom:19px;
+
+}
+
+
+/* ---------------------------------------------------------
+   LABELS
+   --------------------------------------------------------- */
+
+.form-label{
+
+    color:#d1bd86;
+
+    letter-spacing:.65px;
+
+    text-shadow:
+        0 1px 3px rgba(0,0,0,.55);
+
+}
+
+
+/* ---------------------------------------------------------
+   INPUT — GLASS FIELD
+   --------------------------------------------------------- */
+
+.input-box{
+
+    height:57px;
+
+    border-radius:16px;
+
+    background:
+
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.060),
+            rgba(0,0,0,.40)
+        );
+
+    border:1px solid rgba(255,219,125,.17);
+
+    box-shadow:
+
+        inset 0 2px 9px rgba(0,0,0,.58),
+
+        inset 0 1px 0 rgba(255,255,255,.040),
+
+        0 6px 18px rgba(0,0,0,.16);
+
+    transition:var(--ui-transition);
+
+}
+
+
+/* Focus */
+
+.input-box:focus-within{
+
+    transform:translateY(-1px);
+
+    border-color:
+        rgba(255,218,123,.54);
+
+    box-shadow:
+
+        0 0 0 3px rgba(255,198,70,.045),
+
+        0 10px 25px rgba(0,0,0,.27),
+
+        0 0 18px rgba(255,194,55,.045),
+
+        inset 0 2px 9px rgba(0,0,0,.50),
+
+        inset 0 1px 0 rgba(255,255,255,.055);
+
+}
+
+
+/* ---------------------------------------------------------
+   PASSWORD CONTROL
+   --------------------------------------------------------- */
+
+.password-toggle{
+
+    transition:var(--ui-transition);
+
+    border:1px solid transparent;
+
+}
+
+.password-toggle:hover{
+
+    color:#ffe8a1;
+
+    border-color:
+        rgba(255,215,110,.16);
+
+    background:
+        rgba(255,215,110,.075);
+
+    transform:
+        translateY(-50%)
+        scale(1.025);
+
+}
+
+.password-toggle:active{
+
+    transform:
+        translateY(-50%)
+        scale(.95);
+
+}
+
+
+/* ---------------------------------------------------------
+   REMEMBER CHECKBOX
+   --------------------------------------------------------- */
+
+.remember-label{
+
+    transition:
+        color .22s ease;
+
+}
+
+.remember-label:hover{
+
+    color:#cdb77d;
+
+}
+
+.remember-label input{
+
+    cursor:pointer;
+
+    transition:
+        transform .2s ease;
+
+}
+
+.remember-label input:active{
+
+    transform:scale(.92);
+
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM LOGIN BUTTON
+   --------------------------------------------------------- */
+
+.login-button{
+
+    height:59px;
+
+    border-radius:17px;
+
+    transition:var(--ui-transition);
+
+    box-shadow:
+
+        0 14px 30px rgba(0,0,0,.50),
+
+        0 3px 0 rgba(105,64,0,.48),
+
+        0 0 0 1px rgba(255,230,145,.06),
+
+        inset 0 2px 0 rgba(255,255,255,.68),
+
+        inset 0 -4px 8px rgba(105,60,0,.24);
+
+}
+
+
+/* Remove constant moving shine */
+
+.login-button::before{
+    animation:none !important;
+}
+
+
+/* Button hover */
+
+.login-button:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+
+        0 18px 36px rgba(0,0,0,.55),
+
+        0 0 22px rgba(255,202,65,.10),
+
+        0 3px 0 rgba(105,64,0,.48),
+
+        inset 0 2px 0 rgba(255,255,255,.72);
+
+}
+
+
+/* Button press */
+
+.login-button:active{
+
+    transform:translateY(1px) scale(.992);
+
+    box-shadow:
+
+        0 7px 17px rgba(0,0,0,.42),
+
+        inset 0 2px 5px rgba(105,60,0,.25);
+
+}
+
+
+/* ---------------------------------------------------------
+   PREMIUM ERROR ALERT
+   --------------------------------------------------------- */
+
+#errorMsg{
+
+    position:relative;
+
+    display:none;
+
+    margin:0 0 16px;
+
+    min-height:54px;
+
+    padding:12px 15px 12px 47px;
+
+    display:none;
+
+    align-items:center;
+
+    border-radius:15px;
+
+    background:
+
+        linear-gradient(
+            145deg,
+            rgba(72,22,20,.46),
+            rgba(30,9,8,.68)
+        );
+
+    border:1px solid rgba(255,112,96,.25);
+
+    color:#ffc0b7;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    line-height:1.45;
+
+    text-align:left;
+
+    box-shadow:
+
+        0 10px 25px rgba(0,0,0,.30),
+
+        inset 0 1px 0 rgba(255,180,165,.08),
+
+        inset 0 -1px 0 rgba(255,80,70,.035);
+
+    backdrop-filter:blur(15px);
+
+    -webkit-backdrop-filter:blur(15px);
+
+}
+
+
+/* Premium alert icon */
+
+#errorMsg::before{
+
+    content:"!";
+
+    position:absolute;
+
+    left:15px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    width:23px;
+
+    height:23px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffb09f,
+            #b93e34
+        );
+
+    color:#32100c;
+
+    font-size:13px;
+
+    font-weight:900;
+
+    box-shadow:
+
+        0 0 14px rgba(255,92,75,.16),
+
+        inset 0 1px 0 rgba(255,255,255,.40);
+
+}
+
+
+/* Error visible state */
+
+#errorMsg[style*="display: block"]{
+
+    display:flex !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   SPLASH — CLEAN CINEMATIC
+   --------------------------------------------------------- */
+
+#customSplash{
+
+    background:
+
+        radial-gradient(
+            circle at center,
+            #181004 0%,
+            #080603 44%,
+            #010100 100%
+        );
+
+}
+
+
+/* Keep loading subtle */
+
+.splash-loading{
+
+    background:
+        rgba(255,215,110,.08);
+
+    box-shadow:
+        0 0 12px rgba(255,198,70,.05);
+
+}
+
+
+/* ---------------------------------------------------------
+   DESKTOP PROPORTIONS
+   --------------------------------------------------------- */
+
+@media(min-width:769px){
+
+    .login-card{
+
+        width:min(
+            480px,
+            calc(100vw - 60px)
+        );
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE — PRECISE SPACING
+   --------------------------------------------------------- */
+
+@media(max-width:480px){
+
+    body{
+
+        padding:
+            58px
+            12px
+            18px;
+
+        align-items:center;
+
+    }
+
+    #offlineStatus{
+
+        top:11px;
+
+        min-width:170px;
+
+        padding:8px 13px;
+
+        font-size:10px;
+
+    }
+
+    .login-card{
+
+        width:100%;
+
+        max-width:none;
+
+        padding:
+            28px
+            18px
+            23px;
+
+        border-radius:29px;
+
+    }
+
+    .logo-wrap{
+
+        margin-bottom:23px;
+
+    }
+
+    .logo-badge{
+
+        width:72px;
+        height:72px;
+
+        border-radius:22px;
+
+    }
+
+    .logo-icon{
+
+        font-size:32px;
+
+    }
+
+    .logo-title{
+
+        margin-top:15px;
+
+        font-size:20px;
+
+        letter-spacing:1.35px;
+
+    }
+
+    .logo-subtitle{
+
+        margin-top:5px;
+
+        font-size:8px;
+
+        letter-spacing:2px;
+
+    }
+
+    .role-tabs{
+
+        margin-bottom:21px;
+
+        padding:5px;
+
+        gap:5px;
+
+    }
+
+    .role-btn{
+
+        min-height:45px;
+
+        border-radius:13px;
+
+        font-size:11px;
+
+    }
+
+    .form-group{
+
+        margin-bottom:16px;
+
+    }
+
+    .form-label{
+
+        margin-bottom:7px;
+
+        font-size:10px;
+
+    }
+
+    .input-box{
+
+        height:53px;
+
+        border-radius:15px;
+
+    }
+
+    .input-box input{
+
+        font-size:13px;
+
+        padding:
+            0
+            15px;
+
+    }
+
+    .password-wrap{
+
+        padding-right:50px;
+
+    }
+
+    .password-toggle{
+
+        width:38px;
+        height:38px;
+
+        right:7px;
+
+    }
+
+    .remember-row{
+
+        margin:
+            2px
+            2px
+            17px;
+
+    }
+
+    .remember-label{
+
+        font-size:10px;
+
+    }
+
+    #errorMsg{
+
+        min-height:52px;
+
+        margin-bottom:14px;
+
+        padding:
+            11px
+            12px
+            11px
+            44px;
+
+        font-size:10px;
+
+    }
+
+    #errorMsg::before{
+
+        left:13px;
+
+        width:22px;
+        height:22px;
+
+    }
+
+    .login-button{
+
+        height:55px;
+
+        border-radius:16px;
+
+        font-size:13px;
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   SMALL PHONES
+   --------------------------------------------------------- */
+
+@media(max-width:360px){
+
+    body{
+
+        padding:
+            55px
+            9px
+            12px;
+
+    }
+
+    .login-card{
+
+        padding:
+            25px
+            15px
+            20px;
+
+    }
+
+    .logo-title{
+
+        font-size:18px;
+
+    }
+
+    .role-btn{
+
+        font-size:10px;
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   CONSISTENT TOUCH FEEDBACK
+   --------------------------------------------------------- */
+
+button,
+input,
+label{
+
+    -webkit-tap-highlight-color:transparent;
+
+}
+
+
+/* ---------------------------------------------------------
+   NO DISTRACTING MOTION
+   --------------------------------------------------------- */
+
+body::before,
+.logo-badge::after,
+.role-btn.active::after,
+.login-button::before{
+
+    animation:none !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   REDUCED MOTION
+   --------------------------------------------------------- */
+
+@media(prefers-reduced-motion:reduce){
+
+    *,
+    *::before,
+    *::after{
+
+        animation:none !important;
+
+        transition:none !important;
+
+    }
+
+      }
+    </style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     AMBIENT BACKGROUND GLOW ORBS
+========================================================= -->
+
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+
+<!-- =========================================================
+     CUSTOM SPLASH SCREEN
+========================================================= -->
+
+<div id="customSplash">
+    <img id="splashLogo" src="icon-512.png" alt="TEX FOR EVER"
+         onerror="this.onerror=null;this.style.display='none';document.getElementById('splashFallback').style.display='block';">
+    <div id="splashFallback" style="display:none;font-size:64px;line-height:1;">👑</div>
+    <h1>TEX FOR EVER</h1>
+    <div class="splash-loader"></div>
+</div>
+
+<!-- =========================================================
+     NETWORK STATUS
+========================================================= -->
+
+<div id="offlineStatus">
+    🔴 Offline Mode — Local Data
+</div>
+
+<div class="login-card">
+
+    <!-- LOGO -->
+
+    <div class="logo-area">
+
+        <div class="logo-badge">
+            👑
+        </div>
+
+        <h2>TEX FOR EVER</h2>
+
+        <p id="subtitleText">
+            Secure Access Portal
+        </p>
+
+    </div>
+
+    <!-- ROLE SELECTOR -->
+
+    <div class="role-tabs">
+
+        <button
+            type="button"
+            class="role-btn active"
+            id="adminTab"
+            onclick="switchRole('admin')">
+            👑 🔑Admin
+        </button>
+
+        <button
+            type="button"
+            class="role-btn"
+            id="userTab"
+            onclick="switchRole('user')">
+            👤 🔑User
+        </button>
+
+    </div>
+
+    <!-- USERNAME -->
+
+    <div class="form-group">
+
+        <label id="usernameLabel" for="loginUser">
+            Admin User Name
+        </label>
+
+        <input
+            type="text"
+            id="loginUser"
+            class="input-box"
+            placeholder="Enter username"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false">
+
+    </div>
+
+    <!-- PASSWORD -->
+
+    <div class="form-group">
+
+        <label for="loginPass">
+            Password / கடவுச்சொல்
+        </label>
+
+        <div class="password-wrapper">
+
+            <input
+                type="password"
+                id="loginPass"
+                class="input-box"
+                placeholder="Enter password"
+                autocomplete="current-password">
+
+            <button
+                type="button"
+                class="toggle-password"
+                id="togglePasswordBtn"
+                onclick="togglePasswordVisibility()"
+                aria-label="Show password">
+
+                <svg
+                    id="eyeIconOpen"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="3">
+                    </circle>
+
+                </svg>
+
+                <svg
+                    id="eyeIconClosed"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="display:none;">
+
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                    </path>
+
+                    <line
+                        x1="1"
+                        y1="1"
+                        x2="23"
+                        y2="23">
+                    </line>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- REMEMBER ME -->
+
+    <div class="options-row">
+
+        <label
+            class="remember-me"
+            for="rememberMe">
+
+            <input
+                type="checkbox"
+                id="rememberMe">
+
+            Remember Me
+
+        </label>
+
+    </div>
+
+    <!-- ERROR -->
+
+    <div
+        class="error-msg"
+        id="errorMsg"
+        role="alert"
+        aria-live="polite">
+
+        ⚠️ தவறான Username அல்லது Password!
+
+    </div>
+
+    <!-- LOGIN -->
+
+    <button
+        type="button"
+        class="login-submit-btn"
+        id="loginButton"
+        onclick="validateLogin()">
+
+        Login / உள்நுழை
+
+    </button>
+
+</div>
+
+<script>
+
+/* ============================================================
+   TEX FOR EVER OFFLINE PWA SERVICE WORKER
+============================================================ */
+
+(function () {
+
+    "use strict";
+
+    if ("serviceWorker" in navigator) {
+
+        function registerSW() {
+
+            navigator.serviceWorker.register(
+                "./sw.js",
+                { scope: "./" }
+            )
+
+            .then(function (registration) {
+
+                console.log(
+                    "✅ TEX FOR EVER Offline Service Worker Registered:",
+                    registration.scope
+                );
+
+            })
+
+            .catch(function (error) {
+
+                console.warn(
+                    "⚠️ Service Worker registration failed:",
+                    error
+                );
+
+            });
+
+        }
+
+        if (
+            document.readyState === "complete" ||
+            document.readyState === "interactive"
+        ) {
+
+            registerSW();
+
+        } else {
+
+            window.addEventListener(
+                "load",
+                registerSW
+            );
+
+        }
+
+    }
+
+})();
+
+
+/* ============================================================
+   NETWORK STATUS
+============================================================ */
+
+(function () {
+
+    "use strict";
+
+    function updateNetworkStatus() {
+
+        const status =
+            document.getElementById("offlineStatus");
+
+        if (!status) return;
+
+        if (navigator.onLine) {
+
+            status.className = "online";
+
+            status.textContent =
+                "🟢 Online — Cloud Sync Available";
+
+            setTimeout(function () {
+
+                status.className = "";
+
+            }, 2500);
+
+        } else {
+
+            status.className = "offline";
+
+            status.textContent =
+                "🔴 Offline Mode — Local Data";
+
+        }
+
+    }
+
+    window.addEventListener(
+        "online",
+        updateNetworkStatus
+    );
+
+    window.addEventListener(
+        "offline",
+        updateNetworkStatus
+    );
+
+    if (document.readyState === "loading") {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            updateNetworkStatus
+        );
+
+    } else {
+
+        updateNetworkStatus();
+
+    }
+
+})();
+
+
+/* ============================================================
+   TEX FOR EVER LOGIN SYSTEM
+============================================================ */
+
+(function () {
+
+    "use strict";
+
+
+    function safeGetItem(key) {
+
+        try {
+
+            return localStorage.getItem(key);
+
+        } catch (error) {
+
+            console.warn(
+                "LocalStorage read failed:",
+                error
+            );
+
+            return null;
+
+        }
+
+    }
+
+
+    function safeSetItem(key, value) {
+
+        try {
+
+            localStorage.setItem(
+                key,
+                String(value)
+            );
+
+            return true;
+
+        } catch (error) {
+
+            console.warn(
+                "LocalStorage write failed:",
+                error
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    function safeRemoveItem(key) {
+
+        try {
+
+            localStorage.removeItem(key);
+
+        } catch (error) {
+
+            console.warn(
+                "LocalStorage remove failed:",
+                error
+            );
+
+        }
+
+    }
+
+
+    function safeParseJSON(value, fallback) {
+
+        if (!value) return fallback;
+
+        try {
+
+            return JSON.parse(value);
+
+        } catch (error) {
+
+            console.warn(
+                "Invalid stored JSON:",
+                error
+            );
+
+            return fallback;
+
+        }
+
+    }
+
+
+    function getElement(id) {
+
+        return document.getElementById(id);
+
+    }
+
+
+    function showError(message) {
+
+        const errorBox =
+            getElement("errorMsg");
+
+        if (!errorBox) return;
+
+        errorBox.textContent = message;
+
+        errorBox.style.display = "block";
+
+    }
+
+
+    function hideError() {
+
+        const errorBox =
+            getElement("errorMsg");
+
+        if (!errorBox) return;
+
+        errorBox.style.display = "none";
+
+    }
+
+
+    function initializeLogin() {
+
+        const savedUser =
+            safeGetItem("erp_remembered_user");
+
+        const usernameInput =
+            getElement("loginUser");
+
+        const rememberCheckbox =
+            getElement("rememberMe");
+
+
+        if (
+            savedUser &&
+            usernameInput &&
+            rememberCheckbox
+        ) {
+
+            usernameInput.value =
+                savedUser;
+
+            rememberCheckbox.checked =
+                true;
+
+        }
+
+
+        if (
+            usernameInput &&
+            !usernameInput.value
+        ) {
+
+            setTimeout(function () {
+
+                usernameInput.focus();
+
+            }, 200);
+
+        }
+
+
+        const passwordInput =
+            getElement("loginPass");
+
+
+        if (passwordInput) {
+
+            passwordInput.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key === "Enter") {
+
+                        event.preventDefault();
+
+                        validateLogin();
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+
+
+    window.switchRole = function (role) {
+
+        if (
+            role !== "admin" &&
+            role !== "user"
+        ) return;
+
+
+        window.currentRole = role;
+
+
+        const adminBtn =
+            getElement("adminTab");
+
+        const userBtn =
+            getElement("userTab");
+
+        const userLabel =
+            getElement("usernameLabel");
+
+        const subText =
+            getElement("subtitleText");
+
+        const passwordInput =
+            getElement("loginPass");
+
+
+        hideError();
+
+
+        if (passwordInput) {
+
+            passwordInput.value = "";
+
+        }
+
+
+        if (role === "admin") {
+
+            if (adminBtn)
+                adminBtn.classList.add("active");
+
+            if (userBtn)
+                userBtn.classList.remove("active");
+
+            if (userLabel)
+                userLabel.textContent =
+                    "Admin User Name";
+
+            if (subText)
+                subText.textContent =
+                    "Administrator Access Portal";
+
+        } else {
+
+            if (userBtn)
+                userBtn.classList.add("active");
+
+            if (adminBtn)
+                adminBtn.classList.remove("active");
+
+            if (userLabel)
+                userLabel.textContent =
+                    "Staff / User Name";
+
+            if (subText)
+                subText.textContent =
+                    "Standard Operator Portal";
+
+        }
+
+    };
+
+
+    function getSystemUsers() {
+
+        const rawUsers =
+            safeGetItem("erp_system_users");
+
+        const parsedUsers =
+            safeParseJSON(
+                rawUsers,
+                []
+            );
+
+
+        if (!Array.isArray(parsedUsers)) {
+
+            console.warn(
+                "erp_system_users is not an array."
+            );
+
+            return [];
+
+        }
+
+
+        return parsedUsers;
+
+    }
+
+
+    window.validateLogin = async function () {
+
+        const usernameInput =
+            getElement("loginUser");
+
+        const passwordInput =
+            getElement("loginPass");
+
+        const rememberCheckbox =
+            getElement("rememberMe");
+
+        const loginButton =
+            getElement("loginButton");
+
+
+        if (
+            !usernameInput ||
+            !passwordInput
+        ) return;
+
+
+        const username =
+            usernameInput.value.trim();
+
+        const password =
+            passwordInput.value;
+
+        const remember =
+            rememberCheckbox
+                ? rememberCheckbox.checked
+                : false;
+
+
+        if (
+            !username ||
+            !password
+        ) {
+
+            showError(
+                "⚠️ அனைத்து விவரங்களையும் நிரப்பவும்!"
+            );
+
+            if (!username)
+                usernameInput.focus();
+            else
+                passwordInput.focus();
+
+            return;
+
+        }
+
+
+        if (remember)
+
+            safeSetItem(
+                "erp_remembered_user",
+                username
+            );
+
+        else
+
+            safeRemoveItem(
+                "erp_remembered_user"
+            );
+
+
+        if (loginButton) {
+
+            loginButton.disabled = true;
+
+            loginButton.textContent =
+                "Checking... / சரிபார்க்கிறது...";
+
+        }
+
+
+        const cleanUsername =
+            username.toLowerCase();
+
+        const masterAdmin =
+            cleanUsername === "kumar" &&
+            password === "1972";
+
+
+        if (
+            navigator.onLine &&
+            !masterAdmin
+        ) {
+
+            try {
+
+                console.log(
+                    "🟢 Online mode: Connecting to Supabase (Mock Call)..."
+                );
+
+                await new Promise(
+                    resolve =>
+                        setTimeout(resolve, 500)
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Cloud login failed:",
+                    error
+                );
+
+                showError(
+                    "⚠️ சர்வர் பிழை. மீண்டும் முயற்சிக்கவும்."
+                );
+
+                resetLoginButton();
+
+                return;
+
+            }
+
+        } else {
+
+            console.log(
+                "🔴 Offline mode: Using local cached data..."
+            );
+
+        }
+
+
+        const systemUsers =
+            getSystemUsers();
+
+
+        if (
+            window.currentRole === "admin"
+        ) {
+
+            const dynamicAdmin =
+                systemUsers.find(
+                    function (usr) {
+
+                        if (
+                            !usr ||
+                            typeof usr !== "object"
+                        )
+                            return false;
+
+
+                        const storedUsername =
+                            typeof usr.username === "string"
+                                ? usr.username.toLowerCase()
+                                : "";
+
+
+                        return (
+                            storedUsername === cleanUsername &&
+                            usr.password === password &&
+                            (
+                                usr.role === "Administrator" ||
+                                usr.role === "Admin"
+                            )
+                        );
+
+                    }
+                );
+
+
+            if (
+                masterAdmin ||
+                dynamicAdmin
+            ) {
+
+                const loggedRole =
+                    "Administrator";
+
+
+                safeSetItem(
+                    "erp_logged_role",
+                    loggedRole
+                );
+
+                safeSetItem(
+                    "user_role",
+                    loggedRole
+                );
+
+                safeSetItem(
+                    "erp_logged_user",
+                    username
+                );
+
+                safeSetItem(
+                    "username",
+                    username
+                );
+
+
+                window.location.href =
+                    "dashboard.html";
+
+                return;
+
+            }
+
+
+            showError(
+                "⚠️ தவறான அட்மின் விவரங்கள்!"
+            );
+
+            resetLoginButton();
+
+            passwordInput.focus();
+
+            return;
+
+        }
+
+
+        const validUser =
+            systemUsers.find(
+                function (usr) {
+
+                    if (
+                        !usr ||
+                        typeof usr !== "object"
+                    )
+                        return false;
+
+
+                    const storedUsername =
+                        typeof usr.username === "string"
+                            ? usr.username.toLowerCase()
+                            : "";
+
+
+                    return (
+                        storedUsername === cleanUsername &&
+                        usr.password === password
+                    );
+
+                }
+            );
+
+
+        if (
+            validUser ||
+            masterAdmin
+        ) {
+
+            const assignedRole =
+                validUser &&
+                validUser.role
+                    ? validUser.role
+                    : "Standard User";
+
+
+            safeSetItem(
+                "erp_logged_role",
+                assignedRole
+            );
+
+            safeSetItem(
+                "user_role",
+                assignedRole
+            );
+
+            safeSetItem(
+                "erp_logged_user",
+                username
+            );
+
+            safeSetItem(
+                "username",
+                username
+            );
+
+
+            window.location.href =
+                "dashboard.html";
+
+            return;
+
+        }
+
+
+        showError(
+            "⚠️ தவறான யூசர் விவரங்கள்!"
+        );
+
+        resetLoginButton();
+
+        passwordInput.focus();
+
+    };
+
+
+    window.togglePasswordVisibility =
+        function () {
+
+            const passwordInput =
+                getElement("loginPass");
+
+            const toggleBtn =
+                getElement("togglePasswordBtn");
+
+            const eyeOpen =
+                getElement("eyeIconOpen");
+
+            const eyeClosed =
+                getElement("eyeIconClosed");
+
+
+            if (!passwordInput) return;
+
+
+            const isHidden =
+                passwordInput.type === "password";
+
+
+            passwordInput.type =
+                isHidden
+                    ? "text"
+                    : "password";
+
+
+            if (
+                eyeOpen &&
+                eyeClosed
+            ) {
+
+                eyeOpen.style.display =
+                    isHidden
+                        ? "none"
+                        : "block";
+
+                eyeClosed.style.display =
+                    isHidden
+                        ? "block"
+                        : "none";
+
+            }
+
+
+            if (toggleBtn) {
+
+                toggleBtn.setAttribute(
+                    "aria-label",
+                    isHidden
+                        ? "Hide password"
+                        : "Show password"
+                );
+
+            }
+
+        };
+
+
+    function resetLoginButton() {
+
+        const loginButton =
+            getElement("loginButton");
+
+        if (!loginButton) return;
+
+
+        loginButton.disabled = false;
+
+        loginButton.textContent =
+            "Login / உள்நுழை";
+
+    }
+
+
+    window.currentRole =
+        "admin";
+
+
+    if (
+        document.readyState === "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeLogin
+        );
+
+    } else {
+
+        initializeLogin();
+
+    }
+
+})();
+
+
+/* ============================================================
+   SPLASH LOGO (use saved company logo if available)
+============================================================ */
+
+(function () {
+
+    var img = document.getElementById("splashLogo");
+    var fallback = document.getElementById("splashFallback");
+
+    if (!img) return;
+
+    var keys = ["company_logo", "company_logo_base64", "logo"];
+
+    for (var i = 0; i < keys.length; i++) {
+
+        var v = null;
+
+        try {
+            v = localStorage.getItem(keys[i]);
+        } catch (e) {}
+
+        if (!v) continue;
+
+        v = v.trim()
+            .replace(/^["']|["']$/g, "")
+            .replace(/\\"/g, '"');
+
+        if (/^data:image\//i.test(v)) {
+
+            img.style.display = "";
+
+            if (fallback) fallback.style.display = "none";
+
+            img.src = v;
+
+            break;
+        }
+    }
+
+})();
+
+
+/* ============================================================
+   PREMIUM SPLASH
+============================================================ */
+
+setTimeout(function () {
+
+    var splash =
+        document.getElementById(
+            "customSplash"
+        );
+
+    if (splash) {
+
+        splash.classList.add("hide");
+
+        setTimeout(function () {
+
+            splash.remove();
+
+        }, 600);
+
+    }
+
+}, 3000);
+
+</script>
+
+</body>
+</html>

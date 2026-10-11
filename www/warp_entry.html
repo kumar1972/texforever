@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Warp Entry - TEX FOR EVER</title>
+
+<!-- supabase -->
+<script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-app-compat.js"></script>
+<script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="translator.js"></script>
+  <script src="printer.js"></script>
+
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    html, body { width: 100%; min-height: 100vh; background: #030712; color: #1E2B23; }
+    body { padding: 12px; display: flex; flex-direction: column; align-items: center; }
+
+    .main-card.sskr-hidden .header-grid,
+    .main-card.sskr-hidden .row-grid { grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 1fr 65px; }
+    .main-card.sskr-hidden .header-grid > div:nth-child(5),
+    .main-card.sskr-hidden .row-grid .inp-sskr { display: none; }
+
+    .main-card {
+        width: 100%; max-width: 900px; margin: 0; background: #FFFFFF;
+        border: 1px solid rgba(82, 110, 81, 0.15); border-radius: 20px;
+        padding: 20px; box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
+        display: flex; flex-direction: column; gap: 15px;
+    }
+
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .back-btn {
+        display: inline-flex; align-items: center; gap: 5px; color: #FFFFFF;
+        text-decoration: none; font-weight: 600; font-size: 11px;
+        background: #1A2421; padding: 8px 16px; border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.3s ease;
+    }
+    .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+    #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
+    #bitmapDisplayContainer img {
+        max-height: 45px; border-radius: 6px; border: 1px solid rgba(82, 110, 81, 0.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08); cursor: zoom-in; transition: transform 0.3s;
+    }
+    #bitmapDisplayContainer img:hover { transform: scale(1.1); }
+
+    .completed-checkbox {
+        display: flex; align-items: center; gap: 6px; background: #D8DFD6;
+        padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(82, 110, 81, 0.4);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .completed-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #526E51; margin: 0; }
+    .completed-checkbox label { margin: 0; color: #3F5A3E; cursor: pointer; font-size: 12px; font-weight: 700; }
+
+    .page-title { font-size: 16px; font-weight: 700; color: #2F4F38; text-align: left; position: relative; padding-left: 12px; margin-bottom: 5px; }
+    .page-title::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: #4A7C59; border-radius: 4px; }
+
+    .form-section { background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 14px; padding: 22px 15px 15px 15px; margin-bottom: 5px; position: relative; }
+    .section-badge {
+        position: absolute; top: -12px; left: 15px; background: #4A7C59; color: #FFF;
+        font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 12px;
+        letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
+    }
+    .section-badge.blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25); }
+    .section-badge.amber { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 4px 8px rgba(217, 119, 6, 0.25); }
+
+    .bulk-color-box {
+        background: #EAF0EA; border: 1px dashed #4A7C59; border-radius: 10px;
+        padding: 10px 15px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+    }
+    .bulk-color-box label { font-size: 11px; font-weight: 700; color: #2F4F38; white-space: nowrap; }
+    .bulk-color-box select, .bulk-color-box input { flex: 1; min-width: 100px; padding: 8px 10px; font-size: 11px; background: #FFFFFF; color: #1E2B23; }
+    
+    .btn-bulk-change {
+        background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; border: none;
+        padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25); white-space: nowrap; transition: all 0.2s;
+    }
+    .btn-bulk-change:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(59, 130, 246, 0.35); }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 10px; font-weight: 600; color: #4A554A; white-space: nowrap; }
+
+    input, select {
+        width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #D1DED1;
+        background: #FFFFFF; color: #1E2B23; font-size: 11px; font-weight: 600; transition: all 0.3s ease;
+    }
+    input:focus, select:focus { border-color: #4A7C59; outline: none; box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15); }
+
+    .input-group-btn { display: flex; gap: 10px; width: 100%; }
+    .input-group-btn input, .input-group-btn select { flex: 1; background: #FFFFFF; color: #1E2B23; }
+    
+    .btn-copy-design {
+        background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; border: none;
+        padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;
+        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.25); white-space: nowrap; transition: all 0.2s;
+    }
+    .btn-copy-design:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(139, 92, 246, 0.35); }
+
+    .btn-sskr-settings {
+        background: linear-gradient(135deg, #06B6D4, #0E7490); color: white; border: none;
+        padding: 9px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;
+        box-shadow: 0 4px 8px rgba(6, 182, 212, 0.25); white-space: nowrap; transition: all 0.2s;
+        margin-top: 6px; display: none; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-sskr-settings:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(6, 182, 212, 0.35); }
+
+    .sskr-row { display: grid; grid-template-columns: 32px 1.4fr 1.4fr 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .sskr-row input[type="number"] { text-align: center; background: #FFFEF7; border: 1px solid #8B5CF6; color: #6D28D9; font-weight: 700; }
+    .sskr-row-label {
+        font-size: 11px; font-weight: 600; text-align: center; color: #1E2B23; background: #F8FAF8;
+        padding: 8px 4px; border-radius: 6px; border: 1px solid #D1DED1; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .header-grid {
+        display: grid; grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 0.8fr 1fr 65px; gap: 4px;
+        padding: 5px 0; font-size: 9px; font-weight: 700; color: #2F4F38; text-align: center; text-transform: uppercase;
+    }
+    .row-grid { display: grid; grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 0.8fr 1fr 65px; gap: 4px; margin-bottom: 8px; align-items: center; }
+
+    .header-grid-range {
+        display: grid; grid-template-columns: 1fr 1fr 1fr 35px; gap: 6px;
+        padding: 5px 0; font-size: 10px; font-weight: 700; color: #2F4F38; text-align: center; text-transform: uppercase;
+    }
+    .row-grid-range { display: grid; grid-template-columns: 1fr 1fr 1fr 35px; gap: 6px; margin-bottom: 8px; align-items: center; }
+
+    .row-grid input, .row-grid select, .row-grid-range input { text-align: center; padding: 8px 2px; font-size: 11px; background: #FFFFFF; color: #1E2B23; }
+
+    .line-no { font-size: 10px; font-weight: 800; color: #4A7C59; text-align: center; background: #EAF0EA; padding: 8px 0; border-radius: 6px; border: 1px solid #D1DED1; }
+    .btn-add-small { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .action-cell-row { display: flex; gap: 4px; width: 100%; }
+    
+    .btn-insert-small { background: #D1FAE5; color: #059669; border: none; width: 100%; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+    .btn-insert-small:hover { background: #A7F3D0; transform: scale(1.05); }
+    .btn-del-small { background: #FEE2E2; color: #DC2626; border: none; width: 100%; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+    .btn-del-small:hover { background: #FECACA; transform: scale(1.05); }
+
+    .action-btns-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .btn-main { width: 100%; padding: 14px; border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-main:hover { transform: translateY(-2px); }
+    .btn-preview { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25); }
+    .btn-save { background: linear-gradient(135deg, #AC7CAA, #33593D); box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25); }
+    .btn-list { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 6px 15px rgba(245, 158,11,0.25); }
+
+    .overlay-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 25, 20, 0.95); backdrop-filter: blur(6px); z-index: 99999; flex-direction: column; padding: 0; opacity: 0; transition: opacity 0.3s ease; }
+    .overlay-modal.show { opacity: 1; }
+    .modal-content { background: #FFFFFF; width: 100vw; height: 100vh; margin: 0; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; transform: scale(1); }
+    
+    .modal-header { padding: 15px 20px; background: #F4F7F4; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8E2; flex-shrink: 0; }
+    .modal-header h3 { margin: 0; font-size: 16px; color: #4A7C59; font-weight: 800; }
+    .modal-actions { display: flex; gap: 8px; }
+    .close-btn { background: #FEE2E2; color: #DC2626; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .print-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #FAFCFA; width: 100%; max-width: 1000px; margin: 0 auto; }
+    .fullscreen-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center; padding: 20px; flex-direction: column; }
+    .fullscreen-modal img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px; }
+    .close-fullscreen { position: absolute; top: 20px; right: 20px; background: #EF4444; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+    .table-container { width: 100%; border-radius: 10px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2; background: #FFFFFF; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; white-space: nowrap; }
+    th, td { padding: 10px 12px; text-align: center; color: #1E2B23; }
+    .action-cell { display: flex; gap: 4px; justify-content: center; }
+    .edit-action-btn { background: #64748B; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; }
+    .del-action-btn { background: #EF4444; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; }
+    .action-complete { background: #526E51; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+    .action-running { background: #D97706; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+
+    @media print {
+        @page { size: A4 portrait; margin: 10mm; }
+        html, body { width: 100% !important; min-height: 0 !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: #FFFFFF !important; color: #000000 !important; display: block !important; }
+        body > * { display: none !important; }
+        #previewModal { display: block !important; position: relative !important; inset: auto !important; width: 100% !important; height: auto !important; background: #FFFFFF !important; z-index: 999999 !important; }
+        #previewModal * { visibility: visible !important; }
+        .modal-content, .modal-body { display: block !important; background: #FFFFFF !important; width: 100% !important; height: auto !important; overflow: visible !important; box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+        .modal-header, .no-print { display: none !important; }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="main-card">
+
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+
+        <div id="bitmapDisplayContainer">
+            <div class="completed-checkbox">
+                <input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()">
+                <label for="top_completed_status">Completed</label>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="page-title">📐 Warp Pattern Entry</h2>
+
+    <div class="form-section" style="margin-top: 5px;">
+        <div class="section-badge">General Specs</div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label>Design Number</label>
+            <div class="input-group-btn">
+                <select id="designNo" onchange="loadDesignData()">
+                    <option value="">Select Design No</option>
+                </select>
+
+                <button class="btn-copy-design" onclick="copyToNewDesign()" title="Copy current pattern to a new design">
+                    📋 Copy Design
+                </button>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Order Mtrs</label>
+                <input type="number" id="infoOrderMtr" placeholder="Mtrs" step="0.01" oninput="calculateTopBeam()">
+            </div>
+
+            <div class="form-group">
+                <label>Top Beam Mtrs</label>
+                <input type="text" id="infoTopBeam" placeholder="e.g. 130 or +30%" onblur="calculateTopBeam()" onchange="calculateTopBeam()">
+            </div>
+
+            <div class="form-group">
+                <label>Fabric Type</label>
+                <select id="infoType" onchange="toggleSskrSettingsBtn()" style="width:100%; padding:12px; border:1px solid #e2c275; border-radius:10px; background:#FFFEF7; font-weight:700; color:#7a3d0a;">
+                    <option value="Plain stripe">Plain stripe</option>
+                    <option value="Plain check">Plain check</option>
+                    <option value="Dobby stripe">Dobby stripe</option>
+                    <option value="Dobby check">Dobby check</option>
+                    <option value="Seersucker stripe">Seersucker  stripe</option>
+                    <option value="Seersucker checks">Seersucker check</option>
+                    <option value="Twill Checks">Twill Checks</option>
+                    <option value="Twill Stripes">Twill Stripes</option>
+                </select>
+
+                <button type="button" id="sskrSettingsBtn" class="btn-sskr-settings" onclick="openSskrSettingsModal()">
+                    🌊 SSKR % Settings
+                </button>
+            </div>
+        </div>
+
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); background:#FFFFFF; padding:12px; border-radius:10px; border:1px dashed #D1DED1; margin-top:5px;">
+            <div class="form-group"><label>Count 1 (Warp)</label><input type="text" id="infoCount1" placeholder="C1"></div>
+            <div class="form-group"><label>Count 2 (Warp)</label><input type="text" id="infoCount2" placeholder="C2"></div>
+            <div class="form-group"><label>Weft 1</label><input type="text" id="infoWeft1" placeholder="W1"></div>
+            <div class="form-group"><label>Weft 2</label><input type="text" id="infoWeft2" placeholder="W2"></div>
+            <div class="form-group"><label>Onloom.Reed</label><input type="text" id="infoReed" placeholder="Reed" oninput="calculateOnloomWidth(); calculateLiveWarpTotals();"></div>
+            <div class="form-group"><label>Onloom.Pick</label><input type="text" id="infoPick" placeholder="Pick"></div>
+            <div class="form-group"><label>Onloom.Width</label><input type="text" id="infoWidth" placeholder="Width" oninput="calculateLiveWarpTotals();"></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-badge blue">Warp Thread Pattern</div>
+        <div class="bulk-color-box">
+            <label>🎨 Bulk Color Changer:</label>
+            <select id="bulkOldColor"><option value="">Select Old Color</option></select>
+            <label>To ➔</label>
+            <input type="text" id="bulkNewColor" placeholder="Type New Color">
+            <button class="btn-bulk-change" onclick="applyBulkColorChange()">Change Color</button>
+        </div>
+        <div style="font-size:9px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">(Press Enter in Ends to add new line below)</div>
+        <div style="overflow-x:auto;">
+            <div style="min-width:540px;">
+                <div class="header-grid">
+                    <div>#</div><div>Count</div><div>Colour</div><div>Beam</div><div>SSKR %</div><div>Ends</div><div>Action</div>
+                </div>
+                <div id="warpLinesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-badge amber">Pattern Repeats (Groups)</div>
+        <div style="text-align:right;margin-bottom:5px;">
+            <button class="btn-add-small" onclick="addWarpRange()">➕ Add Range</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <div style="min-width:350px;">
+                <div class="header-grid-range">
+                    <div>Start Line</div><div>End Line</div><div>X (Times)</div><div></div>
+                </div>
+                <div id="warpRangesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🟢 WARP TOTAL SUMMARY BOX 🟢 -->
+    <div style="background:#FFFFFF; border-radius:14px; padding:12px 16px; border:1px solid #E2E8E2; margin-bottom:5px; box-shadow:0 4px 10px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:6px;">
+        <div style="font-size:13px; font-weight:700; color:#1E2B23;">Total Pattern Ends: <span id="entryPatternEnds" style="color:#D97706;">0</span></div>
+        <div style="font-size:13px; font-weight:700; color:#059669;">Total Ends: <span id="entryTotalEndsCalc">0 x 0 = 0.00</span></div>
+    </div>
+
+    <div class="action-btns-row">
+        <button class="btn-main btn-preview" onclick="previewPattern()">👁️ Preview</button>
+        <button class="btn-main btn-save" id="saveBtnTxt" onclick="saveWarpDesign(); update3DPreviewData()">💾 Save</button>
+        <button class="btn-main btn-list" onclick="openSavedModal()">📂 Saved List</button>
+    </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div id="previewModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header no-print">
+            <h3>👁️ Warp Pattern Full Screen Preview</h3>
+            <div class="modal-actions">
+                <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                <button class="close-btn" onclick="closeModal('previewModal')">Close ✕</button>
+            </div>
+        </div>
+        <div class="modal-body" id="previewContent"></div>
+    </div>
+</div>
+
+<!-- SAVED LIST MODAL -->
+<div id="savedListModal" class="overlay-modal">
+    <div class="modal-content" style="max-width:600px;height:90vh;margin:auto;border-radius:16px;">
+        <div class="modal-header">
+            <h3>📋 Saved Warp Patterns</h3>
+            <button class="close-btn" onclick="closeModal('savedListModal')">Close ✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Design No</th><th>Total Lines</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="savedPatternsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SSKR % SETTINGS MODAL -->
+<div id="sskrModal" class="overlay-modal">
+    <div class="modal-content" style="max-width:600px;height:85vh;margin:auto;border-radius:16px;">
+        <div class="modal-header">
+            <h3>🌊 SSKR % Settings</h3>
+            <button class="close-btn" onclick="closeModal('sskrModal')">Close ✕</button>
+        </div>
+        <div class="modal-body" id="sskrModalBody"></div>
+    </div>
+</div>
+
+<!-- FULLSCREEN IMAGE -->
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen" onclick="event.stopPropagation();closeFullscreenImage()">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+let currentBaseSpecs = {};
+
+/* ============================================================
+   SAFE STORAGE
+============================================================ */
+function safeJSONParse(value, fallback) {
+    try {
+        if (value === null || value === undefined || value === '') return fallback;
+        const parsed = JSON.parse(value);
+        return parsed === null || parsed === undefined ? fallback : parsed;
+    } catch (e) { return fallback; }
+}
+function getLocalArray(key) {
+    const data = safeJSONParse(localStorage.getItem(key), []);
+    return Array.isArray(data) ? data : [];
+}
+function getLocalObject(key) {
+    const data = safeJSONParse(localStorage.getItem(key), {});
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+
+/* ============================================================
+   PERMISSION
+============================================================ */
+function checkUserPermission() {
+    let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+    if (userRole !== 'Administrator' && userRole !== 'Admin') {
+        let permissions = safeJSONParse(localStorage.getItem('user_permissions'), {});
+        if (permissions['warp_entry.html'] === false || permissions['warp_entry'] === false) return false;
+    }
+    return true;
+}
+
+/* ============================================================
+   INITIAL LOAD
+============================================================ */
+document.addEventListener('DOMContentLoaded', function () {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to access this page. ❌");
+        window.location.href = "dashboard.html";
+        return;
+    }
+    loadDesignDropdown();
+    toggleSskrSettingsBtn();
+    calculateLiveWarpTotals();
+});
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.style.display = 'flex';
+    setTimeout(function () { modal.classList.add('show'); }, 10);
+}
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.remove('show');
+    setTimeout(function () { modal.style.display = 'none'; }, 300);
+}
+
+function toggleSskrSettingsBtn() {
+    const typeElement = document.getElementById('infoType');
+    const btn = document.getElementById('sskrSettingsBtn');
+    const mainCard = document.querySelector('.main-card');
+    if (!typeElement || !btn) return;
+
+    const val = (typeElement.value || '').toLowerCase();
+    const isSeersucker = val.indexOf('seersucker') !== -1;
+
+    if (isSeersucker) btn.style.display = 'inline-flex';
+    else btn.style.display = 'none';
+
+    if (mainCard) {
+        if (isSeersucker) mainCard.classList.remove('sskr-hidden');
+        else mainCard.classList.add('sskr-hidden');
+    }
+}
+
+let sskrGroupsCache = [];
+function openSskrSettingsModal() {
+    const body = document.getElementById('sskrModalBody');
+    if (!body) return;
+
+    const allRows = Array.from(document.querySelectorAll('.line-item'));
+    const topBeamRows = allRows.filter(function (row) {
+        const beamElement = row.querySelector('.inp-beam');
+        return (beamElement && (beamElement.value === 'Top Beam' || beamElement.value === 'Seer sucker'));
+    });
+
+    if (topBeamRows.length === 0) {
+        body.innerHTML = '<p style="text-align:center;color:#D97706;padding:25px;font-size:12px;font-weight:600;">"Top Beam" வகையில் எந்த Line-மும் இல்லை.<br>முதலில் Warp Thread Pattern பிரிவில் Beam Column-ல் "Top Beam" select பண்ணுங்க.</p>';
+        openModal('sskrModal');
+        return;
+    }
+
+    const groups = {};
+    topBeamRows.forEach(function (row) {
+        const countElement = row.querySelector('.inp-count');
+        const colorElement = row.querySelector('.inp-color');
+        const sskrElement = row.querySelector('.inp-sskr');
+        const countVal = (countElement && countElement.value.trim()) || '-';
+        const colorVal = (colorElement && colorElement.value.trim()) || '';
+        const sskrVal = sskrElement ? sskrElement.value : '';
+
+        if (!groups[countVal]) groups[countVal] = { colors: [], sskr: sskrVal, lineCount: 0 };
+        if (colorVal) groups[countVal].colors.push(colorVal);
+        if (sskrVal) groups[countVal].sskr = sskrVal;
+        groups[countVal].lineCount++;
+    });
+
+    sskrGroupsCache = Object.keys(groups);
+    let html = '<div style="font-size:10px;color:#0E7490;font-weight:600;margin-bottom:12px;background:#ECFEFF;border:1px dashed #06B6D4;padding:8px 10px;border-radius:8px;">"Top Beam" வகை Line-கள் Count வாரியா Group ஆகி காட்டப்படுகிறது. ஒரு % type பண்ணா, அந்த Count-க்குள் வரும் எல்லா Line-களுக்கும் ஒரே சமயம் apply ஆகும்.</div>';
+    html += '<div class="sskr-row" style="font-size:9px;font-weight:700;color:#2F4F38;text-transform:uppercase;"><div style="text-align:center;">#</div><div style="text-align:center;">Count</div><div style="text-align:center;">Colours (Lines)</div><div style="text-align:center;">SSKR %</div></div>';
+
+    sskrGroupsCache.forEach(function (countKey, idx) {
+        const g = groups[countKey];
+        const colorsText = g.colors.length > 0 ? (g.colors.join(', ') + ' (' + g.lineCount + ' lines)') : (g.lineCount + ' lines');
+        html += '<div class="sskr-row">'
+            + '<div class="line-no">' + (idx + 1) + '</div>'
+            + '<div class="sskr-row-label">' + escapeHtmlText(countKey) + '</div>'
+            + '<div class="sskr-row-label" style="font-size:9px;">' + escapeHtmlText(colorsText) + '</div>'
+            + '<input type="number" value="' + escapeHtmlAttribute(g.sskr) + '" placeholder="%" oninput="syncSskrGroup(' + idx + ', this.value)">'
+            + '</div>';
+    });
+    body.innerHTML = html;
+    openModal('sskrModal');
+}
+
+function syncSskrGroup(idx, val) {
+    const countKey = sskrGroupsCache[idx];
+    if (countKey === undefined) return;
+
+    document.querySelectorAll('.line-item').forEach(function (row) {
+        const beamElement = row.querySelector('.inp-beam');
+        if (!beamElement || (beamElement.value !== 'Top Beam' && beamElement.value !== 'Seer sucker')) return;
+        const countElement = row.querySelector('.inp-count');
+        const countVal = (countElement && countElement.value.trim()) || '-';
+        if (countVal === countKey) {
+            const sskrElement = row.querySelector('.inp-sskr');
+            if (sskrElement) sskrElement.value = val;
+        }
+    });
+}
+
+window.openFullscreenImage = function (src) {
+    if (!src || src === 'null' || src === 'undefined') return;
+    const img = document.getElementById('fullscreenImg');
+    const modal = document.getElementById('fullscreenModal');
+    if (!img || !modal) return;
+    img.src = src;
+    modal.style.display = 'flex';
+};
+window.closeFullscreenImage = function () {
+    const modal = document.getElementById('fullscreenModal');
+    const img = document.getElementById('fullscreenImg');
+    if (!modal) return;
+    modal.style.display = 'none';
+    if (img) img.src = '';
+};
+
+/* ============================================================
+   DESIGN NAME CLEAN (FIXED MATCHING LOGIC)
+============================================================ */
+function cleanDesignName(str) {
+    return str !== undefined && str !== null
+        ? str.toString().replace(/[#_]/g, '').replace(/\s+/g, '').trim().toLowerCase()
+        : '';
+}
+
+function loadBitmapImage() {
+    const designElement = document.getElementById('designNo');
+    const bitmapContainer = document.getElementById('bitmapDisplayContainer');
+    if (!designElement || !bitmapContainer) return;
+
+    let activeDesign = designElement.value || localStorage.getItem('selected_design_number');
+    const designSpecs = getLocalObject('design_specs');
+    const clean = activeDesign ? cleanDesignName(activeDesign) : '';
+    const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === clean; }) || activeDesign;
+
+    let imgHtml = '';
+    if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
+        const b64 = designSpecs[specKey].bitmap;
+        imgHtml = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage(this.src)" title="Click to view full screen">`;
+    }
+
+    const oldCheckbox = document.getElementById('top_completed_status');
+    const wasChecked = oldCheckbox ? oldCheckbox.checked : false;
+
+    const checkboxHtml = `<div class="completed-checkbox"><input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()"><label for="top_completed_status">Completed</label></div>`;
+    bitmapContainer.innerHTML = checkboxHtml + imgHtml;
+
+    if (wasChecked) {
+        const newCheckbox = document.getElementById('top_completed_status');
+        if (newCheckbox) newCheckbox.checked = true;
+    }
+}
+
+function loadDesignDropdown() {
+    const preDesigns = getLocalArray('pre_design_numbers');
+    const designMasters = getLocalArray('design_masters_data');
+    const designSpecs = getLocalObject('design_specs');
+    const partyOrders = getLocalArray('party_orders_data');
+    const allDesigns = new Set();
+
+    preDesigns.forEach(function (d) { if (d !== null && d !== undefined && d !== '') allDesigns.add(String(d)); });
+    designMasters.forEach(function (d) { if (!d || typeof d !== 'object') return; const value = d.name || d.designNo; if (value) allDesigns.add(String(value)); });
+    Object.keys(designSpecs).forEach(function (k) { if (k) allDesigns.add(String(k)); });
+    partyOrders.forEach(function (o) { if (!o || typeof o !== 'object') return; const value = o.designNumber || o.designNo; if (value) allDesigns.add(String(value)); });
+
+    const designElement = document.getElementById('designNo');
+    if (designElement) {
+        designElement.innerHTML = '<option value="">Select Design No</option>';
+        Array.from(allDesigns).filter(Boolean).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'})).forEach(function (d) {
+            const option = document.createElement('option');
+            option.value = d;
+            option.textContent = d;
+            designElement.appendChild(option);
+        });
+    }
+
+    const activeDesign = localStorage.getItem('selected_design_number');
+    if (activeDesign && Array.from(allDesigns).some(d => cleanDesignName(d) === cleanDesignName(activeDesign))) {
+        if (designElement) designElement.value = Array.from(allDesigns).find(d => cleanDesignName(d) === cleanDesignName(activeDesign));
+        loadDesignData();
+    } else {
+        loadBitmapImage();
+    }
+}
+
+function calculateOnloomWidth() {
+    const baseReed = parseFloat(currentBaseSpecs.reed || currentBaseSpecs.baseReed) || 0;
+    const baseWidth = parseFloat(currentBaseSpecs.width || currentBaseSpecs.baseWidth) || 0;
+    const reedElement = document.getElementById('infoReed');
+    const widthElement = document.getElementById('infoWidth');
+    if (!reedElement || !widthElement) return;
+
+    const onloomReed = parseFloat(reedElement.value) || 0;
+    if (baseWidth > 0 && baseReed > 0 && onloomReed > 0) {
+        widthElement.value = ((baseReed * baseWidth) / onloomReed).toFixed(2);
+    } else if (baseWidth > 0) {
+        widthElement.value = baseWidth.toFixed(2);
+    }
+}
+
+/* ============================================================
+   LOAD DESIGN DATA (FIXED)
+============================================================ */
+function loadDesignData() {
+    const designElement = document.getElementById('designNo');
+    if (!designElement) return;
+
+    const dNo = designElement.value;
+    loadBitmapImage();
+
+    if (dNo) localStorage.setItem('selected_design_number', dNo);
+
+    const linesContainer = document.getElementById('warpLinesContainer');
+    const rangesContainer = document.getElementById('warpRangesContainer');
+    if (linesContainer) linesContainer.innerHTML = '';
+    if (rangesContainer) rangesContainer.innerHTML = '';
+
+    const saveBtn = document.getElementById('saveBtnTxt');
+
+    document.getElementById('infoCount1').value = '';
+    document.getElementById('infoCount2').value = '';
+    document.getElementById('infoWeft1').value = '';
+    document.getElementById('infoWeft2').value = '';
+    document.getElementById('infoOrderMtr').value = '';
+    document.getElementById('infoTopBeam').value = '';
+    document.getElementById('infoType').value = 'Plain';
+    document.getElementById('infoReed').value = '';
+    document.getElementById('infoPick').value = '';
+    document.getElementById('infoWidth').value = '';
+
+    const topCheckbox = document.getElementById('top_completed_status');
+    if (topCheckbox) topCheckbox.checked = false;
+
+    if (!dNo) {
+        if (saveBtn) saveBtn.innerText = "💾 Save";
+        currentBaseSpecs = {};
+        loadDefaultRow();
+        refreshBulkColorDropdown();
+        toggleSskrSettingsBtn();
+        calculateLiveWarpTotals();
+        return;
+    }
+
+    const cleanDNo = cleanDesignName(dNo);
+    const specs = getLocalObject('design_specs');
+    const specKey = Object.keys(specs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
+    currentBaseSpecs = specs[specKey] || {};
+
+    const orders = getLocalArray('party_orders_data');
+    const matchedOrder = orders.find(function (o) { return cleanDesignName(o.designNumber || o.designNo || o.designName) === cleanDNo; }) || null;
+
+    const masters = getLocalArray('design_masters_data');
+    const foundMaster = masters.find(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; }) || null;
+
+    // 🟢 PRIORITY 1: Check warp_entry_data directly
+    let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+    let foundWarpEntry = Array.isArray(warpEntryList) 
+        ? warpEntryList.find(w => cleanDesignName(w.name || w.designNo) === cleanDNo) 
+        : null;
+
+    const specStatus = (currentBaseSpecs.status || (matchedOrder && matchedOrder.status) || (foundMaster && foundMaster.status) || '').toLowerCase();
+    if (specStatus === 'completed') {
+        const cb = document.getElementById('top_completed_status');
+        if (cb) cb.checked = true;
+    }
+    
+    let c1Resolved = (foundWarpEntry && foundWarpEntry.count1) || (matchedOrder && matchedOrder.baseBeamCount) || (foundMaster && (foundMaster.count1 || foundMaster.warp1)) || currentBaseSpecs.baseBeamCount || currentBaseSpecs.warp || currentBaseSpecs.count1 || '';
+    let c2Resolved = (foundWarpEntry && foundWarpEntry.count2) || (matchedOrder && matchedOrder.topBeamCount) || (foundMaster && (foundMaster.count2 || foundMaster.warp2)) || currentBaseSpecs.topBeamCount || currentBaseSpecs.warp2 || currentBaseSpecs.count2 || '';
+    if (c2Resolved === '-') c2Resolved = '';
+
+    let weft1Resolved = (foundWarpEntry && foundWarpEntry.weftCount) || (matchedOrder && matchedOrder.weftCount) || (foundMaster && (foundMaster.weftCount || foundMaster.weft)) || currentBaseSpecs.weftCount || currentBaseSpecs.weft || '';
+    let weft2Resolved = (foundWarpEntry && foundWarpEntry.weft2) || (matchedOrder && matchedOrder.weft2) || (foundMaster && foundMaster.weft2) || currentBaseSpecs.weft2 || '';
+
+    let onloomReedResolved = (foundWarpEntry && foundWarpEntry.onloomReed) || (matchedOrder && matchedOrder.onloomReed) || (foundMaster && foundMaster.onloomReed) || currentBaseSpecs.onloomReed || (matchedOrder && matchedOrder.reed) || (foundMaster && foundMaster.reed) || currentBaseSpecs.reed || '';
+    let onloomPickResolved = (foundWarpEntry && foundWarpEntry.onloomPick) || (matchedOrder && matchedOrder.onloomPick) || (foundMaster && foundMaster.onloomPick) || currentBaseSpecs.onloomPick || (matchedOrder && matchedOrder.pick) || (foundMaster && foundMaster.pick) || currentBaseSpecs.pick || '';
+    let onloomWidthResolved = (foundWarpEntry && foundWarpEntry.onloomWidth) || (matchedOrder && matchedOrder.onloomWidth) || (foundMaster && foundMaster.onloomWidth) || currentBaseSpecs.onloomWidth || (matchedOrder && matchedOrder.width) || (foundMaster && foundMaster.width) || currentBaseSpecs.width || '';
+
+    let matchedProdMtr = 0;
+    if (matchedOrder) { matchedProdMtr = parseFloat(matchedOrder.orderMtr || matchedOrder.productionMeter || matchedOrder.prodMtr || 0) || 0; }
+
+    document.getElementById('infoCount1').value = c1Resolved;
+    document.getElementById('infoCount2').value = c2Resolved;
+    document.getElementById('infoWeft1').value = weft1Resolved;
+    document.getElementById('infoWeft2').value = weft2Resolved;
+    document.getElementById('infoReed').value = onloomReedResolved;
+    document.getElementById('infoPick').value = onloomPickResolved;
+    document.getElementById('infoWidth').value = onloomWidthResolved;
+
+    let effectiveLines = (foundWarpEntry && Array.isArray(foundWarpEntry.warpLines) && foundWarpEntry.warpLines.length > 0)
+        ? foundWarpEntry.warpLines
+        : (foundMaster && Array.isArray(foundMaster.warpLines) ? foundMaster.warpLines : []);
+
+    let effectiveRanges = (foundWarpEntry && Array.isArray(foundWarpEntry.warpRanges))
+        ? foundWarpEntry.warpRanges
+        : (foundMaster && Array.isArray(foundMaster.warpRanges) ? foundMaster.warpRanges : []);
+
+    if (effectiveLines.length > 0) {
+        if (saveBtn) saveBtn.innerText = "✏️ Update";
+
+        const finalMtrToFill = matchedProdMtr > 0 ? matchedProdMtr : ((foundWarpEntry && foundWarpEntry.orderMtr) || (foundMaster && foundMaster.orderMtr) || '');
+        document.getElementById('infoOrderMtr').value = finalMtrToFill;
+        document.getElementById('infoTopBeam').value = (foundWarpEntry && foundWarpEntry.topBeam) || (foundMaster && foundMaster.topBeam) || '';
+
+        document.getElementById('infoType').value = (foundWarpEntry && foundWarpEntry.type) || (foundMaster && foundMaster.type) || (matchedOrder && matchedOrder.weaveType) || currentBaseSpecs.weaveType || currentBaseSpecs.weave || 'Plain';
+
+        effectiveLines.forEach(function (l) {
+            if (!l) return;
+            addWarpLine(l.count || '', l.color || '', l.beam || 'Ground', l.seer || '', l.ends || '');
+        });
+
+        effectiveRanges.forEach(function (r) {
+            if (!r) return;
+            addWarpRange(r.start || '', r.end || '', r.set || '');
+        });
+    } else {
+        if (saveBtn) saveBtn.innerText = "💾 Save";
+        if (matchedProdMtr > 0) document.getElementById('infoOrderMtr').value = matchedProdMtr;
+        document.getElementById('infoType').value = (matchedOrder && matchedOrder.weaveType) || currentBaseSpecs.weaveType || currentBaseSpecs.weave || 'Plain';
+        loadDefaultRow();
+    }
+
+    updateLineNumbers();
+    refreshBulkColorDropdown();
+    toggleSskrSettingsBtn();
+    calculateLiveWarpTotals();
+}
+
+function loadDefaultRow() {
+    const container = document.getElementById('warpLinesContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    addWarpLine();
+    refreshBulkColorDropdown();
+    calculateLiveWarpTotals();
+}
+
+function calculateTopBeam() {
+    const orderElement = document.getElementById('infoOrderMtr');
+    const topBeamInput = document.getElementById('infoTopBeam');
+    if (!orderElement || !topBeamInput) return;
+    const orderMtr = parseFloat(orderElement.value) || 0;
+    const topBeamStr = topBeamInput.value.trim();
+
+    if (orderMtr > 0 && topBeamStr) {
+        const val = parseFloat(topBeamStr.replace('+', '').replace('%', '').trim()) || 0;
+        if (topBeamStr.includes('%') || (val > 0 && val < 50 && !topBeamStr.includes('.'))) {
+            topBeamInput.value = (orderMtr + (orderMtr * val / 100)).toFixed(2);
+        }
+    }
+}
+
+async function copyToNewDesign() {
+    const designElement = document.getElementById('designNo');
+    if (!designElement) return;
+    const currentDNo = designElement.value;
+    if (!currentDNo) { alert("முதலில் எந்த டிசைனை காப்பி செய்ய வேண்டுமோ அதை செலக்ட் செய்யுங்கள் ப்ரோ!"); return; }
+
+    let newDNo = prompt(`'${currentDNo}' டிசைனை காப்பி செய்கிறீர்கள்.\n\nபுதிய டிசைன் நம்பரை (New Design Number) உள்ளிடவும்:`);
+    if (!newDNo || newDNo.trim() === '') return;
+    newDNo = newDNo.trim();
+
+    const preDesignList = getLocalArray('pre_design_numbers');
+    const alreadyExists = preDesignList.some(function (d) { return cleanDesignName(d) === cleanDesignName(newDNo); });
+    if (alreadyExists) { alert("இந்த டிசைன் நம்பர் ஏற்கனவே உள்ளது! வேறு நம்பரை கொடுக்கவும்."); return; }
+
+    const masters = getLocalArray('design_masters_data');
+    const oldMaster = masters.find(m => cleanDesignName(m.name || m.designNo) === cleanDesignName(currentDNo));
+
+    if (oldMaster) {
+        let copiedMaster = JSON.parse(JSON.stringify(oldMaster));
+        copiedMaster.name = newDNo;
+        copiedMaster.designNo = newDNo;
+        copiedMaster.status = 'running';
+        masters.push(copiedMaster);
+        localStorage.setItem('design_masters_data', JSON.stringify(masters));
+
+        let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+        if (!Array.isArray(warpEntryList)) warpEntryList = [];
+        warpEntryList.push(copiedMaster);
+        localStorage.setItem('warp_entry_data', JSON.stringify(warpEntryList));
+
+        try {
+            if (window.supabaseSave) {
+                window.supabaseSave('design_masters_data', masters);
+                window.supabaseSave('warp_entry_data', warpEntryList);
+            }
+        } catch (e) { console.error('supabase save error:', e); }
+    }
+
+    preDesignList.push(newDNo);
+    localStorage.setItem('pre_design_numbers', JSON.stringify(preDesignList));
+
+    try {
+        if (window.supabaseSave) await window.supabaseSave('pre_design_numbers', preDesignList);
+    } catch (e) {}
+
+    if (designElement) {
+        const option = document.createElement('option');
+        option.value = newDNo;
+        option.textContent = newDNo;
+        designElement.appendChild(option);
+        designElement.value = newDNo;
+    }
+    localStorage.setItem('selected_design_number', newDNo);
+    currentBaseSpecs = {};
+    document.getElementById('saveBtnTxt').innerText = "💾 Save";
+    const cb = document.getElementById('top_completed_status');
+    if (cb) cb.checked = false;
+
+    loadDesignData();
+    alert(`✅ '${newDNo}' டிசைனுக்கு வெற்றிகரமாக காப்பி செய்யப்பட்டது!\n\nஇப்போது நீங்கள் 'Bulk Color Changer' மூலம் கலரை மாற்றிவிட்டு 'Save' பட்டனை அழுத்தவும்.`);
+}
+
+function refreshBulkColorDropdown() {
+    const colorsSet = new Set();
+    document.querySelectorAll('.inp-color').forEach(function (inp) {
+        const val = inp.value.trim();
+        if (val) colorsSet.add(val);
+    });
+    const select = document.getElementById('bulkOldColor');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select Old Color</option>';
+    colorsSet.forEach(function (c) {
+        const option = document.createElement('option');
+        option.value = c; option.textContent = c;
+        select.appendChild(option);
+    });
+}
+
+function applyBulkColorChange() {
+    const oldColor = document.getElementById('bulkOldColor').value;
+    const newColor = document.getElementById('bulkNewColor').value.trim();
+    if (!oldColor || !newColor) { alert("Please select the Old Color and type the New Color!"); return; }
+    if (confirm(`Are you sure you want to change all '${oldColor}' to '${newColor}'?`)) {
+        let changedCount = 0;
+        document.querySelectorAll('.inp-color').forEach(function (inp) {
+            if (inp.value.trim() === oldColor) { inp.value = newColor; changedCount++; }
+        });
+        document.getElementById('bulkOldColor').value = '';
+        document.getElementById('bulkNewColor').value = '';
+        refreshBulkColorDropdown();
+        alert(`${changedCount} rows updated successfully! ✅`);
+    }
+}
+
+function addWarpLine(count = '', color = '', beam = 'Ground', sskr = '', ends = '', insertAfterElem = null) {
+    if (!count) { const c1 = document.getElementById('infoCount1'); if (c1 && c1.value) count = c1.value; }
+    const container = document.getElementById('warpLinesContainer');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'row-grid line-item';
+    row.innerHTML = `
+        <div class="line-no"></div>
+        <input type="text" class="inp-count" placeholder="Count" value="${escapeHtmlAttribute(count)}">
+        <input type="text" class="inp-color" placeholder="Colour" value="${escapeHtmlAttribute(color)}" onblur="refreshBulkColorDropdown()" onkeydown="if(event.key==='Enter'){event.preventDefault(); let bm=this.parentElement.querySelector('.inp-beam'); if(bm) bm.focus();}">
+        <select class="inp-beam" onkeydown="if(event.key==='Enter'){event.preventDefault(); if(this.value === 'Ground') this.value = 'Top Beam'; else if(this.value === 'Top Beam') this.value = 'Seer sucker'; else this.value = 'Ground'; let sk=this.parentElement.querySelector('.inp-sskr'); if(sk) sk.focus();}">
+            <option value="Ground" ${beam === 'Ground' ? 'selected' : ''}>Ground</option>
+            <option value="Top Beam" ${beam === 'Top Beam' ? 'selected' : ''}>Top Beam</option>
+            <option value="Seer sucker" ${beam === 'Seer sucker' ? 'selected' : ''}>Seer sucker</option>
+        </select>
+        <input type="number" class="inp-sskr" placeholder="%" value="${escapeHtmlAttribute(sskr)}" onkeydown="if(event.key==='Enter'){event.preventDefault(); let en=this.parentElement.querySelector('.inp-ends'); if(en) en.focus();}">
+        <input type="number" class="inp-ends" placeholder="Ends" value="${escapeHtmlAttribute(ends)}" onkeydown="if(event.key==='Enter'){event.preventDefault(); addWarpLine('','','Ground','','', this.parentElement); setTimeout(()=>{let next = this.parentElement.nextElementSibling?.querySelector('.inp-count'); if(next) next.focus();},50);}">
+        <div class="action-cell-row">
+            <button class="btn-insert-small" onclick="addWarpLine('','','Ground','','', this.parentElement.parentElement);" title="Insert row below">+</button>
+            <button class="btn-del-small" onclick="this.parentElement.parentElement.remove(); updateLineNumbers(); refreshBulkColorDropdown(); calculateLiveWarpTotals();" title="Delete row">×</button>
+        </div>
+    `;
+    if (insertAfterElem && insertAfterElem.nextSibling) container.insertBefore(row, insertAfterElem.nextSibling);
+    else container.appendChild(row);
+    updateLineNumbers(); refreshBulkColorDropdown(); calculateLiveWarpTotals();
+}
+
+function escapeHtmlAttribute(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function addWarpRange(start = '', end = '', set = '') {
+    const container = document.getElementById('warpRangesContainer');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'row-grid-range range-item';
+    row.innerHTML = `
+        <input type="number" class="inp-start" placeholder="Start" value="${escapeHtmlAttribute(start)}">
+        <input type="number" class="inp-end" placeholder="End" value="${escapeHtmlAttribute(end)}">
+        <input type="number" class="inp-set" placeholder="Times" value="${escapeHtmlAttribute(set)}" onkeydown="if(event.key==='Enter'){event.preventDefault(); addWarpRange(); setTimeout(()=>{let ins = document.querySelectorAll('.inp-start'); if(ins.length > 0){ins[ins.length - 1].focus();}},50);}">
+        <button class="btn-del-small" onclick="this.parentElement.remove(); calculateLiveWarpTotals();">×</button>
+    `;
+    container.appendChild(row); calculateLiveWarpTotals();
+}
+
+function updateLineNumbers() {
+    document.querySelectorAll('.line-item .line-no').forEach(function (elem, idx) { elem.innerText = idx + 1; });
+}
+
+async function quickCompleteToggle() {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to modify status on this page. ❌");
+        const cb = document.getElementById('top_completed_status');
+        if (cb) cb.checked = !cb.checked;
+        return;
+    }
+    const designElement = document.getElementById('designNo');
+    const cb = document.getElementById('top_completed_status');
+    if (!designElement || !cb) return;
+
+    const dNo = designElement.value;
+    if (!dNo) { alert("Mudhala Design Number select pannunga bro"); cb.checked = false; return; }
+
+    const isCompleted = cb.checked;
+    const statusText = isCompleted ? 'completed' : 'running';
+    const cleanDNo = cleanDesignName(dNo);
+    const masters = getLocalArray('design_masters_data');
+
+    let idx = masters.findIndex(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; });
+    if (idx > -1) masters[idx].status = statusText;
+    else masters.push({ name: dNo, designNo: dNo, status: statusText, warpLines: [], warpRanges: [] });
+    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+
+    const designSpecs = getLocalObject('design_specs');
+    const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
+    if (!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = statusText;
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('design_masters_data', masters);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+    } catch (e) { console.error("supabase sync error:", e); }
+    renderSavedList();
+    alert(`Design ${dNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
+}
+
+window.saveWarpDesign = async function () {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to save entries on this page. ❌"); return; }
+    const designElement = document.getElementById('designNo');
+    if (!designElement) return;
+    const dNo = designElement.value;
+    if (!dNo) { alert("Please select a Design Number!"); return; }
+
+    const cleanDNo = cleanDesignName(dNo);
+    let masters = getLocalArray('design_masters_data');
+
+    const hasCurrentBaseSpecs = currentBaseSpecs && typeof currentBaseSpecs === 'object' && Object.keys(currentBaseSpecs).length > 0;
+    const hasExistingWarpPattern = masters.some(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo && Array.isArray(m.warpLines) && m.warpLines.length > 0; });
+
+    if (!hasCurrentBaseSpecs && !hasExistingWarpPattern) {
+        const alreadyExists = masters.some(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo && Array.isArray(m.warpLines) && m.warpLines.length > 0; });
+        if (alreadyExists) {
+            if (!confirm("இந்த டிசைனுக்கு ஏற்கனவே வார்ப் பேட்டர்ன் என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?")) return;
+            masters = masters.filter(function (m) { return cleanDesignName(m.name || m.designNo) !== cleanDNo; });
+        }
+    }
+
+    calculateTopBeam();
+    const completedElement = document.getElementById('top_completed_status');
+    const isCompleted = completedElement ? completedElement.checked : false;
+    const lines = [];
+
+    document.querySelectorAll('.line-item').forEach(function (row) {
+        const countElement = row.querySelector('.inp-count');
+        const colorElement = row.querySelector('.inp-color');
+        const beamElement = row.querySelector('.inp-beam');
+        const sskrElement = row.querySelector('.inp-sskr');
+        const endsElement = row.querySelector('.inp-ends');
+        if (!countElement || !colorElement || !beamElement || !sskrElement || !endsElement) return;
+
+        const count = countElement.value.trim();
+        const color = colorElement.value.trim();
+        const beam = beamElement.value;
+        const sskr = parseInt(sskrElement.value) || 0;
+        const ends = endsElement.value.trim();
+
+        if (count || color || ends) {
+            lines.push({ count: count, color: color, beam: beam, seer: sskr, ends: ends });
+        }
+    });
+
+    const ranges = [];
+    document.querySelectorAll('.range-item').forEach(function (row) {
+        const startElement = row.querySelector('.inp-start');
+        const endElement = row.querySelector('.inp-end');
+        const setElement = row.querySelector('.inp-set');
+        if (!startElement || !endElement || !setElement) return;
+
+        const start = startElement.value.trim();
+        const end = endElement.value.trim();
+        const set = setElement.value.trim();
+        if (start && end && set) {
+            ranges.push({ start: parseInt(start), end: parseInt(end), set: parseInt(set) });
+        }
+    });
+
+    const saveBtn = document.getElementById('saveBtnTxt');
+    const originalText = saveBtn ? saveBtn.innerText : "💾 Save";
+    if (saveBtn) { saveBtn.innerText = "⏳ Saving to Cloud..."; saveBtn.disabled = true; }
+
+    const patternData = {
+        name: dNo, designNo: dNo,
+        count1: document.getElementById('infoCount1').value.trim(),
+        count2: document.getElementById('infoCount2').value.trim(),
+        weftCount: document.getElementById('infoWeft1').value.trim(),
+        weft2: document.getElementById('infoWeft2').value.trim(),
+        orderMtr: document.getElementById('infoOrderMtr').value.trim(),
+        topBeam: document.getElementById('infoTopBeam').value.trim(),
+        type: document.getElementById('infoType').value,
+        onloomReed: document.getElementById('infoReed').value.trim(),
+        onloomPick: document.getElementById('infoPick').value.trim(),
+        onloomWidth: document.getElementById('infoWidth').value.trim(),
+        warpLines: lines,
+        warpRanges: ranges,
+        status: isCompleted ? 'completed' : 'running'
+    };
+
+    const idx = masters.findIndex(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; });
+    if (idx === -1) masters.push(patternData);
+    else masters[idx] = Object.assign({}, masters[idx], patternData);
+
+    // 🟢 SAVE INTO warp_entry_data WITH EXACT DESIGN NO 🟢
+    let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+    if (!Array.isArray(warpEntryList)) warpEntryList = [];
+    // Remove old Live Preview or existing saved copy
+    warpEntryList = warpEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo && w.designNo !== "🔴 Live Warp Entry Preview");
+    warpEntryList.push(patternData);
+    localStorage.setItem('warp_entry_data', JSON.stringify(warpEntryList));
+
+    const designSpecs = getLocalObject('design_specs');
+    const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
+    if (!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
+    designSpecs[specKey].weftCount = document.getElementById('infoWeft1').value.trim();
+    designSpecs[specKey].weft2 = document.getElementById('infoWeft2').value.trim();
+    designSpecs[specKey].onloomReed = document.getElementById('infoReed').value.trim();
+    designSpecs[specKey].onloomPick = document.getElementById('infoPick').value.trim();
+    designSpecs[specKey].onloomWidth = document.getElementById('infoWidth').value.trim();
+
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('design_masters_data', masters);
+            await window.supabaseSave('warp_entry_data', warpEntryList);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        if (saveBtn) { saveBtn.innerText = originalText; saveBtn.disabled = false; }
+        alert("Warp Pattern Saved to Cloud Successfully! ✅☁️");
+    } catch (e) {
+        console.error("supabase save error:", e);
+        if (saveBtn) { saveBtn.innerText = originalText; saveBtn.disabled = false; }
+        alert("Data saved locally, but Cloud Sync failed. Please check your internet/supabase connection. ⚠️");
+    }
+};
+
+async function toggleStatus(dNo, newStatus) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to change status. ❌"); return; }
+    if (!confirm(newStatus === 'completed' ? "Change this pattern to Completed?" : "Change this pattern to Running?")) return;
+
+    const cleanDNo = cleanDesignName(dNo);
+    const masters = getLocalArray('design_masters_data');
+    const index = masters.findIndex(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; });
+
+    if (index > -1) {
+        masters[index].status = newStatus;
+        localStorage.setItem('design_masters_data', JSON.stringify(masters));
+
+        const designSpecs = getLocalObject('design_specs');
+        const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
+        if (!designSpecs[specKey]) designSpecs[specKey] = {};
+        designSpecs[specKey].status = newStatus;
+        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+        try {
+            if (window.supabaseSave) { await window.supabaseSave('design_masters_data', masters); await window.supabaseSave('design_specs', designSpecs); }
+            if (window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        } catch (e) { console.error("supabase status sync error:", e); }
+        renderSavedList();
+    }
+}
+
+function openSavedModal() { renderSavedList(); openModal('savedListModal'); }
+
+function renderSavedList() {
+    const masters = getLocalArray('design_masters_data');
+    const tbody = document.getElementById('savedPatternsBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    let hasData = false;
+
+    masters.forEach(function (m) {
+        if (!m || !Array.isArray(m.warpLines) || m.warpLines.length === 0) return;
+        hasData = true;
+        if (!m.status) m.status = "running";
+        const designName = m.name || m.designNo || '-';
+        const statusColor = m.status === 'running' ? '#D97706' : '#526E51';
+        const safeDesign = String(designName).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+        const statusBtn = m.status === 'running'
+            ? `<button class="action-complete" onclick="toggleStatus('${safeDesign}', 'completed')">Complete</button>`
+            : `<button class="action-running" onclick="toggleStatus('${safeDesign}', 'running')">Running</button>`;
+
+        tbody.innerHTML += `
+            <tr>
+                <td><b>${escapeHtmlText(designName)}</b></td>
+                <td>${m.warpLines.length} Lines</td>
+                <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${escapeHtmlText(m.status)}</td>
+                <td><div class="action-cell">${statusBtn}<button class="edit-action-btn" onclick="editDesignPattern('${safeDesign}')">✏️ Edit</button></div></td>
+            </tr>
+        `;
+    });
+
+    if (!hasData) tbody.innerHTML = `<tr><td colspan="4" style="padding:15px; color:#D97706;">No Warp Patterns saved yet.</td></tr>`;
+}
+
+function escapeHtmlText(value) {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function editDesignPattern(dNo) {
+    closeModal('savedListModal');
+    const select = document.getElementById('designNo');
+    if (!select) return;
+    select.value = dNo;
+    loadDesignData();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function previewPattern() {
+    calculateTopBeam(); calculateOnloomWidth();
+    const designElement = document.getElementById('designNo');
+    if (!designElement) return;
+
+    const dNo = designElement.value;
+    const warpLines = [];
+    document.querySelectorAll('.line-item').forEach(function (row) {
+        const count = row.querySelector('.inp-count').value.trim();
+        const color = row.querySelector('.inp-color').value.trim();
+        const beam = row.querySelector('.inp-beam').value;
+        const sskrElement = row.querySelector('.inp-sskr');
+        const sskr = sskrElement ? (parseInt(sskrElement.value) || 0) : 0;
+        const ends = parseFloat(row.querySelector('.inp-ends').value) || 0;
+        if (count || color || ends) warpLines.push({ count: count, color: color, beam: beam, seer: sskr, ends: ends });
+    });
+
+    const ranges = [];
+    document.querySelectorAll('.range-item').forEach(function (row) {
+        const start = parseInt(row.querySelector('.inp-start').value) || 0;
+        const end = parseInt(row.querySelector('.inp-end').value) || 0;
+        const set = parseInt(row.querySelector('.inp-set').value) || 0;
+        if (start && end && set) ranges.push({ start, end, set });
+    });
+
+    if (warpLines.length === 0) { alert("No pattern to preview! Please add lines."); return; }
+
+    const designSpecs = getLocalObject('design_specs');
+    const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDesignName(dNo); });
+    const sp = specKey ? designSpecs[specKey] : {};
+
+    let headerHtml = `
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;background:#F4F7F4;border:1px solid #4A7C59;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:11px;font-weight:700;color:#1E2B23;">
+            <span style="margin-right:8px;">Design: <span style="color:#4A7C59;">${escapeHtmlText(dNo || '-')}</span></span>
+            <span style="margin-right:8px;">Counts: ${escapeHtmlText(document.getElementById('infoCount1').value || '-')}, ${escapeHtmlText(document.getElementById('infoCount2').value || '-')}</span>
+            <span style="margin-right:8px;">Order Mtr: ${escapeHtmlText(document.getElementById('infoOrderMtr').value || '-')}</span>
+            <span style="margin-right:8px;">Top Beam: ${escapeHtmlText(document.getElementById('infoTopBeam').value || '-')}</span>
+            <span style="margin-right:8px;">Type: ${escapeHtmlText(document.getElementById('infoType').value || 'Plain')}</span>
+            <span style="margin-right:8px;">Reed: ${escapeHtmlText(document.getElementById('infoReed').value || '-')}</span>
+            <span style="margin-right:8px;">Pick: ${escapeHtmlText(document.getElementById('infoPick').value || '-')}</span>
+            <span>Width: ${escapeHtmlText(document.getElementById('infoWidth').value || '-')}</span>
+        </div>
+    `;
+
+    let col1Html = ''; let col2Html = ''; let currentLinesInCol1 = 0; const MAX_LINES_COL1 = 45;
+    let groundTotal = 0; let topTotal = 0; let flatPattern = []; let i = 0;
+
+    const tdStyle = "padding:4px 6px;text-align:center;color:#1E2B23;font-size:11px;border-bottom:1px dashed #A0AFA0;";
+    const tdStyleColor = "padding:4px 6px;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;border-bottom:1px dashed #A0AFA0;";
+    const tdStyleLast = "padding:4px 6px;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:11px;border-bottom:1px dashed #A0AFA0;";
+
+    while (i < warpLines.length) {
+        const start = i + 1;
+        const range = ranges.find(r => r.start === start);
+        let blockHtml = ''; let blockLineCount = 0;
+
+        if (range && range.end >= range.start) {
+            const end = range.end; const set = range.set;
+            const blockLines = []; let blockGroundEnds = 0; let blockTopEnds = 0;
+
+            for (let j = start - 1; j < end; j++) {
+                if (warpLines[j]) {
+                    const lineItem = Object.assign({}, warpLines[j]); lineItem.lineNo = j + 1; blockLines.push(lineItem);
+                    if (warpLines[j].beam === 'Top Beam' || warpLines[j].beam === 'Seer sucker') blockTopEnds += parseInt(warpLines[j].ends) || 0;
+                    else blockGroundEnds += parseInt(warpLines[j].ends) || 0;
+
+                    for (let rep = 0; rep < set; rep++) {
+                        flatPattern.push({ lineNo: j + 1, count: lineItem.count || '-', color: lineItem.color || '-', ends: parseFloat(lineItem.ends) || 0, beam: lineItem.beam });
+                    }
+                }
+            }
+            let total = 0; for (let j = start - 1; j < end; j++) total += parseInt(warpLines[j]?.ends) || 0; total = total * set;
+            groundTotal += blockGroundEnds * set; topTotal += blockTopEnds * set;
+
+            blockLines.forEach(function (item, index) {
+                let endsDisplay = '';
+                if (item.beam === 'Seer sucker') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#8B5CF6;font-weight:bold;" title="SSKR">${item.ends}</span>`;
+                else if (item.beam === 'Top Beam') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#D97706;" title="Dobby">${item.ends}</span>`;
+                else endsDisplay = `<span style="display:inline-block;padding-right:15px;color:#2F4F38;" title="Bottom">${item.ends}</span>`;
+                const colorTamil = typeof translateColorToTamil === 'function' ? translateColorToTamil(item.color) : item.color;
+
+                blockHtml += `
+                    <tr>
+                        <td style="${tdStyle}font-weight:700;color:#4A554A;">${item.lineNo}</td>
+                        <td style="${tdStyle}">${escapeHtmlText(item.count || '-')}</td>
+                        <td style="${tdStyleColor}">${escapeHtmlText(colorTamil)}</td>
+                        <td style="${tdStyle}font-weight:bold;">${endsDisplay}</td>
+                `;
+                if (index === 0) {
+                    blockHtml += `
+                        <td rowspan="${blockLines.length}" style="${tdStyleLast}">
+                            <div style="display:flex;align-items:center;justify-content:flex-start;gap:4px;font-weight:700;font-size:16px;">
+                                <span style="font-size:${blockLines.length * 18}px;font-weight:300;line-height:0.5;display:inline-block;">}</span>
+                                <span>X ${set} = <span style="color:#D97706">${total}</span></span>
+                            </div>
+                        </td>
+                    `;
+                }
+                blockHtml += `</tr>`;
+            });
+            i = end; blockLineCount = blockLines.length;
+
+        } else {
+            const item = Object.assign({}, warpLines[i]); item.lineNo = i + 1;
+            if (item.beam === 'Top Beam' || item.beam === 'Seer sucker') topTotal += parseFloat(item.ends) || 0;
+            else groundTotal += parseFloat(item.ends) || 0;
+
+            flatPattern.push({ lineNo: item.lineNo, count: item.count || '-', color: item.color || '-', ends: parseFloat(item.ends) || 0, beam: item.beam });
+
+            let endsDisplay = '';
+            if (item.beam === 'Seer sucker') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#8B5CF6;font-weight:bold;" title="SSKR">${item.ends}</span>`;
+            else if (item.beam === 'Top Beam') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#D97706;" title="Dobby">${item.ends}</span>`;
+            else endsDisplay = `<span style="display:inline-block;padding-right:15px;color:#2F4F38;" title="Bottom">${item.ends}</span>`;
+            const colorTamil = typeof translateColorToTamil === 'function' ? translateColorToTamil(item.color) : item.color;
+
+            blockHtml += `
+                <tr>
+                    <td style="${tdStyle}font-weight:700;color:#4A554A;">${item.lineNo}</td>
+                    <td style="${tdStyle}">${escapeHtmlText(item.count || '-')}</td>
+                    <td style="${tdStyleColor}">${escapeHtmlText(colorTamil)}</td>
+                    <td style="${tdStyle}font-weight:bold;">${endsDisplay}</td>
+                    <td style="${tdStyleLast}"></td>
+                </tr>
+            `;
+            i++; blockLineCount = 1;
+        }
+
+        if (currentLinesInCol1 < MAX_LINES_COL1) { col1Html += blockHtml; currentLinesInCol1 += blockLineCount; }
+        else { col2Html += blockHtml; }
+    }
+
+    const finalTotal = groundTotal + topTotal;
+    let hasGround = false; let hasTop = false; let hasSskr = false;
+    warpLines.forEach(function (wl) { if (wl.beam === 'Ground') hasGround = true; if (wl.beam === 'Top Beam') hasTop = true; if (wl.beam === 'Seer sucker') hasSskr = true; });
+
+    let beamLabels = [];
+    if (hasGround) beamLabels.push("Bottom");
+    if (hasTop) beamLabels.push("Dobby");
+    if (hasSskr) beamLabels.push("SSKR");
+    let dynamicBeamHeader = beamLabels.length > 0 ? beamLabels.join(" / ") : "Bottom";
+    let topLabelStr = hasSskr && !hasTop ? "SSKR" : (hasTop && !hasSskr ? "Dobby" : "Dobby/SSKR");
+
+    const finalTotalDisplay = topTotal > 0 ? `<span style="color:#3F5A3E;">${groundTotal} <span style="font-size:9px;">(Bottom)</span></span> + <span style="color:#D97706;">${topTotal} <span style="font-size:9px;">(${topLabelStr})</span></span> = ${finalTotal}` : `${finalTotal}`;
+
+    let html = headerHtml;
+    const tableHeader = `
+        <tr style="background:#EAF0EA;">
+            <th style="padding:6px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:10%;">No</th>
+            <th style="padding:6px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:15%;">Count</th>
+            <th style="padding:6px;text-align:left;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:25%;">Colour</th>
+            <th style="padding:6px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;line-height:1.2;width:15%;">Ends<br><span style="font-size:7px;color:#4A554A;">${dynamicBeamHeader}</span></th>
+            <th style="padding:6px;text-align:left;padding-left:10px;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:35%;">Set</th>
+        </tr>
+    `;
+
+    html += `<div class="print-flex-row" style="display:flex;gap:20px;align-items:flex-start;justify-content:space-between;width:100%;"><div class="print-col-box" style="flex:1;width:48%;background:#FFF;"><table style="width:100%;border-collapse:collapse;font-size:11px;">${tableHeader}${col1Html}</table></div><div class="print-col-box" style="flex:1;width:48%;background:#FFF;">`;
+    if (col2Html !== '') html += `<table style="width:100%;border-collapse:collapse;font-size:11px;">${tableHeader}${col2Html}</table>`;
+    html += `</div></div>`;
+
+    const curWidth = parseFloat(document.getElementById('infoWidth')?.value) || 0;
+    const curReed = parseFloat(document.getElementById('infoReed')?.value) || 0;
+    const calcEnds = (curWidth * curReed).toFixed(2);
+    const grandTotalPattern = groundTotal + topTotal;
+    const curTotalEnds = Math.round(curWidth * curReed);
+
+    html += `
+        <div style="margin-top:15px;border-top:2px solid #4A7C59;padding-top:5px;page-break-inside:avoid;">
+            <table style="width:100%;border-collapse:collapse;font-size:11px;background:#FFF;">
+                <tr style="font-weight:bold;font-size:12px;background:#F8FAF8;border-bottom:1px dashed #A0AFA0;">
+                    <td style="padding:8px;text-align:right;color:#2F4F38;width:60%;">Total Pattern Ends:</td>
+                    <td style="padding:8px;font-weight:bold;text-align:left;padding-left:15px;white-space:nowrap;color:#1E2B23;">${finalTotalDisplay}</td>
+                </tr>
+                <tr style="background:#FFFFFF;border-bottom:1px dashed #A0AFA0;">
+                    <td colspan="2" style="padding:8px;text-align:center;font-size:12px;font-weight:700;color:#1E2B23;">
+                        Warp Width ${curWidth} X Reed ${curReed} = <span style="color:#059669;">${calcEnds}</span> Total Ends
+                    </td>
+                </tr>
+    `;
+
+    if (curReed > 0 && curWidth > 0 && grandTotalPattern > 0) {
+        const repeats = Math.floor(curTotalEnds / grandTotalPattern);
+        const remEnds = curTotalEnds % grandTotalPattern;
+        const countTotals = {};
+
+        flatPattern.forEach(function (item) { countTotals[item.count] = (countTotals[item.count] || 0) + (item.ends * repeats); });
+
+        let endsToDistribute = remEnds;
+        for (const item of flatPattern) {
+            if (endsToDistribute <= 0) break;
+            const take = Math.min(item.ends, endsToDistribute);
+            countTotals[item.count] = (countTotals[item.count] || 0) + take;
+            endsToDistribute -= take;
+        }
+
+        html += `
+            <tr style="font-weight:700;font-size:12px;background:#FFFFFF;color:#2F4F38;border-bottom:1px dashed #A0AFA0;">
+                <td colspan="2" style="padding:10px;text-align:center;">
+                    <span style="color:#D97706;font-weight:800;">${repeats} Repeat</span> + 
+                    <span style="color:#D97706;font-weight:800;">${remEnds} Ends</span> = 
+                    <span style="font-size:13px;color:#1E2B23;font-weight:800;">${curTotalEnds} Total Ends</span>
+                </td>
+            </tr>
+        `;
+
+        const breakdownHtml = Object.keys(countTotals).map(c => `<span style="color:#1E2B23;"><b>${escapeHtmlText(c)}</b>: ${countTotals[c]} Ends</span>`).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
+        html += `<tr style="font-size:11px;background:#EAF0EA;"><td colspan="2" style="padding:10px;text-align:center;"><span style="color:#4A7C59;font-weight:800;margin-right:8px;text-transform:uppercase;">Count Wise Total:</span>${breakdownHtml}</td></tr>`;
+    }
+
+    html += `</table></div>`;
+    const previewContent = document.getElementById('previewContent');
+    if (!previewContent) return;
+    previewContent.innerHTML = html;
+    openModal('previewModal');
+}
+
+/* ============================================================
+   3D PREVIEW DATA LINK (FIXED)
+============================================================ */
+function update3DPreviewData() {
+    try {
+        let colorInputs = document.querySelectorAll('.inp-color');
+        let endsInputs = document.querySelectorAll('.inp-ends');
+        let beamInputs = document.querySelectorAll('.inp-beam');
+        let sskrInputs = document.querySelectorAll('.inp-sskr');
+
+        let color1 = colorInputs.length > 0 ? colorInputs[0].value : "White";
+        let ends1 = endsInputs.length > 0 ? endsInputs[0].value : "60";
+        let sskr1 = sskrInputs.length > 0 ? (parseInt(sskrInputs[0].value) || 0) : 0;
+
+        let color2 = colorInputs.length > 1 ? colorInputs[1].value : "Blue";
+        let ends2 = endsInputs.length > 1 ? endsInputs[1].value : "60";
+        let sskr2 = sskrInputs.length > 1 ? (parseInt(sskrInputs[1].value) || 0) : 0;
+
+        let previewObj = {
+            designNo: "🔴 Live Warp Entry Preview", 
+            warpColor1: color1, warpEnds1: ends1, warpSeer1: sskr1,
+            warpColor2: color2, warpEnds2: ends2, warpSeer2: sskr2,
+            weftColor: "White" 
+        };
+
+        let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+        if (!Array.isArray(warpEntryList)) warpEntryList = [];
+        
+        // பழைய Preview டேட்டா இருந்தால் அகற்றிவிட்டு புதியதை சேர்க்கவும் (மற்ற டிசைன்களை அழிக்காது)
+        warpEntryList = warpEntryList.filter(w => w.designNo !== "🔴 Live Warp Entry Preview");
+        warpEntryList.unshift(previewObj); 
+        
+        localStorage.setItem('warp_entry_data', JSON.stringify(warpEntryList));
+    } catch(e) {
+        console.error("3D Preview Data Link Error:", e);
+    }
+}
+
+/* ============================================================
+   🟢 LIVE WARP TOTALS CALCULATION 🟢
+============================================================ */
+function calculateLiveWarpTotals() {
+    let patternEnds = 0;
+    
+    const ranges = [];
+    document.querySelectorAll('.range-item').forEach(function(row) {
+        const s = parseInt(row.querySelector('.inp-start')?.value) || 0;
+        const e = parseInt(row.querySelector('.inp-end')?.value) || 0;
+        const set = parseInt(row.querySelector('.inp-set')?.value) || 0;
+        if (s && e && set) { ranges.push({ start: s, end: e, set: set }); }
+    });
+
+    const lines = [];
+    document.querySelectorAll('.line-item').forEach(function(row) {
+        const val = parseFloat(row.querySelector('.inp-ends')?.value) || 0;
+        lines.push(val);
+    });
+
+    let i = 0;
+    while (i < lines.length) {
+        const lineNo = i + 1;
+        const range = ranges.find(r => r.start === lineNo);
+
+        if (range && range.end >= range.start) {
+            let blockEnds = 0;
+            for (let j = lineNo - 1; j < range.end; j++) { blockEnds += lines[j] || 0; }
+            patternEnds += blockEnds * range.set;
+            i = range.end;
+        } else {
+            patternEnds += lines[i] || 0;
+            i++;
+        }
+    }
+
+    const reed = parseFloat(document.getElementById('infoReed')?.value) || 0;
+    const width = parseFloat(document.getElementById('infoWidth')?.value) || 0;
+    const totalEnds = (width * reed).toFixed(2);
+
+    const patternEndsElem = document.getElementById('entryPatternEnds');
+    const totalEndsElem = document.getElementById('entryTotalEndsCalc');
+
+    if (patternEndsElem) patternEndsElem.innerText = patternEnds;
+    if (totalEndsElem) totalEndsElem.innerText = `${width} x ${reed} = ${totalEnds}`;
+}
+
+document.addEventListener('input', function(e) {
+    if (
+        e.target.classList.contains('inp-ends') || 
+        e.target.classList.contains('inp-start') || 
+        e.target.classList.contains('inp-end') || 
+        e.target.classList.contains('inp-set') || 
+        e.target.id === 'infoReed' || 
+        e.target.id === 'infoWidth'
+    ) { calculateLiveWarpTotals(); }
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('btn-del-small')) { setTimeout(calculateLiveWarpTotals, 50); }
+});
+</script>
+</body>
+</html>

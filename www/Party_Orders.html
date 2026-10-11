@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PARTY ORDERS - TEX FOR EVER</title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        html, body { 
+            width: 100%;
+            min-height: 100vh;
+            background: #030712 !important; 
+            color: #1E2B23; 
+        }
+
+        body { 
+            padding: 12px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        html body .container,
+        div.container,
+        .container {
+            width: 100% !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
+            background: #FFFFFF !important;
+            background-color: #FFFFFF !important;
+            padding: 20px !important;
+            border-radius: 20px !important;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4) !important;
+            border: 1px solid rgba(82, 110, 81, 0.25) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px !important;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 11px;
+            background: #1A1; 
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(74, 124, 89, 0.25);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: #33593D; transform: translateY(-2px); }
+
+        #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
+        #bitmapDisplayContainer img {
+            max-height: 45px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            cursor: zoom-in;
+            transition: transform 0.3s;
+        }
+        #bitmapDisplayContainer img:hover { transform: scale(1.1); }
+
+        .card-header {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: #2F4F38 !important;
+            text-align: left;
+            position: relative;
+            padding-left: 14px;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10%;
+            height: 80%;
+            width: 4px;
+            background: #4A7C59;
+            border-radius: 4px;
+        }
+
+        .form-section {
+            background: #F8FAF8 !important;
+            border: 1px solid #E2E8E2 !important;
+            border-radius: 14px;
+            padding: 18px 15px 15px 15px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        
+        .section-badge {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #4A7C59;
+            color: #FFF;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #4A554A !important;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #D1DED1 !important;
+            border-radius: 8px;
+            font-size: 11px;
+            background: #FFFFFF !important;
+            color: #1E2B23 !important;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        input:focus, select:focus {
+            border-color: #4A7C59 !important;
+            outline: none;
+            background: #FFFFFF !important;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15) !important;
+        }
+        
+        input::placeholder { color: #A0AFA0; font-weight: 400; }
+
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0 0 0;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #4A79, #33593D);
+            box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(74, 124, 89, 0.35); }
+
+        .popup-trigger-btn {
+            background: linear-gradient(135deg, #2AA6, #1D4FC8);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .popup-trigger-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35); }
+
+        .overlay-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 25, 20, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 99999;
+            flex-direction: column;
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .overlay-modal.show { opacity: 1; }
+        
+        .modal-content {
+            background: #FFFFFF;
+            width: 100%; height: 100%;
+            border-radius: 16px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .overlay-modal.show .modal-content { transform: scale(1); }
+
+        .modal-header {
+            padding: 15px 20px;
+            background: #F4F7F4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E2E8E2;
+        }
+        .modal-header h3 { margin: 0; font-size: 15px; color: #1E2B23; font-weight: 700; }
+        .close-btn {
+            background: #FEE2E2; color: #DC2626; border: none; padding: 8px 14px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;
+            transition: all 0.2s ease;
+        }
+        .close-btn:hover { background: #FECACA; transform: scale(1.05); }
+
+        .modal-body { padding: 15px; overflow-y: auto; flex: 1; background: #FAFCFA; }
+
+        .fullscreen-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+            padding: 20px; flex-direction: column;
+        }
+        .fullscreen-modal img {
+            max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        .close-fullscreen {
+            position: absolute; top: 20px; right: 20px; background: #EF4444; color: white;
+            border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .excel-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 11px; background: #FFFFFF; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2;
+        }
+        .excel-table th, .excel-table td { padding: 10px; text-align: left; border-bottom: 1px solid #E2E8E2; color: #1E2B23; }
+        .excel-table th { background: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .excel-table tr:last-child td { border-bottom: none; }
+        .excel-table tbody tr:hover { background: #F8FAF8; }
+
+        .action-cell { display: flex; flex-direction: row; gap: 5px; align-items: center; }
+
+        .action-btn {
+            border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+            font-size: 10px; font-weight: 600; color: white; transition: all 0.2s ease;
+        }
+        .action-del { background: #EF4444; } .action-del:hover { background: #DC2626; box-shadow: 0 2px 5px rgba(220, 38, 38, 0.3); }
+        .action-edit { background: #64748B; } .action-edit:hover { background: #475569; box-shadow: 0 2px 5px rgba(71, 85, 105, 0.3); }
+        .action-complete { background: #10B981; } .action-complete:hover { background: #059669; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3); }
+        .action-running { background: #F59E0B; } .action-running:hover { background: #D97706; box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3); }
+    </style>
+</head>
+<body>
+    <datalist id="countsList">
+        <option value="20s"><option value="30s"><option value="40s"><option value="60s">
+        <option value="80s"><option value="2/40"><option value="2/60"><option value="2/80"><option value="2/60s">
+    </datalist>
+
+    <div class="container" style="background: #FFFFFF !important; background-color: #FFFFFF !important;">
+        <div class="top-nav">
+            <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+            <div id="bitmapDisplayContainer"></div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <h2 class="card-header" style="color: #2F4F38 !important; margin-bottom: 0;">Create Party Order</h2>
+            <label style="display: flex; align-items: center; gap: 6px; background: #EAF2EC; border: 1px solid #B4D3BC; padding: 6px 12px; border-radius: 8px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="orderStatusToggle" onchange="quickCompleteToggle()" style="width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: #4A7C59;">
+                <span style="font-size: 11px; font-weight: 800; color: #2F4F38; text-transform: uppercase; margin: 0;">Completed</span>
+            </label>
+        </div>
+
+        <form id="partyOrderForm" onsubmit="savePartyOrder(event)">
+            
+            <!-- Section 1: Order Details -->
+            <div class="form-section" style="margin-top: 10px;">
+                <div class="section-badge">Order Info</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Order Date</label>
+                        <input type="date" id="orderDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Date</label>
+                        <input type="date" id="deliveryDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Party Name</label>
+                        <input type="text" id="partyName" placeholder="Enter Party Name" list="partyMasterSuggestions">
+                        <datalist id="partyMasterSuggestions"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>PO Number</label>
+                        <input type="text" id="poNumber" placeholder="Enter PO No">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Design Specifications -->
+            <div class="form-section">
+                <div class="section-badge">Design Specs</div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Design Number</label>
+                        <select id="designNumber" onchange="onDesignSelect(this.value)">
+                            <option value="">Select Design</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Base Beam (Warp)</label>
+                        <input type="text" id="baseBeamCount" list="countsList" placeholder="e.g. 2/60">
+                    </div>
+                    <div class="form-group">
+                        <label>Top Beam (Warp)</label>
+                        <input type="text" id="topBeamCount" list="countsList" placeholder="e.g. 2/40">
+                    </div>
+                    <!-- 🟢 NEW: Weft 1 and Weft 2 Fields -->
+                    <div class="form-group">
+                        <label>Weft 1</label>
+                        <input type="text" id="weftCount" list="countsList" placeholder="Weft 1">
+                    </div>
+                    <div class="form-group">
+                        <label>Weft 2</label>
+                        <input type="text" id="weftCount2" list="countsList" placeholder="Weft 2">
+                    </div>
+                    <div class="form-group">
+                        <label>Reed</label>
+                        <input type="text" id="reed" placeholder="Reed">
+                    </div>
+                    <div class="form-group">
+                        <label>Pick</label>
+                        <input type="text" id="pick" placeholder="Pick">
+                    </div>
+                    <div class="form-group">
+                        <label>Width</label>
+                        <input type="text" id="width" placeholder="Width">
+                    </div>
+                    <div class="form-group">
+                        <label>Weave Type</label>
+                        <input type="text" id="weaveType" placeholder="Weave Type">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Commercials -->
+            <div class="form-section">
+                <div class="section-badge">Commercials</div>
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Order Metres</label>
+                        <input type="number" step="0.01" id="orderMtr" placeholder="0.00 Metres">
+                    </div>
+                    <div class="form-group">
+                        <label>Rate / Metre (₹)</label>
+                        <input type="number" step="0.01" id="rateMtr" placeholder="₹ 0.00">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="saveBtn" class="btn-main">✅ Save Order Details</button>
+        </form>
+
+        <button type="button" class="popup-trigger-btn" onclick="openModal('savedOrdersModal')">📊 View Saved Orders Data</button>
+    </div>
+
+    <!-- Full-Screen Modal for Saved Orders -->
+    <div id="savedOrdersModal" class="overlay-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 Saved Orders Registry</h3>
+                <button class="close-btn" onclick="closeModal('savedOrdersModal')">Close ✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="overflow-x: auto;">
+                    <table id="partyOrderTable" class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Party Name</th>
+                                <th>PO No</th>
+                                <th>Design No</th>
+                                <th>Base Beam</th>
+                                <th>Top Beam</th>
+                                <th>Order Metres</th>
+                                <th>Rate/Metre</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Modal -->
+    <div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+        <button class="close-fullscreen">Close ✕</button>
+        <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+    </div>
+
+    <script>
+        let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+        let editingId = null;
+        
+        function checkUserPermission() {
+            let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+            if (userRole !== 'Administrator' && userRole !== 'Admin') {
+                let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+                if (permissions['party_orders.html'] === false || permissions['party_orders'] === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkUserPermission()) {
+                alert("Access Denied! You do not have permission to access this page. ❌");
+                window.location.href = "dashboard.html";
+                return;
+            }
+            document.getElementById('orderDate').valueAsDate = new Date();
+            loadDesignList();
+            loadPartySuggestions();
+            updatePartyTable();
+        });
+
+        function loadPartySuggestions() {
+            let partyDb = JSON.parse(localStorage.getItem('party_master_db')) || {};
+            let partyList = JSON.parse(localStorage.getItem('party_master_list')) || Object.keys(partyDb);
+            let datalist = document.getElementById('partyMasterSuggestions');
+            if(datalist) {
+                let html = '';
+                partyList.forEach(p => {
+                    html += `<option value="${p}">`;
+                });
+                datalist.innerHTML = html;
+            }
+        }
+
+        function loadDesignList() {
+            let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+            let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+
+            let allDesigns = new Set();
+            preDesigns.forEach(d => allDesigns.add(d));
+            if(Array.isArray(designMasters)) {
+                designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
+            }
+            Object.keys(designSpecs).forEach(k => allDesigns.add(k));
+
+            let select = document.getElementById('designNumber');
+            let html = '<option value="">Select Design</option>';
+            Array.from(allDesigns).filter(Boolean).forEach(d => {
+                html += `<option value="${d}">${d}</option>`;
+            });
+            select.innerHTML = html;
+
+            let activeDesign = localStorage.getItem('selected_design_number');
+            if(activeDesign && allDesigns.has(activeDesign)) {
+                select.value = activeDesign;
+                onDesignSelect(activeDesign);
+            }
+        }
+
+        function openModal(modalId) {
+            if(modalId === 'savedOrdersModal') {
+                updatePartyTable(); 
+            }
+            let modal = document.getElementById(modalId);
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeModal(modalId) {
+            let modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        window.openFullscreenImage = function(src) {
+            if(!src || src === '' || src === 'null') return;
+            document.getElementById('fullscreenImg').src = src;
+            document.getElementById('fullscreenModal').style.display = 'flex';
+        };
+        window.closeFullscreenImage = function() {
+            document.getElementById('fullscreenModal').style.display = 'none';
+        };
+
+        function loadBitmapImage() {
+            let activeDesign = localStorage.getItem('selected_design_number');
+            let designSelect = document.getElementById('designNumber');
+            if(designSelect && designSelect.value) {
+                activeDesign = designSelect.value;
+            }
+            
+            let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+            let bitmapContainer = document.getElementById('bitmapDisplayContainer');
+            
+            let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
+            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
+
+            if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
+                let b64 = designSpecs[specKey].bitmap;
+                bitmapContainer.innerHTML = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage('${b64}')" title="Click to view full screen">`;
+            } else {
+                bitmapContainer.innerHTML = '';
+            }
+        }
+
+        function onDesignSelect(val) {
+            loadBitmapImage();
+
+            if(val) {
+                let clean = val.toString().replace('#', '').trim().toLowerCase();
+                
+                // Data sources loading
+                let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+                let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+                let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+
+                // 1. Find from Design Master (Priority 1)
+                let foundMaster = {};
+                if (Array.isArray(designMasters)) {
+                    foundMaster = designMasters.find(d => {
+                        let dName = (d.name || d.designNo || '').toString().replace('#', '').trim().toLowerCase();
+                        return dName === clean;
+                    }) || {};
+                }
+
+                // 2. Find from Design Specs
+                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || val;
+                let specs = designSpecs[specKey] || {};
+
+                // Status Toggle update
+                let specStatus = (specs.status || foundMaster.status || '').toLowerCase();
+                document.getElementById('orderStatusToggle').checked = (specStatus === 'completed');
+
+                // Auto-filling fields with Design Master priority
+                document.getElementById('baseBeamCount').value = foundMaster.warp1 || foundMaster.baseBeamCount || specs.warp || specs.baseBeamCount || '2/60';
+                document.getElementById('topBeamCount').value = foundMaster.warp2 || foundMaster.topBeamCount || specs.warp2 || specs.topBeamCount || '';
+                
+                // 🟢 NEW: Auto-filling Weft 1 and Weft 2
+                document.getElementById('weftCount').value = foundMaster.weftCount || foundMaster.weft || specs.weftCount || specs.weft || '40s';
+                document.getElementById('weftCount2').value = foundMaster.weft2 || specs.weft2 || '';
+                
+                // Reed, Pick, Width (Directly from Design Master)
+                document.getElementById('reed').value = foundMaster.reed || specs.reed || '';
+                document.getElementById('pick').value = foundMaster.pick || specs.pick || '';
+                document.getElementById('width').value = foundMaster.width || specs.width || specs.finishWidth || '58';
+                
+                document.getElementById('weaveType').value = foundMaster.weave || foundMaster.weaveType || specs.weave || specs.weaveType || '';
+            } else {
+                document.getElementById('orderStatusToggle').checked = false;
+                document.getElementById('baseBeamCount').value = '';
+                document.getElementById('topBeamCount').value = '';
+                document.getElementById('weftCount').value = '';
+                document.getElementById('weftCount2').value = '';
+                document.getElementById('reed').value = '';
+                document.getElementById('pick').value = '';
+                document.getElementById('width').value = '58';
+                document.getElementById('weaveType').value = '';
+            }
+        }
+
+        async function quickCompleteToggle() {
+            if (!checkUserPermission()) {
+                alert("Access Denied! You do not have permission to modify status on this page. ❌");
+                let toggle = document.getElementById('orderStatusToggle');
+                if(toggle) toggle.checked = !toggle.checked;
+                return;
+            }
+
+            let designNo = document.getElementById('designNumber').value;
+            let isCompleted = document.getElementById('orderStatusToggle').checked;
+
+            if(!designNo) {
+                alert("Mudhala Design Number select pannunga bro");
+                document.getElementById('orderStatusToggle').checked = false;
+                return;
+            }
+
+            let statusText = isCompleted ? 'completed' : 'running';
+            let clean = designNo.toString().replace('#', '').trim().toLowerCase();
+
+            let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+            let index = orders.findIndex(x => (x.designNumber || x.designNo || '').toString().replace('#','').trim().toLowerCase() === clean);
+
+            if(index > -1) {
+                orders[index].status = statusText;
+                orders[index].width = document.getElementById('width').value.trim() || '58';
+            } else {
+                let newOrder = {
+                    id: Date.now(),
+                    date: document.getElementById('orderDate').value || new Date().toISOString().split('T')[0],
+                    partyName: document.getElementById('partyName').value.trim() || 'Direct Order',
+                    poNo: document.getElementById('poNumber').value.trim() || 'N/A',
+                    designNumber: designNo,
+                    designNo: designNo,
+                    baseBeamCount: document.getElementById('baseBeamCount').value.trim() || '-',
+                    topBeamCount: document.getElementById('topBeamCount').value.trim() || '-',
+                    weftCount: document.getElementById('weftCount').value.trim() || '-',
+                    weft2: document.getElementById('weftCount2').value.trim() || '-',
+                    reed: document.getElementById('reed').value.trim() || '-',
+                    pick: document.getElementById('pick').value.trim() || '-',
+                    width: document.getElementById('width').value.trim() || '58',
+                    weaveType: document.getElementById('weaveType').value.trim() || '-',
+                    orderMtr: document.getElementById('orderMtr').value.trim() || '0',
+                    rateMtr: document.getElementById('rateMtr').value.trim() || '0',
+                    deliveryDate: document.getElementById('deliveryDate').value || new Date().toISOString().split('T')[0],
+                    status: statusText
+                };
+                orders.push(newOrder);
+            }
+            localStorage.setItem('party_orders_data', JSON.stringify(orders));
+
+            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || designNo;
+            
+            if(!designSpecs[specKey]) {
+                designSpecs[specKey] = {};
+            }
+            designSpecs[specKey].status = statusText;
+            designSpecs[specKey].width = document.getElementById('width').value.trim() || '58';
+            localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+            try {
+                if (window.supabaseSave) {
+                    await window.supabaseSave('party_orders_data', orders);
+                    await window.supabaseSave('design_specs', designSpecs);
+                }
+                if (window.supabaseSaveIndividual) {
+                    await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+                }
+            } catch(e) {
+                console.error("supabase Sync Error: ", e);
+            }
+
+            updatePartyTable();
+            alert(`Design ${designNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
+        }
+
+        async function savePartyOrder(e) {
+            e.preventDefault();
+            
+            if (!checkUserPermission()) {
+                alert("Access Denied! You do not have permission to save party orders on this page. ❌");
+                return;
+            }
+            
+            let designNo = document.getElementById('designNumber').value;
+            let baseBeam = document.getElementById('baseBeamCount').value.trim() || '-';
+            let topBeam = document.getElementById('topBeamCount').value.trim() || '-';
+            let combinedWarp = (topBeam && topBeam !== '-') ? `${baseBeam}, ${topBeam}` : baseBeam;
+            let currentWidth = document.getElementById('width').value.trim() || '58';
+
+            const orderData = {
+                id: editingId !== null ? editingId : Date.now(),
+                date: document.getElementById('orderDate').value || '',
+                partyName: document.getElementById('partyName').value.trim() || 'N/A',
+                poNo: document.getElementById('poNumber').value.trim() || 'N/A',
+                designNumber: designNo || 'N/A',
+                designNo: designNo || 'N/A',
+                baseBeamCount: baseBeam,
+                topBeamCount: topBeam,
+                warpCount: combinedWarp,
+                weftCount: document.getElementById('weftCount').value.trim() || '-',
+                weft2: document.getElementById('weftCount2').value.trim() || '-',
+                reed: document.getElementById('reed').value.trim() || '-',
+                pick: document.getElementById('pick').value.trim() || '-',
+                width: currentWidth,
+                finishWidth: currentWidth,
+                weaveType: document.getElementById('weaveType').value.trim() || '-',
+                orderMtr: document.getElementById('orderMtr').value.trim() || '0',
+                productionMeter: document.getElementById('orderMtr').value.trim() || '0',
+                prodMtr: document.getElementById('orderMtr').value.trim() || '0',
+                rateMtr: document.getElementById('rateMtr').value.trim() || '0',
+                deliveryDate: document.getElementById('deliveryDate').value || '',
+                status: document.getElementById('orderStatusToggle').checked ? 'completed' : 'running'
+            };
+
+            let btn = document.getElementById('saveBtn');
+            btn.innerText = "⏳ Saving to Cloud...";
+
+            if(editingId !== null) {
+                let index = partyOrders.findIndex(x => x.id === editingId);
+                if(index > -1) {
+                    partyOrders[index] = orderData;
+                }
+                editingId = null;
+            } else {
+                let existingIndex = partyOrders.findIndex(x => {
+                    let d = x.designNumber || x.designNo || '';
+                    return designNo && d.toString().replace('#', '').trim().toLowerCase() === designNo.toString().replace('#', '').trim().toLowerCase();
+                });
+
+                if(existingIndex > -1) {
+                    partyOrders[existingIndex] = { ...partyOrders[existingIndex], ...orderData };
+                } else {
+                    partyOrders.push(orderData);
+                }
+            }
+
+            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            if(designNo) {
+                let clean = designNo.toString().replace('#', '').trim().toLowerCase();
+                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || designNo;
+
+                if(!designSpecs[specKey]) designSpecs[specKey] = {};
+                designSpecs[specKey].status = orderData.status;
+                designSpecs[specKey].baseBeamCount = baseBeam;
+                designSpecs[specKey].topBeamCount = topBeam;
+                designSpecs[specKey].baseCount = combinedWarp;
+                
+                // 🟢 NEW: Update weft values in designSpecs
+                designSpecs[specKey].weftCount = document.getElementById('weftCount').value.trim();
+                designSpecs[specKey].weft2 = document.getElementById('weftCount2').value.trim();
+                
+                designSpecs[specKey].width = currentWidth;
+                designSpecs[specKey].finishWidth = currentWidth;
+                localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                
+                if (window.supabaseSave) {
+                    await window.supabaseSave('design_specs', designSpecs);
+                }
+                if (window.supabaseSaveIndividual) {
+                    await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+                }
+            }
+
+            localStorage.setItem('party_orders_data', JSON.stringify(partyOrders));
+            
+            if (window.supabaseSave) {
+                await window.supabaseSave('party_orders_data', partyOrders);
+            }
+
+            updatePartyTable();
+            
+            document.getElementById('partyOrderForm').reset();
+            document.getElementById('orderStatusToggle').checked = false;
+            document.getElementById('orderDate').valueAsDate = new Date();
+            document.getElementById('width').value = '58';
+            
+            loadDesignList();
+            btn.innerText = "✅ Save Order Details";
+            alert("Party Order saved successfully! ✅☁️");
+        }
+
+        function editOrder(id) {
+            if (!checkUserPermission()) {
+                alert("Access Denied! You do not have permission to edit entries. ❌");
+                return;
+            }
+
+            closeModal('savedOrdersModal');
+            let item = partyOrders.find(x => x.id === id);
+            if(!item) return;
+
+            editingId = id;
+            document.getElementById('orderDate').value = item.date || '';
+            document.getElementById('deliveryDate').value = item.deliveryDate || '';
+            document.getElementById('partyName').value = item.partyName || '';
+            document.getElementById('poNumber').value = item.poNo || '';
+            document.getElementById('designNumber').value = item.designNumber || item.designNo || '';
+            document.getElementById('baseBeamCount').value = item.baseBeamCount || item.warpCount || '';
+            document.getElementById('topBeamCount').value = item.topBeamCount || '';
+            
+            // 🟢 NEW: Set Weft 1 and Weft 2 during edit
+            document.getElementById('weftCount').value = item.weftCount || '';
+            document.getElementById('weftCount2').value = item.weft2 || '';
+            
+            document.getElementById('reed').value = item.reed || '';
+            document.getElementById('pick').value = item.pick || '';
+            document.getElementById('width').value = item.width || item.finishWidth || '58';
+            document.getElementById('weaveType').value = item.weaveType || '';
+            document.getElementById('orderMtr').value = item.orderMtr || item.productionMeter || '';
+            document.getElementById('rateMtr').value = item.rateMtr || '';
+            document.getElementById('orderStatusToggle').checked = (item.status === 'completed');
+
+            document.getElementById('saveBtn').innerText = "🔄 Update Order Details";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadBitmapImage();
+        }
+
+        function updatePartyTable() {
+            partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+            const tbody = document.querySelector('#partyOrderTable tbody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            partyOrders.slice().reverse().forEach(item => {
+                let statusColor = item.status == 'running' ? '#F59E0B' : '#10B981';
+                let statusBtn = item.status == 'running' 
+                    ? `<button class="action-btn action-complete" onclick="toggleStatus(${item.id}, 'completed')">Complete</button>` 
+                    : `<button class="action-btn action-running" onclick="toggleStatus(${item.id}, 'running')">Running</button>`;
+                
+                let row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${item.date || '-'}</td>
+                    <td><b>${item.partyName || '-'}</b></td>
+                    <td>${item.poNo || '-'}</td>
+                    <td><b style="color:#2F4F38;">${item.designNumber || item.designNo || '-'}</b></td>
+                    <td>${item.baseBeamCount || item.warpCount || '-'}</td>
+                    <td>${item.topBeamCount || '-'}</td>
+                    <td>${item.orderMtr || '0'}</td>
+                    <td>₹${item.rateMtr || '0'}</td>
+                    <td><span style="color:${statusColor}; font-weight:800; font-size:9px; background:rgba(0,0,0,0.05); padding:3px 8px; border-radius:12px; text-transform:uppercase;">${item.status || 'running'}</span></td>
+                    <td>
+                        <div class="action-cell">
+                            ${statusBtn}
+                            <button class="action-btn action-edit" onclick="editOrder(${item.id})">Edit</button>
+                            <button class="action-btn action-del" onclick="deleteOrder(${item.id})">Del</button>
+                        </div>
+                    </td>
+                `;
+            });
+        }
+
+        async function toggleStatus(id, newStatus) {
+            if (!checkUserPermission()) {
+                alert("Access Denied! You do not have permission to change status. ❌");
+                return;
+            }
+
+            let msg = newStatus === 'completed' ? "Indha order-ai Completed-aga maatranuma?" : "Indha order-ai Running-ku maatranuma?";
+            if(confirm(msg)) {
+                partyOrders = partyOrders.map(x => x.id === id ? {...x, status: newStatus} : x);
+                localStorage.setItem('party_orders_data', JSON.stringify(partyOrders));
+                
+                let item = partyOrders.find(x => x.id === id);
+                if(item) {
+                    let dNo = item.designNumber || item.designNo;
+                    if(dNo) {
+                        let clean = dNo.toString().replace('#', '').trim().toLowerCase();
+                        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                        let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || dNo;
+
+                        if(!designSpecs[specKey]) designSpecs[specKey] = {};
+                        designSpecs[specKey].status = newStatus;
+                        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                        if (window.supabaseSave) {
+                            await window.supabaseSave('design_specs', designSpecs);
+                        }
+                        if (window.supabaseSaveIndividual) {
+                            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+                        }
+                    }
+                }
+
+                if (window.supabaseSave) {
+                    await window.supabaseSave('party_orders_data', partyOrders);
+                }
+
+                updatePartyTable();
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (!checkUserPermission()) {
+                alert("Access Denied! You do not have permission to delete entries. ❌");
+                return;
+            }
+
+            if(confirm("Indha order-ai delete pannanuma?")){
+                partyOrders = partyOrders.filter(x => x.id !== id);
+                localStorage.setItem('party_orders_data', JSON.stringify(partyOrders));
+                
+                if (window.supabaseSave) {
+                    await window.supabaseSave('party_orders_data', partyOrders);
+                }
+
+                updatePartyTable();
+            }
+        }
+    </script>
+</body>
+</html>

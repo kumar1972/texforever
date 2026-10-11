@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Washing - TEX FOR EVER</title>
+<!-- IMPORTANT: config.js must load first -->
+<script src="config.js"></script>
+<script src="translator.js"></script>
+  <script src="printer.js"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+    html, body { 
+        width: 100%; 
+        min-height: 100vh; 
+        background: #030712; 
+        color: #1E2B23; 
+    }
+
+    body { 
+        padding: 12px; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .main-card {
+        width: 100%;
+        max-width: 900px;
+        margin: 0;
+        background: #FFFFFF;
+        border: 1px solid rgba(82, 110, 81, 0.15);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .top-nav { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 5px; 
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #FFFFFF;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 11px;
+        background: #1A1; 
+        padding: 8px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+    .back-btn:hover { background: #000AAA; transform: translateY(-2px); }
+
+    #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
+    #bitmapDisplayContainer img {
+        max-height: 45px;
+        border-radius: 6px;
+        border: 1px solid rgba(82, 110, 81, 0.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        cursor: zoom-in;
+        transition: transform 0.3s;
+    }
+    #bitmapDisplayContainer img:hover { transform: scale(1.1); }
+
+    .completed-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #D8DFD6;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(82, 110, 81, 0.4);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .completed-checkbox input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #526E51;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+    
+    .completed-checkbox label {
+        margin: 0;
+        color: #3F5A3E;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .page-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #EAF0EA;
+        padding-bottom: 12px;
+        margin-bottom: 5px;
+    }
+
+    .page-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #2F4F38;
+        position: relative;
+        padding-left: 12px;
+    }
+    .page-title::before {
+        content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px;
+        background: #4A7C59; border-radius: 4px;
+    }
+
+    .report-btn-group { display: flex; gap: 8px; }
+    
+    .report-btn { background: linear-gradient(135deg, #3BF6, #1D4ED8); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); transition: transform 0.2s;}
+    .report-btn:hover { transform: translateY(-2px); }
+    
+    .print-main-btn { background: linear-gradient(135deg, #10B981, #0599); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); transition: transform 0.2s;}
+    .print-main-btn:hover { transform: translateY(-2px); }
+
+    .form-section {
+        background: #F8FAF8;
+        border: 1px solid #E2E8E2;
+        border-radius: 14px;
+        padding: 22px 15px 15px 15px;
+        margin-bottom: 5px;
+        position: relative;
+    }
+    
+    .section-badge {
+        position: absolute;
+        top: -12px;
+        left: 15px;
+        background: #4A7C59;
+        color: #FFF;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 12px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
+    }
+    .section-badge.blue { background: linear-gradient(135deg, #3BF6, #1D4ED8); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25); }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 10px; font-weight: 600; color: #4A554A; }
+
+    .input-group-btn { display: flex; gap: 6px; width: 100%; }
+    .input-group-btn select { flex: 1; }
+    .btn-add-inline {
+        background: #10B981; color: white; border: none; padding: 6px 12px; border-radius: 8px;
+        font-weight: 700; font-size: 10px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
+    }
+    .btn-add-inline:hover { background: #059669; }
+
+    input, select {
+        width: 100%; padding: 10px 12px; border-radius: 8px;
+        border: 1px solid #D1DED1; background: #FFFFFF; color: #1E2B23;
+        font-size: 11px; font-weight: 600; transition: all 0.3s ease;
+        box-shadow: inset 0 2px 4px rgba(30, 43, 35, 0.02);
+    }
+    input:focus, select:focus {
+        border-color: #4A7C59; outline: none; background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
+    }
+    input::placeholder { color: #A0AFA0; font-weight: 400; }
+    input[readonly] { background: #EAF0EA; color: #4A7C59; border: 1px dashed #A0AFA0; }
+
+    .grid-header {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 1fr 1.5fr 35px;
+        gap: 6px; padding: 0 4px; margin-bottom: 8px; margin-top: 10px;
+    }
+    .grid-header-bot {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 1fr 1.5fr 1.2fr 35px;
+        gap: 6px; padding: 0 4px; margin-bottom: 8px; margin-top: 10px;
+    }
+
+    .grid-header div, .grid-header-bot div {
+        font-size: 10px; font-weight: 700; color: #2F4F38;
+        text-align: center; text-transform: uppercase;
+    }
+
+    .line-row {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 1fr 1.5fr 35px;
+        gap: 6px; align-items: center; margin-bottom: 8px;
+    }
+    .line-row-bot {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 1fr 1.5fr 1.2fr 35px;
+        gap: 6px; align-items: center; margin-bottom: 8px;
+    }
+
+    .line-row input, .line-row-bot input { padding: 10px 4px; font-size: 11px; text-align: center; }
+
+    .add-btn, .del-btn {
+        color: white; border: none; width: 35px; height: 35px; border-radius: 8px;
+        cursor: pointer; font-size: 16px; font-weight: bold; display: flex;
+        align-items: center; justify-content: center; transition: all 0.2s ease;
+    }
+    .add-btn { background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); }
+    .add-btn:hover { transform: scale(1.05); }
+    .del-btn { background: #FEE2E2; color: #DC2626; box-shadow: 0 2px 5px rgba(220, 38, 38, 0.1); }
+    .del-btn:hover { background: #FECACA; transform: scale(1.05); }
+
+    .btn-main {
+        width: 100%; padding: 14px; margin: 10px 0 0 0; border: none; border-radius: 10px;
+        color: white; font-weight: 700; font-size: 13px; cursor: pointer;
+        transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .btn-save { background: linear-gradient(135deg, #4A59, #33593D); box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25); }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(74, 124, 89, 0.35); }
+    
+    .btn-blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25); }
+    .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35); }
+
+    .popup-trigger-btn {
+        background: linear-gradient(135deg, #AA66F1, #4338CA);
+        color: white; border: none; padding: 14px; border-radius: 10px;
+        font-size: 13px; font-weight: bold; cursor: pointer; width: 100%;
+        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.25);
+        transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 5px;
+    }
+    .popup-trigger-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35); }
+
+    .overlay-modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(18, 25, 20, 0.95); backdrop-filter: blur(6px);
+        z-index: 99999; flex-direction: column; padding: 0; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .overlay-modal.show { opacity: 1; }
+    
+    .modal-content {
+        background: #FFFFFF; width: 100vw; height: 100vh; margin: 0; border-radius: 0;
+        display: flex; flex-direction: column; box-shadow: none;
+        overflow: hidden; transform: scale(1);
+    }
+
+    .modal-header {
+        padding: 15px 20px; background: #F4F7F4; display: flex;
+        justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8E2;
+        flex-shrink: 0;
+    }
+    .modal-header h3 { margin: 0; font-size: 16px; color: #1E2B23; font-weight: 800; border:none; padding:0; }
+    
+    .modal-actions { display: flex; gap: 8px; }
+    
+    .print-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .close-btn {
+        background: #FEE2E2; color: #DC2626; border: none; padding: 8px 16px;
+        border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;
+        transition: all 0.2s ease;
+    }
+    .close-btn:hover { background: #FECACA; transform: scale(1.05); }
+
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #FAFCFA; width: 100%; max-width: 1000px; margin: 0 auto; }
+
+    #savedListModal .modal-content {
+        max-width: 1000px;
+        height: 90vh;
+        margin: auto;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        transform: scale(0.95);
+    }
+    #savedListModal.show .modal-content { transform: scale(1); }
+
+    .fullscreen-modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+        padding: 20px; flex-direction: column;
+    }
+    .fullscreen-modal img {
+        max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+    }
+    .close-fullscreen {
+        position: absolute; top: 20px; right: 20px; background: #EF4444; color: white;
+        border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+        cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .table-container {
+        width: 100%; border-radius: 10px; overflow-x: auto;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2; background: #FFFFFF;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; text-align: center; white-space: nowrap; }
+    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #E2E8E2; color: #1E2B23; }
+    th { background: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #F8FAF8; }
+    
+    .action-cell { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
+    .edit-action-btn { background: #64748B; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; transition: all 0.2s; width: 100%; }
+    .edit-action-btn:hover { background: #475569; }
+    .del-action-btn { background: #EF4444; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; transition: all 0.2s; width: 100%; }
+    .del-action-btn:hover { background: #DC2626; box-shadow: 0 2px 5px rgba(220, 38, 38, 0.3); }
+
+    .action-complete { background: #526E51; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; width: 100%; }
+    .action-running { background: #D97706; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; width: 100%; }
+
+    .shrink-text { color: #DC2626; font-weight: 800; background: #FEE2E2; padding: 2px 6px; border-radius: 4px; }
+    .status-pending { color: #D97706; font-weight: 800; font-size: 9px; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 12px; text-transform: uppercase;}
+
+    #designModal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(18, 25, 20, 0.85); backdrop-filter: blur(4px);
+        z-index: 99999; justify-content: center; align-items: center;
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    #designModal.show { opacity: 1; }
+    
+    .design-modal-content {
+        background: #FFFFFF; width: 90%; max-width: 400px; border-radius: 16px;
+        overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        transform: scale(0.95); transition: transform 0.3s ease;
+    }
+    #designModal.show .design-modal-content { transform: scale(1); }
+    
+    .design-modal-header {
+        background: #F4F7F4; color: #2F4F38; padding: 15px 20px; font-weight: 800;
+        font-size: 13px; display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #E2E8E2; text-transform: uppercase;
+    }
+    .design-modal-body { padding: 10px 15px; max-height: 400px; overflow-y: auto; background: #FAFCFA; }
+    .design-option {
+        display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;
+        border-bottom: 1px solid #E2E8E2; cursor: pointer; font-size: 12px; color: #1E2B23;
+        transition: background 0.2s; border-radius: 8px; margin-bottom: 5px; background: #FFFFFF;
+    }
+    .design-option:hover { background: #EAF0EA; border-color: #4A7C59; }
+
+    @media print {
+        body * { visibility: hidden; }
+        .overlay-modal, .overlay-modal * { visibility: visible; }
+        .overlay-modal { position: absolute; left: 0; top: 0; width: 100%; padding: 0; z-index: 99999; background: #FFFFFF; }
+        .modal-content { max-height: none !important; height: auto !important; overflow: visible !important; box-shadow: none; border: none; border-radius: 0; }
+        .no-print { display: none !important; }
+        .modal-body { padding: 0; background: #FFFFFF; }
+    }
+</style>
+</head>
+<body>
+
+<div class="main-card">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="completed-checkbox">
+                <input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()">
+                <label for="top_completed_status">Completed</label>
+            </div>
+            <div id="bitmapDisplayContainer"></div>
+        </div>
+    </div>
+
+    <div class="page-header-row">
+        <div class="color: #ffffff; /* Inga unga color-a change pannikalam */">🌊 Washing Entry System</div>
+        <div class="report-btn-group">
+            <button type="button" class="report-btn" onclick="openPreview()">👁️ Preview</button>
+            <button type="button" class="print-main-btn" onclick="printReport()">🖨️ Print</button>
+        </div>
+    </div>
+
+    <!-- 1. TOP SECTION (ORDER DETAILS) -->
+    <div class="form-section" id="sectionTop">
+        <div class="section-badge">1. Washing Order Info</div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Order Date</label>
+                <input type="date" id="topDate">
+            </div>
+            <div class="form-group">
+                <label>Washing Unit Name</label>
+                <div class="input-group-btn">
+                    <select id="topUnit">
+                        <option value="">Select Washing Unit</option>
+                    </select>
+                    <button type="button" class="btn-add-inline" onclick="addWashingUnit()">+ Add</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Design Number</label>
+                <select id="topDesignNo" onchange="onDesignSelect(this.value)">
+                    <option value="">Select Design No</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <div style="min-width: 450px;">
+                <div class="grid-header">
+                    <div>Slip No</div>
+                    <div>Pieces</div>
+                    <div>Meter</div>
+                    <div>Process Type</div>
+                    <div></div>
+                </div>
+                <div id="topLinesContainer">
+                    <div class="line-row">
+                        <input type="text" class="t-slip" placeholder="Slip">
+                        <input type="number" class="t-piece" placeholder="0">
+                        <input type="number" class="t-mtr" placeholder="0" step="0.01">
+                        <input type="text" class="t-process" placeholder="Type">
+                        <button class="add-btn" onclick="addNewTopRow(this)">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-main btn-save" id="saveTopBtnTxt" onclick="saveTopOrder()">✅ Save Washing Order</button>
+    </div>
+
+    <!-- 2. BOTTOM SECTION (RECEIVED DETAILS) -->
+    <div class="form-section" id="sectionBottom">
+        <div class="section-badge blue">2. Washing Received & Shrinkage / Reprocessing</div>
+        
+        <div class="form-row" style="grid-template-columns: 1fr 1.5fr;">
+            <div class="form-group">
+                <label>Received Date</label>
+                <input type="date" id="botDate">
+            </div>
+            <div class="form-group">
+                <label>Design & Washing Unit (Select Pending)</label>
+                <input type="text" id="botDesignDisplay" placeholder="Click to Select Pending Order" readonly onclick="openDesignModal()" style="cursor: pointer; font-weight:700;">
+                <input type="hidden" id="botDesignNo">
+                <input type="hidden" id="botUnitName">
+            </div>
+        </div>
+
+        <div id="botGridWrapper" style="display: none; margin-top: 10px; overflow-x: auto;">
+            <div style="min-width: 600px;">
+                <div class="grid-header-bot">
+                    <div>Slip No</div>
+                    <div>Pieces</div>
+                    <div>Sent Mtr</div>
+                    <div>Process</div>
+                    <div>Rcvd Mtr</div>
+                    <div></div>
+                </div>
+                <div id="botLinesContainer"></div>
+            </div>
+            <button class="btn-main btn-blue" id="saveBotBtnTxt" onclick="saveBottomEntry()">📥 Save Received Entry</button>
+        </div>
+    </div>
+
+    <button type="button" class="popup-trigger-btn" onclick="openModal('savedListModal')">📊 View Saved Washing Registry</button>
+</div>
+
+<!-- Selection Modal for Bottom Form -->
+<div id="designModal">
+    <div class="design-modal-content">
+        <div class="design-modal-header">
+            <span>Select Pending Washing Order</span>
+            <span style="cursor: pointer; font-size: 16px; color:#DC2626;" onclick="closeDesignModal()">✕</span>
+        </div>
+        <div class="design-modal-body" id="modalDesignList"></div>
+    </div>
+</div>
+
+<!-- Full Screen Print Preview Modal -->
+<div id="previewModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header no-print">
+            <h3 style="color: #2F4F38; font-size: 16px; text-transform: uppercase;">👁️ Washing Order Full Screen Preview</h3>
+            <div class="modal-actions">
+                <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                <button class="close-btn" onclick="closeModal('previewModal')">Close ✕</button>
+            </div>
+        </div>
+        <div class="modal-body" id="previewContent"></div>
+    </div>
+</div>
+
+<!-- Saved List Modal -->
+<div id="savedListModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📊 Saved Washing Registry</h3>
+            <button class="close-btn" onclick="closeModal('savedListModal')">Close ✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-container">
+                <table id="washingTable">
+                    <thead>
+                        <tr>
+                            <th>Design</th>
+                            <th>Washing Unit</th>
+                            <th>Slip</th>
+                            <th>Piece</th>
+                            <th>Sent Mtr</th>
+                            <th>Process</th>
+                            <th>Rcvd Date</th>
+                            <th>Rcvd Mtr</th>
+                            <th>Shrink %</th>
+                            <th>Status</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Image Modal -->
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+function checkUserPermission() {
+    let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+    if (userRole !== 'Administrator' && userRole !== 'Admin') {
+        let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+        if (permissions['washing.html'] === false || permissions['washing'] === false) {
+            return false;
+        }
+    }
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to access this page. ❌");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    document.getElementById('topDate').valueAsDate = new Date();
+    document.getElementById('botDate').valueAsDate = new Date();
+    loadWashingUnitDropdown();
+    loadDesignDropdowns();
+    renderTable();
+});
+
+function openModal(modalId) {
+    let modal = document.getElementById(modalId);
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+    if(modalId === 'savedListModal') {
+        renderTable(); 
+    }
+}
+
+function closeModal(modalId) {
+    let modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+window.openFullscreenImage = function(src) {
+    if(!src || src === '' || src === 'null') return;
+    document.getElementById('fullscreenImg').src = src;
+    document.getElementById('fullscreenModal').style.display = 'flex';
+};
+window.closeFullscreenImage = function() {
+    document.getElementById('fullscreenModal').style.display = 'none';
+};
+
+function loadBitmapImage() {
+    let activeDesign = document.getElementById('topDesignNo').value || localStorage.getItem('selected_design_number');
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let bitmapContainer = document.getElementById('bitmapDisplayContainer');
+    
+    let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
+
+    let imgHtml = '';
+    if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
+        let b64 = designSpecs[specKey].bitmap;
+        imgHtml = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage('${b64}')" title="Click to view full screen">`;
+    }
+    
+    bitmapContainer.innerHTML = imgHtml;
+}
+
+function loadWashingUnitDropdown() {
+    let masterUnits = JSON.parse(localStorage.getItem('tex_master_washing_units')) || [];
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let unitSet = new Set([...masterUnits]);
+    issues.forEach(i => { if(i.unit) unitSet.add(i.unit.trim()); });
+
+    let select = document.getElementById('topUnit');
+    let currentVal = select.value;
+    let html = '<option value="">Select Washing Unit</option>';
+    Array.from(unitSet).sort().forEach(u => {
+        let sel = (currentVal && u.toLowerCase() === currentVal.toLowerCase()) ? 'selected' : '';
+        html += `<option value="${u}" ${sel}>${u}</option>`;
+    });
+    select.innerHTML = html;
+    if(currentVal) select.value = currentVal;
+}
+
+function addWashingUnit() {
+    let name = prompt("புதிய Washing Unit பெயரை உள்ளிடவும்:");
+    if(name) {
+        name = name.trim();
+        if(!name) return;
+        let masterUnits = JSON.parse(localStorage.getItem('tex_master_washing_units')) || [];
+        if(!masterUnits.includes(name)) {
+            masterUnits.push(name);
+            localStorage.setItem('tex_master_washing_units', JSON.stringify(masterUnits));
+            if(window.supabaseSave) window.supabaseSave('tex_master_washing_units', masterUnits);
+            loadWashingUnitDropdown();
+            alert(`Washing Unit '${name}' added successfully! ✅`);
+        }
+        document.getElementById('topUnit').value = name;
+    }
+}
+
+function openDesignModal() {
+    let modal = document.getElementById('designModal');
+    modal.style.display = 'flex';
+    
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let receives = JSON.parse(localStorage.getItem('washing_receive_records')) || [];
+
+    let pendingItems = issues.filter(issue => {
+        let hasReceive = receives.some(r => String(r.issueId) === String(issue.id));
+        return !hasReceive; 
+    });
+
+    let modalList = document.getElementById('modalDesignList');
+    modalList.innerHTML = '';
+
+    if(pendingItems.length === 0) {
+        modalList.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748B; font-weight:600;">No pending washing orders found!</div>';
+    } else {
+        let uniqueMap = new Map();
+        pendingItems.forEach(item => {
+            let key = `${item.designNo}_${item.unit}`;
+            if(!uniqueMap.has(key)) {
+                uniqueMap.set(key, { designNo: item.designNo, unit: item.unit });
+            }
+        });
+
+        uniqueMap.forEach((val) => {
+            let div = document.createElement('div');
+            div.className = 'design-option';
+            div.innerHTML = `<span><b style="color:#2F4F38;">${val.designNo}</b> <span style="color:#D97706; font-size:10px; margin-left:8px; background:#FEF3C7; padding:2px 6px; border-radius:6px;">${val.unit}</span></span>`;
+            div.onclick = function() {
+                document.getElementById('botDesignDisplay').value = `${val.designNo} - ${val.unit}`;
+                document.getElementById('botDesignNo').value = val.designNo;
+                document.getElementById('botUnitName').value = val.unit;
+                closeDesignModal();
+                loadBottomData();
+            };
+            modalList.appendChild(div);
+        });
+    }
+    
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeDesignModal() {
+    let modal = document.getElementById('designModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function loadDesignDropdowns() {
+    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+
+    let allDesigns = new Set([...preDesigns]);
+    if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
+    Object.keys(designSpecs).forEach(k => allDesigns.add(k));
+    if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
+
+    let topSelect = document.getElementById('topDesignNo');
+    let topHtml = '<option value="">Select Design No</option>';
+    Array.from(allDesigns).filter(Boolean).forEach(d => { topHtml += `<option value="${d}">${d}</option>`; });
+    topSelect.innerHTML = topHtml;
+
+    let activeDesign = localStorage.getItem('selected_design_number');
+    if(activeDesign && allDesigns.has(activeDesign)) {
+        topSelect.value = activeDesign;
+        onDesignSelect(activeDesign);
+    } else {
+        loadBitmapImage();
+    }
+}
+
+function onDesignSelect(val) {
+    loadBitmapImage();
+    renderTable(); 
+    if(!val) return;
+    localStorage.setItem('selected_design_number', val);
+
+    let clean = val.toString().replace('#', '').trim().toLowerCase();
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || val;
+
+    let specStatus = (designSpecs[specKey] && designSpecs[specKey].status) ? designSpecs[specKey].status.toLowerCase() : '';
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let rec = issues.find(r => (r.designNo || r.designNumber || '').toString().replace('#','').trim().toLowerCase() === clean);
+
+    if(specStatus === 'completed' || (rec && (rec.status || '').toLowerCase() === 'completed')) {
+        document.getElementById('top_completed_status').checked = true;
+    } else {
+        document.getElementById('top_completed_status').checked = false;
+    }
+}
+
+function addNewTopRow(btn) {
+    let container = document.getElementById('topLinesContainer');
+    let row = document.createElement('div');
+    row.className = 'line-row';
+    row.innerHTML = `
+        <input type="text" class="t-slip" placeholder="Slip">
+        <input type="number" class="t-piece" placeholder="0">
+        <input type="number" class="t-mtr" placeholder="0" step="0.01">
+        <input type="text" class="t-process" placeholder="Type">
+        <button class="del-btn" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.insertBefore(row, btn.parentElement.nextSibling);
+}
+
+function addNewBottomRow(btn) {
+    let container = document.getElementById('botLinesContainer');
+    let row = document.createElement('div');
+    row.className = 'line-row-bot';
+    row.innerHTML = `
+        <input type="text" class="b-slip" placeholder="Slip">
+        <input type="number" class="b-piece" placeholder="0">
+        <input type="number" class="b-mtr" placeholder="0" step="0.01">
+        <input type="text" class="b-process" value="Reprocessing" placeholder="Process">
+        <input type="number" class="b-received" placeholder="Rcvd Mtr" step="0.01">
+        <button class="del-btn" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(row);
+}
+
+async function quickCompleteToggle() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    let dNo = document.getElementById('topDesignNo').value;
+    let isCompleted = document.getElementById('top_completed_status').checked;
+
+    if(!dNo) {
+        alert("Mudhala Design Number select pannunga bro");
+        document.getElementById('top_completed_status').checked = false;
+        return;
+    }
+
+    let statusText = isCompleted ? 'completed' : 'running';
+    let cleanKey = dNo.toString().replace('#', '').trim().toLowerCase();
+
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let updated = false;
+
+    issues.forEach(r => {
+        if((r.designNo || r.designNumber || '').toString().replace('#','').trim().toLowerCase() === cleanKey) {
+            r.status = statusText;
+            updated = true;
+        }
+    });
+
+    if(!updated) {
+        let dateVal = document.getElementById('topDate').value || new Date().toISOString().split('T')[0];
+        let unit = document.getElementById('topUnit').value.trim() || 'Main Unit';
+        let firstRow = document.querySelector('.line-row');
+        let slip = firstRow ? firstRow.querySelector('.t-slip').value.trim() : 'S-01';
+        let piece = firstRow ? parseInt(firstRow.querySelector('.t-piece').value) || 1 : 1;
+        let mtr = firstRow ? parseFloat(firstRow.querySelector('.t-mtr').value) || 0 : 0;
+        let process = firstRow ? firstRow.querySelector('.t-process').value.trim() : 'General';
+
+        issues.push({
+            id: Date.now(),
+            date: dateVal,
+            unit: unit,
+            designNo: dNo,
+            slip: slip,
+            piece: piece,
+            mtr: mtr.toFixed(2),
+            process: process,
+            status: statusText
+        });
+    }
+
+    localStorage.setItem('washing_issue_records', JSON.stringify(issues));
+
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === cleanKey) || dNo;
+
+    if(!designSpecs[specKey]) {
+        designSpecs[specKey] = {};
+    }
+    designSpecs[specKey].status = statusText;
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('washing_issue_records', issues);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        }
+    } catch(e) {
+        console.error("supabase Sync Error: ", e);
+    }
+
+    renderTable();
+    alert(`Design ${dNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
+}
+
+async function saveTopOrder() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to save entries on this page. ❌"); return; }
+
+    let dateVal = document.getElementById('topDate').value;
+    let unit = document.getElementById('topUnit').value.trim();
+    let dNo = document.getElementById('topDesignNo').value;
+    let isCompleted = document.getElementById('top_completed_status').checked;
+
+    if(!dNo || !unit) { alert("Please fill Date, Washing Name, and Design Number!"); return; }
+
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let cleanDNo = dNo.toString().replace('#', '').trim().toLowerCase();
+
+    let alreadyExists = issues.some(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanDNo);
+    if(alreadyExists) {
+        let confirmReEntry = confirm("இந்த டிசைனுக்கு ஏற்கனவே Washing Order என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?");
+        if(!confirmReEntry) {
+            return; 
+        }
+        issues = issues.filter(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() !== cleanDNo);
+    }
+
+    let btn = document.getElementById('saveTopBtnTxt');
+    let origText = btn.innerText;
+    btn.innerText = "⏳ Saving to Cloud...";
+
+    let rows = document.querySelectorAll('#topLinesContainer .line-row');
+    if(rows.length === 0) {
+        btn.innerText = origText;
+        return;
+    }
+
+    let savedCount = 0;
+
+    rows.forEach(row => {
+        let slip = row.querySelector('.t-slip').value.trim();
+        let piece = parseInt(row.querySelector('.t-piece').value) || 0;
+        let mtr = parseFloat(row.querySelector('.t-mtr').value) || 0;
+        let process = row.querySelector('.t-process').value.trim();
+
+        if(slip && piece > 0 && mtr > 0) {
+            issues.push({
+                id: Date.now() + Math.random(),
+                date: dateVal,
+                unit: unit,
+                designNo: dNo,
+                slip: slip,
+                piece: piece,
+                mtr: mtr.toFixed(2),
+                process: process,
+                status: isCompleted ? 'completed' : 'running'
+            });
+            savedCount++;
+        }
+    });
+
+    if(savedCount > 0) {
+        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === cleanDNo) || dNo;
+
+        if(!designSpecs[specKey]) designSpecs[specKey] = {};
+        designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
+        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+        localStorage.setItem('washing_issue_records', JSON.stringify(issues));
+        
+        if (window.supabaseSave) {
+            await window.supabaseSave('washing_issue_records', issues);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        }
+        
+        alert("Top Order Saved to Cloud Successfully! ✅☁️");
+        
+        document.getElementById('topLinesContainer').innerHTML = `
+            <div class="line-row">
+                <input type="text" class="t-slip" placeholder="Slip">
+                <input type="number" class="t-piece" placeholder="0">
+                <input type="number" class="t-mtr" placeholder="0" step="0.01">
+                <input type="text" class="t-process" placeholder="Type">
+                <button class="add-btn" onclick="addNewTopRow(this)">+</button>
+            </div>
+        `;
+        document.getElementById('topDesignNo').value = '';
+        document.getElementById('topUnit').value = '';
+        document.getElementById('top_completed_status').checked = false;
+        
+        renderTable();
+        loadBitmapImage();
+    } else {
+        alert("Please fill Slip, Piece, and Mtr correctly.");
+    }
+    btn.innerText = origText;
+}
+
+function loadBottomData() {
+    let dNo = document.getElementById('botDesignNo').value;
+    let uName = document.getElementById('botUnitName').value;
+    let wrapper = document.getElementById('botGridWrapper');
+    let container = document.getElementById('botLinesContainer');
+    container.innerHTML = '';
+    
+    if(!dNo || !uName) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    
+    wrapper.style.display = 'block';
+
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let receives = JSON.parse(localStorage.getItem('washing_receive_records')) || [];
+
+    let pendingItems = issues.filter(issue => {
+        let hasReceive = receives.some(r => String(r.issueId) === String(issue.id));
+        return !hasReceive && issue.designNo === dNo && issue.unit === uName; 
+    });
+
+    pendingItems.forEach(item => {
+        let row = document.createElement('div');
+        row.className = 'line-row-bot';
+        row.setAttribute('data-id', item.id);
+        
+        row.innerHTML = `
+            <input type="text" class="b-slip" value="${item.slip}" readonly>
+            <input type="text" class="b-piece" value="${item.piece}" readonly>
+            <input type="text" class="b-mtr" value="${item.mtr}" readonly>
+            <input type="text" class="b-process" value="${item.process}" readonly>
+            <input type="number" class="b-received" placeholder="Rcvd Mtr" step="0.01">
+            <button class="add-btn" onclick="addNewBottomRow(this)" title="Add Reprocessing Row">+</button>
+        `;
+        container.appendChild(row);
+    });
+}
+
+async function saveBottomEntry() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to save entries on this page. ❌"); return; }
+
+    let dateVal = document.getElementById('botDate').value;
+    let dNo = document.getElementById('botDesignNo').value;
+    let uName = document.getElementById('botUnitName').value;
+
+    if(!dNo || !uName) { alert("Please select a Pending Washing Order!"); return; }
+
+    let btn = document.getElementById('saveBotBtnTxt');
+    let origText = btn.innerText;
+    btn.innerText = "⏳ Saving to Cloud...";
+
+    let rows = document.querySelectorAll('#botLinesContainer .line-row-bot');
+    if(rows.length === 0) {
+        btn.innerText = origText;
+        return;
+    }
+
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let receives = JSON.parse(localStorage.getItem('washing_receive_records')) || [];
+    let savedCount = 0;
+
+    rows.forEach(row => {
+        let recId = row.getAttribute('data-id');
+        let rcvMtr = parseFloat(row.querySelector('.b-received').value);
+        
+        if (!recId) {
+            let slip = row.querySelector('.b-slip').value.trim();
+            let piece = parseInt(row.querySelector('.b-piece').value) || 0;
+            let sentMtr = parseFloat(row.querySelector('.b-mtr').value) || 0;
+            let process = row.querySelector('.b-process').value.trim() || 'Reprocessing';
+
+            if(rcvMtr > 0) {
+                let newIssueId = Date.now() + Math.random();
+                issues.push({
+                    id: newIssueId,
+                    date: dateVal,
+                    unit: uName,
+                    designNo: dNo,
+                    slip: slip || 'REP-01',
+                    piece: piece,
+                    mtr: sentMtr.toFixed(2),
+                    process: process,
+                    status: 'running'
+                });
+
+                let shrinkPerc = 0;
+                if(sentMtr > 0 && rcvMtr <= sentMtr) {
+                    shrinkPerc = ((sentMtr - rcvMtr) / sentMtr) * 100;
+                }
+
+                receives.push({
+                    id: Date.now() + Math.random(),
+                    issueId: newIssueId,
+                    botDate: dateVal,
+                    designNo: dNo,
+                    unit: uName,
+                    receivedMtr: rcvMtr.toFixed(2),
+                    shrinkagePerc: shrinkPerc.toFixed(2) + "%"
+                });
+                savedCount++;
+            }
+        } else {
+            if(rcvMtr > 0) {
+                let issueIndex = issues.findIndex(r => String(r.id) === String(recId));
+                if(issueIndex !== -1) {
+                    let issMtr = parseFloat(issues[issueIndex].mtr);
+                    
+                    let shrinkPerc = 0;
+                    if(issMtr > 0 && rcvMtr <= issMtr) {
+                        shrinkPerc = ((issMtr - rcvMtr) / issMtr) * 100;
+                    }
+
+                    receives.push({
+                        id: Date.now() + Math.random(),
+                        issueId: recId,
+                        botDate: dateVal,
+                        designNo: dNo,
+                        unit: uName,
+                        receivedMtr: rcvMtr.toFixed(2),
+                        shrinkagePerc: shrinkPerc.toFixed(2) + "%"
+                    });
+                    savedCount++;
+                }
+            }
+        }
+    });
+
+    if(savedCount > 0) {
+        localStorage.setItem('washing_issue_records', JSON.stringify(issues));
+        localStorage.setItem('washing_receive_records', JSON.stringify(receives));
+        
+        if (window.supabaseSave) {
+            await window.supabaseSave('washing_issue_records', issues);
+            await window.supabaseSave('washing_receive_records', receives);
+        }
+
+        alert("Bottom Entry Saved to Cloud Successfully! ✅☁️");
+        
+        document.getElementById('botDesignDisplay').value = '';
+        document.getElementById('botDesignNo').value = '';
+        document.getElementById('botUnitName').value = '';
+        document.getElementById('botGridWrapper').style.display = 'none';
+        renderTable();
+    } else {
+        alert("Please enter Received Mtr for at least one item.");
+    }
+    btn.innerText = origText;
+}
+
+async function toggleStatus(id, newStatus) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    let msg = newStatus === 'completed' ? "Change this order to Completed?" : "Change this order to Running?";
+    if(confirm(msg)) {
+        let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+        let index = issues.findIndex(r => String(r.id) === String(id));
+        
+        if(index > -1) {
+            issues[index].status = newStatus;
+            localStorage.setItem('washing_issue_records', JSON.stringify(issues));
+            
+            let dNo = issues[index].designNo;
+            if(dNo) {
+                let clean = dNo.toString().replace('#', '').trim().toLowerCase();
+                let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || dNo;
+
+                if(!designSpecs[specKey]) designSpecs[specKey] = {};
+                designSpecs[specKey].status = newStatus;
+                localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+                if(window.supabaseSave) {
+                    await window.supabaseSave('design_specs', designSpecs);
+                }
+                if (window.supabaseSaveIndividual) {
+                    await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+                }
+            }
+
+            if(window.supabaseSave) {
+                await window.supabaseSave('washing_issue_records', issues);
+            }
+            renderTable();
+        }
+    }
+}
+
+async function editWashingRecord(issueId, isReceived) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let receives = JSON.parse(localStorage.getItem('washing_receive_records')) || [];
+    
+    if (isReceived) {
+        let recIndex = receives.findIndex(r => String(r.issueId) === String(issueId));
+        if(recIndex !== -1) {
+            let recRecord = receives[recIndex];
+            
+            receives.splice(recIndex, 1);
+            localStorage.setItem('washing_receive_records', JSON.stringify(receives));
+            
+            if (window.supabaseSave) {
+                window.supabaseSave('washing_receive_records', receives);
+            }
+            
+            document.getElementById('botDate').value = recRecord.botDate;
+            document.getElementById('botDesignDisplay').value = `${recRecord.designNo} - ${recRecord.unit}`;
+            document.getElementById('botDesignNo').value = recRecord.designNo;
+            document.getElementById('botUnitName').value = recRecord.unit;
+            closeModal('savedListModal');
+            loadBottomData();
+            
+            setTimeout(() => {
+                let rows = document.querySelectorAll('#botLinesContainer .line-row-bot');
+                rows.forEach(row => {
+                    if(String(row.getAttribute('data-id')) === String(issueId)) {
+                        row.querySelector('.b-received').value = recRecord.receivedMtr;
+                    }
+                });
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 100);
+            renderTable();
+        }
+    } else {
+        let issueIndex = issues.findIndex(iss => String(iss.id) === String(issueId));
+        if(issueIndex !== -1) {
+            let issRecord = issues[issueIndex];
+            issues.splice(issueIndex, 1);
+            localStorage.setItem('washing_issue_records', JSON.stringify(issues));
+            
+            if (window.supabaseSave) {
+                window.supabaseSave('washing_issue_records', issues);
+            }
+            
+            document.getElementById('topDate').value = issRecord.date;
+            document.getElementById('topUnit').value = issRecord.unit;
+            document.getElementById('topDesignNo').value = issRecord.designNo;
+            document.getElementById('top_completed_status').checked = (issRecord.status === 'completed');
+            
+            let container = document.getElementById('topLinesContainer');
+            container.innerHTML = `
+                <div class="line-row">
+                    <input type="text" class="t-slip" value="${issRecord.slip}">
+                    <input type="number" class="t-piece" value="${issRecord.piece}">
+                    <input type="number" class="t-mtr" value="${issRecord.mtr}" step="0.01">
+                    <input type="text" class="t-process" value="${issRecord.process}">
+                    <button class="add-btn" onclick="addNewTopRow(this)">+</button>
+                </div>
+            `;
+            closeModal('savedListModal');
+            renderTable();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadBitmapImage();
+        }
+    }
+}
+
+async function deleteWashingRecord(issueId, isReceived) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+    if(!confirm("Are you sure you want to delete this record?")) return;
+    
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let receives = JSON.parse(localStorage.getItem('washing_receive_records')) || [];
+    
+    if (isReceived) {
+        let recIndex = receives.findIndex(r => String(r.issueId) === String(issueId));
+        if(recIndex !== -1) receives.splice(recIndex, 1);
+    } else {
+        let issueIndex = issues.findIndex(iss => String(iss.id) === String(issueId));
+        if(issueIndex !== -1) issues.splice(issueIndex, 1);
+    }
+    
+    localStorage.setItem('washing_receive_records', JSON.stringify(receives));
+    localStorage.setItem('washing_issue_records', JSON.stringify(issues));
+    
+    if (window.supabaseSave) {
+        await window.supabaseSave('washing_receive_records', receives);
+        await window.supabaseSave('washing_issue_records', issues);
+    }
+    
+    renderTable();
+    
+    document.getElementById('botLinesContainer').innerHTML = '';
+    document.getElementById('botGridWrapper').style.display = 'none';
+    document.getElementById('botDesignDisplay').value = '';
+}
+
+function renderTable() {
+    let issues = JSON.parse(localStorage.getItem('washing_issue_records')) || [];
+    let receives = JSON.parse(localStorage.getItem('washing_receive_records')) || [];
+    let selectedDesign = document.getElementById('topDesignNo').value.trim();
+
+    if(selectedDesign) {
+        issues = issues.filter(r => (r.designNo || r.designNumber || "").trim().toLowerCase() === selectedDesign.toLowerCase());
+    }
+
+    let tbody = document.getElementById('dataTableBody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    if(issues.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" style="padding:20px; color:#A0AFA0;">No Records Found for this design.</td></tr>`;
+        return;
+    }
+
+    issues.slice().reverse().forEach(issue => {
+        let matchingRec = receives.find(r => String(r.issueId) === String(issue.id));
+        let isReceived = !!matchingRec;
+        
+        let botDateStr = "-";
+        if (matchingRec && matchingRec.botDate) {
+            let dObj = new Date(matchingRec.botDate);
+            botDateStr = ("0" + dObj.getDate()).slice(-2) + "/" + ("0" + (dObj.getMonth() + 1)).slice(-2) + "/" + dObj.getFullYear();
+        }
+
+        let rcvMtr = matchingRec ? `<span style="color:#10B981; font-weight:bold;">${matchingRec.receivedMtr}</span>` : `<span class="status-pending">Pending</span>`;
+        let shrinkPerc = matchingRec ? matchingRec.shrinkagePerc : "-";
+        let shrinkDisplay = (shrinkPerc !== "-") ? `<span class="shrink-text">${shrinkPerc}</span>` : "-";
+        
+        if(!issue.status) issue.status = "running";
+        let statusColor = issue.status === 'running' ? '#D97706' : '#526E51';
+        let statusBtn = issue.status === 'running' 
+            ? `<button class="action-complete" onclick="toggleStatus(${issue.id}, 'completed')">Complete</button>` 
+            : `<button class="action-running" onclick="toggleStatus(${issue.id}, 'running')">Running</button>`;
+
+        let actionBtns = `
+            <div class="action-cell">
+                ${statusBtn}
+                <button class="edit-action-btn" onclick="editWashingRecord(${issue.id}, ${isReceived})" title="Edit">✏️</button>
+                <button class="del-action-btn" onclick="deleteWashingRecord(${issue.id}, ${isReceived})" title="Delete">🗑️</button>
+            </div>
+        `;
+
+        tbody.innerHTML += `
+            <tr>
+                <td><b>${issue.designNo}</b></td>
+                <td style="color:#D97706; font-weight:700;">${issue.unit}</td>
+                <td>${issue.slip}</td>
+                <td>${issue.piece}</td>
+                <td>${issue.mtr}</td>
+                <td>${issue.process}</td>
+                <td>${botDateStr}</td>
+                <td>${rcvMtr}</td>
+                <td>${shrinkDisplay}</td>
+                <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${issue.status}</td>
+                <td class="no-print">${actionBtns}</td>
+            </tr>
+        `;
+    });
+}
+
+function openPreview() {
+    let tableBody = document.getElementById('dataTableBody'); 
+    
+    let html = `<div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #E2E8E2; padding-bottom: 15px;">
+                    <h2 style="color: #2F4F38; font-family: sans-serif; margin-bottom: 5px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Washing Production Report</h2>
+                </div>
+                <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:center; background:#FFF; color:#1E2B23; border:1px solid #D1DED1;">`;
+    
+    html += `<tr style="background:#EAF0EA;">`;
+    let headers = document.querySelectorAll('.table-container table thead th');
+    headers.forEach((th, idx) => {
+        if(idx < headers.length - 1) { 
+            html += `<th style="border:1px solid #D1DED1; padding:10px; font-weight:bold; color:#2F4F38; text-transform:uppercase;">${th.innerText}</th>`;
+        }
+    });
+    html += `</tr>`;
+
+    let rows = tableBody.querySelectorAll('tr');
+    if(rows.length === 0 || rows[0].innerText.includes("No Records Found")) {
+        html += `<tr><td colspan="10" style="border:1px solid #D1DED1; padding:20px; text-align:center;">No Data Found</td></tr>`;
+    } else {
+        rows.forEach(tr => {
+            let cells = tr.querySelectorAll('td');
+            html += `<tr style="border-bottom:1px dashed #E2E8E2;">`;
+            cells.forEach((td, idx) => {
+                if(idx < cells.length - 1) { 
+                    html += `<td style="border:1px solid #E2E8E2; padding:10px;">${td.innerHTML}</td>`;
+                }
+            });
+            html += `</tr>`;
+        });
+    }
+    
+    html += `</table></div>`;
+    document.getElementById('previewContent').innerHTML = html;
+    openModal('previewModal');
+}
+
+function printReport() {
+    if(document.getElementById('previewModal').style.display !== 'flex') {
+        openPreview();
+    }
+    setTimeout(() => {
+        window.print();
+    }, 300);
+}
+</script>
+</body>
+</html>

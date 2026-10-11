@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Weave Graph Editor</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0b111a; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #fff; }
+        .container { max-width: 600px; margin: auto; }
+        .title { font-size: 13px; color: #60a5fa; margin-bottom: 8px; font-weight: 600; }
+        .select-box { width: 100%; padding: 12px; background: #0f1c2e; color: #fff; border: 1px solid #1e3a5f; border-radius: 8px; font-size: 15px; font-weight: bold; outline: none; margin-bottom: 12px; }
+        .btn-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .ctrl-btn { flex: 1; min-width: 70px; background: #162b46; color: #60a5fa; border: 1px solid #1e3a5f; padding: 10px 4px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; }
+        .action-btn { flex: 1; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; }
+        .btn-copy { background: #1e3a5f; color: #60a5fa; border: 1px solid #294b7a; }
+        .btn-paste { background: #1e3a5f; color: #60a5fa; border: 1px solid #294b7a; }
+        .btn-save { background: #2563eb; color: #fff; box-shadow: 0 0 10px rgba(37, 99, 235, 0.5); }
+        .input-label { font-size: 12px; color: #f59e0b; font-weight: bold; display: block; margin-bottom: 4px; }
+        .formula-input { width: 100%; padding: 10px; background: #fff; color: #000; border-radius: 6px; border: none; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+        .panel { background: #0a1420; border: 1px solid #142840; border-radius: 10px; padding: 14px; margin-bottom: 15px; text-align: center; overflow-x: auto; }
+        .panel-title { font-size: 13px; color: #94a3b8; font-weight: bold; margin-bottom: 10px; }
+        .cell-btn { width: 28px; height: 28px; border-radius: 6px; font-size: 12px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .cell-x { background: #16a34a; color: #ffffff; font-weight: bold; } 
+        .cell-0 { background: #1e293b; color: #94a3b8; font-weight: bold; } 
+        .del-btn { background: #1e3a5f; color: #60a5fa; border: none; width: 26px; height: 28px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+        .preview-grid { display: inline-grid; gap: 1px; background: #142840; padding: 6px; border-radius: 6px; }
+        .preview-pixel { width: 12px; height: 12px; border-radius: 1px; }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 15px; }
+        .modal-content { background: #0f1c2e; padding: 20px; border-radius: 10px; width: 100%; max-width: 500px; border: 1px solid #1e3a5f; }
+        .modal-content h3 { margin-top: 0; color: #60a5fa; font-size: 18px; margin-bottom: 8px; }
+        .modal-content p { font-size: 13px; color: #94a3b8; margin-bottom: 15px; }
+        .code-area { width: 100%; height: 200px; background: #0b111a; color: #22c55e; border: 1px solid #1e3a5f; padding: 12px; font-family: monospace; font-size: 13px; border-radius: 6px; outline: none; margin-bottom: 15px; white-space: pre; overflow: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Weave Type / Up to 14 Frames Editor</div>
+        
+        <select id="weaveSelect" class="select-box"></select>
+
+        <div class="btn-row">
+            <button class="ctrl-btn" onclick="addCol()">+ Col</button>
+            <button class="ctrl-btn" onclick="addRow()">+ Row</button>
+            <button class="ctrl-btn" onclick="removeRow()">- Row</button>
+            <button class="ctrl-btn" onclick="removeCol()">- Col</button>
+        </div>
+
+        <div class="btn-row">
+            <button class="action-btn btn-copy" onclick="copyGraph()">Copy Graph</button>
+            <button class="action-btn btn-paste" onclick="pasteGraph()">Paste Graph</button>
+            <button class="action-btn btn-save" onclick="generateSaveCode()">Save / Export Code</button>
+        </div>
+
+        <div>
+            <label class="input-label">Weft (Pick) Repeats Formula</label>
+            <input type="text" id="formulaInput" class="formula-input" placeholder="Eg: (4-4)*20">
+        </div>
+
+        <div class="panel">
+            <div id="gridContainer"></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Live Weave Preview (Repeated)</div>
+            <div id="liveWeavePreview" class="preview-grid"></div>
+        </div>
+    </div>
+
+    <!-- Export Code Modal -->
+    <div id="exportModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Copy your JS Code</h3>
+            <p>Indha code-ai copy seidhu unga code editor-il ulla <b>pre_stock.js</b> file-il (preDefinedDesigns ullae) paste seiyavum.</p>
+            <textarea id="exportCode" class="code-area" readonly></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="copyExportCode()" style="flex: 1; padding: 12px; background: #16a34a; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">📋 Copy Code</button>
+                <button onclick="closeModal()" style="flex: 1; padding: 12px; background: #dc2626; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="pre_stock.js"></script>
+</body>
+</html>

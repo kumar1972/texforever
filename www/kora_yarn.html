@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kora Yarn - TEX FOR EVER</title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        html, body { 
+            width: 100%; 
+            min-height: 100vh; 
+            background: #030712; 
+            color: #1E2B23; 
+        }
+
+        body { 
+            padding: 12px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-card {
+            width: 100%;
+            max-width: 900px;
+            margin: 0;
+            background: #FFFFFF;
+            border: 1px solid rgba(82, 110, 81, 0.15);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .top-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 5px; 
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 11px;
+            background: #1A1; 
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+        .completed-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #D8DFD6;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.4);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .completed-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #526E51;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+        
+        .completed-checkbox label {
+            margin: 0;
+            color: #3F5A3E;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
+        #bitmapDisplayContainer img {
+            max-height: 40px;
+            border-radius: 4px;
+            border: 1px solid rgba(82, 110, 81, 0.4);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: zoom-in;
+            transition: transform 0.2s;
+        }
+        #bitmapDisplayContainer img:hover { transform: scale(1.1); }
+
+        .page-title {
+            font-size: 16px;
+            margin-bottom: 5px;
+            font-weight: 700;
+            color: #2F4F38;
+            text-align: left;
+            position: relative;
+            padding-left: 12px;
+        }
+        .page-title::before {
+            content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px;
+            background: #4A7C59; border-radius: 4px;
+        }
+
+        .form-section {
+            background: #F8FAF8;
+            border: 1px solid #E2E8E2;
+            border-radius: 14px;
+            padding: 20px 15px 15px 15px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        
+        .section-badge {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: #4A7C59;
+            color: #FFF;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
+        }
+        .section-badge.issue { background: linear-gradient(135deg, #D97706, #5309); }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .form-row.full { grid-template-columns: 1fr; }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 10px; font-weight: 600; color: #4A554A; }
+
+        .input-group-btn {
+            display: flex;
+            gap: 6px;
+        }
+        .input-group-btn select, .input-group-btn input {
+            flex: 1;
+        }
+        .btn-add-inline {
+            background: #10B981;
+            color: white; border: none; padding: 0 8px; border-radius: 8px;
+            font-weight: 700; font-size: 10px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2); white-space: nowrap;
+        }
+        .btn-add-inline:hover { background: #059669; }
+        
+        .btn-del-inline {
+            background: #FEE2E2; color: #DC2626; border: none; padding: 0 8px;
+            border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(220, 38, 38, 0.2); display: flex; align-items: center; justify-content: center;
+        }
+        .btn-del-inline:hover { background: #FECACA; }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #D1DED1;
+            background: #FFFFFF;
+            color: #1E2B23;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(30, 43, 35, 0.02);
+        }
+
+        input:focus, select:focus {
+            border-color: #4A7C59;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
+        }
+        
+        input::placeholder { color: #A0AFA0; font-weight: 400; }
+
+        .btn-main {
+            width: 100%; padding: 14px; margin: 5px 0 0 0; border: none; border-radius: 10px;
+            color: white; font-weight: 700; font-size: 13px; cursor: pointer;
+            background: linear-gradient(135deg, #4A7C59, #33593D);
+            box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25);
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(74, 124, 89, 0.35); }
+        .btn-main:active { transform: translateY(1px); }
+
+        .btn-issue { background: linear-gradient(135deg, #F59E0B, #D97676); box-shadow: 0 6px 15px rgba(217, 119, 6, 0.25); }
+        .btn-issue:hover { box-shadow: 0 8px 20px rgba(217, 119, 6, 0.35); }
+
+        .popup-trigger-btn {
+            background: linear-gradient(135deg, #1B82A1, #22AD4ED8);
+            color: white; border: none; padding: 14px; border-radius: 10px;
+            font-size: 12px; font-weight: bold; cursor: pointer; width: 100%;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .popup-trigger-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35); }
+        
+        .popup-btn-secondary { background: linear-gradient(135deg, #10B, #0519); box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25); }
+        .popup-btn-secondary:hover { box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35); }
+
+        .history-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+
+        .overlay-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 25, 20, 0.85); backdrop-filter: blur(4px);
+            z-index: 99999; flex-direction: column; padding: 15px; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay-modal.show { opacity: 1; }
+        
+        .modal-content {
+            background: #FFFFFF; width: 100%; height: 100%; border-radius: 16px;
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden; transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .overlay-modal.show .modal-content { transform: scale(1); }
+
+        .modal-header {
+            padding: 15px 20px; background: #F4F7F4; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8E2;
+        }
+        .modal-header h3 { margin: 0; font-size: 15px; color: #1E2B23; font-weight: 700; }
+        .close-btn {
+            background: #FEE2E2; color: #DC2626; border: none; padding: 8px 14px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;
+            transition: all 0.2s ease;
+        }
+        .close-btn:hover { background: #FECACA; transform: scale(1.05); }
+
+        .modal-body { padding: 15px; overflow-y: auto; flex: 1; background: #FAFCFA; }
+
+        .fullscreen-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+            padding: 20px; flex-direction: column;
+        }
+        .fullscreen-modal img {
+            max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        .close-fullscreen {
+            position: absolute; top: 20px; right: 20px; background: #EF4444; color: white;
+            border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .table-container {
+            width: 100%; border-radius: 10px; overflow-x: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2; background: #FFFFFF;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; text-align: center; white-space: nowrap; }
+        th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #E2E8E2; color: #1E2B23; }
+        th { background: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #F8FAF8; }
+
+        .action-btns { display: flex; gap: 6px; justify-content: center; }
+        .edit-action-btn { background: #64748B; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; transition: all 0.2s; }
+        .edit-action-btn:hover { background: #475569; }
+        .del-action-btn { background: #EF4444; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; transition: all 0.2s ease; }
+        .del-action-btn:hover { background: #DC2626; box-shadow: 0 2px 5px rgba(220, 38, 38, 0.3); }
+
+        .action-complete { background: #526E51; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+        .action-running { background: #D97706; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <div id="bitmapDisplayContainer">
+            <div class="completed-checkbox">
+                <input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()">
+                <label for="top_completed_status">Completed</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="color: #ffffff; /* Inga unga color-a change pannikalam */">🧵 Kora Yarn Management</div>
+
+    <div class="form-section" style="margin-top: 10px;">
+        <div class="section-badge">📥 Inward Stock</div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="inwardDate">
+            </div>
+            <div class="form-group">
+                <label id="supplierLabel">Source / Mill Name</label>
+                <div class="input-group-btn">
+                    <select id="supplierName"><option value="">Select Mill</option></select>
+                    <button type="button" class="btn-add-inline" onclick="addMasterMill('supplierName')">+ Add</button>
+                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('mill')" title="Delete Mill">🗑️</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Yarn Count</label>
+                <div class="input-group-btn">
+                    <select id="inwardCount"><option value="">Select Count</option></select>
+                    <button type="button" class="btn-add-inline" onclick="addMasterCount('inwardCount')">+ Add</button>
+                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('count')" title="Delete Count">🗑️</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Weight (KG)</label>
+                <input type="number" id="inwardWt" placeholder="0.000" step="0.001">
+            </div>
+        </div>
+        <button class="btn-main" id="saveInwardBtn" onclick="saveInward()">✅ Save Kora Stock</button>
+    </div>
+
+    <div class="form-section">
+        <div class="section-badge issue">📤 Outward Issue</div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Issue Date</label>
+                <input type="date" id="issueDate">
+            </div>
+            <div class="form-group">
+                <label>Dyeing / Unit Name</label>
+                <div class="input-group-btn">
+                    <select id="dyeingName"><option value="">Select Unit</option></select>
+                    <button type="button" class="btn-add-inline" onclick="addMasterUnit('dyeingName')">+ Add</button>
+                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('unit')" title="Delete Unit">🗑️</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-row full">
+            <div class="form-group">
+                <label>Mill Name (From where yarn is taken)</label>
+                <div class="input-group-btn">
+                    <select id="issueMillName"><option value="">Select Mill</option></select>
+                    <button type="button" class="btn-add-inline" onclick="addMasterMill('issueMillName')">+ Add</button>
+                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('mill')" title="Delete Mill">🗑️</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row full">
+            <div class="form-group">
+                <label>Design Number</label>
+                <select id="designNo" onchange="onDesignSelect(this.value)">
+                    <option value="">Select Design</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Yarn Count</label>
+                <div class="input-group-btn">
+                    <select id="issueCount"><option value="">Select Count</option></select>
+                    <button type="button" class="btn-add-inline" onclick="addMasterCount('issueCount')">+ Add</button>
+                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('count')" title="Delete Count">🗑️</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Issue Weight (KG)</label>
+                <input type="number" id="issueWt" placeholder="0.000" step="0.001">
+            </div>
+        </div>
+        <button class="btn-main btn-issue" id="saveIssueBtn" onclick="saveIssue()">➕ Add Kora Issue</button>
+    </div>
+
+    <div class="history-btn-group">
+        <button class="popup-trigger-btn" onclick="openModal('inwardModal')">📋 View Inward History (வரவு)</button>
+        <button class="popup-trigger-btn popup-btn-secondary" onclick="openModal('issueModal')">📋 View Issue History (செலவு)</button>
+    </div>
+
+</div>
+
+<div id="inwardModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Inward History Registry (வரவு)</h3>
+            <button class="close-btn" onclick="closeModal('inwardModal')">Close ✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Source / Mill Name</th>
+                            <th>Count</th>
+                            <th>Weight</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inwardHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="issueModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Issue History Registry (செலவு)</h3>
+            <button class="close-btn" onclick="closeModal('issueModal')">Close ✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Mill</th>
+                            <th>Unit</th>
+                            <th>Design</th>
+                            <th>Count</th>
+                            <th>Weight</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issueHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+let editingInwardId = null;
+let editingIssueId = null;
+
+function checkUserPermission() {
+    let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+    if (userRole !== 'Administrator' && userRole !== 'Admin') {
+        let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+        if (permissions['kora_yarn.html'] === false || permissions['kora_yarn'] === false || permissions['kora'] === false) {
+            return false;
+        }
+    }
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to access this page. ❌");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    document.getElementById('inwardDate').valueAsDate = new Date();
+    document.getElementById('issueDate').valueAsDate = new Date();
+    
+    loadMillSuggestions();
+    loadUnitSuggestions();
+    loadCountSuggestions();
+    loadDesignDropdown();
+    refreshAllTables();
+});
+
+async function syncDataToCloud(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+    if (window.supabaseSave) {
+        await window.supabaseSave(key, data);
+    }
+    if (window.supabaseSaveIndividual) {
+        await window.supabaseSaveIndividual(key, data);
+    }
+}
+
+function addMasterMill(selectId) {
+    let val = prompt("புதிய மில் பெயரை உள்ளிடவும் (Enter new Mill Name):");
+    if(val) {
+        val = val.trim();
+        if(!val) return;
+        let masterMills = JSON.parse(localStorage.getItem('tex_master_mills')) || [];
+        if(!masterMills.includes(val)) {
+            masterMills.push(val);
+            syncDataToCloud('tex_master_mills', masterMills);
+            loadMillSuggestions();
+            alert(`Mill '${val}' added & saved to Cloud successfully! ✅`);
+        }
+        document.getElementById(selectId).value = val;
+    }
+}
+
+function addMasterUnit(selectId) {
+    let val = prompt("புதிய யூனிட் பெயரை உள்ளிடவும் (Enter new Dyeing/Unit Name):");
+    if(val) {
+        val = val.trim();
+        if(!val) return;
+        let masterUnits = JSON.parse(localStorage.getItem('tex_master_units')) || [];
+        if(!masterUnits.includes(val)) {
+            masterUnits.push(val);
+            syncDataToCloud('tex_master_units', masterUnits);
+            loadUnitSuggestions();
+            alert(`Unit '${val}' added & saved to Cloud successfully! ✅`);
+        }
+        document.getElementById(selectId).value = val;
+    }
+}
+
+function addMasterCount(selectId) {
+    let val = prompt("புதிய நூல் கவுண்டை உள்ளிடவும் (Enter new Yarn Count):");
+    if(val) {
+        val = val.trim();
+        if(!val) return;
+        let masterCounts = JSON.parse(localStorage.getItem('tex_master_counts')) || [];
+        if(!masterCounts.includes(val)) {
+            masterCounts.push(val);
+            syncDataToCloud('tex_master_counts', masterCounts);
+            loadCountSuggestions();
+            alert(`Count '${val}' added & saved to Cloud successfully! ✅`);
+        }
+        document.getElementById(selectId).value = val;
+    }
+}
+
+function deleteMasterItem(type) {
+    let storageKey = ''; let title = '';
+    if(type === 'mill') { storageKey = 'tex_master_mills'; title = "Mill"; }
+    else if(type === 'unit') { storageKey = 'tex_master_units'; title = "Unit"; }
+    else if(type === 'count') { storageKey = 'tex_master_counts'; title = "Count"; }
+
+    let masterList = JSON.parse(localStorage.getItem(storageKey)) || [];
+    if(masterList.length === 0) { alert(`No manually added ${title}s found to delete.`); return; }
+
+    let listStr = masterList.map((m, i) => `${i + 1}. ${m}`).join('\n');
+    let idxStr = prompt(`எந்த ${title} பெயரை நீக்க வேண்டும்? அதற்கான எண்ணை டைப் செய்யவும்:\n\n${listStr}`);
+
+    if(idxStr) {
+        let idx = parseInt(idxStr) - 1;
+        if(idx >= 0 && idx < masterList.length) {
+            let deleted = masterList.splice(idx, 1);
+            syncDataToCloud(storageKey, masterList);
+            if(type === 'mill') loadMillSuggestions();
+            if(type === 'unit') loadUnitSuggestions();
+            if(type === 'count') loadCountSuggestions();
+            alert(`'${deleted[0]}' நீக்கப்பட்டது (Deleted successfully)! ✅`);
+        } else {
+            alert("தவறான எண் (Invalid Number)!");
+        }
+    }
+}
+
+function loadMillSuggestions() {
+    let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let masterMills = JSON.parse(localStorage.getItem('tex_master_mills')) || [];
+    
+    let millsSet = new Set([...masterMills]);
+    inwards.forEach(item => { if(item.supplier) millsSet.add(item.supplier.trim()); if(item.millName) millsSet.add(item.millName.trim()); });
+    issues.forEach(item => { if(item.millName) millsSet.add(item.millName.trim()); });
+
+    let supVal = document.getElementById('supplierName').value;
+    let issMillVal = document.getElementById('issueMillName').value;
+
+    let html = '<option value="">Select Mill</option>';
+    Array.from(millsSet).sort().forEach(mill => { html += `<option value="${mill}">${mill}</option>`; });
+    
+    document.getElementById('supplierName').innerHTML = html;
+    document.getElementById('issueMillName').innerHTML = html;
+
+    if(supVal) document.getElementById('supplierName').value = supVal;
+    if(issMillVal) document.getElementById('issueMillName').value = issMillVal;
+}
+
+function loadUnitSuggestions() {
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let masterUnits = JSON.parse(localStorage.getItem('tex_master_units')) || [];
+    
+    let unitSet = new Set([...masterUnits]);
+    issues.forEach(item => { if(item.dyeingName) unitSet.add(item.dyeingName.trim()); });
+
+    let dyeVal = document.getElementById('dyeingName').value;
+
+    let html = '<option value="">Select Unit</option>';
+    Array.from(unitSet).sort().forEach(u => { html += `<option value="${u}">${u}</option>`; });
+    
+    document.getElementById('dyeingName').innerHTML = html;
+    if(dyeVal) document.getElementById('dyeingName').value = dyeVal;
+}
+
+function loadCountSuggestions() {
+    let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let masterCounts = JSON.parse(localStorage.getItem('tex_master_counts')) || [];
+    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let masters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    
+    let countSet = new Set([...masterCounts]);
+    inwards.forEach(item => { if(item.count) countSet.add(item.count.trim()); });
+    issues.forEach(item => { if(item.count) countSet.add(item.count.trim()); });
+    
+    Object.values(specs).forEach(s => {
+        if(s.warp) countSet.add(s.warp.trim());
+        if(s.baseBeamCount) countSet.add(s.baseBeamCount.trim());
+        if(s.topBeamCount && s.topBeamCount !== '-') countSet.add(s.topBeamCount.trim());
+        if(s.weft) countSet.add(s.weft.trim());
+        if(s.weftCount) countSet.add(s.weftCount.trim());
+    });
+
+    if(Array.isArray(masters)) {
+        masters.forEach(m => {
+            if(m.warp1) countSet.add(m.warp1.trim());
+            if(m.warp2 && m.warp2 !== '-') countSet.add(m.warp2.trim());
+            if(m.weftCount) countSet.add(m.weftCount.trim());
+        });
+    }
+
+    if(Array.isArray(orders)) {
+        orders.forEach(o => {
+            if(o.baseBeamCount) countSet.add(o.baseBeamCount.trim());
+            if(o.topBeamCount && o.topBeamCount !== '-') countSet.add(o.topBeamCount.trim());
+            if(o.weftCount) countSet.add(o.weftCount.trim());
+        });
+    }
+
+    let inVal = document.getElementById('inwardCount').value;
+    let issVal = document.getElementById('issueCount').value;
+
+    let html = '<option value="">Select Count</option>';
+    Array.from(countSet).filter(Boolean).sort().forEach(c => { html += `<option value="${c}">${c}</option>`; });
+    
+    document.getElementById('inwardCount').innerHTML = html;
+    document.getElementById('issueCount').innerHTML = html;
+
+    if(inVal) document.getElementById('inwardCount').value = inVal;
+    if(issVal) document.getElementById('issueCount').value = issVal;
+}
+
+function openModal(modalId) {
+    if(modalId === 'inwardModal' || modalId === 'issueModal') refreshAllTables();
+    let modal = document.getElementById(modalId);
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeModal(modalId) {
+    let modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function cleanDesignName(str) { return str ? str.toString().replace('#', '').trim().toLowerCase() : ''; }
+
+window.openFullscreenImage = function(src) {
+    if(!src || src === '' || src === 'null') return;
+    document.getElementById('fullscreenImg').src = src;
+    document.getElementById('fullscreenModal').style.display = 'flex';
+};
+window.closeFullscreenImage = function() { document.getElementById('fullscreenModal').style.display = 'none'; };
+
+function loadBitmapImage() {
+    let activeDesign = document.getElementById('designNo').value || localStorage.getItem('selected_design_number');
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let bitmapContainer = document.getElementById('bitmapDisplayContainer');
+    
+    let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
+
+    let imgHtml = '';
+    if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
+        let b64 = designSpecs[specKey].bitmap;
+        imgHtml = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage('${b64}')" title="Click to view full screen">`;
+    }
+    
+    let checkboxHtml = `<div class="completed-checkbox"><input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()"><label for="top_completed_status">Completed</label></div>`;
+    let cb = document.getElementById('top_completed_status'); let wasChecked = cb ? cb.checked : false;
+    bitmapContainer.innerHTML = checkboxHtml + imgHtml;
+    if(wasChecked) document.getElementById('top_completed_status').checked = true;
+}
+
+function loadDesignDropdown() {
+    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+
+    let allDesigns = new Set();
+    preDesigns.forEach(d => allDesigns.add(d));
+    if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
+    Object.keys(designSpecs).forEach(d => allDesigns.add(d));
+    if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
+
+    let select = document.getElementById('designNo');
+    let html = '<option value="">Select Design No</option>';
+    Array.from(allDesigns).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
+    select.innerHTML = html;
+
+    let activeDesign = localStorage.getItem('selected_design_number');
+    if(activeDesign && allDesigns.has(activeDesign)) {
+        select.value = activeDesign;
+        onDesignSelect(activeDesign);
+    } else { loadBitmapImage(); }
+}
+
+function onDesignSelect(val) {
+    loadBitmapImage();
+    if(!val) return;
+    localStorage.setItem('selected_design_number', val);
+    
+    let clean = cleanDesignName(val);
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === clean) || val;
+    let sp = designSpecs[specKey] || {};
+
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let foundMaster = Array.isArray(designMasters) ? designMasters.find(d => cleanDesignName(d.name || d.designNo) === clean) || {} : {};
+
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let foundOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === clean) || {} : {};
+
+    let specStatus = (sp.status || foundOrder.status || '').toLowerCase();
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let rec = issues.find(r => cleanDesignName(r.designNo || r.designNumber) === clean);
+
+    let cb = document.getElementById('top_completed_status');
+    if(specStatus === 'completed' || (rec && rec.status && rec.status.toLowerCase() === 'completed')) {
+        if(cb) cb.checked = true;
+    } else { if(cb) cb.checked = false; }
+
+    // Auto-select Count for Issue if available
+    let resolvedCount = foundOrder.baseBeamCount || sp.baseBeamCount || foundMaster.warp1 || sp.warp || foundOrder.weftCount || sp.weft || '';
+    if(resolvedCount && !document.getElementById('issueCount').value) {
+        document.getElementById('issueCount').value = resolvedCount;
+    }
+}
+
+async function quickCompleteToggle() {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to modify status on this page. ❌");
+        let cb = document.getElementById('top_completed_status');
+        if(cb) cb.checked = !cb.checked;
+        return;
+    }
+
+    let dNo = document.getElementById('designNo').value;
+    let cb = document.getElementById('top_completed_status');
+    let isCompleted = cb ? cb.checked : false;
+
+    if(!dNo) { alert("Mudhala Design Number select pannunga bro"); if(cb) cb.checked = false; return; }
+
+    let statusText = isCompleted ? 'completed' : 'running';
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let updated = false;
+
+    issues.forEach(r => { if(cleanDesignName(r.designNo || r.designNumber) === cleanDesignName(dNo)) { r.status = statusText; updated = true; } });
+
+    if(!updated) {
+        let dateVal = document.getElementById('issueDate').value || new Date().toISOString().split('T')[0];
+        let dyeingName = document.getElementById('dyeingName').value.trim() || 'Direct Unit';
+        let issueMillName = document.getElementById('issueMillName').value.trim() || 'Main Mill';
+        let count = document.getElementById('issueCount').value.trim() || '20/s';
+        let issueWt = parseFloat(document.getElementById('issueWt').value) || 0;
+
+        issues.push({ id: Date.now(), date: dateVal, dyeingName: dyeingName, millName: issueMillName, designNo: dNo, count: count, issueWt: issueWt.toFixed(3), status: statusText });
+    }
+
+    syncDataToCloud('kora_issue_records', issues);
+
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let clean = cleanDesignName(dNo);
+    let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === clean) || dNo;
+
+    if(!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = statusText;
+    syncDataToCloud('design_specs', designSpecs);
+
+    refreshAllTables();
+    alert(`Design ${dNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
+}
+
+async function saveInward() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to save inward stock on this page. ❌"); return; }
+
+    let dateVal = document.getElementById('inwardDate').value;
+    let supplier = document.getElementById('supplierName').value.trim();
+    let count = document.getElementById('inwardCount').value.trim();
+    let weight = parseFloat(document.getElementById('inwardWt').value) || 0;
+    
+    let cb = document.getElementById('top_completed_status'); let isCompleted = cb ? cb.checked : false;
+
+    if(!supplier || !count || weight <= 0) { alert("Please enter or select Mill Name, Count, and valid Weight!"); return; }
+
+    let records = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    let cleanSupplier = supplier.replace('#', '').trim().toLowerCase();
+
+    if(editingInwardId === null && cleanSupplier) {
+        let alreadyExists = records.some(r => {
+            let rSup = r.supplier ? r.supplier.replace('#', '').trim().toLowerCase() : '';
+            let rCount = r.count ? r.count.trim().toLowerCase() : '';
+            return rSup === cleanSupplier && rCount === count.trim().toLowerCase();
+        });
+        if(alreadyExists) {
+            let confirmReEntry = confirm("இந்த சப்ளையர் மற்றும் கவுண்டிற்கு ஏற்கனவே என்ட்ரி உள்ளது. கூடுதலாக இன்னொரு என்ட்ரி சேர்க்க வேண்டுமா?");
+            if(!confirmReEntry) return; 
+        }
+    }
+
+    let btn = document.getElementById('saveInwardBtn'); btn.innerText = "⏳ Saving to Cloud...";
+
+    if (editingInwardId) {
+        let idx = records.findIndex(r => r.id == editingInwardId);
+        if(idx !== -1) {
+            records[idx].date = dateVal; records[idx].supplier = supplier; records[idx].count = count;
+            records[idx].weight = weight.toFixed(3); records[idx].status = isCompleted ? 'completed' : 'running';
+        }
+        editingInwardId = null; alert("Kora Stock Updated to Cloud Successfully! ✅☁️");
+    } else {
+        records.push({ id: Date.now() + Math.random(), date: dateVal, supplier: supplier, count: count, weight: weight.toFixed(3), status: isCompleted ? 'completed' : 'running' });
+        alert("Kora Stock Added to Cloud Successfully! ✅☁️");
+    }
+
+    syncDataToCloud('kora_stock_records', records);
+    
+    document.getElementById('supplierName').value = ''; document.getElementById('inwardCount').value = ''; document.getElementById('inwardWt').value = '';
+    if(cb) cb.checked = false; 
+    
+    loadMillSuggestions(); loadCountSuggestions(); refreshAllTables();
+    btn.innerText = "✅ Save Kora Stock";
+}
+
+async function saveIssue() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to add kora issue on this page. ❌"); return; }
+
+    let dateVal = document.getElementById('issueDate').value;
+    let dyeingName = document.getElementById('dyeingName').value.trim();
+    let issueMillName = document.getElementById('issueMillName').value.trim(); 
+    let dNo = document.getElementById('designNo').value;
+    let count = document.getElementById('issueCount').value.trim();
+    let issueWt = parseFloat(document.getElementById('issueWt').value) || 0;
+    
+    let cb = document.getElementById('top_completed_status'); let isCompleted = cb ? cb.checked : false;
+
+    if(!dyeingName || !dNo || !count || issueWt <= 0 || !issueMillName) { alert("Please fill all details to issue yarn (including Mill Name)!"); return; }
+
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let cleanDNo = cleanDesignName(dNo); let cleanDyeing = dyeingName.toLowerCase().trim();
+
+    if(editingIssueId === null && cleanDNo) {
+        let exactDuplicate = issues.some(r => {
+            let rDno = cleanDesignName(r.designNo || r.designNumber);
+            let rCount = r.count ? r.count.trim().toLowerCase() : '';
+            let rDyeing = r.dyeingName ? r.dyeingName.toLowerCase().trim() : '';
+            return rDno === cleanDNo && rCount === count.trim().toLowerCase() && rDyeing === cleanDyeing;
+        });
+        if(exactDuplicate) {
+            let confirmReEntry = confirm("இதே டிசைன் மற்றும் கவுண்ட் ஏற்கனவே இதே டையிங் யூனிட்டிற்கு (Dyeing Party) என்ட்ரி செய்யப்பட்டுள்ளது. கூடுதலாக இன்னொரு என்ட்ரி சேர்க்க வேண்டுமா?");
+            if(!confirmReEntry) return; 
+        }
+    }
+
+    let btn = document.getElementById('saveIssueBtn'); btn.innerText = "⏳ Saving to Cloud...";
+
+    if (editingIssueId) {
+        let idx = issues.findIndex(r => r.id == editingIssueId);
+        if(idx !== -1) {
+            issues[idx].date = dateVal; issues[idx].dyeingName = dyeingName; issues[idx].millName = issueMillName; 
+            issues[idx].designNo = dNo; issues[idx].count = count; issues[idx].issueWt = issueWt.toFixed(3);
+            issues[idx].status = isCompleted ? 'completed' : 'running';
+        }
+        editingIssueId = null; alert("Kora Issue Updated to Cloud Successfully! ✅☁️");
+    } else {
+        issues.push({ id: Date.now() + Math.random(), date: dateVal, dyeingName: dyeingName, millName: issueMillName, designNo: dNo, count: count, issueWt: issueWt.toFixed(3), status: isCompleted ? 'completed' : 'running' });
+        alert("Kora Yarn Issued to Cloud Successfully! ✅☁️");
+    }
+
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
+
+    if(!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
+    syncDataToCloud('design_specs', designSpecs);
+
+    syncDataToCloud('kora_issue_records', issues);
+
+    document.getElementById('dyeingName').value = ''; document.getElementById('issueMillName').value = ''; 
+    document.getElementById('designNo').value = ''; document.getElementById('issueCount').value = ''; document.getElementById('issueWt').value = '';
+    if(cb) cb.checked = false; 
+    
+    loadUnitSuggestions(); loadMillSuggestions(); loadCountSuggestions(); refreshAllTables();
+    btn.innerText = "➕ Add Kora Issue";
+}
+
+async function toggleInwardStatus(id, newStatus) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to change status. ❌"); return; }
+    if(confirm(newStatus === 'completed' ? "Change this stock to Completed?" : "Change this stock to Running?")) {
+        let records = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+        let index = records.findIndex(r => r.id == id);
+        if(index > -1) {
+            records[index].status = newStatus; 
+            syncDataToCloud('kora_stock_records', records);
+            refreshAllTables();
+        }
+    }
+}
+
+async function toggleIssueStatus(id, newStatus) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to change status. ❌"); return; }
+    if(confirm(newStatus === 'completed' ? "Change this issue to Completed?" : "Change this issue to Running?")) {
+        let records = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+        let index = records.findIndex(r => r.id == id);
+        if(index > -1) {
+            records[index].status = newStatus; 
+            let dNo = records[index].designNo;
+            if(dNo) {
+                let cleanDNo = cleanDesignName(dNo); let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
+                if(!designSpecs[specKey]) designSpecs[specKey] = {};
+                designSpecs[specKey].status = newStatus; 
+                syncDataToCloud('design_specs', designSpecs);
+            }
+            syncDataToCloud('kora_issue_records', records);
+            refreshAllTables();
+        }
+    }
+}
+
+function refreshAllTables() {
+    let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+
+    let inBody = document.getElementById('inwardHistoryBody'); inBody.innerHTML = '';
+    if(inwards.length === 0) {
+        inBody.innerHTML = `<tr><td colspan="6" style="padding:20px; color:#4A554A;">No inward records found.</td></tr>`;
+    } else {
+        [...inwards].reverse().forEach(item => {
+            let dObj = new Date(item.date); let dStr = ("0"+dObj.getDate()).slice(-2)+"/"+("0"+(dObj.getMonth()+1)).slice(-2)+"/"+dObj.getFullYear();
+            if(!item.status) item.status = "running"; let statusColor = item.status === 'running' ? '#D97706' : '#526E51';
+            let statusBtn = item.status === 'running' ? `<button class="action-complete" onclick="toggleInwardStatus(${item.id}, 'completed')">Complete</button>` : `<button class="action-running" onclick="toggleInwardStatus(${item.id}, 'running')">Running</button>`;
+            inBody.innerHTML += `<tr><td>${dStr}</td><td style="text-align:left;"><b>${item.supplier}</b></td><td>${item.count}</td><td style="font-weight:bold; color:#10B981;">${item.weight}</td><td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${item.status}</td><td class="action-btns">${statusBtn}<button class="edit-action-btn" onclick="closeModal('inwardModal'); editInward(${item.id})">✏️</button><button class="del-action-btn" onclick="deleteInward(${item.id})">🗑️</button></td></tr>`;
+        });
+    }
+
+    let outBody = document.getElementById('issueHistoryBody'); outBody.innerHTML = '';
+    if(issues.length === 0) {
+        outBody.innerHTML = `<tr><td colspan="8" style="padding:20px; color:#4A554A;">No issue records found.</td></tr>`;
+    } else {
+        [...issues].reverse().forEach(item => {
+            let dObj = new Date(item.date); let dStr = ("0"+dObj.getDate()).slice(-2)+"/"+("0"+(dObj.getMonth()+1)).slice(-2)+"/"+dObj.getFullYear();
+            if(!item.status) item.status = "running"; let statusColor = item.status === 'running' ? '#D97706' : '#526E51';
+            let statusBtn = item.status === 'running' ? `<button class="action-complete" onclick="toggleIssueStatus(${item.id}, 'completed')">Complete</button>` : `<button class="action-running" onclick="toggleIssueStatus(${item.id}, 'running')">Running</button>`;
+            outBody.innerHTML += `<tr><td>${dStr}</td><td>${item.millName || '-'}</td><td><b>${item.dyeingName}</b></td><td><b style="color:#2F4F38;">${item.designNo}</b></td><td>${item.count}</td><td style="font-weight:bold; color:#D97706;">${item.issueWt}</td><td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${item.status}</td><td class="action-btns">${statusBtn}<button class="edit-action-btn" onclick="closeModal('issueModal'); editIssue(${item.id})">✏️</button><button class="del-action-btn" onclick="deleteIssue(${item.id})">🗑️</button></td></tr>`;
+        });
+    }
+}
+
+function editInward(id) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to edit entries. ❌"); return; }
+    let records = JSON.parse(localStorage.getItem('kora_stock_records')) || []; let rec = records.find(r => r.id == id);
+    if(rec) {
+        editingInwardId = id; document.getElementById('inwardDate').value = rec.date; document.getElementById('supplierName').value = rec.supplier;
+        document.getElementById('inwardCount').value = rec.count; document.getElementById('inwardWt').value = rec.weight;
+        let cb = document.getElementById('top_completed_status'); if(cb) cb.checked = (rec.status === 'completed');
+        document.getElementById('saveInwardBtn').innerText = "🔄 Update Kora Stock"; window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+async function deleteInward(id) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to delete entries. ❌"); return; }
+    if(!confirm("Are you sure you want to delete this Inward record?")) return;
+    let records = JSON.parse(localStorage.getItem('kora_stock_records')) || []; records = records.filter(r => r.id != id);
+    syncDataToCloud('kora_stock_records', records);
+    loadMillSuggestions(); loadCountSuggestions(); refreshAllTables();
+}
+
+function editIssue(id) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to edit entries. ❌"); return; }
+    let records = JSON.parse(localStorage.getItem('kora_issue_records')) || []; let rec = records.find(r => r.id == id);
+    if(rec) {
+        editingIssueId = id; document.getElementById('issueDate').value = rec.date; document.getElementById('dyeingName').value = rec.dyeingName;
+        document.getElementById('issueMillName').value = rec.millName || ''; document.getElementById('designNo').value = rec.designNo;
+        document.getElementById('issueCount').value = rec.count; document.getElementById('issueWt').value = rec.issueWt;
+        let cb = document.getElementById('top_completed_status'); if(cb) cb.checked = (rec.status === 'completed');
+        onDesignSelect(rec.designNo); document.getElementById('saveIssueBtn').innerText = "🔄 Update Issue"; document.getElementById('dyeingName').scrollIntoView({behavior: 'smooth'});
+    }
+}
+
+async function deleteIssue(id) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission to delete entries. ❌"); return; }
+    if(!confirm("Are you sure you want to delete this Issue record?")) return;
+    let records = JSON.parse(localStorage.getItem('kora_issue_records')) || []; records = records.filter(r => r.id != id);
+    syncDataToCloud('kora_issue_records', records);
+    loadUnitSuggestions(); loadCountSuggestions(); refreshAllTables();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Invoice - TEXF FOR EVER </title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        html, body { 
+            width: 100%;
+            min-height: 100vh;
+            background: #030712; 
+            color: #1E2B23; 
+        }
+
+        body { 
+            padding: 12px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0;
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.06);
+            border: 1px solid rgba(82, 110, 81, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 11px;
+            background: #1A2; 
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+        #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
+        #bitmapDisplayContainer img {
+            max-height: 45px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            cursor: zoom-in;
+            transition: transform 0.3s;
+        }
+        #bitmapDisplayContainer img:hover { transform: scale(1.1); }
+
+        .completed-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #D8DFD6;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.4);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .completed-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #526E51;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+        
+        .completed-checkbox label {
+            margin: 0;
+            color: #3F5A3E;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .card-header {
+            font-size: 16px;
+            margin-bottom: 5px;
+            font-weight: 700;
+            color: #2F4F38;
+            text-align: left;
+            position: relative;
+            padding-left: 12px;
+        }
+        .card-header::before {
+            content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px;
+            background: #4A7C59; border-radius: 4px;
+        }
+
+        .form-section {
+            background: #F8FAF8;
+            border: 1px solid #E2E8E2;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        
+        .section-badge {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #4A7C59;
+            color: #FFF;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(74, 124, 89, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+        }
+
+        .form-group { margin-bottom: 0; }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #4A554A;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #D1DED1;
+            border-radius: 8px;
+            font-size: 11px;
+            background: #FFFFFF;
+            color: #1E2B23;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        textarea { resize: vertical; height: 60px; }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #4A7C59;
+            outline: none;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
+        }
+        
+        input::placeholder, textarea::placeholder { color: #A0AFA0; font-weight: 400; }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: #FFFFFF;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #D1DED1;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+            position: relative;
+        }
+        .item-col-group { display: flex; flex-direction: column; }
+        .item-col-group.full-width { grid-column: span 2; }
+
+        .add-row-btn, .del-row-btn {
+            grid-column: span 2;
+            color: white; border: none; height: 38px; border-radius: 8px;
+            font-weight: bold; cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-top: 5px; transition: all 0.2s ease;
+        }
+        .add-row-btn { background: #4A7C59; box-shadow: 0 4px 10px rgba(74, 124, 89, 0.2); }
+        .add-row-btn:hover { background: #33593D; transform: translateY(-1px); }
+        .del-row-btn { background: #EF4444; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+        .del-row-btn:hover { background: #DC2626; transform: translateY(-1px); }
+        
+        .btn-main {
+            width: 100%; padding: 14px; margin: 5px 0; border: none; border-radius: 10px;
+            color: white; font-weight: 700; font-size: 13px; cursor: pointer;
+            background: linear-gradient(135deg, #4A7CA9, #33593D);
+            box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25);
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(74, 124, 89, 0.35); }
+        .btn-main:active { transform: translateY(1px); }
+
+        .print-btn { background: linear-gradient(135deg, #1A24a1, #777777); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+        .print-btn:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+
+        .popup-trigger-btn {
+            background: linear-gradient(135deg, #1A86, #1D4ED8);
+            color: white; border: none; padding: 14px; border-radius: 10px;
+            font-size: 13px; font-weight: bold; cursor: pointer; width: 100%;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 5px;
+        }
+        .popup-trigger-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35); }
+
+        .overlay-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 25, 20, 0.85); backdrop-filter: blur(4px);
+            z-index: 99999; flex-direction: column; padding: 15px; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .overlay-modal.show { opacity: 1; }
+        
+        .modal-content {
+            background: #FFFFFF; width: 100%; height: 100%; border-radius: 16px;
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden; transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .overlay-modal.show .modal-content { transform: scale(1); }
+
+        .modal-header {
+            padding: 15px 20px; background: #F4F7F4; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8E2;
+        }
+        .modal-header h3 { margin: 0; font-size: 15px; color: #1E2B23; font-weight: 700; }
+        .close-btn {
+            background: #FEE2E2; color: #DC2626; border: none; padding: 8px 14px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;
+            transition: all 0.2s ease;
+        }
+        .close-btn:hover { background: #FECACA; transform: scale(1.05); }
+
+        .modal-body { padding: 15px; overflow-y: auto; flex: 1; background: #FAFCFA; }
+
+        .fullscreen-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+            padding: 20px; flex-direction: column;
+        }
+        .fullscreen-modal img {
+            max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        .close-fullscreen {
+            position: absolute; top: 20px; right: 20px; background: #EF4444; color: white;
+            border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .excel-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 11px; background: #FFFFFF; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2;
+        }
+        .excel-table th, .excel-table td { padding: 10px; text-align: left; border-bottom: 1px solid #E2E8E2; color: #1E2B23; }
+        .excel-table th { background: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .excel-table tr:last-child td { border-bottom: none; }
+        .excel-table tbody tr:hover { background: #F8FAF8; }
+
+        .action-cell { display: flex; flex-direction: row; gap: 5px; align-items: center; }
+
+        .action-btn {
+            border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+            font-size: 10px; font-weight: 600; color: white; transition: all 0.2s ease;
+        }
+        .action-del { background: #EF4444; } .action-del:hover { background: #DC2626; box-shadow: 0 2px 5px rgba(220, 38, 38, 0.3); }
+        .action-edit { background: #64748B; } .action-edit:hover { background: #475569; box-shadow: 0 2px 5px rgba(71, 85, 105, 0.3); }
+        .action-complete { background: #10B981; } .action-complete:hover { background: #059669; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3); }
+        .action-running { background: #F59E0B; } .action-running:hover { background: #D97706; box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3); }
+
+        #printPreviewContainer { display: none; background: #FFFFFF; color: #000000; padding: 25px; border-radius: 12px; margin-top: 10px; border: 1px solid #ccc; width: 100%; max-width: 100%; }
+        .invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 15px; font-size: 12px; align-items: flex-start; }
+        
+        .invoice-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 15px; font-size: 11px; border: 1px solid #000; }
+        .invoice-table th, .invoice-table td { border: none; border-right: 1px solid #000; padding: 6px 4px; text-align: center; word-wrap: break-word; }
+        .invoice-table th { background: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 1px solid #000; }
+        .invoice-table td { height: 28px; }
+        .invoice-table th:last-child, .invoice-table td:last-child { border-right: none; }
+        .invoice-table tfoot tr { border-top: 1px solid #000; font-weight: bold; }
+        .invoice-table tfoot td { border-top: 1px solid #000; padding: 6px 8px; }
+
+        @media print {
+            body { background: #FFFFFF; color: #000000; padding: 0; }
+            .no-print { display: none !important; }
+            #printPreviewContainer { display: block !important; padding: 0; box-shadow: none; border: none; margin: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <div id="bitmapDisplayContainer">
+            <div class="completed-checkbox">
+                <input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()">
+                <label for="top_completed_status">Completed</label>
+            </div>
+        </div>
+    </div>
+
+    <h2 class=".card-header {
+    color: #ffffff; /* White color text-kku */
+}
+">Invoice / Bill Entry</h2>
+
+    <div class="form-section" style="margin-top: 10px;">
+        <div class="section-badge">Invoice Info</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Invoice Date</label>
+                <input type="date" id="inv_date">
+            </div>
+            <div class="form-group">
+                <label>Invoice Number</label>
+                <input type="text" id="inv_no" placeholder="Enter Inv No">
+            </div>
+            <div class="form-group">
+                <label>Transport Name</label>
+                <input type="text" id="inv_transport" placeholder="Transport Name">
+            </div>
+            <div class="form-group">
+                <label>LR Number</label>
+                <input type="text" id="inv_lr" placeholder="LR Number">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-badge">Address Details</div>
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+                <label>Company Address (From)</label>
+                <textarea id="comp_address" placeholder="Enter Company Full Address..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Party Address (To)</label>
+                <textarea id="party_address" placeholder="Enter Party Full Address..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-badge">Commercials</div>
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">
+                <label>GST Type / Rate</label>
+                <select id="gst_type">
+                    <option value="none">No GST</option>
+                    <option value="gst_5">CGST 2.5% + SGST 2.5% (5%)</option>
+                    <option value="gst_12">CGST 6% + SGST 6% (12%)</option>
+                    <option value="igst_5">IGST 5%</option>
+                    <option value="igst_12">IGST 12%</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div class="section-badge">Design Specs</div>
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Design Number</label>
+                <select id="global_design" onchange="applyGlobalDesign(this.value)">
+                    <option value="">Select Design</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Count</label>
+                <input type="text" id="global_count" placeholder="Count">
+            </div>
+            <div class="form-group">
+                <label>Reed</label>
+                <input type="text" id="global_reed" placeholder="Reed">
+            </div>
+            <div class="form-group">
+                <label>Pick</label>
+                <input type="text" id="global_pick" placeholder="Pick">
+            </div>
+            <div class="form-group">
+                <label>Weave Type</label>
+                <input type="text" id="global_weave" placeholder="Weave">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section" style="background: transparent; border: none; padding: 0;">
+        <div class="section-badge" style="top: -15px; left: 0;">Item Entries</div>
+        <div id="invoiceItemsContainer" style="margin-top: 15px;">
+            <div class="item-row">
+                <div class="item-col-group">
+                    <label>Date</label>
+                    <input type="date" class="i-date">
+                </div>
+                <div class="item-col-group">
+                    <label>Pcs</label>
+                    <input type="number" class="i-pcs" placeholder="No. of Pcs">
+                </div>
+                <div class="item-col-group">
+                    <label>Qty (Meters)</label>
+                    <input type="number" class="i-qty" placeholder="Total Qty" oninput="calcTotal(this)">
+                </div>
+                <div class="item-col-group">
+                    <label>Rate / Meter (₹)</label>
+                    <input type="number" class="i-rate" placeholder="Rate" oninput="calcTotal(this)">
+                </div>
+                <div class="item-col-group full-width">
+                    <label>Total Amount (₹)</label>
+                    <input type="number" class="i-total" placeholder="0.00" readonly style="background:#F0FDF4; color:#059669; font-weight:800; border-color:#86EFAC;">
+                </div>
+                <button type="button" class="add-row-btn" onclick="addInvoiceRow()">➕ Add More Items</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-main" id="saveInvBtn" onclick="saveInvoice()">✅ Save Invoice Details</button>
+    <button class="btn-main print-btn" onclick="showFullPreview()">🖨️ Print / PDF Bill Preview</button>
+    <button type="button" class="popup-trigger-btn" onclick="openModal('invoiceListModal')">📊 View Saved Invoices</button>
+</div>
+
+<!-- Saved Invoices Modal -->
+<div id="invoiceListModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📊 Saved Invoices Registry</h3>
+            <button class="close-btn" onclick="closeModal('invoiceListModal')">Close ✕</button>
+        </div>
+        <div class="modal-body">
+            <div style="overflow-x: auto;">
+                <table id="invoicesTable" class="excel-table">
+                    <thead>
+                        <tr>
+                            <th>Inv No</th>
+                            <th>Date</th>
+                            <th>Party Name</th>
+                            <th>Design No</th>
+                            <th>Total Qty</th>
+                            <th>Grand Total</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Image Modal -->
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<div id="printPreviewContainer"></div>
+
+<script>
+let editingInvoiceId = null;
+let savedInvoices = JSON.parse(localStorage.getItem('saved_invoices_data')) || [];
+
+function checkUserPermission() {
+    let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+    if (userRole !== 'Administrator' && userRole !== 'Admin') {
+        let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+        if (permissions['invoice.html'] === false || permissions['invoice'] === false) return false;
+    }
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to access this page. ❌");
+        window.location.href = "dashboard.html";
+        return;
+    }
+    
+    document.getElementById('inv_date').valueAsDate = new Date();
+    
+    let defaultCompAddr = localStorage.getItem('company_full_address') || localStorage.getItem('set_comp_addr') || '';
+    if(defaultCompAddr && !document.getElementById('comp_address').value) {
+        document.getElementById('comp_address').value = defaultCompAddr;
+    }
+
+    loadDesignDropdowns();
+    updateInvoicesTable();
+});
+
+function openModal(modalId) {
+    let modal = document.getElementById(modalId);
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeModal(modalId) {
+    let modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function cleanDesignName(str) { return str ? str.toString().replace('#', '').trim().toLowerCase() : ''; }
+
+window.openFullscreenImage = function(src) {
+    if(!src || src === '' || src === 'null') return;
+    document.getElementById('fullscreenImg').src = src;
+    document.getElementById('fullscreenModal').style.display = 'flex';
+};
+window.closeFullscreenImage = function() {
+    document.getElementById('fullscreenModal').style.display = 'none';
+};
+
+function loadBitmapImage() {
+    let activeDesign = document.getElementById('global_design').value || localStorage.getItem('selected_design_number');
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let bitmapContainer = document.getElementById('bitmapDisplayContainer');
+
+    let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
+
+    let imgHtml = '';
+    if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
+        let b64 = designSpecs[specKey].bitmap;
+        imgHtml = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage('${b64}')" title="Click to view full screen">`;
+    }
+
+    let checkboxHtml = `<div class="completed-checkbox"><input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()"><label for="top_completed_status">Completed</label></div>`;
+
+    let wasChecked = false;
+    let cb = document.getElementById('top_completed_status');
+    if(cb) wasChecked = cb.checked;
+
+    bitmapContainer.innerHTML = checkboxHtml + imgHtml;
+
+    if(wasChecked) {
+        let newCb = document.getElementById('top_completed_status');
+        if(newCb) newCb.checked = true;
+    }
+}
+
+function loadDesignDropdowns() {
+    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+
+    let allDesigns = new Set();
+    preDesigns.forEach(d => allDesigns.add(d));
+    if(Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
+    Object.keys(designSpecs).forEach(d => allDesigns.add(d));
+    if(Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
+
+    let select = document.getElementById('global_design');
+    let current = select.value;
+    let html = '<option value="">Select Design</option>';
+    Array.from(allDesigns).filter(Boolean).forEach(d => {
+        html += '<option value="' + d + '">' + d + '</option>';
+    });
+    select.innerHTML = html;
+    select.value = current;
+
+    let activeDesign = localStorage.getItem('selected_design_number');
+    if(activeDesign && !select.value) {
+        select.value = activeDesign;
+        applyGlobalDesign(activeDesign);
+    }
+    loadBitmapImage();
+}
+
+function applyGlobalDesign(designNo) {
+    if(!designNo) return;
+    localStorage.setItem('selected_design_number', designNo);
+    loadBitmapImage();
+    
+    let clean = cleanDesignName(designNo);
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === clean) || designNo;
+    let sp = designSpecs[specKey] || {};
+
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let foundMaster = Array.isArray(designMasters) ? designMasters.find(d => cleanDesignName(d.name || d.designNo) === clean) || {} : {};
+
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let matchedOrder = Array.isArray(partyOrders) ? partyOrders.find(p => cleanDesignName(p.designNumber || p.designNo) === clean) || {} : {};
+    
+    let specStatus = (sp.status || matchedOrder.status || '').toLowerCase();
+    let invs = JSON.parse(localStorage.getItem('saved_invoices_data')) || [];
+    let invRec = invs.find(x => cleanDesignName(x.design) === clean);
+
+    if(specStatus === 'completed' || (invRec && invRec.status && invRec.status.toLowerCase() === 'completed')) {
+        let cb = document.getElementById('top_completed_status');
+        if(cb) cb.checked = true;
+    } else {
+        let cb = document.getElementById('top_completed_status');
+        if(cb) cb.checked = false;
+    }
+
+    if(matchedOrder.partyName && !document.getElementById('party_address').value) {
+        document.getElementById('party_address').value = matchedOrder.partyName;
+    }
+
+    // Resolved Multi-beam and Weft Count
+    let baseCount = matchedOrder.baseBeamCount || sp.baseBeamCount || foundMaster.warp1 || sp.warp || sp.baseCount || '';
+    let topBeam = matchedOrder.topBeamCount || sp.topBeamCount || foundMaster.warp2 || '';
+    let combinedWarp = (topBeam && topBeam !== '-') ? `${baseCount} / ${topBeam}` : baseCount;
+    let weftCountVal = matchedOrder.weftCount || sp.weftCount || foundMaster.weftCount || sp.weft || '';
+
+    let fullCountDisplay = combinedWarp ? (weftCountVal ? `${combinedWarp} x ${weftCountVal}` : combinedWarp) : weftCountVal;
+
+    document.getElementById('global_count').value = fullCountDisplay;
+    document.getElementById('global_reed').value = matchedOrder.reed || sp.reed || foundMaster.reed || '';
+    document.getElementById('global_pick').value = matchedOrder.pick || sp.pick || foundMaster.pick || '';
+    document.getElementById('global_weave').value = matchedOrder.weaveType || sp.weave || foundMaster.weave || sp.weaveType || '';
+}
+
+function addInvoiceRow(date = '', pcs = '', qty = '', rate = '') {
+    let container = document.getElementById('invoiceItemsContainer');
+    let div = document.createElement('div');
+    div.className = 'item-row';
+    let amt = (qty && rate) ? (parseFloat(qty) * parseFloat(rate)).toFixed(2) : '';
+    div.innerHTML = `
+        <div class="item-col-group">
+            <label>Date</label>
+            <input type="date" class="i-date" value="${date}">
+        </div>
+        <div class="item-col-group">
+            <label>Pcs</label>
+            <input type="number" class="i-pcs" placeholder="No. of Pcs" value="${pcs}">
+        </div>
+        <div class="item-col-group">
+            <label>Qty (Meters)</label>
+            <input type="number" class="i-qty" placeholder="Total Qty" value="${qty}" oninput="calcTotal(this)">
+        </div>
+        <div class="item-col-group">
+            <label>Rate / Meter (₹)</label>
+            <input type="number" class="i-rate" placeholder="Rate" value="${rate}" oninput="calcTotal(this)">
+        </div>
+        <div class="item-col-group full-width">
+            <label>Total Amount (₹)</label>
+            <input type="number" class="i-total" placeholder="0.00" readonly style="background:#F0FDF4; color:#059669; font-weight:800; border-color:#86EFAC;" value="${amt}">
+        </div>
+        <button type="button" class="del-row-btn" onclick="this.parentElement.remove()">✕ Remove Item</button>
+    `;
+    container.appendChild(div);
+}
+
+function calcTotal(element) {
+    let row = element.closest('.item-row');
+    let qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+    let rate = parseFloat(row.querySelector('.i-rate').value) || 0;
+    let totalField = row.querySelector('.i-total');
+    totalField.value = (qty * rate).toFixed(2);
+}
+
+async function quickCompleteToggle() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    let designNo = document.getElementById('global_design').value;
+    let cb = document.getElementById('top_completed_status');
+    let isCompleted = cb ? cb.checked : false;
+
+    if(!designNo) {
+        alert("Mudhala Design Number select pannunga bro");
+        if(cb) cb.checked = false;
+        return;
+    }
+
+    let statusText = isCompleted ? 'completed' : 'running';
+
+    let invs = JSON.parse(localStorage.getItem('saved_invoices_data')) || [];
+    let updated = false;
+
+    invs.forEach(r => {
+        if(cleanDesignName(r.design) === cleanDesignName(designNo)) {
+            r.status = statusText;
+            updated = true;
+        }
+    });
+
+    if(!updated) {
+        let invNo = document.getElementById('inv_no').value.trim() || 'INV-01';
+        let invDate = document.getElementById('inv_date').value || new Date().toISOString().split('T')[0];
+        let compAddress = document.getElementById('comp_address').value;
+        let partyAddress = document.getElementById('party_address').value;
+        
+        invs.push({
+            id: Date.now(),
+            invNo: invNo,
+            invDate: invDate,
+            compAddress: compAddress,
+            partyAddress: partyAddress,
+            transport: document.getElementById('inv_transport').value || '',
+            lr: document.getElementById('inv_lr').value || '',
+            gstType: document.getElementById('gst_type').value || 'none',
+            design: designNo,
+            countVal: document.getElementById('global_count').value || '',
+            reed: document.getElementById('global_reed').value || '',
+            pick: document.getElementById('global_pick').value || '',
+            weave: document.getElementById('global_weave').value || '',
+            items: [],
+            totalQty: 0,
+            grandTotal: 0,
+            status: statusText
+        });
+    }
+
+    localStorage.setItem('saved_invoices_data', JSON.stringify(invs));
+
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let cleanDNo = designNo ? designNo.toString().replace('#', '').trim().toLowerCase() : '';
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === cleanDNo) || designNo;
+
+    if(!designSpecs[specKey]) {
+        designSpecs[specKey] = {};
+    }
+    designSpecs[specKey].status = statusText;
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('saved_invoices_data', invs);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        }
+    } catch(e) {
+        console.error("supabase Sync Error: ", e);
+    }
+
+    updateInvoicesTable();
+    alert(`Design ${designNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
+}
+
+async function saveInvoice() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    let invNo = document.getElementById('inv_no').value.trim();
+    if(!invNo) {
+        alert("Invoice Number-ஐ உள்ளிடவும்!");
+        return;
+    }
+
+    let design = document.getElementById('global_design').value;
+    let cleanDesign = cleanDesignName(design);
+
+    if(editingInvoiceId === null && cleanDesign) {
+        let alreadyExists = savedInvoices.some(inv => {
+            let invDesign = cleanDesignName(inv.design);
+            return invDesign === cleanDesign;
+        });
+
+        if(alreadyExists) {
+            let confirmReEntry = confirm("இந்த டிசைனுக்கு ஏற்கனவே என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?");
+            if(!confirmReEntry) {
+                return;
+            }
+        }
+    }
+
+    let isCompleted = false;
+    let cb = document.getElementById('top_completed_status');
+    if(cb) {
+        isCompleted = cb.checked;
+    }
+
+    let btn = document.getElementById('saveInvBtn');
+    btn.innerText = "⏳ Saving to Cloud...";
+
+    let compAddress = document.getElementById('comp_address').value;
+    let partyAddress = document.getElementById('party_address').value;
+    let invDate = document.getElementById('inv_date').value;
+    let transport = document.getElementById('inv_transport').value;
+    let lr = document.getElementById('inv_lr').value;
+    let gstType = document.getElementById('gst_type').value;
+
+    let countVal = document.getElementById('global_count').value;
+    let reed = document.getElementById('global_reed').value;
+    let pick = document.getElementById('global_pick').value;
+    let weave = document.getElementById('global_weave').value;
+
+    let items = [];
+    let totalQty = 0;
+    let subTotal = 0;
+
+    document.querySelectorAll('#invoiceItemsContainer .item-row').forEach(row => {
+        let date = row.querySelector('.i-date').value;
+        let pcs = row.querySelector('.i-pcs').value;
+        let qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+        let rate = parseFloat(row.querySelector('.i-rate').value) || 0;
+        let amount = parseFloat(row.querySelector('.i-total').value) || 0;
+
+        totalQty += qty;
+        subTotal += amount;
+        items.push({ date, pcs, qty, rate, amount });
+    });
+
+    let calculatedTaxTotal = subTotal;
+    if (gstType === 'gst_5' || gstType === 'igst_5') calculatedTaxTotal += subTotal * 0.05;
+    else if (gstType === 'gst_12' || gstType === 'igst_12') calculatedTaxTotal += subTotal * 0.12;
+
+    let grandTotal = Math.round(calculatedTaxTotal);
+
+    let invoiceObj = {
+        id: editingInvoiceId !== null ? editingInvoiceId : Date.now(),
+        invNo, invDate, compAddress, partyAddress, transport, lr, gstType,
+        design, countVal, reed, pick, weave, items, totalQty, grandTotal,
+        status: isCompleted ? 'completed' : 'running'
+    };
+
+    if(editingInvoiceId !== null) {
+        savedInvoices = savedInvoices.map(inv => inv.id === editingInvoiceId ? invoiceObj : inv);
+        editingInvoiceId = null;
+    } else {
+        savedInvoices.push(invoiceObj);
+    }
+
+    if(design) {
+        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDesign) || design;
+
+        if(!designSpecs[specKey]) designSpecs[specKey] = {};
+        designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
+        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+        
+        if (window.supabaseSave) {
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        }
+    }
+
+    localStorage.setItem('saved_invoices_data', JSON.stringify(savedInvoices));
+    
+    if (window.supabaseSave) {
+        await window.supabaseSave('saved_invoices_data', savedInvoices);
+    }
+
+    updateInvoicesTable();
+    alert("Invoice Successfully Saved to Cloud! ✅☁️");
+    
+    document.getElementById('inv_no').value = '';
+    document.getElementById('inv_transport').value = '';
+    document.getElementById('inv_lr').value = '';
+    if(document.getElementById('top_completed_status')) {
+        document.getElementById('top_completed_status').checked = false;
+    }
+    document.getElementById('invoiceItemsContainer').innerHTML = `
+        <div class="item-row">
+            <div class="item-col-group">
+                <label>Date</label>
+                <input type="date" class="i-date">
+            </div>
+            <div class="item-col-group">
+                <label>Pcs</label>
+                <input type="number" class="i-pcs" placeholder="No. of Pcs">
+            </div>
+            <div class="item-col-group">
+                <label>Qty (Meters)</label>
+                <input type="number" class="i-qty" placeholder="Total Qty" oninput="calcTotal(this)">
+            </div>
+            <div class="item-col-group">
+                <label>Rate / Meter (₹)</label>
+                <input type="number" class="i-rate" placeholder="Rate" oninput="calcTotal(this)">
+            </div>
+            <div class="item-col-group full-width">
+                <label>Total Amount (₹)</label>
+                <input type="number" class="i-total" placeholder="0.00" readonly style="background:#F0FDF4; color:#059669; font-weight:800; border-color:#86EFAC;">
+            </div>
+            <button type="button" class="add-row-btn" onclick="addInvoiceRow()">➕ Add More Items</button>
+        </div>
+    `;
+    document.getElementById('inv_date').valueAsDate = new Date();
+    btn.innerText = "✅ Save Invoice Details";
+}
+
+async function toggleStatus(id, newStatus) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    let msg = newStatus === 'completed' ? "Change this invoice to Completed?" : "Change this invoice to Running?";
+    if(confirm(msg)) {
+        let index = savedInvoices.findIndex(r => r.id == id);
+        if(index > -1) {
+            savedInvoices[index].status = newStatus;
+            localStorage.setItem('saved_invoices_data', JSON.stringify(savedInvoices));
+            
+            let dNo = savedInvoices[index].design;
+            if(dNo) {
+                let cleanDNo = cleanDesignName(dNo);
+                let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
+
+                if(!designSpecs[specKey]) designSpecs[specKey] = {};
+                designSpecs[specKey].status = newStatus;
+                localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                
+                if(window.supabaseSave) {
+                    await window.supabaseSave('design_specs', designSpecs);
+                }
+                if(window.supabaseSaveIndividual) {
+                    await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+                }
+            }
+
+            if(window.supabaseSave) {
+                await window.supabaseSave('saved_invoices_data', savedInvoices);
+            }
+            updateInvoicesTable();
+        }
+    }
+}
+
+function updateInvoicesTable() {
+    savedInvoices = JSON.parse(localStorage.getItem('saved_invoices_data')) || [];
+    let tbody = document.querySelector('#invoicesTable tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    savedInvoices.slice().reverse().forEach(inv => {
+        if(!inv.status) inv.status = "running";
+        let statusColor = inv.status === 'running' ? '#D97706' : '#526E51';
+        let statusBtn = inv.status === 'running' 
+            ? `<button class="action-btn action-complete" onclick="toggleStatus(${inv.id}, 'completed')">Complete</button>` 
+            : `<button class="action-btn action-running" onclick="toggleStatus(${inv.id}, 'running')">Running</button>`;
+
+        let partyNameDisplay = inv.partyAddress ? inv.partyAddress.split('\n')[0] : '-';
+        let totalQtyDisplay = (typeof inv.totalQty === 'number' ? inv.totalQty : 0).toFixed(2);
+        let grandTotalDisplay = (typeof inv.grandTotal === 'number' ? inv.grandTotal : 0).toFixed(2);
+
+        let row = tbody.insertRow();
+        row.innerHTML = `
+            <td><b>${inv.invNo || '-'}</b></td>
+            <td>${inv.invDate || '-'}</td>
+            <td>${partyNameDisplay}</td>
+            <td>${inv.design || '-'}</td>
+            <td>${totalQtyDisplay}</td>
+            <td style="font-weight:bold; color:#10B981;">₹${grandTotalDisplay}</td>
+            <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${inv.status}</td>
+            <td>
+                <div class="action-cell">
+                    ${statusBtn}
+                    <button class="action-btn action-edit" onclick="editInvoice(${inv.id})">Edit</button>
+                    <button class="action-btn action-del" onclick="deleteInvoice(${inv.id})">Del</button>
+                </div>
+            </td>
+        `;
+    });
+}
+
+function editInvoice(id) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    closeModal('invoiceListModal');
+    let inv = savedInvoices.find(x => x.id === id);
+    if(!inv) return;
+
+    editingInvoiceId = id;
+    document.getElementById('inv_no').value = inv.invNo;
+    document.getElementById('inv_date').value = inv.invDate;
+    document.getElementById('comp_address').value = inv.compAddress;
+    document.getElementById('party_address').value = inv.partyAddress;
+    document.getElementById('inv_transport').value = inv.transport || '';
+    document.getElementById('inv_lr').value = inv.lr || '';
+    document.getElementById('gst_type').value = inv.gstType || 'none';
+
+    document.getElementById('global_design').value = inv.design || '';
+    document.getElementById('global_count').value = inv.countVal || '';
+    document.getElementById('global_reed').value = inv.reed || '';
+    document.getElementById('global_pick').value = inv.pick || '';
+    document.getElementById('global_weave').value = inv.weave || '';
+
+    if(document.getElementById('top_completed_status')) {
+        document.getElementById('top_completed_status').checked = (inv.status === 'completed');
+    }
+
+    let container = document.getElementById('invoiceItemsContainer');
+    container.innerHTML = '';
+    if(inv.items && inv.items.length > 0) {
+        inv.items.forEach((item, idx) => {
+            if(idx === 0) {
+                container.innerHTML = `
+                    <div class="item-row">
+                        <div class="item-col-group">
+                            <label>Date</label>
+                            <input type="date" class="i-date" value="${item.date || ''}">
+                        </div>
+                        <div class="item-col-group">
+                            <label>Pcs</label>
+                            <input type="number" class="i-pcs" placeholder="No. of Pcs" value="${item.pcs || ''}">
+                        </div>
+                        <div class="item-col-group">
+                            <label>Qty (Meters)</label>
+                            <input type="number" class="i-qty" placeholder="Total Qty" value="${item.qty || ''}" oninput="calcTotal(this)">
+                        </div>
+                        <div class="item-col-group">
+                            <label>Rate / Meter (₹)</label>
+                            <input type="number" class="i-rate" placeholder="Rate" value="${item.rate || ''}" oninput="calcTotal(this)">
+                        </div>
+                        <div class="item-col-group full-width">
+                            <label>Total Amount (₹)</label>
+                            <input type="number" class="i-total" placeholder="0.00" readonly style="background:#F0FDF4; color:#059669; font-weight:800; border-color:#86EFAC;" value="${item.amount || ''}">
+                        </div>
+                        <button type="button" class="add-row-btn" onclick="addInvoiceRow()">➕ Add More Items</button>
+                    </div>
+                `;
+            } else {
+                addInvoiceRow(item.date, item.pcs, item.qty, item.rate);
+            }
+        });
+    } else {
+        container.innerHTML = `
+            <div class="item-row">
+                <div class="item-col-group">
+                    <label>Date</label>
+                    <input type="date" class="i-date">
+                </div>
+                <div class="item-col-group">
+                    <label>Pcs</label>
+                    <input type="number" class="i-pcs" placeholder="No. of Pcs">
+                </div>
+                <div class="item-col-group">
+                    <label>Qty (Meters)</label>
+                    <input type="number" class="i-qty" placeholder="Total Qty" oninput="calcTotal(this)">
+                </div>
+                <div class="item-col-group">
+                    <label>Rate / Meter (₹)</label>
+                    <input type="number" class="i-rate" placeholder="Rate" oninput="calcTotal(this)">
+                </div>
+                <div class="item-col-group full-width">
+                    <label>Total Amount (₹)</label>
+                    <input type="number" class="i-total" placeholder="0.00" readonly style="background:#F0FDF4; color:#059669; font-weight:800; border-color:#86EFAC;">
+                </div>
+                <button type="button" class="add-row-btn" onclick="addInvoiceRow()">➕ Add More Items</button>
+            </div>
+        `;
+    }
+
+    document.getElementById('saveInvBtn').innerText = "🔄 Update Invoice Details";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteInvoice(id) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    if(confirm("Indha invoice-ai delete pannanuma?")) {
+        savedInvoices = savedInvoices.filter(x => x.id !== id);
+        localStorage.setItem('saved_invoices_data', JSON.stringify(savedInvoices));
+        
+        if (window.supabaseSave) {
+            await window.supabaseSave('saved_invoices_data', savedInvoices);
+        }
+
+        updateInvoicesTable();
+    }
+}
+
+function showFullPreview() {
+    let compAddr = document.getElementById('comp_address').value;
+    let partyAddr = document.getElementById('party_address').value;
+    let invNo = document.getElementById('inv_no').value;
+    let invDate = document.getElementById('inv_date').value;
+    let transport = document.getElementById('inv_transport').value;
+    let lr = document.getElementById('inv_lr').value;
+    let gstType = document.getElementById('gst_type').value;
+    
+    let design = document.getElementById('global_design').value;
+    let countVal = document.getElementById('global_count').value;
+    let reed = document.getElementById('global_reed').value;
+    let pick = document.getElementById('global_pick').value;
+    let weave = document.getElementById('global_weave').value;
+
+    let companyLogo = localStorage.getItem('company_logo_base64') || localStorage.getItem('company_logo') || localStorage.getItem('logo') || '';
+    let logoHtml = '';
+    if (companyLogo) {
+        logoHtml = `<div style="display:flex; align-items:center;"><img src="${companyLogo}" alt="Company Logo" style="max-height:30px; max-width:45px; border-radius:3px; object-fit:contain;"></div>`;
+    }
+
+    let rowsHtml = '';
+    let subTotal = 0;
+
+    let itemRows = document.querySelectorAll('#invoiceItemsContainer .item-row');
+    itemRows.forEach(function(row, idx) {
+        let date = row.querySelector('.i-date').value;
+        let pcs = row.querySelector('.i-pcs').value;
+        let qty = row.querySelector('.i-qty').value;
+        let rate = row.querySelector('.i-rate').value;
+        let total = row.querySelector('.i-total').value;
+
+        subTotal += parseFloat(total) || 0;
+
+        rowsHtml += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td>' + date + '</td>' +
+            '<td>' + pcs + '</td>' +
+            '<td>' + qty + '</td>' +
+            '<td>' + rate + '</td>' +
+            '<td>' + total + '</td>' +
+        '</tr>';
+    });
+
+    let taxRowsHtml = '';
+    let calculatedTaxTotal = subTotal;
+
+    if (gstType === 'gst_5') {
+        let cgst = subTotal * 0.025;
+        let sgst = subTotal * 0.025;
+        calculatedTaxTotal += cgst + sgst;
+        taxRowsHtml += '<tr><td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">CGST (2.5%):</td><td style="font-weight:bold; border-top:1px solid #000;">' + cgst.toFixed(2) + '</td></tr>';
+        taxRowsHtml += '<tr><td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">SGST (2.5%):</td><td style="font-weight:bold; border-top:1px solid #000;">' + sgst.toFixed(2) + '</td></tr>';
+    } else if (gstType === 'gst_12') {
+        let cgst = subTotal * 0.06;
+        let sgst = subTotal * 0.06;
+        calculatedTaxTotal += cgst + sgst;
+        taxRowsHtml += '<tr><td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">CGST (6%):</td><td style="font-weight:bold; border-top:1px solid #000;">' + cgst.toFixed(2) + '</td></tr>';
+        taxRowsHtml += '<tr><td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">SGST (6%):</td><td style="font-weight:bold; border-top:1px solid #000;">' + sgst.toFixed(2) + '</td></tr>';
+    } else if (gstType === 'igst_5') {
+        let igst = subTotal * 0.05;
+        calculatedTaxTotal += igst;
+        taxRowsHtml += '<tr><td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">IGST (5%):</td><td style="font-weight:bold; border-top:1px solid #000;">' + igst.toFixed(2) + '</td></tr>';
+    } else if (gstType === 'igst_12') {
+        let igst = subTotal * 0.12;
+        calculatedTaxTotal += igst;
+        taxRowsHtml += '<tr><td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">IGST (12%):</td><td style="font-weight:bold; border-top:1px solid #000;">' + igst.toFixed(2) + '</td></tr>';
+    }
+
+    let grandTotalRounded = Math.round(calculatedTaxTotal);
+    let roundOff = (grandTotalRounded - calculatedTaxTotal).toFixed(2);
+
+    document.getElementById('mainContainer').style.display = 'none';
+    let previewContainer = document.getElementById('printPreviewContainer');
+    previewContainer.style.display = 'block';
+
+    let safeCompAddr = (compAddr || '').replace(/\n/g, '<br>');
+    let safePartyAddr = (partyAddr || '').replace(/\n/g, '<br>');
+
+    previewContainer.innerHTML = 
+        '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; border-bottom:2px solid #333; padding-bottom:8px;">' +
+            '<div style="flex:1;">' + logoHtml + '</div>' +
+            '<div style="flex:2; text-align:center; font-size:18px; font-weight:bold; letter-spacing:1px;">TAX INVOICE</div>' +
+            '<div style="flex:1;"></div>' +
+        '</div>' +
+        '<div class="invoice-header">' +
+            '<div><strong>From:</strong><br>' + safeCompAddr + '</div>' +
+            '<div style="text-align:right;"><strong>To:</strong><br>' + safePartyAddr + '<br><br><strong>Inv No:</strong> ' + invNo + '<br><strong>Date:</strong> ' + invDate + '<br><strong>Transport:</strong> ' + transport + ' | <strong>LR:</strong> ' + lr + '</div>' +
+        '</div>' +
+        '<div style="font-size:11px; margin-bottom:10px; background:#f8fafc; padding:6px; border:1px solid #ccc;"><strong>Design No:</strong> <span style="font-weight:bold;">' + design + '</span>, <strong>Count:</strong> <span style="font-weight:bold;">' + countVal + '</span>, <strong>Reed:</strong> <span style="font-weight:bold;">' + reed + '</span>, <strong>Pick:</strong> <span style="font-weight:bold;">' + pick + '</span>, <strong>Weave:</strong> <span style="font-weight:bold;">' + weave + '</span></div>' +
+        '<table class="invoice-table">' +
+            '<thead>' +
+                '<tr>' +
+                    '<th style="width:10%;">S.No</th>' +
+                    '<th style="width:20%;">Date</th>' +
+                    '<th style="width:15%;">Pcs</th>' +
+                    '<th style="width:20%;">Qty</th>' +
+                    '<th style="width:15%;">Rate</th>' +
+                    '<th style="width:20%;">Amount</th>' +
+                '</tr>' +
+            '</thead>' +
+            '<tbody>' + rowsHtml + '</tbody>' +
+            '<tfoot>' +
+                '<tr>' +
+                    '<td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">Sub Total:</td>' +
+                    '<td style="font-weight:bold; border-top:1px solid #000;">' + subTotal.toFixed(2) + '</td>' +
+                '</tr>' +
+                taxRowsHtml +
+                '<tr>' +
+                    '<td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">Round Off:</td>' +
+                    '<td style="font-weight:bold; border-top:1px solid #000;">' + roundOff + '</td>' +
+                '</tr>' +
+                '<tr>' +
+                    '<td colspan="5" style="text-align:right; font-weight:bold; border-top:1px solid #000;">Grand Total:</td>' +
+                    '<td style="font-weight:bold; font-size:12px; border-top:1px solid #000;">' + grandTotalRounded.toFixed(2) + '</td>' +
+                '</tr>' +
+            '</tfoot>' +
+        '</table>' +
+        '<div style="margin-top:40px; display:flex; justify-content:space-between; font-size:11px; font-weight:bold;">' +
+            '<div>Receiver Signature</div>' +
+            '<div>For TEX FOR EVER<br><br><br>Authorized Signatory</div>' +
+        '</div>' +
+        '<div style="text-align:center; margin-top:25px; display:flex; gap:10px; justify-content:center;" class="no-print">' +
+            '<button onclick="window.print()" style="background:#1A2421; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🖨️ Print / Save as PDF</button>' +
+            '<button onclick="goBackToForm()" style="background:#64748B; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">✏️ Edit Invoice</button>' +
+        '</div>';
+
+    window.scrollTo(0, 0);
+}
+
+function goBackToForm() {
+    document.getElementById('printPreviewContainer').style.display = 'none';
+    document.getElementById('mainContainer').style.display = 'flex';
+    window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

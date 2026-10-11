@@ -1,0 +1,4191 @@
+<!DOCTYPE html>
+<html lang="ta">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- PWA Manifest & App Icons -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#030705">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TEX FOR EVER ">
+
+<title>Dashboard - TEX FOR EVER </title>
+
+<!-- IMPORTANT: config.js and translator.js already exist -->
+<script src="config.js" defer></script>
+<script src="translator.js" defer></script>
+
+<style>
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:'Poppins',sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+html,
+body{
+    width:100%;
+    min-height:100vh;
+    background:#030e12;
+    color:#F8FAFC;
+    overflow-x:hidden;
+    transition: background 0.3s ease;
+}
+
+body{
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+
+/* =========================================================
+   TOP HEADER
+========================================================= */
+
+.top-header-container{
+    width:100%;
+    max-width:1100px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:20px 25px;
+    min-height:110px;
+
+    background:rgba(15,23,42,.95);
+    backdrop-filter:blur(12px);
+
+    border-radius:20px;
+    margin-bottom:14px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.8),
+        0 0 20px rgba(56,189,248,.15);
+
+    border:2px solid rgba(56,189,248,.4);
+
+    position:relative;
+    z-index:50;
+}
+
+.header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.sidebar-toggle-btn {
+    background: rgba(56,189,248,.15);
+    border: 1.5px solid #38BDF8;
+    color: #38BDF8;
+    font-size: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(56,189,248,.3);
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(56,189,248,.3);
+    transform: scale(1.05);
+}
+
+.top-header-container h3 {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    font-size: 26px;
+    font-weight: 900;
+
+    letter-spacing: 1.5px;
+    line-height: 1.5;
+
+    background: linear-gradient(
+        135deg,
+        #38BDF8,
+        #00ff88,
+        #C08444,
+        #38BDF8,
+        #00ff88
+    );
+    background-size: 300% 300%;
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    text-transform: uppercase;
+
+    animation: colorful-glow 3s ease-in-out infinite;
+}
+
+@keyframes colorful-glow {
+    0% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.6)) 
+                drop-shadow(0 0 15px rgba(0, 255, 136, 0.4));
+    }
+    50% {
+        background-position: 100% 50%;
+        filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.8)) 
+                drop-shadow(0 0 25px rgba(192, 132, 68, 0.6))
+                drop-shadow(0 0 40px rgba(56, 189, 248, 0.4));
+    }
+    100% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.6)) 
+                drop-shadow(0 0 15px rgba(0, 255, 136, 0.4));
+    }
+}
+
+
+/* =========================================================
+   SIDEBAR NAVIGATION MENU DRAWER (ACCORDION)
+========================================================= */
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+.sidebar-container {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 300px;
+    height: 100vh;
+    background: #0B1120;
+    border-right: 2px solid #38BDF8;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.9);
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-container.active {
+    left: 0;
+}
+
+.sidebar-header {
+    padding: 20px;
+    background: #0F172A;
+    border-bottom: 1px solid rgba(56,189,248,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-header h4 {
+    color: #38BDF8;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.sidebar-close-btn {
+    background: transparent;
+    border: none;
+    color: #F87171;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.sidebar-menu-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Accordion Main Menu Item */
+.menu-accordion-group {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(56,189,248,0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.menu-accordion-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    color: #38BDF8;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: 0.5px;
+}
+
+.menu-accordion-btn:hover {
+    background: rgba(56,189,248,0.1);
+}
+
+.accordion-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.menu-accordion-group.active .accordion-arrow {
+    transform: rotate(180deg);
+}
+
+/* Submenu Container */
+.submenu-list {
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(3,7,18,0.6);
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid transparent;
+}
+
+.menu-accordion-group.active .submenu-list {
+    max-height: 300px;
+    border-top: 1px solid rgba(56,189,248,0.15);
+    padding: 6px 0;
+}
+
+.submenu-item {
+    padding: 10px 16px 10px 28px;
+    color: #CBD5E1;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.submenu-item:hover {
+    background: rgba(56,189,248,0.15);
+    color: #38BDF8;
+    border-left-color: #38BDF8;
+    padding-left: 32px;
+}
+
+/* Standalone Sidebar Direct Links */
+.sidebar-direct-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(56,189,248,0.15);
+    border-radius: 12px;
+    color: #CBD5E1;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.sidebar-direct-item:hover {
+    background: rgba(56,189,248,0.2);
+    color: #38BDF8;
+    border-color: #38BDF8;
+    transform: translateX(4px);
+}
+
+
+/* =========================================================
+   COMPANY LOGO
+========================================================= */
+
+#companyLogoContainer{
+    flex:0 0 auto;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+}
+
+#companyLogoContainer img{
+    height:90px;
+    width:90px;
+
+    border-radius:12px;
+    border:2px solid #38BDF8;
+
+    object-fit:cover;
+
+    box-shadow:
+        0 0 15px rgba(56,189,248,.5);
+}
+
+.logo-placeholder{
+    height:65px;
+    width:65px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:11px;
+
+    background:rgba(56,189,248,.08);
+
+    border-radius:12px;
+    border:2px dashed #38BDF8;
+
+    color:#38BDF8;
+
+    font-weight:800;
+    text-align:center;
+}
+
+
+/* =========================================================
+   HEADER RIGHT
+========================================================= */
+
+.header-right-actions{
+    flex:1;
+
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+
+    gap:10px;
+}
+
+
+/* =========================================================
+   CLOCK
+========================================================= */
+
+.live-clock-box{
+    text-align:right;
+
+    background:rgba(56,189,248,.08);
+
+    padding:6px 14px;
+
+    border-radius:12px;
+
+    border:1px solid rgba(56,189,248,.3);
+}
+
+.live-clock{
+    font-size:11.5px;
+    font-weight:800;
+    color:#38BDF8;
+}
+
+.live-date{
+    font-size:9px;
+    color:#94A3B8;
+}
+
+
+/* =========================================================
+   DROPDOWN
+========================================================= */
+
+.profile-dropdown-wrapper{
+    position:relative;
+    display:inline-block;
+}
+
+.dropdown-btn{
+    background:
+        linear-gradient(
+            135deg,
+            rgba(56,189,248,.2),
+            rgba(129,140,248,.2)
+        );
+
+    border:1.5px solid #38BDF8;
+
+    color:white;
+
+    font-size:16px;
+
+    padding:8px 14px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 0 15px rgba(56,189,248,.3);
+}
+
+.dropdown-menu{
+    position:absolute;
+
+    right:0;
+    top:calc(100% + 12px);
+
+    background:#0F172A;
+    color:#F8FAFC;
+
+    border-radius:16px;
+
+    box-shadow:
+        0 25px 60px rgba(0,0,0,.95);
+
+    width:240px;
+
+    z-index:999999;
+    overflow:hidden;
+
+    border:2px solid #38BDF8;
+
+    display:none;
+}
+
+.dropdown-menu a{
+    display:block;
+
+    padding:14px 18px;
+
+    text-decoration:none;
+
+    color:#CBD5E1;
+
+    font-size:13px;
+    font-weight:600;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+    line-height:1.5;
+}
+
+.dropdown-menu a:hover{
+    background:rgba(56,189,248,.2);
+    color:#38BDF8;
+}
+
+.dropdown-menu a:last-child{
+    color:#F87171;
+    border-bottom:none;
+}
+
+.user-info-box{
+    padding:16px 18px;
+
+    background:#030712;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.1);
+
+    font-size:12px;
+    font-weight:600;
+
+    color:#94A3B8;
+    line-height:1.8;
+}
+
+
+/* =========================================================
+   SCREEN ZOOM POPUP
+========================================================= */
+
+.screen-zoom-popup{
+    position:absolute;
+
+    right:0;
+    top:calc(100% + 12px);
+
+    background:#061814;
+
+    border:2px solid #10B981;
+    border-radius:18px;
+
+    padding:16px;
+
+    width:250px;
+
+    z-index:999999;
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,.9),
+        0 0 20px rgba(16,185,129,.3);
+
+    display:none;
+
+    flex-direction:column;
+
+    gap:12px;
+
+    text-align:center;
+}
+
+.screen-zoom-popup h4{
+    color:#34D399;
+
+    font-size:11px;
+
+    font-weight:800;
+
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.resolution-select{
+    width:100%;
+    padding:10px 12px;
+    background:#020b08;
+    color:#fff;
+    border:1px solid #34D399;
+    border-radius:10px;
+    font-size:12px;
+    font-weight:700;
+    outline:none;
+    cursor:pointer;
+}
+
+.resolution-select option{
+    background:#061814;
+    color:#fff;
+}
+
+.resolution-current{
+    font-size:10px;
+    color:#94A3B8;
+    font-weight:700;
+    padding:5px 0;
+}
+
+.fit-screen-action-btn{
+    background:#3B82F6;
+    color:#FFF;
+
+    border:none;
+
+    padding:10px;
+
+    border-radius:12px;
+
+    font-size:12.5px;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 4px 15px rgba(59,130,246,.4);
+}
+
+.fit-screen-action-btn:hover{
+    background:#2563EB;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.container{
+    width:100%;
+    max-width:1100px;
+
+    background:rgba(11,17,32,.9);
+
+    backdrop-filter:blur(20px);
+
+    padding:22px;
+
+    border-radius:28px;
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.9);
+
+    border:
+        2px solid rgba(56,189,248,.35);
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-bar-wrapper{
+    position:relative;
+    width:100%;
+}
+
+.search-bar-box{
+    display:flex;
+
+    gap:10px;
+
+    background:#FFFFFF !important;
+
+    padding:10px 14px;
+
+    border-radius:16px;
+
+    border:2px solid #38BDF8;
+
+    align-items:center;
+}
+
+.search-bar-box input{
+    flex:1;
+
+    background:transparent !important;
+
+    border:none;
+
+    color:#0F172A !important;
+
+    font-size:12.5px;
+
+    outline:none;
+
+    font-weight:600;
+}
+
+.search-bar-box button{
+    background:
+        linear-gradient(
+            135deg,
+            #38BDF8,
+            #0284C7
+        );
+
+    color:#0F172A;
+
+    border:none;
+
+    padding:8px 18px;
+
+    border-radius:12px;
+
+    font-weight:900;
+
+    cursor:pointer;
+}
+
+.search-suggestions-dropdown{
+    position:absolute;
+
+    top:100%;
+    left:0;
+
+    width:100%;
+
+    background:#0F172A;
+
+    border:2px solid #38BDF8;
+
+    border-radius:14px;
+
+    margin-top:6px;
+
+    max-height:220px;
+
+    overflow-y:auto;
+
+    z-index:999;
+
+    display:none;
+}
+
+.search-suggestion-item{
+    padding:11px 16px;
+
+    font-size:11.5px;
+
+    color:#CBD5E1;
+
+    cursor:pointer;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.05);
+}
+
+.search-suggestion-item:hover{
+    background:rgba(56,189,248,.25);
+    color:#38BDF8;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats-banner{
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:14px;
+
+    background:#0F172A;
+
+    padding:14px;
+
+    border-radius:18px;
+
+    border:
+        2px solid rgba(255,255,255,.08);
+
+    text-align:center;
+}
+
+.stat-box{
+    background:rgba(255,255,255,.04);
+
+    padding:12px;
+
+    border-radius:14px;
+
+    border:
+        1.5px solid rgba(56,189,248,.25);
+}
+
+.stat-title{
+    display:block;
+
+    font-size:10px;
+
+    color:#94A3B8;
+
+    font-weight:700;
+}
+
+.stat-value{
+    display:block;
+
+    font-size:16px;
+
+    color:#38BDF8;
+
+    font-weight:900;
+
+    margin-top:4px;
+}
+
+
+/* =========================================================
+   DESIGN MASTER
+========================================================= */
+
+.master-setup-btn{
+    background:
+        linear-gradient(
+            135deg,
+            #3B82F6,
+            #8B5CF6,
+            #EC4899
+        );
+
+    color:white;
+
+    padding:18px;
+
+    border-radius:20px;
+
+    text-decoration:none;
+
+    font-weight:900;
+
+    font-size:13.5px;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    gap:14px;
+
+    border:
+        2px solid rgba(255,255,255,.4);
+
+    width:100%;
+
+    cursor:pointer;
+}
+
+.master-setup-btn img{
+    width:28px;
+    height:28px;
+
+    object-fit:contain;
+
+    background:transparent !important;
+}
+
+
+/* =========================================================
+   MENU GRID
+========================================================= */
+
+.menu-grid{
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:14px;
+}
+
+.menu-btn{
+    color:#FFF;
+
+    min-height:120px;
+
+    padding:14px 18px;
+
+    border-radius:18px;
+
+    text-decoration:none;
+
+    font-weight:700;
+
+    text-align:left;
+
+    display:flex;
+
+    flex-direction:row;
+
+    align-items:center;
+
+    justify-content:flex-start;
+
+    gap:18px;
+
+    font-size:18px;
+
+    letter-spacing:.3px;
+
+    line-height:1.35;
+
+    cursor:pointer;
+
+    border:
+        1.5px solid rgba(255,255,255,.25);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.3);
+
+    transition:all .3s ease;
+
+    overflow:hidden;
+}
+
+.menu-btn:hover{
+    transform:translateY(-4px);
+
+    box-shadow:
+        0 12px 25px rgba(0,0,0,.5);
+}
+
+.tab-icon{
+    width:100px;
+    min-width:100px;
+
+    height:100px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    flex-shrink:0;
+
+    background:transparent !important;
+}
+
+.tab-icon img,
+.tab-icon .emoji-icon {
+    width:96px;
+    height:96px;
+
+    object-fit:contain;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:transparent !important;
+
+    filter:
+        drop-shadow(
+            0 5px 8px rgba(0,0,0,.45)
+        );
+
+    transition:
+        transform .3s ease;
+}
+
+.menu-btn:hover .tab-icon img,
+.menu-btn:hover .tab-icon .emoji-icon {
+    transform:scale(1.10);
+}
+
+.menu-btn > .tab-icon + *{
+    flex:1;
+    min-width:0;
+}
+
+
+/* =========================================================
+   THEMES
+========================================================= */
+
+.btn-theme-1{
+    background:linear-gradient(135deg,rgba(29,78,216,.75),rgba(59,130,246,.6));
+}
+
+.btn-theme-2{
+    background:linear-gradient(135deg,rgba(4,120,87,.75),rgba(16,185,129,.6));
+}
+
+.btn-theme-3{
+    background:linear-gradient(135deg,rgba(109,40,217,.75),rgba(139,92,246,.6));
+}
+
+.btn-theme-4{
+    background:linear-gradient(135deg,rgba(194,65,12,.75),rgba(249,115,22,.6));
+}
+
+.btn-theme-5{
+    background:linear-gradient(135deg,rgba(190,24,93,.75),rgba(236,72,153,.6));
+}
+
+.btn-theme-6{
+    background:linear-gradient(135deg,rgba(15,118,110,.75),rgba(20,184,166,.6));
+}
+
+.btn-theme-7{
+    background:linear-gradient(135deg,rgba(67,56,202,.75),rgba(99,102,241,.6));
+}
+
+.btn-theme-8{
+    background:linear-gradient(135deg,rgba(180,83,9,.75),rgba(245,158,11,.6));
+}
+
+.btn-theme-9{
+    background:linear-gradient(135deg,rgba(159,18,57,.75),rgba(225,29,72,.6));
+}
+
+.btn-theme-10{
+    background:linear-gradient(135deg,rgba(21,128,61,.75),rgba(34,197,94,.6));
+}
+
+.btn-theme-11{
+    background:linear-gradient(135deg,rgba(88,28,135,.75),rgba(147,51,234,.6));
+}
+
+.btn-theme-12{
+    background:linear-gradient(135deg,rgba(3,105,161,.75),rgba(14,165,233,.6));
+}
+
+.btn-theme-grey{
+    background:linear-gradient(135deg,rgba(75,85,99,.75),rgba(107,114,128,.6));
+}
+
+
+/* =========================================================
+   FULL WIDTH
+========================================================= */
+
+.full-span,
+.btn-m-all,
+.btn-matrix{
+    grid-column:span 3;
+
+    flex-direction:row;
+
+    padding:16px 20px;
+}
+
+.full-span .tab-icon,
+.btn-m-all .tab-icon,
+.btn-matrix .tab-icon{
+    width:105px;
+    min-width:105px;
+    height:105px;
+}
+
+.full-span .tab-icon img,
+.btn-m-all .tab-icon img,
+.btn-matrix .tab-icon img,
+.full-span .tab-icon .emoji-icon,
+.btn-m-all .tab-icon .emoji-icon,
+.btn-matrix .tab-icon .emoji-icon{
+    width:100px;
+    height:100px;
+}
+
+.btn-m-all{
+    background:
+        linear-gradient(
+            135deg,
+            rgba(194,65,12,.7),
+            rgba(217,119,6,.7),
+            rgba(236,72,153,.7),
+            rgba(139,92,246,.7)
+        );
+
+    border:2px solid #FCD34D;
+}
+
+.btn-matrix{
+    background:
+        linear-gradient(
+            135deg,
+            rgba(15,23,42,.6),
+            rgba(30,41,59,.7),
+            rgba(56,189,248,.4)
+        );
+
+    border:2px solid #38BDF8;
+}
+
+
+/* =========================================================
+   DELAYED ORDERS
+========================================================= */
+
+.delayed-orders-section{
+    margin-top:12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(153,27,27,.25),
+            rgba(69,10,10,.4)
+        );
+
+    border:2px solid #EF4444;
+
+    border-radius:20px;
+
+    padding:18px;
+}
+
+.delayed-orders-section h3{
+    color:#F87171;
+
+    font-size:13px;
+
+    font-weight:900;
+
+    margin-bottom:12px;
+}
+
+.delayed-table-container{
+    width:100%;
+
+    border-radius:14px;
+
+    overflow-x:auto;
+
+    border:
+        1.5px solid rgba(239,68,68,.5);
+}
+
+.delayed-table{
+    width:100%;
+
+    border-collapse:collapse;
+
+    font-size:11.5px;
+
+    text-align:center;
+
+    white-space:nowrap;
+}
+
+.delayed-table th,
+.delayed-table td{
+    padding:11px 14px;
+
+    border-bottom:
+        1px solid rgba(239,68,68,.2);
+
+    color:#FCA5A5;
+}
+
+.delayed-table th{
+    background:rgba(239,68,68,.3);
+
+    color:#F87171;
+}
+
+.red-alert-text{
+    color:#F87171;
+    font-weight:900;
+}
+
+
+/* =========================================================
+   SYNC STATUS
+========================================================= */
+
+.sync-status{
+    display:none !important;
+
+    position:fixed;
+
+    right:12px;
+    bottom:12px;
+
+    z-index:999999;
+
+    padding:7px 12px;
+
+    border-radius:20px;
+
+    background:rgba(15,23,42,.95);
+
+    border:1px solid #38BDF8;
+
+    color:#38BDF8;
+
+    font-size:10px;
+
+    font-weight:800;
+}
+
+.sync-status.error{
+    border-color:#F87171;
+    color:#F87171;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media(max-width:768px){
+
+    body{
+        padding:8px;
+    }
+
+    .top-header-container{
+        flex-wrap:wrap;
+
+        justify-content:center;
+
+        gap:15px;
+
+        padding:18px;
+    }
+
+    .header-left-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .top-header-container h3{
+        font-size:20px;
+    }
+
+    #companyLogoContainer{
+        flex:1 1 auto;
+    }
+
+    .header-right-actions{
+        flex:1 1 100%;
+
+        justify-content:center;
+
+        flex-wrap:wrap;
+    }
+
+    .menu-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .full-span,
+    .btn-m-all,
+    .btn-matrix{
+        grid-column:span 2;
+    }
+
+    .stats-banner{
+        grid-template-columns:1fr;
+    }
+
+    .menu-btn{
+        min-height:105px;
+
+        padding:12px;
+
+        gap:12px;
+
+        font-size:15px;
+    }
+
+    .tab-icon{
+        width:82px;
+        min-width:82px;
+        height:82px;
+    }
+
+    .tab-icon img,
+    .tab-icon .emoji-icon{
+        width:78px;
+        height:78px;
+    }
+
+    .full-span .tab-icon,
+    .btn-m-all .tab-icon,
+    .btn-matrix .tab-icon{
+        width:88px;
+        min-width:88px;
+        height:88px;
+    }
+
+    .full-span .tab-icon img,
+    .btn-m-all .tab-icon img,
+    .btn-matrix .tab-icon img,
+    .full-span .tab-icon .emoji-icon,
+    .btn-m-all .tab-icon .emoji-icon,
+    .btn-matrix .tab-icon .emoji-icon{
+        width:84px;
+        height:84px;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media(max-width:480px){
+
+    .menu-grid{
+        grid-template-columns:1fr;
+    }
+
+    .full-span,
+    .btn-m-all,
+    .btn-matrix{
+        grid-column:span 1;
+    }
+
+    .search-bar-box{
+        flex-wrap:wrap;
+    }
+
+    .search-bar-box button{
+        width:100%;
+    }
+
+    .menu-btn{
+        min-height:105px;
+        font-size:16px;
+    }
+
+    .tab-icon{
+        width:85px;
+        min-width:85px;
+        height:85px;
+    }
+
+    .tab-icon img,
+    .tab-icon .emoji-icon{
+        width:80px;
+        height:80px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media(max-width:360px){
+
+    .menu-btn{
+        gap:9px;
+        padding:10px;
+        font-size:14px;
+    }
+
+    .tab-icon{
+        width:72px;
+        min-width:72px;
+        height:72px;
+    }
+
+    .tab-icon img,
+    .tab-icon .emoji-icon{
+        width:68px;
+        height:68px;
+    }
+}
+
+
+/* =========================================================
+   LOGOUT CONFIRM MODAL
+========================================================= */
+
+.logout-modal-overlay{
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100vh;
+    background:rgba(0,0,0,.72);
+    backdrop-filter:blur(5px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999999;
+    padding:20px;
+}
+
+.logout-modal-box{
+    width:min(360px,100%);
+    background:#0F172A;
+    border:2px solid #38BDF8;
+    border-radius:20px;
+    padding:22px;
+    box-shadow:0 25px 70px rgba(0,0,0,.9);
+    text-align:center;
+}
+
+.logout-modal-box h3{
+    color:#38BDF8;
+    font-size:17px;
+    font-weight:900;
+    margin-bottom:10px;
+}
+
+.logout-modal-box p{
+    color:#CBD5E1;
+    font-size:13px;
+    line-height:1.6;
+    margin-bottom:20px;
+}
+
+.logout-modal-actions{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+}
+
+.logout-cancel-btn,
+.logout-ok-btn{
+    flex:1;
+    min-height:44px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:900;
+    cursor:pointer;
+    border:1px solid;
+}
+
+.logout-cancel-btn{
+    background:#1E293B;
+    color:#E2E8F0;
+    border-color:#64748B;
+}
+
+.logout-ok-btn{
+    background:#DC2626;
+    color:#FFF;
+    border-color:#F87171;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<!-- =========================================================
+     SIDEBAR NAVIGATION MENU DRAWER (ADVANCED ACCORDION)
+========================================================= -->
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div id="sidebarContainer" class="sidebar-container">
+    <div class="sidebar-header">
+        <h4>📋 Quick Menu</h4>
+        <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+    </div>
+
+    <div class="sidebar-menu-items">
+
+        <!-- 1. ORDER MENU -->
+        <div class="menu-accordion-group" id="accordionOrder">
+            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionOrder')">
+                <span>📦 1. Order</span>
+                <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="submenu-list">
+                <a href="#" class="submenu-item" onclick="navigateToPage('Party_Orders.html');return false;">• Party Order Page</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('Despatch.html');return false;">• Despatched Page</a>
+            </div>
+        </div>
+
+        <!-- 2. DESIGN MENU -->
+        <div class="menu-accordion-group" id="accordionDesign">
+            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionDesign')">
+                <span>🎨 2. Design</span>
+                <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="submenu-list">
+                <a href="#" class="submenu-item" onclick="navigateToPage('design_master.html');return false;">• New Design Entry</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('warp_entry.html');return false;">• Warp Entry</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('weft_entry.html');return false;">• Weft Entry</a>
+            </div>
+        </div>
+
+        <!-- 3. YARN MENU -->
+        <div class="menu-accordion-group" id="accordionYarn">
+            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionYarn')">
+                <span>🧵 3. Yarn</span>
+                <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="submenu-list">
+                <a href="#" class="submenu-item" onclick="navigateToPage('kora_yarn.html');return false;">• Kora Purchase</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('dyeing_issue.html');return false;">• Dyeing Order Issue</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('dyeing_receive.html');return false;">• Dyed Colours Receive</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('warping.html');return false;">• Warping Program</a>
+            </div>
+        </div>
+
+        <!-- 4. FABRICS MENU -->
+        <div class="menu-accordion-group" id="accordionFabrics">
+            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionFabrics')">
+                <span>👕 4. Fabrics</span>
+                <span class="accordion-arrow">▼</span>
+            </button>
+            <div class="submenu-list">
+                <a href="#" class="submenu-item" onclick="navigateToPage('weaving.html');return false;">• Weaving Program</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('weaving_receive.html');return false;">• Weavers Fabrics Received</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('washing.html');return false;">• Washing Program</a>
+                <a href="#" class="submenu-item" onclick="navigateToPage('Despatch.html');return false;">• Despatched Page</a>
+            </div>
+        </div>
+
+        <!-- QUICK DIRECT LINKS -->
+        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('process_matrix.html');return false;">📊 Process Matrix</a>
+        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('weave_3d.html');return false;">👕 3D Simulation</a>
+        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('report.html');return false;">📈 All Reports</a>
+        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('settings.html');return false;">🛠️ Settings</a>
+
+    </div>
+</div>
+
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<div class="top-header-container">
+
+    <div class="header-left-group">
+        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Open Sidebar Menu">
+            ☰
+        </button>
+        <h3 id="appHeaderTitle">
+            TEX FOR EVER 
+        </h3>
+    </div>
+
+    <div id="companyLogoContainer"
+         onclick="navigateToPage('settings.html')"
+         title="Open Settings">
+    </div>
+
+    <div class="header-right-actions">
+
+        <div class="live-clock-box">
+            <div id="liveClock" class="live-clock">12:00:00 AM</div>
+            <div id="liveDate" class="live-date">01 Jan 2026</div>
+        </div>
+
+        <!-- SCREEN SIZE -->
+        <div class="profile-dropdown-wrapper">
+
+            <button
+                class="dropdown-btn"
+                onclick="toggleScreenZoomMenu(event)"
+                title="Select Screen Resolution">
+                🔍
+            </button>
+
+            <div id="screenZoomMenu" class="screen-zoom-popup">
+
+                <h4>Screen Resolution</h4>
+
+                <select
+                    id="screenResolutionSelect"
+                    class="resolution-select"
+                    onchange="changeScreenResolution(this.value)">
+
+                    <option value="auto">Auto / Current Screen</option>
+                    <option value="768x1024">768 × 1024</option>
+                    <option value="1024x768">1024 × 768</option>
+                    <option value="1280x720">1280 × 720</option>
+                    <option value="1366x768">1366 × 768</option>
+                    <option value="1920x1080">1920 × 1080</option>
+
+                </select>
+
+                <div
+                    id="resolutionCurrentText"
+                    class="resolution-current">
+                    Current Screen: detecting...
+                </div>
+
+                <button
+                    class="fit-screen-action-btn"
+                    onclick="resetFitToScreen()">
+                    Fit to Screen
+                </button>
+
+            </div>
+        </div>
+
+
+        <!-- THEME -->
+        <div class="profile-dropdown-wrapper">
+
+            <button
+                class="dropdown-btn"
+                onclick="toggleThemeMenu(event)">
+                🎨
+            </button>
+
+            <div id="themeDropdownMenu" class="dropdown-menu">
+
+                <div class="user-info-box">
+                    🎨 Select Theme
+                </div>
+
+                <a href="#"
+                   onclick="setTheme('dark');return false;">
+                    🔵 Dark Neon
+                </a>
+
+                <a href="#"
+                   onclick="setTheme('softgreen');return false;">
+                    🟢 Soft Green
+                </a>
+
+                <a href="#"
+                   onclick="setTheme('darkgreen');return false;">
+                    🟩 Dark Green
+                </a>
+
+                <a href="#"
+                   onclick="setTheme('sunset');return false;">
+                    🟠 Sunset Gold
+                </a>
+
+                <a href="#"
+                   onclick="setTheme('royalblue');return false;">
+                    💎 Royal Blue
+                </a>
+
+            </div>
+        </div>
+
+
+        <!-- PROFILE -->
+        <div class="profile-dropdown-wrapper">
+
+            <button
+                class="dropdown-btn"
+                onclick="toggleMenu(event)">
+                👨‍💼
+            </button>
+
+            <div id="dropdownMenu" class="dropdown-menu">
+
+                <div id="userInfoBox"
+                     class="user-info-box">
+                    Loading...
+                </div>
+
+                <a href="#"
+                   onclick="navigateToPage('settings.html');return false;">
+                    ⚙️ Settings
+                </a>
+
+                <a href="#"
+                   onclick="clearCacheData();return false;">
+                    🔄 Clear Local Cache
+                </a>
+
+                <a href="#"
+                   onclick="logoutUser();return false;">
+                    🚪 Log Out
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<div class="container" id="dashboardMainContainer">
+
+
+    <!-- SEARCH -->
+
+    <div class="search-bar-wrapper">
+
+        <div class="search-bar-box">
+
+            <span>🔍</span>
+
+            <input
+                id="quickSearchInput"
+                type="text"
+                placeholder="Quick Search Design No / Party Name..."
+                autocomplete="off"
+                oninput="handleSearchInput(this.value)">
+
+            <button onclick="quickSearchDesign()">
+                Go Print
+            </button>
+
+        </div>
+
+        <div
+            id="searchSuggestions"
+            class="search-suggestions-dropdown">
+        </div>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats-banner">
+
+        <div class="stat-box">
+
+            <span class="stat-title">
+                Saved Designs
+            </span>
+
+            <span
+                id="statDesignsCount"
+                class="stat-value">
+                0
+            </span>
+
+        </div>
+
+
+        <div class="stat-box">
+
+            <span class="stat-title">
+                Active Orders
+            </span>
+
+            <span
+                id="statOrdersCount"
+                class="stat-value">
+                0
+            </span>
+
+        </div>
+
+
+        <div class="stat-box">
+
+            <span class="stat-title">
+                Delayed Alerts
+            </span>
+
+            <span
+                id="statDelayedCount"
+                class="stat-value"
+                style="color:#F87171;">
+                0
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- DESIGN MASTER -->
+
+    <button
+        class="master-setup-btn"
+        onclick="navigateToPage('design_master.html')">
+
+        <img
+            src="./icon/design_master.png"
+            alt="Design Master">
+
+        Create / Edit Design Master Setup
+
+    </button>
+
+
+    <!-- =====================================================
+         MENU
+    ===================================================== -->
+
+    <div class="menu-grid">
+
+
+        <button
+            class="menu-btn btn-theme-1"
+            onclick="navigateToPage('Party_Orders.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/Party_Orders.png"
+                    alt="Party Orders">
+            </span>
+
+            <span>
+                1 ~ PARTY ORDER Ledger
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-2"
+            onclick="navigateToPage('warp_entry.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/warp_entry.png"
+                    alt="Warp Entry">
+            </span>
+
+            <span>
+                2 ~ WARP DESIGN Entry
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-3"
+            onclick="navigateToPage('weft_entry.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/weft_entry.png"
+                    alt="Weft Entry">
+            </span>
+
+            <span>
+                2.1 ~ WEFT DESIGN Entry
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-4"
+            onclick="navigateToPage('kora_yarn.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/kora_yarn.png"
+                    alt="Kora">
+            </span>
+
+            <span>
+                3 ~ KORA PURCHASE Entry
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-5"
+            onclick="navigateToPage('dyeing_issue.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/dyeing_issue.png"
+                    alt="Dyeing Issue">
+            </span>
+
+            <span>
+                4 ~ DYEING ORDER Issue
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-6"
+            onclick="navigateToPage('dyeing_receive.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/dyeing_receive.png"
+                    alt="Dyeing Receive">
+            </span>
+
+            <span>
+                4.1 ~ DYED COLOURS Receive
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-7"
+            onclick="navigateToPage('warping.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/warping.png"
+                    alt="Warping">
+            </span>
+
+            <span>
+                5 ~ WARPING Program
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-8"
+            onclick="navigateToPage('weaving.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/weaving.png"
+                    alt="Weaving">
+            </span>
+
+            <span>
+                6 ~ WEAVING Program
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-6"
+            onclick="navigateToPage('weaving_receive.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/weaving_receive.png"
+                    alt="Weaving Receive">
+            </span>
+
+            <span>
+                6.1 ~ WEAVERS FABRICS Receive
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-9"
+            onclick="navigateToPage('washing.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/washing.png"
+                    alt="Washing">
+            </span>
+
+            <span>
+                7 ~ WASHING Program
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-10"
+            onclick="navigateToPage('Despatch.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/Despatch.png"
+                    alt="Despatch">
+            </span>
+
+            <span>
+                8 ~ DESPATCH Program
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-11"
+            onclick="navigateToPage('report.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/report.png"
+                    alt="Report">
+            </span>
+
+            <span>
+                9 ~ ALL Reports
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-grey"
+            onclick="navigateToPage('yarn_calc.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/yarn_calc.png"
+                    alt="Yarn Calculation">
+            </span>
+
+            <span>
+                10 ~ YARN WIGHT Calculation
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-grey"
+            onclick="navigateToPage('design_sheet_print.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/design_sheet_print.png"
+                    alt="Design Sheet Print">
+            </span>
+
+            <span>
+                11 ~ DESIGN Sheet Print out
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-theme-12"
+            onclick="navigateToPage('invoice.html')">
+
+            <span class="tab-icon">
+                <img
+                    src="./icon/invoice.png"
+                    alt="Invoice">
+            </span>
+
+            <span>
+                12 ~ INVOICE / BILL entry
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-m-all"
+            onclick="navigateToPage('design_list.html?type=all&status=all')">
+
+            <span class="tab-icon">
+
+                <img
+                    src="./icon/design_list.png"
+                    alt="Design List"
+                    style="width:50px;height:50px;object-fit:contain;">
+
+            </span>
+
+            <span>
+                13 ~ TOTAL Saved DESIGNS List
+            </span>
+
+        </button>
+
+
+        <button
+            class="menu-btn btn-matrix"
+            onclick="navigateToPage('process_matrix.html')">
+
+            <span class="tab-icon">
+
+                <img
+                    src="./icon/process_matrix.png"
+                    alt="Process Matrix"
+                    style="width:100px;height:100px;object-fit:contain;">
+
+            </span>
+
+            <span>
+                14 ~ Live MULTI-DESIGN Process Status
+            </span>
+
+        </button>
+
+
+        <!-- 15 -->
+
+        <button
+            class="menu-btn full-span"
+            onclick="navigateToPage('weave_3d.html')"
+            style="
+                background:linear-gradient(
+                    135deg,
+                    #1e1b4b,
+                    #312e81,
+                    #4338ca
+                );
+                border:2px solid #818cf8;
+                box-shadow:0 0 15px rgba(99,102,241,.4);
+            ">
+
+            <span class="tab-icon">
+
+                <span class="emoji-icon"
+                    style="
+                        font-size:60px;
+                        filter:drop-shadow(
+                            0 5px 8px rgba(0,0,0,.5)
+                        );
+                    ">
+                    👕
+                </span>
+
+            </span>
+
+            <span
+                style="
+                    color:#c7d2fe;
+                    text-shadow:0 2px 4px rgba(0,0,0,.5);
+                ">
+
+                15 ~ 3D FABRIC Simulation / Preview
+
+            </span>
+
+        </button>
+
+
+        <!-- 16 -->
+
+        <button
+            class="menu-btn full-span"
+            onclick="navigateToPage('denting_editor.html')"
+            style="
+                background:linear-gradient(
+                    135deg,
+                    #064e3b,
+                    #0f766e,
+                    #059669
+                );
+                border:2px solid #34d399;
+                box-shadow:0 0 15px rgba(52,211,153,.4);
+            ">
+
+            <span class="tab-icon">
+
+                <span class="emoji-icon"
+                    style="
+                        font-size:55px;
+                        filter:drop-shadow(
+                            0 5px 8px rgba(0,0,0,.5)
+                        );
+                    ">
+                    📐
+                </span>
+
+            </span>
+
+            <span
+                style="
+                    color:#d1fae5;
+                    text-shadow:0 2px 4px rgba(0,0,0,.5);
+                ">
+
+                16 ~ ADVANCED Denting & Drawing Editor
+
+            </span>
+
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         ONLINE STATUS
+    ===================================================== -->
+
+    <div id="connectionStatusIndicator"
+        style="
+            font-size:16px;
+            background:#000;
+            padding:8px 16px;
+            border-radius:10px;
+            color:#FCD34D;
+        ">
+        ● Checking Status...
+    </div>
+    <script>
+        (function(){
+            var ind = document.getElementById("connectionStatusIndicator");
+            if(!navigator.onLine && ind){
+                ind.style.color = "#ff3333";
+                ind.textContent = "● OFFLINE Work Mode";
+            }
+        })();
+    </script>
+
+
+    <!-- =====================================================
+         DELAYED ORDERS
+    ===================================================== -->
+
+    <div
+        id="delayedOrdersSection"
+        class="delayed-orders-section"
+        style="display:none;">
+
+        <h3>
+            ⚠️ Delayed Party Orders
+        </h3>
+
+        <div class="delayed-table-container">
+
+            <table class="delayed-table">
+
+                <thead>
+
+                    <tr>
+                        <th>S.No</th>
+                        <th>Design No</th>
+                        <th>Party Name</th>
+                        <th>Order Mtr</th>
+                        <th>Delivery Date</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="delayedOrdersBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     SYNC STATUS
+========================================================= -->
+
+<div
+    id="syncStatus"
+    class="sync-status">
+    ☁️ Connecting...
+</div>
+
+
+
+<!-- =========================================================
+     LOGOUT CONFIRM MODAL
+========================================================= -->
+
+<div
+    id="logoutConfirmModal"
+    class="logout-modal-overlay">
+
+    <div class="logout-modal-box">
+
+        <h3>🚪 Confirm Logout</h3>
+
+        <p>
+            Are you sure you want to log out?
+        </p>
+
+        <div class="logout-modal-actions">
+
+            <button
+                type="button"
+                class="logout-cancel-btn"
+                onclick="closeLogoutModal()">
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="logout-ok-btn"
+                onclick="confirmLogout()">
+                OK / Logout
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+/*
+=========================================================
+ Acode / TypeScript language-service compatibility
+
+ This is NORMAL JavaScript, not TypeScript.
+ This prevents Acode from showing false
+ "implicitly any" diagnostics for this HTML file.
+=========================================================
+*/
+
+// @ts-nocheck
+
+
+/* =========================================================
+   SIDEBAR TOGGLE & ACCORDION FUNCTIONS
+========================================================= */
+
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebarContainer");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar && overlay) {
+        sidebar.classList.toggle("active");
+        overlay.classList.toggle("active");
+    }
+}
+
+function toggleAccordion(groupId) {
+    const group = document.getElementById(groupId);
+    if (group) {
+        // Optional: close other accordions if you want only one open at a time
+        // document.querySelectorAll('.menu-accordion-group').forEach(el => {
+        //     if(el.id !== groupId) el.classList.remove('active');
+        // });
+        group.classList.toggle("active");
+    }
+}
+
+
+/* =========================================================
+   SAFE JSON
+========================================================= */
+
+function safeJSON(key, fallback){
+
+    try{
+
+        const raw = localStorage.getItem(key);
+
+        if(!raw)
+            return fallback;
+
+        const data = JSON.parse(raw);
+
+        return data ?? fallback;
+
+    }catch(error){
+
+        console.warn(
+            "JSON error:",
+            key,
+            error
+        );
+
+        return fallback;
+    }
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(value){
+
+    return String(value ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+/* =========================================================
+   SYNC STATUS
+========================================================= */
+
+function setSyncStatus(message, error){
+
+    const el = document.getElementById("syncStatus");
+    if(el){
+        el.textContent = message;
+        el.classList.toggle("error", Boolean(error));
+    }
+
+    const indicator = document.getElementById("connectionStatusIndicator");
+    if(indicator){
+        if(error || !navigator.onLine){
+            indicator.style.color = "#ff3333";
+            indicator.textContent = "● OFFLINE Work Mode";
+        } else if(message.includes("Connected")){
+            indicator.style.color = "#00ff88";
+            indicator.textContent = "● ONLINE Supabase Auto";
+        } else {
+            indicator.style.color = "#FCD34D";
+            indicator.textContent = "● Checking Status...";
+        }
+    }
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function navigateToPage(pageUrl){
+
+    if(!pageUrl)
+        return;
+
+    // Close sidebar when navigating
+    const sidebar = document.getElementById("sidebarContainer");
+    const overlay = document.getElementById("sidebarOverlay");
+    if(sidebar) sidebar.classList.remove("active");
+    if(overlay) overlay.classList.remove("active");
+
+    const cleanPage =
+        String(pageUrl).split("?")[0];
+
+    const role =
+        localStorage.getItem("erp_logged_role") ||
+        localStorage.getItem("user_role") ||
+        "Standard User";
+
+
+    /* ADMIN */
+
+    if(
+        role === "Administrator" ||
+        role === "Admin"
+    ){
+
+        location.href = pageUrl;
+        return;
+    }
+
+
+    /* PERMISSION */
+
+    const saved =
+        localStorage.getItem("user_permissions");
+
+    if(saved){
+
+        try{
+
+            const permissions =
+                JSON.parse(saved);
+
+            const pageKey =
+                cleanPage
+                    .replace(".html","")
+                    .toLowerCase();
+
+
+            if(
+                permissions[cleanPage] === false ||
+                permissions[pageKey] === false
+            ){
+
+                alert(
+                    "Access Denied! You do not have permission to access this page. 🔒"
+                );
+
+                return;
+            }
+
+        }catch(error){
+
+            console.warn(
+                "Permission error:",
+                error
+            );
+        }
+    }
+
+
+    location.href = pageUrl;
+}
+
+
+/* =========================================================
+   DATE
+========================================================= */
+
+function getLocalDateString(){
+
+    const d = new Date();
+
+    return `${d.getFullYear()}-${
+        String(d.getMonth()+1).padStart(2,"0")
+    }-${
+        String(d.getDate()).padStart(2,"0")
+    }`;
+}
+
+
+function normalizeDate(value){
+
+    if(!value)
+        return "";
+
+    const s =
+        String(value).trim();
+
+
+    if(
+        /^\d{4}-\d{2}-\d{2}$/.test(s)
+    ){
+
+        return s;
+    }
+
+
+    if(
+        /^\d{2}\/\d{2}\/\d{4}$/.test(s)
+    ){
+
+        const p = s.split("/");
+
+        return `${p[2]}-${p[1]}-${p[0]}`;
+    }
+
+
+    if(
+        /^\d{2}-\d{2}-\d{4}$/.test(s)
+    ){
+
+        const p = s.split("-");
+
+        return `${p[2]}-${p[1]}-${p[0]}`;
+    }
+
+
+    return "";
+}
+
+
+/* =========================================================
+   DASHBOARD STATS
+========================================================= */
+
+function loadDashboardStats(){
+
+    try{
+
+        const designs =
+            safeJSON(
+                "design_masters_data",
+                []
+            );
+
+        const orders =
+            safeJSON(
+                "party_orders_data",
+                []
+            );
+
+
+        const designCount =
+            Array.isArray(designs)
+                ? designs.length
+                : 0;
+
+
+        const orderList =
+            Array.isArray(orders)
+                ? orders
+                : [];
+
+
+        /* ACTIVE ORDERS */
+
+        const activeOrders =
+            orderList.filter(order=>{
+
+                if(!order)
+                    return false;
+
+                const status =
+                    String(
+                        order.status ||
+                        order.orderStatus ||
+                        ""
+                    )
+                    .toLowerCase()
+                    .trim();
+
+                return ![
+                    "completed",
+                    "complete",
+                    "closed",
+                    "cancelled",
+                    "canceled"
+                ].includes(status);
+            });
+
+
+        /* DELAYED */
+
+        const today =
+            getLocalDateString();
+
+
+        const delayedList =
+            activeOrders.filter(order=>{
+
+                if(!order)
+                    return false;
+
+                const delivery =
+                    normalizeDate(
+                        order.deliveryDate ||
+                        order.delivery_date ||
+                        order.delivery ||
+                        ""
+                    );
+
+                if(!delivery)
+                    return false;
+
+                return delivery < today;
+            });
+
+
+        const designEl =
+            document.getElementById(
+                "statDesignsCount"
+            );
+
+        if(designEl)
+            designEl.textContent =
+                designCount;
+
+
+        const orderEl =
+            document.getElementById(
+                "statOrdersCount"
+            );
+
+        if(orderEl)
+            orderEl.textContent =
+                activeOrders.length;
+
+
+        const delayedEl =
+            document.getElementById(
+                "statDelayedCount"
+            );
+
+        if(delayedEl)
+            delayedEl.textContent =
+                delayedList.length;
+
+
+        renderDelayedOrders(
+            delayedList
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Dashboard statistics error:",
+            error
+        );
+
+
+        const designEl =
+            document.getElementById(
+                "statDesignsCount"
+            );
+
+        const orderEl =
+            document.getElementById(
+                "statOrdersCount"
+            );
+
+        const delayedEl =
+            document.getElementById(
+                "statDelayedCount"
+            );
+
+
+        if(designEl)
+            designEl.textContent = "0";
+
+        if(orderEl)
+            orderEl.textContent = "0";
+
+        if(delayedEl)
+            delayedEl.textContent = "0";
+
+
+        renderDelayedOrders([]);
+    }
+}
+
+
+/* =========================================================
+   COMPANY SETTINGS / LOGO
+========================================================= */
+
+function loadCompanySettings(){
+
+    try{
+
+        const heading =
+            localStorage.getItem(
+                "app_heading_name"
+            );
+
+
+        const title =
+            document.getElementById(
+                "appHeaderTitle"
+            );
+
+
+        if(heading && title)
+            title.textContent = heading;
+
+
+        const container =
+            document.getElementById(
+                "companyLogoContainer"
+            );
+
+
+        if(!container)
+            return;
+
+
+        container.innerHTML = "";
+
+
+        let logo =
+            localStorage.getItem(
+                "company_logo_base64"
+            ) ||
+            localStorage.getItem(
+                "company_logo"
+            ) ||
+            localStorage.getItem(
+                "logo"
+            ) ||
+            "";
+
+
+        logo =
+            String(logo).trim();
+
+
+        if(
+            logo.startsWith('"') &&
+            logo.endsWith('"')
+        ){
+
+            try{
+
+                logo =
+                    JSON.parse(logo);
+
+            }catch(error){
+
+                console.warn(
+                    "Logo JSON parse failed"
+                );
+            }
+        }
+
+
+        if(
+            logo &&
+            !logo.startsWith("data:image/") &&
+            !logo.startsWith("http://") &&
+            !logo.startsWith("https://") &&
+            !logo.startsWith("blob:")
+        ){
+
+            logo =
+                "data:image/png;base64," +
+                logo;
+        }
+
+
+        if(logo){
+
+            const img =
+                document.createElement("img");
+
+
+            img.alt =
+                "Company Logo";
+
+
+            img.onload = function(){
+                console.log("Company logo loaded");
+            };
+
+
+            img.onerror = function(){
+                console.error("Company logo URL/Base64 is invalid");
+                container.innerHTML =
+                    '<div class="logo-placeholder">Logo Error</div>';
+            };
+
+
+            img.src = logo;
+
+            container.appendChild(img);
+
+        }else{
+
+            const placeholder =
+                document.createElement("div");
+
+
+            placeholder.className =
+                "logo-placeholder";
+
+
+            placeholder.textContent =
+                "+ Logo";
+
+
+            container.appendChild(
+                placeholder
+            );
+        }
+
+    }catch(error){
+
+        console.error(
+            "Company settings error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   DELAYED ORDERS
+========================================================= */
+
+function renderDelayedOrders(list){
+
+    const section =
+        document.getElementById(
+            "delayedOrdersSection"
+        );
+
+
+    const tbody =
+        document.getElementById(
+            "delayedOrdersBody"
+        );
+
+
+    if(!section || !tbody)
+        return;
+
+
+    tbody.innerHTML = "";
+
+
+    if(
+        !Array.isArray(list) ||
+        !list.length
+    ){
+
+        section.style.display =
+            "none";
+
+        return;
+    }
+
+
+    section.style.display =
+        "block";
+
+
+    list.forEach((item,index)=>{
+
+        const row =
+            document.createElement("tr");
+
+
+        const design =
+            item.designNumber ||
+            item.designNo ||
+            "-";
+
+
+        const party =
+            item.partyName ||
+            item.party ||
+            "-";
+
+
+        const meters =
+            item.orderMtr ||
+            item.orderMeter ||
+            item.order_mtr ||
+            "0";
+
+
+        const delivery =
+            item.deliveryDate ||
+            item.delivery_date ||
+            "-";
+
+
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><b>${escapeHTML(design)}</b></td>
+            <td>${escapeHTML(party)}</td>
+            <td>${escapeHTML(meters)}</td>
+            <td class="red-alert-text">
+                ${escapeHTML(delivery)}
+            </td>
+        `;
+
+
+        tbody.appendChild(row);
+    });
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+function handleSearchInput(value){
+
+    const box =
+        document.getElementById(
+            "searchSuggestions"
+        );
+
+
+    if(!box)
+        return;
+
+
+    const term =
+        String(value || "")
+            .trim()
+            .toLowerCase();
+
+
+    if(!term){
+
+        box.style.display =
+            "none";
+
+        return;
+    }
+
+
+    const results = [];
+
+
+    /* DESIGN NUMBERS */
+
+    const pre =
+        safeJSON(
+            "pre_design_numbers",
+            []
+        );
+
+
+    if(Array.isArray(pre)){
+
+        pre.forEach(item=>{
+
+            const design =
+                typeof item === "object"
+                    ? (
+                        item.designNo ||
+                        item.designNumber ||
+                        ""
+                    )
+                    : item;
+
+
+            if(
+                design &&
+                String(design)
+                    .toLowerCase()
+                    .includes(term)
+            ){
+
+                results.push({
+                    type:"Design",
+                    value:String(design)
+                });
+            }
+        });
+    }
+
+
+    /* PARTY ORDERS */
+
+    const orders =
+        safeJSON(
+            "party_orders_data",
+            []
+        );
+
+
+    if(Array.isArray(orders)){
+
+        orders.forEach(order=>{
+
+            if(!order)
+                return;
+
+
+            const design =
+                order.designNumber ||
+                order.designNo ||
+                "";
+
+
+            const party =
+                order.partyName ||
+                order.party ||
+                "";
+
+
+            if(
+                design &&
+                String(design)
+                    .toLowerCase()
+                    .includes(term)
+            ){
+
+                results.push({
+                    type:"Design",
+                    value:String(design)
+                });
+            }
+
+
+            if(
+                party &&
+                String(party)
+                    .toLowerCase()
+                    .includes(term)
+            ){
+
+                results.push({
+                    type:"Party",
+                    value:String(party),
+                    design:String(design)
+                });
+            }
+
+        });
+    }
+
+
+    /* REMOVE DUPLICATES */
+
+    const unique = [];
+    const seen = new Set();
+
+
+    results.forEach(item=>{
+
+        const key =
+            item.type +
+            "|" +
+            item.value;
+
+
+        if(!seen.has(key)){
+
+            seen.add(key);
+
+            unique.push(item);
+        }
+    });
+
+
+    const limited =
+        unique.slice(0,8);
+
+
+    if(!limited.length){
+
+        box.style.display =
+            "none";
+
+        return;
+    }
+
+
+    box.innerHTML = "";
+
+
+    limited.forEach(item=>{
+
+        const div =
+            document.createElement("div");
+
+
+        div.className =
+            "search-suggestion-item";
+
+
+        div.textContent =
+            item.type === "Party"
+                ? `👤 ${item.value}${
+                    item.design
+                        ? " — Design: " +
+                          item.design
+                        : ""
+                }`
+                : `🎨 ${item.value}`;
+
+
+        div.onclick = function(){
+
+            selectSearchSuggestion(
+                item.design ||
+                item.value
+            );
+        };
+
+
+        box.appendChild(div);
+    });
+
+
+    box.style.display =
+        "block";
+}
+
+
+function selectSearchSuggestion(value){
+
+    const input =
+        document.getElementById(
+            "quickSearchInput"
+        );
+
+
+    const box =
+        document.getElementById(
+            "searchSuggestions"
+        );
+
+
+    if(input)
+        input.value = value;
+
+
+    if(box)
+        box.style.display = "none";
+
+
+    quickSearchDesign();
+}
+
+
+function quickSearchDesign(){
+
+    const input =
+        document.getElementById(
+            "quickSearchInput"
+        );
+
+
+    if(!input)
+        return;
+
+
+    const query =
+        input.value.trim();
+
+
+    if(!query){
+
+        alert(
+            "Please enter a design number or party name!"
+        );
+
+        return;
+    }
+
+
+    localStorage.setItem(
+        "selected_design_number",
+        query
+    );
+
+
+    navigateToPage(
+        "design_sheet_print.html"
+    );
+}
+
+
+/* =========================================================
+   SCREEN RESOLUTION
+========================================================= */
+
+let selectedResolution =
+    localStorage.getItem(
+        "erp_dashboard_resolution"
+    ) || "auto";
+
+
+function updateCurrentResolutionText(){
+
+    const el =
+        document.getElementById(
+            "resolutionCurrentText"
+        );
+
+    if(!el)
+        return;
+
+    el.textContent =
+        `Current Screen: ${
+            window.innerWidth
+        } × ${
+            window.innerHeight
+        }`;
+}
+
+
+function applySelectedResolution(value){
+
+    selectedResolution =
+        String(value || "auto");
+
+    const body =
+        document.body;
+
+    if(!body)
+        return;
+
+
+    if(
+        selectedResolution === "auto"
+    ){
+
+        body.style.width = "";
+        body.style.minWidth = "";
+        body.style.maxWidth = "";
+        body.style.zoom = "";
+
+    }else{
+
+        const parts =
+            selectedResolution.split("x");
+
+        const width =
+            parseInt(parts[0],10);
+
+        const height =
+            parseInt(parts[1],10);
+
+
+        if(
+            !isNaN(width) &&
+            !isNaN(height)
+        ){
+
+            const screenWidth =
+                window.innerWidth;
+
+            const screenHeight =
+                window.innerHeight;
+
+
+            const scale =
+                Math.min(
+                    screenWidth / width,
+                    screenHeight / height,
+                    1
+                );
+
+
+            body.style.width =
+                width + "px";
+
+            body.style.minWidth =
+                width + "px";
+
+            body.style.maxWidth =
+                width + "px";
+
+            body.style.zoom =
+                String(scale);
+        }
+    }
+
+
+    updateCurrentResolutionText();
+}
+
+
+function changeScreenResolution(value){
+
+    selectedResolution =
+        String(value || "auto");
+
+
+    localStorage.setItem(
+        "erp_dashboard_resolution",
+        selectedResolution
+    );
+
+
+    applySelectedResolution(
+        selectedResolution
+    );
+
+
+    const menu =
+        document.getElementById(
+            "screenZoomMenu"
+        );
+
+
+    if(menu)
+        menu.style.display =
+            "none";
+}
+
+
+function resetFitToScreen(){
+
+    selectedResolution =
+        "auto";
+
+
+    localStorage.setItem(
+        "erp_dashboard_resolution",
+        "auto"
+    );
+
+
+    const select =
+        document.getElementById(
+            "screenResolutionSelect"
+        );
+
+
+    if(select)
+        select.value =
+            "auto";
+
+
+    applySelectedResolution(
+        "auto"
+    );
+
+
+    const zoomMenu =
+        document.getElementById(
+            "screenZoomMenu"
+        );
+
+
+    if(zoomMenu)
+        zoomMenu.style.display =
+            "none";
+}
+
+
+function toggleScreenZoomMenu(event){
+
+    if(event)
+        event.stopPropagation();
+
+
+    const zoomMenu =
+        document.getElementById(
+            "screenZoomMenu"
+        );
+
+
+    const themeMenu =
+        document.getElementById(
+            "themeDropdownMenu"
+        );
+
+
+    const profileMenu =
+        document.getElementById(
+            "dropdownMenu"
+        );
+
+
+    if(themeMenu)
+        themeMenu.style.display =
+            "none";
+
+
+    if(profileMenu)
+        profileMenu.style.display =
+            "none";
+
+
+    if(zoomMenu){
+
+        zoomMenu.style.display =
+            zoomMenu.style.display === "flex"
+                ? "none"
+                : "flex";
+
+
+        if(
+            zoomMenu.style.display === "flex"
+        ){
+
+            const select =
+                document.getElementById(
+                    "screenResolutionSelect"
+                );
+
+
+            if(select)
+                select.value =
+                    selectedResolution;
+
+
+            updateCurrentResolutionText();
+        }
+    }
+}
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function setTheme(theme){
+
+    localStorage.setItem(
+        "erp_theme_mode",
+        theme
+    );
+
+    const themeBgs = {
+        dark: "#030e12",
+        softgreen: "#042018",
+        darkgreen: "#02160e",
+        sunset: "#1a0f05",
+        royalblue: "#070e27"
+    };
+    if(themeBgs[theme]){
+        document.body.style.backgroundColor = themeBgs[theme];
+    }
+
+    if(
+        typeof window.applySystemTheme ===
+        "function"
+    ){
+
+        try{
+
+            window.applySystemTheme();
+
+        }catch(error){
+
+            console.warn(
+                "Theme apply error:",
+                error
+            );
+        }
+
+    }
+
+    closeAllMenus();
+}
+
+
+function toggleThemeMenu(event){
+
+    if(event)
+        event.stopPropagation();
+
+
+    const theme =
+        document.getElementById(
+            "themeDropdownMenu"
+        );
+
+
+    const profile =
+        document.getElementById(
+            "dropdownMenu"
+        );
+
+
+    const zoomMenu =
+        document.getElementById(
+            "screenZoomMenu"
+        );
+
+
+    if(profile)
+        profile.style.display =
+            "none";
+
+
+    if(zoomMenu)
+        zoomMenu.style.display =
+            "none";
+
+
+    if(theme){
+
+        theme.style.display =
+            theme.style.display === "block"
+                ? "none"
+                : "block";
+    }
+}
+
+
+function toggleMenu(event){
+
+    if(event)
+        event.stopPropagation();
+
+
+    const menu =
+        document.getElementById(
+            "dropdownMenu"
+        );
+
+
+    const theme =
+        document.getElementById(
+            "themeDropdownMenu"
+        );
+
+
+    const zoomMenu =
+        document.getElementById(
+            "screenZoomMenu"
+        );
+
+
+    if(theme)
+        theme.style.display =
+            "none";
+
+
+    if(zoomMenu)
+        zoomMenu.style.display =
+            "none";
+
+
+    if(menu){
+
+        menu.style.display =
+            menu.style.display === "block"
+                ? "none"
+                : "block";
+    }
+}
+
+
+function closeAllMenus(){
+
+    [
+        "dropdownMenu",
+        "themeDropdownMenu",
+        "searchSuggestions",
+        "screenZoomMenu"
+    ]
+    .forEach(id=>{
+
+        const el =
+            document.getElementById(id);
+
+        if(el)
+            el.style.display =
+                "none";
+    });
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+function logoutUser(){
+
+    const modal =
+        document.getElementById(
+            "logoutConfirmModal"
+        );
+
+    if(modal)
+        modal.style.display =
+            "flex";
+}
+
+
+function closeLogoutModal(){
+
+    const modal =
+        document.getElementById(
+            "logoutConfirmModal"
+        );
+
+    if(modal)
+        modal.style.display =
+            "none";
+}
+
+
+async function confirmLogout(){
+
+    closeLogoutModal();
+
+
+    try{
+
+        if(
+            window.supabaseClient &&
+            window.supabaseClient.auth &&
+            typeof window.supabaseClient.auth.signOut ===
+            "function"
+        ){
+
+            await window.supabaseClient.auth.signOut();
+        }
+
+    }catch(error){
+
+        console.warn(
+            "Logout error:",
+            error
+        );
+    }
+
+
+    [
+        "erp_logged_role",
+        "erp_logged_user",
+        "user_role",
+        "username"
+    ]
+    .forEach(key=>{
+
+        localStorage.removeItem(key);
+    });
+
+
+    location.href =
+        "index.html";
+}
+
+
+/* =========================================================
+   SAFE CACHE CLEAR
+========================================================= */
+
+function clearCacheData(){
+
+    if(
+        !confirm(
+            "Clear local cache?\n\nSupabase Cloud data will NOT be deleted."
+        )
+    )
+        return;
+
+
+    const keep = [
+
+        "erp_logged_role",
+        "erp_logged_user",
+        "user_role",
+        "username",
+        "user_permissions",
+        "erp_system_users",
+        "app_heading_name",
+        "company_logo_base64",
+        "company_logo",
+        "logo",
+        "erp_theme_mode",
+        "erp_dashboard_zoom",
+        "erp_dashboard_resolution"
+
+    ];
+
+
+    const remove = [];
+
+
+    for(
+        let i = 0;
+        i < localStorage.length;
+        i++
+    ){
+
+        const key =
+            localStorage.key(i);
+
+
+        if(
+            key &&
+            !keep.includes(key)
+        ){
+
+            remove.push(key);
+        }
+    }
+
+
+    remove.forEach(key=>{
+
+        localStorage.removeItem(key);
+    });
+
+
+    alert(
+        "Local cache cleared successfully! ☁️\nSupabase Cloud data is safe."
+    );
+
+
+    location.reload();
+}
+
+
+/* =========================================================
+   CLOCK
+========================================================= */
+
+function startClock(){
+
+    function update(){
+
+        const now =
+            new Date();
+
+
+        let h =
+            now.getHours();
+
+
+        const m =
+            String(
+                now.getMinutes()
+            ).padStart(2,"0");
+
+
+        const s =
+            String(
+                now.getSeconds()
+            ).padStart(2,"0");
+
+
+        const ampm =
+            h >= 12
+                ? "PM"
+                : "AM";
+
+
+        h =
+            h % 12 || 12;
+
+
+        const clock =
+            document.getElementById(
+                "liveClock"
+            );
+
+
+        if(clock){
+
+            clock.textContent =
+                `${h}:${m}:${s} ${ampm}`;
+        }
+
+
+        const date =
+            document.getElementById(
+                "liveDate"
+            );
+
+
+        if(date){
+
+            date.textContent =
+                now.toLocaleDateString(
+                    "en-GB",
+                    {
+                        day:"2-digit",
+                        month:"short",
+                        year:"numeric"
+                    }
+                );
+        }
+    }
+
+
+    update();
+
+
+    setInterval(
+        update,
+        1000
+    );
+}
+
+
+/* =========================================================
+   USER INFO
+========================================================= */
+
+function loadUserInfo(){
+
+    const role =
+        localStorage.getItem(
+            "erp_logged_role"
+        ) ||
+        localStorage.getItem(
+            "user_role"
+        ) ||
+        "Guest";
+
+
+    const username =
+        localStorage.getItem(
+            "erp_logged_user"
+        ) ||
+        localStorage.getItem(
+            "username"
+        ) ||
+        "Unknown";
+
+
+    const box =
+        document.getElementById(
+            "userInfoBox"
+        );
+
+
+    if(!box)
+        return;
+
+
+    box.innerHTML = `
+        🟢 Role:
+        <span style="color:#38BDF8;">
+            ${escapeHTML(role)}
+        </span>
+        <br>
+        👤 Name:
+        <span style="color:#34D399;">
+            ${escapeHTML(username)}
+        </span>
+    `;
+}
+
+
+/* =========================================================
+   WAIT FOR CLOUD
+========================================================= */
+
+function waitForCloudSync(timeout){
+
+    const maxWait =
+        Number(timeout) || 5000;
+
+
+    return new Promise(resolve=>{
+
+        const start =
+            Date.now();
+
+
+        function check(){
+
+            if(!navigator.onLine){
+                setSyncStatus("⚠️ Offline / Local Data", true);
+                resolve(false);
+                return;
+            }
+
+            if(
+                window.supabaseClient &&
+                window.cloudSyncReady
+            ){
+
+                setSyncStatus(
+                    "☁️ Supabase Connected"
+                );
+
+                resolve(true);
+
+                return;
+            }
+
+
+            if(
+                Date.now() - start >=
+                maxWait
+            ){
+
+                setSyncStatus(
+                    "⚠️ Offline / Local Data",
+                    true
+                );
+
+                resolve(false);
+
+                return;
+            }
+
+
+            setTimeout(
+                check,
+                150
+            );
+        }
+
+
+        check();
+    });
+}
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+window.addEventListener(
+    "DOMContentLoaded",
+    async function(){
+
+        try{
+
+            const savedTheme = localStorage.getItem("erp_theme_mode") || "dark";
+            const themeBgs = {
+                dark: "#030e12",
+                softgreen: "#042018",
+                darkgreen: "#02160e",
+                sunset: "#1a0f05",
+                royalblue: "#070e27"
+            };
+            if(themeBgs[savedTheme]){
+                document.body.style.backgroundColor = themeBgs[savedTheme];
+            }
+
+            const savedResolution =
+                localStorage.getItem(
+                    "erp_dashboard_resolution"
+                ) || "auto";
+
+            selectedResolution =
+                savedResolution;
+
+            const resolutionSelect =
+                document.getElementById(
+                    "screenResolutionSelect"
+                );
+
+            if(resolutionSelect)
+                resolutionSelect.value =
+                    selectedResolution;
+
+            applySelectedResolution(
+                selectedResolution
+            );
+
+
+            loadUserInfo();
+
+
+            loadCompanySettings();
+
+
+            startClock();
+
+
+            await waitForCloudSync(5000);
+
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        300
+                    )
+            );
+
+
+            loadDashboardStats();
+
+
+            if(
+                typeof window.populateDropdowns ===
+                "function"
+            ){
+
+                try{
+
+                    window.populateDropdowns();
+
+                }catch(error){
+
+                    console.warn(
+                        "populateDropdowns error:",
+                        error
+                    );
+                }
+            }
+
+
+            setInterval(
+                loadDashboardStats,
+                10000
+            );
+
+
+        }catch(error){
+
+            console.error(
+                "Dashboard initialization error:",
+                error
+            );
+
+
+            setSyncStatus(
+                "⚠️ Dashboard Error",
+                true
+            );
+
+
+            loadDashboardStats();
+        }
+    }
+);
+
+
+/* =========================================================
+   RESOLUTION RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    function(){
+
+        updateCurrentResolutionText();
+
+        if(
+            selectedResolution !== "auto"
+        ){
+
+            applySelectedResolution(
+                selectedResolution
+            );
+        }
+    }
+);
+
+
+/* =========================================================
+   ONLINE/OFFLINE LISTENERS
+========================================================= */
+
+window.addEventListener('online', () => {
+    setSyncStatus("☁️ Supabase Connected");
+});
+
+window.addEventListener('offline', () => {
+    setSyncStatus("⚠️ Offline / Local Data", true);
+});
+
+
+/* =========================================================
+   OUTSIDE CLICK
+========================================================= */
+
+window.addEventListener(
+    "click",
+    function(event){
+
+        const target =
+            event.target;
+
+
+        if(
+            !target ||
+            !target.closest(
+                ".profile-dropdown-wrapper"
+            )
+        ){
+
+            const menu =
+                document.getElementById(
+                    "dropdownMenu"
+                );
+
+
+            const theme =
+                document.getElementById(
+                    "themeDropdownMenu"
+                );
+
+
+            const zoomMenu =
+                document.getElementById(
+                    "screenZoomMenu"
+                );
+
+
+            if(menu)
+                menu.style.display =
+                    "none";
+
+
+            if(theme)
+                theme.style.display =
+                    "none";
+
+
+            if(zoomMenu)
+                zoomMenu.style.display =
+                    "none";
+        }
+
+
+        if(
+            !target ||
+            !target.closest(
+                ".search-bar-wrapper"
+            )
+        ){
+
+            const search =
+                document.getElementById(
+                    "searchSuggestions"
+                );
+
+
+            if(search)
+                search.style.display =
+                    "none";
+        }
+
+    }
+);
+
+</script>
+<script>
+/* ============================================================
+   TEX FOR EVER OFFLINE PWA SERVICE WORKER (DASHBOARD)
+============================================================ */
+(function () {
+    "use strict";
+
+    if ("serviceWorker" in navigator) {
+        function registerSW() {
+            navigator.serviceWorker.register("./sw.js", { scope: "./" })
+                .then(function (registration) {
+                    console.log("✅ TEX FOR EVER Offline Service Worker Registered on Dashboard:", registration.scope);
+                })
+                .catch(function (error) {
+                    console.warn("⚠️ Service Worker registration failed:", error);
+                });
+        }
+
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+            registerSW();
+        } else {
+            window.addEventListener("load", registerSW);
+        }
+    }
+})();
+</script>
+
+</body>
+</html>

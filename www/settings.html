@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>ERP Master Settings</title>
+<script src="config.js"></script>
+<script src="translator.js"></script>
+<script src="folder.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+
+html,body{width:100%;min-height:100vh;background:#030712;color:#1E2B23;}
+
+body{padding:12px;display:flex;flex-direction:column;align-items:center;}
+
+.container{
+    width:100%;max-width:900px;background:#fff;padding:20px;border-radius:20px;
+    box-shadow:0 10px 35px rgba(30,43,35,.06);border:1px solid rgba(82,110,81,.15);
+    display:flex;flex-direction:column;gap:16px;
+}
+
+.top-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+
+.back-btn{
+    display:inline-flex;align-items:center;gap:5px;color:#fff;text-decoration:none;
+    font-weight:600;font-size:11px;background:#1A2421;padding:8px 16px;border-radius:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.page-title{
+    font-size:18px;margin-bottom:5px;font-weight:800;color:#2F4F38;text-align:center;
+    text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #EAF0EA;padding-bottom:12px;
+}
+
+.form-section{
+    background:#F8FAF8;border:1px solid #E2E8E2;border-radius:14px;
+    padding:22px 15px 15px;position:relative;
+}
+
+.section-badge{
+    position:absolute;top:-12px;left:15px;background:#4A7C59;color:#fff;font-size:10px;
+    font-weight:700;padding:4px 12px;border-radius:12px;letter-spacing:.5px;text-transform:uppercase;
+}
+.section-badge.blue{background:linear-gradient(135deg,#3B82F6,#1D4ED8);}
+.section-badge.amber{background:linear-gradient(135deg,#F59E0B,#D97706);}
+.section-badge.danger{background:linear-gradient(135deg,#EF4444,#DC2626);}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
+
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.form-group label{font-size:11px;font-weight:700;color:#4A554A;}
+
+input,select,textarea{
+    width:100%;padding:12px 14px;border-radius:8px;border:1px solid #D1DED1;background:#fff;
+    color:#1E2B23;font-size:12px;font-weight:600;outline:none;
+}
+textarea{resize:vertical;height:80px;}
+input:focus,select:focus,textarea:focus{border-color:#4A7C59;box-shadow:0 0 0 3px rgba(74,124,89,.15);}
+
+.checkbox-group-container{
+    background:#fff;border:1px solid #D1DED1;border-radius:10px;padding:15px;
+    display:flex;flex-direction:column;gap:10px;margin-top:5px;
+}
+.checkbox-item{
+    display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:#1E2B23;cursor:pointer;
+}
+.checkbox-item input[type=checkbox]{width:16px;height:16px;accent-color:#EF4444;}
+
+.users-table-container{margin-top:15px;background:#fff;border-radius:10px;overflow-x:auto;border:1px solid #D1DED1;}
+.users-table{width:100%;border-collapse:collapse;font-size:11px;text-align:center;}
+.users-table th,.users-table td{padding:10px;border-bottom:1px solid #E2E8E2;color:#1E2B23;}
+.users-table th{background:#EAF0EA;color:#2F4F38;font-weight:700;text-transform:uppercase;}
+
+input[type=file]{padding:8px;background:#F4F7F4;border:1px dashed #4A7C59;cursor:pointer;}
+input[type=file]::file-selector-button{
+    background:#4A7C59;color:#fff;border:0;padding:6px 14px;border-radius:6px;
+    font-weight:600;font-size:10px;cursor:pointer;margin-right:10px;
+}
+
+.preview-box{
+    margin-top:10px;background:#fff;padding:14px;min-height:100px;border-radius:10px;
+    border:1px solid #D1DED1;display:none;align-items:center;justify-content:center;overflow:hidden;
+}
+.preview-box img{display:block;max-width:100%;width:auto;height:auto;max-height:120px;object-fit:contain;border-radius:6px;}
+
+.logo-status{margin-top:7px;font-size:10px;font-weight:600;text-align:center;color:#4A7C59;}
+
+#advancedJsonEditor{
+    background:#1A2421;color:#A7F3D0;font-family:'Courier New',monospace;font-size:11px;
+    padding:15px;border-radius:10px;border:1px solid #064E3B;height:180px;
+}
+
+.btn-action{
+    color:#fff;border:0;padding:12px 16px;border-radius:8px;font-weight:700;cursor:pointer;
+    font-size:11px;transition:.2s;box-shadow:0 4px 10px rgba(30,43,35,.1);text-transform:uppercase;
+    letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:6px;
+    text-decoration:none;text-align:center;
+}
+.btn-action:disabled{opacity:.65;cursor:wait;transform:none!important;}
+.btn-action:hover{transform:translateY(-1px);}
+.btn-primary{background:linear-gradient(135deg,#4A7C59,#2F4F38);}
+.btn-success{background:linear-gradient(135deg,#10B981,#059669);}
+.btn-info{background:linear-gradient(135deg,#3B82F6,#1D4ED8);}
+.btn-warning{background:linear-gradient(135deg,#F59E0B,#D97706);}
+.btn-danger{background:linear-gradient(135deg,#EF4444,#DC2626);}
+
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:5px;}
+
+#settingsStatus{font-size:11px;text-align:center;font-weight:700;color:#2563EB;min-height:16px;}
+.save-progress{display:none;text-align:center;font-size:11px;font-weight:700;color:#2563EB;padding:5px;}
+.exit-section{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+
+@media(max-width:600px){
+    body{padding:8px;}
+    .container{padding:15px;border-radius:15px;}
+    .action-row{grid-template-columns:1fr;}
+    .top-nav{gap:10px;}
+    .page-title{font-size:16px;}
+    .form-section{padding:22px 12px 14px;}
+    .btn-action{min-height:48px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="top-nav">
+    <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+    <span style="font-size:12px;font-weight:700;color:#4A7C59;text-transform:uppercase">⚙️ System Config</span>
+</div>
+
+<h2 class="page-title">ERP Master Settings</h2>
+<div id="settingsStatus"></div>
+<div id="saveProgress" class="save-progress"></div>
+
+<!-- USER ACCESS -->
+<div class="form-section" style="border-left:4px solid #EF4444">
+    <div class="section-badge danger">🔒 User Access Control (All Pages)</div>
+    <div class="form-group">
+        <label style="color:#2F4F38;font-size:12px">Select which pages the 'User' is allowed to access:</label>
+        <div class="checkbox-group-container" style="max-height:280px;overflow-y:auto">
+            <label class="checkbox-item"><input type="checkbox" id="perm_dashboard" checked> dashboard.html (Dashboard)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_design_list" checked> design_list.html (Design List)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_design_master" checked> design_master.html (Design Master)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_despatch" checked> Despatch.html (Despatch)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_dyeing_issue" checked> dyeing_issue.html (Dyeing Issue)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_dyeing_receive" checked> dyeing_receive.html (Dyeing Receive)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_index" checked> index.html (Index / Login)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_invoice" checked> invoice.html (Invoice / Bill)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_kora_yarn" checked> kora_yarn.html (Kora Yarn)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_party_orders" checked> Party_Orders.html (Party Orders)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_process_matrix" checked> process_matrix.html (Process Matrix)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_report" checked> report.html (Report)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_settings" checked> settings.html (Settings)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_warp_entry" checked> warp_entry.html (Warp Entry)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_warping" checked> warping.html (Warping)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_washing" checked> washing.html (Washing)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_weaving" checked> weaving.html (Weaving)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_weft_entry" checked> weft_entry.html (Weft Entry)</label>
+            <label class="checkbox-item"><input type="checkbox" id="perm_yarn_calc" checked> yarn_calc.html (Yarn Calculation)</label>
+        </div>
+    </div>
+    <button type="button" class="btn-action btn-danger" style="width:100%" onclick="updateUserPermissions()">Update User Permissions</button>
+</div>
+
+<!-- USER MANAGEMENT -->
+<div class="form-section" style="border-left:4px solid #3B82F6">
+    <div class="section-badge blue">👤 User Management</div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="newUsername" placeholder="Enter Username...">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="newPassword" placeholder="Enter Password...">
+        </div>
+    </div>
+    <div class="form-group" style="margin-top:10px">
+        <label>Role / Permissions Level</label>
+        <select id="newUserRole">
+            <option value="Standard User">Standard User</option>
+            <option value="Administrator">Administrator</option>
+        </select>
+    </div>
+    <button type="button" class="btn-action btn-info" style="width:100%" onclick="addNewUserAccount()">Create New User Account</button>
+    <div class="users-table-container">
+        <table class="users-table">
+            <thead>
+                <tr><th>Username</th><th>Password</th><th>Role</th><th>Action</th></tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- GENERAL PROFILE -->
+<div class="form-section">
+    <div class="section-badge">General Profile</div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Change Main Heading Name</label>
+            <input type="text" id="set_heading" placeholder="Enter App Heading...">
+        </div>
+        <div class="form-group">
+            <label>Company Logo Upload</label>
+            <input type="file" id="set_logo_file" accept="image/png,image/jpeg,image/webp,image/jpg" onchange="previewLogo(this)">
+            <div id="logoPreviewBox" class="preview-box">
+                <img id="logoImgTag" src="" alt="Company Logo" onerror="handleLogoImageError(this)">
+            </div>
+            <div id="logoStatus" class="logo-status"></div>
+        </div>
+    </div>
+    <div class="form-group" style="margin-top:5px">
+        <label>Default Company Address (For Invoices)</label>
+        <textarea id="set_comp_addr" placeholder="Enter Full Company Address..."></textarea>
+    </div>
+</div>
+
+<!-- DATABASE CONNECTION + CLOUD AUTO-SYNC -->
+<div class="form-section" style="border-left:4px solid #F59E0B">
+    <div class="section-badge amber">☁️ Database Connection & Sync</div>
+
+    <div class="form-group" style="display:flex; flex-direction:row; justify-content:space-between; align-items:center; background:#EAF0EA; padding:12px 14px; border-radius:10px; border:1px solid #4A7C59; margin-bottom:12px;">
+        <div>
+            <label style="color:#2F4F38; font-size:12px; font-weight:800; cursor:pointer;" for="cloudSyncToggle">☁️ Cloud Auto-Sync</label>
+            <p style="font-size:10px; color:#4A554A; margin-top:2px;">ON = Cloud Sync | OFF = 📴 Full Offline (Local data மட்டும்)</p>
+        </div>
+        <input type="checkbox" id="cloudSyncToggle" style="width:24px; height:24px; cursor:pointer; accent-color:#10B981; margin:0;" onchange="saveCloudToggleState()">
+    </div>
+
+    <div class="form-group">
+        <label style="color:#2F4F38;font-size:12px">Database Provider</label>
+        <select id="databaseProviderInput" style="width:100%; padding:10px; border-radius:8px; border:1px solid #4A7C59;">
+            <option value="supabase">Supabase</option>
+            <option value="mysql">MySQL</option>
+            <option value="postgresql">PostgreSQL</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label style="color:#2F4F38;font-size:12px">Server / Project URL</label>
+        <input type="text" id="supabaseUrlInput" placeholder="https://xxxxxx.supabase.co">
+    </div>
+
+    <div class="form-group">
+        <label style="color:#2F4F38;font-size:12px">API Key / Access Key</label>
+        <input type="password" id="supabaseKeyInput" placeholder="Enter API / Access Key">
+    </div>
+
+    <button type="button" class="btn-action btn-warning" style="width:100%" onclick="saveSupabaseConfig()">💾 Save Database Connection</button>
+</div>
+
+<!-- DESIGN ASSETS -->
+<div class="form-section">
+    <div class="section-badge blue">Design Assets</div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Select Design No</label>
+            <select id="settingDesignSelect" onchange="loadDesignBitmap(this.value)">
+                <option value="">Select Design Number</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Upload Bitmap Image for Design</label>
+            <input type="file" id="designBitmapFile" accept="image/png,image/jpeg,image/webp,image/jpg" onchange="previewDesignBitmap(this)">
+            <div id="designBitmapPreviewBox" class="preview-box">
+                <img id="designBitmapImgTag" src="" alt="Design Bitmap" onerror="handleDesignImageError(this)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PARTY DIRECTORY -->
+<div class="form-section">
+    <div class="section-badge amber">Party Directory</div>
+    <div class="form-group">
+        <label>Manage Existing Parties</label>
+        <select id="partyListSelect" onchange="selectPartyToEdit(this.value)">
+            <option value="">Select Party to Edit/View</option>
+        </select>
+    </div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Party Name</label>
+            <input type="text" id="partyNameInput" placeholder="Enter Party Name...">
+        </div>
+        <div class="form-group">
+            <label>Party Address & GST Details</label>
+            <textarea id="partyAddressInput" placeholder="Enter Full Address & GST No..."></textarea>
+        </div>
+    </div>
+    <div class="action-row">
+        <button type="button" class="btn-action btn-success" onclick="savePartyMaster()">💾 Save / Add Party</button>
+        <button type="button" class="btn-action btn-danger" onclick="deletePartyMaster()">🗑️ Delete Party</button>
+    </div>
+</div>
+
+<!-- ADVANCED CONFIG -->
+<div class="form-section">
+    <div class="section-badge danger">Advanced Config</div>
+    <div class="form-group">
+        <label>🛠️ Local Database JSON Editor</label>
+        <textarea id="advancedJsonEditor" placeholder="Click Load JSON Data only when required..."></textarea>
+    </div>
+    <div class="action-row">
+        <button type="button" class="btn-action btn-info" onclick="loadStorageDataToEditor()">📥 Load JSON</button>
+        <button type="button" class="btn-action btn-success" onclick="saveStorageDataFromEditor()">💾 Save JSON</button>
+    </div>
+</div>
+
+<!-- SYSTEM ACTIONS -->
+<div class="exit-section">
+    <button type="button" id="saveAllButton" class="btn-action btn-success" style="width:100%;font-size:13px;padding:14px" onclick="executeSaveAll()">💾 SAVE ALL SETTINGS & EXIT</button>
+    <button type="button" class="btn-action btn-success" style="width:100%;" onclick="selectTexforeverFolder()">📁 SELECT FOLDER</button>
+    <button type="button" class="btn-action btn-info" style="width:100%" onclick="exitToDashboard()">🏠 EXIT TO DASHBOARD</button>
+    <button type="button" class="btn-action btn-info" style="width:100%" onclick="backupAllData()">📥 BACKUP ERP DATA (JSON)</button>
+    <button type="button" class="btn-action btn-success" style="width:100%" onclick="backupAllDataAsExcel()">📊 BACKUP ERP DATA AS EXCEL (CSV)</button>
+    <div class="action-row">
+        <button type="button" class="btn-action btn-warning" onclick="clearLocalCache()">🧹 CLEAR LOCAL CACHE</button>
+        <button type="button" class="btn-action btn-danger" onclick="factoryResetCloud()">⚠️ FACTORY RESET CLOUD</button>
+    </div>
+</div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   TEX FOR EVER SETTINGS
+============================================================ */
+
+let tempLogoData = "";
+let tempDesignBitmapData = "";
+let settingsInitialized = false;
+let saveAllRunning = false;
+
+/* CONSTANTS */
+const LOGO_MAX_WIDTH = 512;
+const LOGO_MAX_HEIGHT = 512;
+const RAW_FILE_SIZE_LIMIT = 8 * 1024 * 1024;
+const DESIGN_MAX_WIDTH = 800;
+const DESIGN_MAX_HEIGHT = 800;
+const MAX_IMAGE_BYTES = 350 * 1024;
+
+/* INDEXEDDB HELPER */
+const DB_NAME = "TexForEverDB";
+const STORE_NAME = "erp_store";
+const DB_VERSION = 1;
+
+function openIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+    });
+}
+
+async function idbGet(key) {
+    try {
+        const db = await openIndexedDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const request = tx.objectStore(STORE_NAME).get(key);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
+async function idbSet(key, value) {
+    try {
+        const db = await openIndexedDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const request = tx.objectStore(STORE_NAME).put(value, key);
+            request.onsuccess = () => resolve(true);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (e) {
+        return false;
+    }
+}
+
+async function idbGetAll() {
+    try {
+        const db = await openIndexedDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, "readonly");
+            const store = tx.objectStore(STORE_NAME);
+            const requestID = store.getAllKeys();
+            const requestVal = store.getAll();
+            tx.oncomplete = () => {
+                const keys = requestID.result;
+                const values = requestVal.result;
+                const result = {};
+                for (let i = 0; i < keys.length; i++) {
+                    result[keys[i]] = values[i];
+                }
+                resolve(result);
+            };
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (e) {
+        return {};
+    }
+}
+
+/* GET ELEMENT */
+function $(id) {
+    return document.getElementById(id);
+}
+
+/* STATUS */
+function status(message, ok = true) {
+    const el = $("settingsStatus");
+    if (!el) return;
+    el.textContent = message;
+    el.style.color = ok ? "#2563EB" : "#DC2626";
+}
+
+/* SAVE PROGRESS */
+function saveProgress(message) {
+    const el = $("saveProgress");
+    if (!el) return;
+    el.style.display = "block";
+    el.textContent = message;
+}
+
+function hideSaveProgress() {
+    const el = $("saveProgress");
+    if (el) el.style.display = "none";
+}
+
+/* SAFE LOAD */
+function safeLoad(key, fallback) {
+    try {
+        if (typeof window.localLoad === "function") {
+            return window.localLoad(key, fallback);
+        }
+        const raw = localStorage.getItem(key);
+        if (raw === null) return fallback;
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            return raw;
+        }
+    } catch (e) {
+        return fallback;
+    }
+}
+
+/* SAFE SAVE */
+function safeSave(key, value) {
+    try {
+        if (typeof window.localSave === "function") {
+            return window.localSave(key, value);
+        }
+        localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+        idbSet(key, value);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+/* CLOUD SAVE */
+async function pageCloudSave(key, value) {
+    try {
+        if (typeof window.supabaseSave === "function") {
+            return await window.supabaseSave(key, value);
+        }
+        return safeSave(key, value);
+    } catch (e) {
+        console.warn("Cloud save fallback:", key, e);
+        safeSave(key, value);
+        return true;
+    }
+}
+
+/* TEXT CLEAN */
+function cleanInputText(v) {
+    return v == null ? "" : String(v).replace(/\\/g, "").replace(/"/g, "").trim();
+}
+
+/* NORMALIZE IMAGE */
+function normalizeImageData(value) {
+    if (!value) return "";
+    let data = String(value).trim();
+    if ((data.startsWith('"') && data.endsWith('"')) || (data.startsWith("'") && data.endsWith("'"))) {
+        data = data.slice(1, -1);
+    }
+    data = data.replace(/\\"/g, '"').trim();
+    if (/^(data:image\/|blob:|https?:\/\/)/i.test(data)) {
+        return data;
+    }
+    return "";
+}
+
+/* IMAGE SIZE */
+function getDataUrlBytes(dataUrl) {
+    try {
+        if (!dataUrl || !dataUrl.startsWith("data:")) return 0;
+        const base64 = dataUrl.split(",")[1] || "";
+        return Math.floor((base64.length * 3) / 4);
+    } catch (e) {
+        return 0;
+    }
+}
+
+/* IMAGE COMPRESSION */
+function compressImageSafe(file, maxW, maxH, callback) {
+
+    if (!file) { callback(""); return; }
+    if (!file.type || !file.type.startsWith("image/")) { callback(""); return; }
+
+    function renderToDataUrl(source, w, h) {
+        try {
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d", { alpha: true });
+            if (!ctx) { callback(""); return; }
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.drawImage(source, 0, 0, w, h);
+
+            let result = "";
+            try {
+                result = canvas.toDataURL("image/webp", 0.78);
+            } catch (e) {
+                result = "";
+            }
+
+            if (!result || !result.startsWith("data:image/")) {
+                try {
+                    const c = document.createElement("canvas");
+                    c.width = w;
+                    c.height = h;
+                    const cctx = c.getContext("2d");
+                    cctx.fillStyle = "#FFFFFF";
+                    cctx.fillRect(0, 0, w, h);
+                    cctx.drawImage(source, 0, 0, w, h);
+                    result = c.toDataURL("image/jpeg", 0.78);
+                } catch (err) {
+                    result = "";
+                }
+            }
+
+            if (getDataUrlBytes(result) > MAX_IMAGE_BYTES) {
+                const qualities = [0.65, 0.55, 0.45, 0.35];
+                for (const q of qualities) {
+                    try {
+                        const smaller = canvas.toDataURL("image/webp", q);
+                        if (getDataUrlBytes(smaller) < getDataUrlBytes(result)) {
+                            result = smaller;
+                        }
+                        if (getDataUrlBytes(result) <= MAX_IMAGE_BYTES) break;
+                    } catch (err) {}
+                }
+            }
+
+            if (getDataUrlBytes(result) > MAX_IMAGE_BYTES) {
+                alert("Image is still too large.\n\nPlease select a smaller image.");
+                callback("");
+                return;
+            }
+
+            if (source && typeof source.close === "function") {
+                try { source.close(); } catch (e) {}
+            }
+
+            callback(normalizeImageData(result));
+
+        } catch (error) {
+            console.error("Image compression:", error);
+            callback("");
+        }
+    }
+
+    function fallbackViaImageElement() {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = function () {
+            URL.revokeObjectURL(objectUrl);
+            let w = img.naturalWidth || img.width;
+            let h = img.naturalHeight || img.height;
+            if (!w || !h) { callback(""); return; }
+            const scale = Math.min(1, maxW / w, maxH / h);
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
+            renderToDataUrl(img, w, h);
+        };
+
+        img.onerror = function () {
+            URL.revokeObjectURL(objectUrl);
+            callback("");
+        };
+
+        img.src = objectUrl;
+    }
+
+    if (typeof createImageBitmap === "function") {
+
+        const SAFE_DECODE_CEILING = 1024;
+
+        /* FIX #2: only resizeWidth is passed, so the aspect ratio is preserved
+           (previously resizeWidth + resizeHeight forced every image to 1024x1024) */
+        createImageBitmap(file, {
+            resizeWidth: SAFE_DECODE_CEILING,
+            resizeQuality: "medium"
+        })
+        .then(function (bitmap) {
+            const w = bitmap.width;
+            const h = bitmap.height;
+            const scale = Math.min(1, maxW / w, maxH / h);
+            const targetW = Math.max(1, Math.round(w * scale));
+            const targetH = Math.max(1, Math.round(h * scale));
+            renderToDataUrl(bitmap, targetW, targetH);
+        })
+        .catch(function () {
+            fallbackViaImageElement();
+        });
+
+        return;
+    }
+
+    fallbackViaImageElement();
+}
+
+/* TOAST */
+function toast(message, ok = true, callback) {
+    try {
+        const old = $("customToast");
+        if (old) old.remove();
+
+        const t = document.createElement("div");
+        t.id = "customToast";
+        t.textContent = (ok ? "✅ " : "⚠️ ") + message;
+
+        Object.assign(t.style, {
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: ok ? "#10B981" : "#DC2626",
+            color: "#fff",
+            padding: "14px 24px",
+            borderRadius: "10px",
+            boxShadow: "0 10px 25px rgba(0,0,0,.3)",
+            zIndex: "999999",
+            fontWeight: "700",
+            fontSize: "14px",
+            textAlign: "center",
+            minWidth: "280px",
+            maxWidth: "calc(100% - 30px)"
+        });
+
+        document.body.appendChild(t);
+
+        setTimeout(function () {
+            if (t && t.parentNode) t.remove();
+            if (callback) callback();
+        }, 1200);
+
+    } catch (e) {
+        console.log("Toast:", message);
+        if (callback) callback();
+    }
+}
+
+/* EXIT TO DASHBOARD */
+function exitToDashboard() {
+    try {
+        window.location.replace("dashboard.html");
+    } catch (e) {
+        location.href = "dashboard.html";
+    }
+}
+
+/* STORED COMPANY LOGO */
+function getStoredCompanyLogo() {
+    const keys = ["company_logo", "company_logo_base64", "logo"];
+    for (const key of keys) {
+        try {
+            const raw = localStorage.getItem(key);
+            const value = normalizeImageData(raw);
+            if (value) return value;
+        } catch (e) {}
+    }
+    return "";
+}
+
+/* SHOW LOGO */
+function showCompanyLogo(src) {
+    const img = $("logoImgTag");
+    const box = $("logoPreviewBox");
+    const st = $("logoStatus");
+
+    if (!img || !box) return;
+
+    const clean = normalizeImageData(src);
+
+    if (!clean) {
+        img.removeAttribute("src");
+        box.style.display = "none";
+        if (st) st.textContent = "";
+        return;
+    }
+
+    img.onload = function () {
+        box.style.display = "flex";
+        if (st) {
+            st.textContent = "✅ Company Logo Ready";
+            st.style.color = "#4A7C59";
+        }
+    };
+
+    img.onerror = function () {
+        box.style.display = "none";
+        if (st) {
+            st.textContent = "⚠️ Saved logo could not be displayed";
+            st.style.color = "#DC2626";
+        }
+    };
+
+    img.src = clean;
+}
+
+function handleLogoImageError(img) {
+    if (img) img.removeAttribute("src");
+    if ($("logoPreviewBox")) $("logoPreviewBox").style.display = "none";
+}
+
+function handleDesignImageError(img) {
+    if (img) img.removeAttribute("src");
+    if ($("designBitmapPreviewBox")) $("designBitmapPreviewBox").style.display = "none";
+}
+
+/* USER PERMISSION */
+function checkUserPermission() {
+    const role = localStorage.getItem("erp_logged_role") || localStorage.getItem("user_role");
+
+    if (role === "Administrator" || role === "Admin") return true;
+
+    const p = safeLoad("user_permissions", {});
+
+    return !(p && (p.settings === false || p["settings.html"] === false));
+}
+
+/* DESIGN DROPDOWN */
+function loadDesignDropdownInSettings() {
+    const pre = safeLoad("pre_design_numbers", []) || [];
+    const masters = safeLoad("design_masters_data", []) || [];
+    const specs = safeLoad("design_specs", {}) || {};
+    const orders = safeLoad("party_orders_data", []) || [];
+
+    const all = new Set();
+
+    (Array.isArray(pre) ? pre : []).forEach(function (d) {
+        const value = typeof d === "object" ? (d.designNo || d.designNumber) : d;
+        if (value) all.add(value);
+    });
+
+    (Array.isArray(masters) ? masters : []).forEach(function (d) {
+        const value = d && (d.name || d.designNo || d.designNumber);
+        if (value) all.add(value);
+    });
+
+    if (specs && typeof specs === "object") {
+        Object.keys(specs).forEach(function (k) { all.add(k); });
+    }
+
+    (Array.isArray(orders) ? orders : []).forEach(function (o) {
+        const value = o && (o.designNumber || o.designNo);
+        if (value) all.add(value);
+    });
+
+    const select = $("settingDesignSelect");
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Select Design Number</option>';
+
+    Array.from(all).filter(Boolean).forEach(function (d) {
+        const opt = document.createElement("option");
+        opt.value = String(d);
+        opt.textContent = String(d);
+        select.appendChild(opt);
+    });
+}
+
+/* LOAD DESIGN BITMAP */
+function loadDesignBitmap(designNo) {
+    const box = $("designBitmapPreviewBox");
+    const img = $("designBitmapImgTag");
+
+    if (!designNo) {
+        tempDesignBitmapData = "";
+        if (box) box.style.display = "none";
+        return;
+    }
+
+    const specs = safeLoad("design_specs", {}) || {};
+    const clean = String(designNo).replace("#", "").trim().toLowerCase();
+
+    const key = Object.keys(specs).find(function (k) {
+        return String(k).replace("#", "").trim().toLowerCase() === clean;
+    }) || designNo;
+
+    const bitmap = normalizeImageData(specs[key] && specs[key].bitmap);
+
+    tempDesignBitmapData = bitmap;
+
+    if (img && bitmap) {
+        img.onload = function () {
+            if (box) box.style.display = "flex";
+        };
+        img.src = bitmap;
+    } else {
+        if (box) box.style.display = "none";
+    }
+}
+
+/* LOGO PREVIEW */
+function previewLogo(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        input.value = "";
+        return;
+    }
+
+    if (file.size > RAW_FILE_SIZE_LIMIT) {
+        alert(
+            "This photo file is too large to process safely on this device (" +
+            (file.size / (1024 * 1024)).toFixed(1) +
+            " MB).\n\nPlease pick a smaller/compressed photo, or use your phone's " +
+            "gallery editor to shrink it before uploading."
+        );
+        input.value = "";
+        return;
+    }
+
+    compressImageSafe(file, LOGO_MAX_WIDTH, LOGO_MAX_HEIGHT, function (b64) {
+
+        if (!b64) {
+            input.value = "";
+            if ($("logoStatus")) {
+                $("logoStatus").textContent = "⚠️ Logo compression failed";
+                $("logoStatus").style.color = "#DC2626";
+            }
+            return;
+        }
+
+        tempLogoData = b64;
+        showCompanyLogo(tempLogoData);
+
+        const size = getDataUrlBytes(tempLogoData);
+
+        if ($("logoStatus")) {
+            $("logoStatus").textContent = "✅ Logo optimized: " + Math.round(size / 1024) + " KB";
+            $("logoStatus").style.color = "#4A7C59";
+        }
+    });
+}
+
+/* DESIGN BITMAP PREVIEW */
+function previewDesignBitmap(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        input.value = "";
+        return;
+    }
+
+    if (file.size > RAW_FILE_SIZE_LIMIT) {
+        alert(
+            "This photo file is too large to process safely on this device (" +
+            (file.size / (1024 * 1024)).toFixed(1) +
+            " MB).\n\nPlease pick a smaller/compressed photo, or use your phone's " +
+            "gallery editor to shrink it before uploading."
+        );
+        input.value = "";
+        return;
+    }
+
+    compressImageSafe(file, DESIGN_MAX_WIDTH, DESIGN_MAX_HEIGHT, function (b64) {
+
+        if (!b64) {
+            input.value = "";
+            return;
+        }
+
+        tempDesignBitmapData = b64;
+
+        const img = $("designBitmapImgTag");
+        const box = $("designBitmapPreviewBox");
+
+        if (img) {
+            img.src = tempDesignBitmapData;
+            if (box) box.style.display = "flex";
+        }
+    });
+}
+
+/* PARTY DATABASE */
+function getPartyDatabase() {
+    const db = safeLoad("party_master_db", {});
+    return (db && typeof db === "object" && !Array.isArray(db)) ? db : {};
+}
+
+/* PARTY DROPDOWN */
+function loadPartyDropdown() {
+    const select = $("partyListSelect");
+    if (!select) return;
+
+    const db = getPartyDatabase();
+
+    select.innerHTML = '<option value="">Select Party to Edit/View</option>';
+
+    Object.keys(db).sort().forEach(function (p) {
+        const o = document.createElement("option");
+        o.value = p;
+        o.textContent = p;
+        select.appendChild(o);
+    });
+}
+
+/* SELECT PARTY */
+function selectPartyToEdit(name) {
+    if (!$("partyNameInput") || !$("partyAddressInput")) return;
+
+    $("partyNameInput").value = name || "";
+    $("partyAddressInput").value = name ? String(getPartyDatabase()[name] || "") : "";
+}
+
+/* SAVE PARTY */
+async function savePartyMaster() {
+    const name = $("partyNameInput").value.trim();
+    const addr = $("partyAddressInput").value.trim();
+
+    if (!name) {
+        toast("Please enter a Party Name!", false);
+        return;
+    }
+
+    const db = getPartyDatabase();
+    db[name] = addr;
+
+    safeSave("party_master_db", db);
+    safeSave("party_master_list", Object.keys(db));
+
+    await pageCloudSave("party_master_db", db);
+    await pageCloudSave("party_master_list", Object.keys(db));
+
+    loadPartyDropdown();
+    $("partyListSelect").value = name;
+
+    toast("Party Details Saved Successfully!");
+}
+
+/* DELETE PARTY */
+async function deletePartyMaster() {
+    const name = $("partyListSelect").value;
+
+    if (!name) {
+        toast("Please select a Party to delete!", false);
+        return;
+    }
+
+    if (!confirm("Are you sure you want to delete party: " + name + "?")) return;
+
+    const db = getPartyDatabase();
+    delete db[name];
+
+    safeSave("party_master_db", db);
+    safeSave("party_master_list", Object.keys(db));
+
+    await pageCloudSave("party_master_db", db);
+    await pageCloudSave("party_master_list", Object.keys(db));
+
+    $("partyNameInput").value = "";
+    $("partyAddressInput").value = "";
+
+    loadPartyDropdown();
+
+    toast("Party deleted successfully!");
+}
+
+/* UPDATE USER PERMISSIONS */
+async function updateUserPermissions() {
+    const keys = [
+        "dashboard", "design_list", "design_master", "despatch", "dyeing_issue",
+        "dyeing_receive", "index", "invoice", "kora_yarn", "party_orders",
+        "process_matrix", "report", "settings", "warp_entry", "warping",
+        "washing", "weaving", "weft_entry", "yarn_calc"
+    ];
+
+    const permissions = {};
+
+    keys.forEach(function (k) {
+        const el = $("perm_" + k);
+        permissions[k] = !!(el && el.checked);
+    });
+
+    safeSave("user_permissions", permissions);
+    await pageCloudSave("user_permissions", permissions);
+
+    toast("All Pages User Permissions Updated!");
+}
+
+/* LOAD USER PERMISSIONS */
+function loadUserPermissions() {
+    const p = safeLoad("user_permissions", {}) || {};
+
+    Object.keys(p).forEach(function (k) {
+        const el = $("perm_" + k);
+        if (el) el.checked = p[k] !== false;
+    });
+}
+
+/* USERS */
+function getUsers() {
+    const users = safeLoad("erp_system_users", []);
+    return Array.isArray(users) ? users : [];
+}
+
+/* USERS TABLE */
+function renderUsersTable() {
+    const tbody = $("usersTableBody");
+    if (!tbody) return;
+
+    const users = getUsers();
+    tbody.innerHTML = "";
+
+    users.forEach(function (u, i) {
+        const tr = document.createElement("tr");
+
+        [u.username, u.password, u.role].forEach(function (v) {
+            const td = document.createElement("td");
+            td.textContent = v == null ? "" : String(v);
+            tr.appendChild(td);
+        });
+
+        const td = document.createElement("td");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn-action btn-danger";
+        b.style.cssText = "padding:4px 8px;font-size:9px";
+        b.textContent = "Del";
+        b.onclick = function () { deleteUserAccount(i); };
+
+        td.appendChild(b);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    });
+}
+
+/* ADD USER */
+async function addNewUserAccount() {
+    const name = $("newUsername").value.trim();
+    const pass = $("newPassword").value.trim();
+    const role = $("newUserRole").value;
+
+    if (!name || !pass) {
+        toast("Please enter Username and Password!", false);
+        return;
+    }
+
+    const users = getUsers();
+
+    if (users.some(function (u) {
+        return String(u.username).toLowerCase() === name.toLowerCase();
+    })) {
+        toast("Username already exists!", false);
+        return;
+    }
+
+    users.push({ username: name, password: pass, role: role });
+
+    safeSave("erp_system_users", users);
+    await pageCloudSave("erp_system_users", users);
+
+    $("newUsername").value = "";
+    $("newPassword").value = "";
+
+    renderUsersTable();
+
+    toast("New User Account Created!");
+}
+
+/* DELETE USER */
+async function deleteUserAccount(index) {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
+    const users = getUsers();
+
+    if (index < 0 || index >= users.length) return;
+
+    users.splice(index, 1);
+
+    safeSave("erp_system_users", users);
+    await pageCloudSave("erp_system_users", users);
+
+    renderUsersTable();
+
+    toast("User deleted successfully!");
+}
+
+/* SAVE COMPANY LOGO */
+async function saveCompanyLogoSafely() {
+    const logo = normalizeImageData(tempLogoData);
+
+    if (!logo) return true;
+
+    const size = getDataUrlBytes(logo);
+
+    if (size > MAX_IMAGE_BYTES) {
+        toast("Logo is too large. Please upload again.", false);
+        return false;
+    }
+
+    saveProgress("Saving company logo...");
+
+    safeSave("company_logo", logo);
+    safeSave("company_logo_base64", logo);
+    safeSave("logo", logo);
+
+    const cloudResult = await pageCloudSave("company_logo", logo);
+
+    if ($("logoStatus")) {
+        $("logoStatus").textContent = "✅ Logo saved • " + Math.round(size / 1024) + " KB";
+        $("logoStatus").style.color = "#4A7C59";
+    }
+
+    return cloudResult !== false;
+}
+
+/* CLOUD TOGGLE */
+function saveCloudToggleState() {
+    const toggle = $("cloudSyncToggle");
+    if (!toggle) return;
+
+    const isChecked = toggle.checked;
+
+    localStorage.setItem("erp_cloud_sync_enabled", isChecked ? "true" : "false");
+
+    if (isChecked) {
+        toast("☁️ Cloud Auto-Sync: ENABLED (Online Mode)");
+    } else {
+        toast("📴 Cloud Auto-Sync: DISABLED (Full Offline Mode)");
+    }
+}
+
+/* DATABASE CONFIG */
+function saveSupabaseConfig() {
+    const provider = $("databaseProviderInput").value;
+    const url = $("supabaseUrlInput").value.trim();
+    const key = $("supabaseKeyInput").value.trim();
+
+    if (!url || !key) {
+        toast("Please enter Server URL and API Key!", false);
+        return;
+    }
+
+    safeSave("database_provider", provider);
+    safeSave("database_server_url", url);
+    safeSave("database_api_key", key);
+
+    if (provider === "supabase") {
+        safeSave("custom_supabase_url", url);
+        safeSave("custom_supabase_key", key);
+    }
+
+    saveCloudToggleState();
+
+    toast("Database Connection & Sync Updated!", true, function () {
+        window.location.reload();
+    });
+}
+
+/* SAVE ALL SETTINGS */
+async function executeSaveAll() {
+
+    if (saveAllRunning) return;
+
+    saveAllRunning = true;
+
+    const button = $("saveAllButton");
+
+    if (button) {
+        button.disabled = true;
+        button.style.opacity = "0.65";
+        button.style.cursor = "wait";
+    }
+
+    try {
+
+        saveProgress("Saving ERP settings...");
+        status("Saving settings...");
+
+        saveCloudToggleState();
+
+        const heading = cleanInputText($("set_heading") ? $("set_heading").value : "");
+        const addr = $("set_comp_addr") ? $("set_comp_addr").value.trim() : "";
+
+        if (heading) safeSave("app_heading_name", heading);
+        if (addr) safeSave("company_full_address", addr);
+
+        if (tempLogoData) {
+            const logo = normalizeImageData(tempLogoData);
+
+            if (!logo) throw new Error("Invalid company logo.");
+            if (getDataUrlBytes(logo) > MAX_IMAGE_BYTES) throw new Error("Company logo is too large.");
+
+            safeSave("company_logo", logo);
+            safeSave("company_logo_base64", logo);
+            safeSave("logo", logo);
+        }
+
+        const select = $("settingDesignSelect");
+
+        if (select && select.value && tempDesignBitmapData) {
+            const specs = safeLoad("design_specs", {}) || {};
+            const clean = String(select.value).replace("#", "").trim().toLowerCase();
+
+            const key = Object.keys(specs).find(function (k) {
+                return String(k).replace("#", "").trim().toLowerCase() === clean;
+            }) || select.value;
+
+            if (!specs[key] || typeof specs[key] !== "object") {
+                specs[key] = {};
+            }
+
+            specs[key].bitmap = normalizeImageData(tempDesignBitmapData);
+
+            safeSave("design_specs", specs);
+        }
+
+        status("✅ Settings saved locally");
+
+        /* FIX #3: wait for the cloud uploads to finish BEFORE redirecting,
+           otherwise the browser can cancel requests still in flight */
+        if (typeof window.isCloudSyncActive === "function" && window.isCloudSyncActive()) {
+
+            saveProgress("☁️ Syncing to cloud...");
+
+            const cloudJobs = [];
+
+            if (heading) cloudJobs.push(pageCloudSave("app_heading_name", heading));
+            if (addr) cloudJobs.push(pageCloudSave("company_full_address", addr));
+
+            if (tempLogoData) {
+                cloudJobs.push(pageCloudSave("company_logo", normalizeImageData(tempLogoData)));
+            }
+
+            if (select && select.value && tempDesignBitmapData) {
+                const specs = safeLoad("design_specs", {}) || {};
+                cloudJobs.push(pageCloudSave("design_specs", specs));
+            }
+
+            const results = await Promise.allSettled(cloudJobs);
+            console.log("TEX FOR EVER cloud sync completed:", results);
+        }
+
+        saveProgress("✅ Saved. Opening Dashboard...");
+
+        window.location.replace("dashboard.html");
+
+    } catch (e) {
+
+        console.error("executeSaveAll ERROR:", e);
+
+        status("❌ Save failed: " + e.message, false);
+        hideSaveProgress();
+
+        alert("Save Error:\n\n" + e.message + "\n\nYour local data has been protected.");
+
+        saveAllRunning = false;
+
+        if (button) {
+            button.disabled = false;
+            button.style.opacity = "1";
+            button.style.cursor = "pointer";
+        }
+
+        return;
+    }
+}
+
+/* CLEAR LOCAL CACHE */
+async function clearLocalCache() {
+    if (typeof window.handleLocalReset === "function") {
+        return await window.handleLocalReset();
+    }
+    alert("❌ Clear Cache function is not available. Please check config.js.");
+}
+
+/* FACTORY RESET CLOUD */
+async function factoryResetCloud() {
+    if (typeof window.handleCloudReset === "function") {
+        return await window.handleCloudReset();
+    }
+    alert("❌ Factory Reset function is not available. Please check config.js.");
+}
+
+/* BACKUP ALL DATA (JSON) - Android + Folder Backup */
+async function backupAllData() {
+    try {
+
+        const idbData = await idbGetAll();
+        const allData = { ...idbData };
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!allData[key]) {
+                allData[key] = localStorage.getItem(key);
+            }
+        }
+
+        const payload = {
+            app: "TEX FOR EVER",
+            version: "Settings Backup with IndexedDB",
+            createdAt: new Date().toISOString(),
+            data: allData
+        };
+
+        const jsonContent = JSON.stringify(payload, null, 2);
+
+        const fileName = "texforever_erp_backup_" + new Date().toISOString().slice(0, 10) + ".json";
+
+        /* ANDROID NATIVE BACKUP */
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TexforeverStorage) {
+
+            const folderUri = localStorage.getItem("texforever_selected_folder_uri");
+
+            if (!folderUri) {
+                alert("Please select backup folder first!");
+                if (typeof selectTexforeverFolder === "function") {
+                    await selectTexforeverFolder();
+                }
+                return;
+            }
+
+            const base64Data = btoa(unescape(encodeURIComponent(jsonContent)));
+
+            const result = await window.Capacitor.Plugins.TexforeverStorage.saveBackup({
+                fileName: fileName,
+                data: base64Data,
+                folderUri: folderUri
+            });
+
+            if (result && result.success) {
+                toast("ERP JSON Backup Saved Successfully!", true);
+                return;
+            }
+
+            throw new Error("Android JSON backup failed");
+        }
+
+        /* NORMAL WEB / DESKTOP BACKUP */
+        const blob = new Blob([jsonContent], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        toast("ERP JSON Backup Download Started!");
+
+    } catch (e) {
+        console.error("Backup Error:", e);
+        alert("Backup Error: " + (e.message || e));
+    }
+}
+
+/* BACKUP ALL DATA AS EXCEL (CSV) - Android + Folder Backup */
+async function backupAllDataAsExcel() {
+    try {
+
+        const idbData = await idbGetAll();
+        const allData = { ...idbData };
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!allData[key]) {
+                allData[key] = localStorage.getItem(key);
+            }
+        }
+
+        let csvContent = "Key,Value\r\n";
+
+        for (const key of Object.keys(allData)) {
+
+            let value = allData[key];
+
+            if (typeof value !== "string") {
+                value = JSON.stringify(value);
+            }
+
+            value = String(value).replace(/"/g, '""').replace(/\r?\n/g, ' ');
+
+            csvContent += '"' + String(key).replace(/"/g, '""') + '","' + value + '"\r\n';
+        }
+
+        const fileName = "texforever_erp_backup_" + new Date().toISOString().slice(0, 10) + ".csv";
+
+        /* ANDROID NATIVE BACKUP */
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TexforeverStorage) {
+
+            const folderUri = localStorage.getItem("texforever_selected_folder_uri");
+
+            if (!folderUri) {
+                toast("Please select backup folder first!", false);
+                if (typeof selecttecforeverFolder === "function") {
+                    selectTexforeverFolder();
+                }
+                return;
+            }
+
+            const base64Data = btoa(unescape(encodeURIComponent(csvContent)));
+
+            const result = await window.Capacitor.Plugins.TexforeverStorage.saveBackup({
+                fileName: fileName,
+                data: base64Data,
+                folderUri: folderUri
+            });
+
+            if (result && result.success) {
+                toast("Excel/CSV Backup Saved Successfully!", true);
+                return;
+            }
+
+            throw new Error("Android backup failed");
+        }
+
+        /* NORMAL WEB / DESKTOP BACKUP */
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        toast("Excel/CSV Backup Download Started!", true);
+
+    } catch (e) {
+        console.error("Excel Backup Error:", e);
+        alert("Excel Backup Error: " + (e.message || e));
+    }
+}
+
+/* LOAD STORAGE JSON */
+async function loadStorageDataToEditor() {
+    const idbData = await idbGetAll();
+    const allData = { ...idbData };
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!allData[key]) {
+            allData[key] = localStorage.getItem(key);
+        }
+    }
+
+    const editor = $("advancedJsonEditor");
+
+    if (editor) {
+        editor.value = JSON.stringify(allData, null, 2);
+    }
+
+    toast("Database Loaded into JSON Editor!");
+}
+
+/* SAVE STORAGE JSON */
+async function saveStorageDataFromEditor() {
+    const editor = $("advancedJsonEditor");
+    if (!editor) return;
+
+    let parsed;
+
+    try {
+        parsed = JSON.parse(editor.value);
+    } catch (e) {
+        alert("Invalid JSON format!\n\nError: " + e.message);
+        return;
+    }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        alert("JSON root must be an object.");
+        return;
+    }
+
+    if (!confirm("⚠️ Overwrite local database with these JSON changes?")) return;
+
+    try {
+
+        for (const key of Object.keys(parsed)) {
+
+            const val = typeof parsed[key] === "string" ? parsed[key] : JSON.stringify(parsed[key]);
+
+            localStorage.setItem(key, val);
+            await idbSet(key, parsed[key]);
+        }
+
+        if (window.supabaseSave && window.isCloudSyncActive && window.isCloudSyncActive()) {
+
+            for (const key of (window.erpCloudKeys || [])) {
+
+                if (!(key in parsed)) continue;
+
+                let value = parsed[key];
+
+                if (typeof value === "string") {
+                    try {
+                        value = JSON.parse(value);
+                    } catch (e) {}
+                }
+
+                await window.supabaseSave(key, value);
+            }
+        }
+
+        toast("Database Updated Successfully!", true, function () {
+            location.reload();
+        });
+
+    } catch (e) {
+        console.error("Database Save Error:", e);
+        alert("Database Save Error: " + e.message);
+    }
+}
+
+/* INITIALISE SETTINGS */
+async function initialiseSettings() {
+
+    if (settingsInitialized) return;
+
+    settingsInitialized = true;
+
+    try {
+        const idbData = await idbGetAll();
+
+        for (const key in idbData) {
+            if (!localStorage.getItem(key)) {
+                localStorage.setItem(
+                    key,
+                    typeof idbData[key] === "string" ? idbData[key] : JSON.stringify(idbData[key])
+                );
+            }
+        }
+    } catch (e) {}
+
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to access settings. ❌");
+        location.href = "dashboard.html";
+        return;
+    }
+
+    /* HEADING */
+    const heading = safeLoad("app_heading_name", "TEX FOR EVER");
+    if ($("set_heading")) {
+        $("set_heading").value = cleanInputText(heading);
+    }
+
+    /* ADDRESS */
+    const address = safeLoad("company_full_address", "TEX FOR EVER ,Salem, Tamil Nadu.");
+    if ($("set_comp_addr")) {
+        $("set_comp_addr").value = String(address || "").replace(/\\n/g, "\n");
+    }
+
+    /* LOGO */
+    tempLogoData = getStoredCompanyLogo();
+    showCompanyLogo(tempLogoData);
+
+    /* CLOUD AUTO-SYNC TOGGLE LOAD */
+    const cloudToggle = $("cloudSyncToggle");
+    if (cloudToggle) {
+        const syncState = localStorage.getItem("erp_cloud_sync_enabled");
+        cloudToggle.checked = (syncState !== "false");
+    }
+
+    /* COMMON DATABASE CONFIG */
+    if ($("databaseProviderInput")) {
+        $("databaseProviderInput").value = safeLoad("database_provider", "supabase");
+    }
+
+    if ($("supabaseUrlInput")) {
+        $("supabaseUrlInput").value = safeLoad("database_server_url", safeLoad("custom_supabase_url", ""));
+    }
+
+    if ($("supabaseKeyInput")) {
+        $("supabaseKeyInput").value = safeLoad("database_api_key", safeLoad("custom_supabase_key", ""));
+    }
+
+    /* OTHER DATA */
+    loadDesignDropdownInSettings();
+    loadPartyDropdown();
+    loadUserPermissions();
+    renderUsersTable();
+
+    status("⚙️ Settings ready");
+}
+
+/* DOM READY */
+window.addEventListener("DOMContentLoaded", function () {
+    initialiseSettings();
+});
+</script>
+</body>
+</html>

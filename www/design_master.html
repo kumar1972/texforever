@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Design Master - TEX FOR EVER </title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        html, body { width: 100%; min-height: 100vh; background: #E2E8F0; color: #0F172A; }
+        body { padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+        
+        .main-card {
+            width: 100%; max-width: 800px; margin: 0; background: #F8FAFC;
+            border-radius: 0 0 20px 20px; padding: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 2px solid #94A3B8; display: flex; flex-direction: column; gap: 10px;
+            position: relative; overflow: hidden;
+        }
+
+        .main-card::before { display: none; }
+
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px; color: #0F172A;
+            text-decoration: none; font-weight: 700; font-size: 12px; 
+            background: linear-gradient(135deg, #CBD5E1, #94A3B8); 
+            padding: 8px 14px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: #0F172A; color: #FFFFFF; transform: translateY(-2px); }
+
+      
+        h2.card-header {
+            font-size: 22px; font-weight: 900; color: #0F172A; text-align: left;
+            position: relative; padding-left: 14px; margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        h2.card-header::before {
+            content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 6px;
+            background: linear-gradient(to bottom, #0F172A, #3B82F6); border-radius: 6px;
+        }
+
+        .form-section { 
+            background: #EEF2FF; 
+            border: 2px solid #CBD5E1; border-radius: 14px; 
+            padding: 14px; margin-bottom: 0; position: relative; 
+            display: flex; flex-direction: column; gap: 10px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; width: 100%; }
+        .form-group { flex: 1; min-width: 110px; display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 11.5px; color: #1E293B; font-weight: 800; white-space: nowrap; letter-spacing: 0.5px; }
+        
+        input, select { 
+            width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #94A3B8; 
+            background: #FFFFFF; color: #0F172A; font-size: 12.5px; font-weight: 800; 
+            transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+        }
+        input:focus, select:focus { border-color: #3B82F6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        
+        .mgmt-tabs-container {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; 
+            background: #E2E8F0; padding: 5px; border-radius: 12px; margin-bottom: 2px;
+            border: 1px solid #CBD5E1;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .mgmt-tab-btn {
+            padding: 8px 4px; font-size: 11px; font-weight: 800; border: none; 
+            background: #FFFFFF; color: #1E293B; border-radius: 8px; 
+            cursor: pointer; text-align: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .mgmt-tab-btn:hover { background: #CBD5E1; transform: translateY(-1px); }
+        
+        .mgmt-tab-btn.active { 
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); 
+            color: #FFFFFF; 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3); 
+            transform: translateY(-1px);
+        }
+        
+        .mgmt-pane { display: none; flex-direction: column; gap: 8px; width: 100%; animation: fadeInTab 0.3s ease-in-out; }
+        .mgmt-pane.active { display: flex; }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .action-btn {
+            padding: 10px 14px; border-radius: 8px; border: none; color: white;
+            font-weight: 800; font-size: 12px; cursor: pointer; text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); }
+        .action-btn:active { transform: translateY(0); }
+
+        .btn-del { background: linear-gradient(135deg, #EF4444, #B91C1C); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        .btn-edit { background: linear-gradient(135deg, #F59E0B, #B45309); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+        .btn-add { background: linear-gradient(135deg, #10B981, #047857); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        .btn-save { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        
+        .btn-photo-save { background: linear-gradient(135deg, #8B5CF6, #5B21B6); width: 100%; margin-top: 5px; padding: 12px; font-size: 12px; box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35); }
+
+        .custom-upload-btn {
+            background: linear-gradient(135deg, #FFFFFF, #E2E8F0); border: 2px dashed #94A3B8; color: #1E293B; padding: 10px;
+            border-radius: 10px; font-weight: 800; font-size: 11.5px; cursor: pointer; text-align: center;
+            display: block; transition: all 0.3s ease; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .custom-upload-btn:hover { background: #CBD5E1; transform: translateY(-1px); }
+
+        #bitmapPreviewBox { background: #FFFFFF; padding: 8px; border-radius: 10px; border: 2px solid #94A3B8; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); margin-top: 2px; text-align: center; display: none; }
+        #bitmapImgTag { width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: zoom-in; }
+
+        .fullscreen-view-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); z-index: 9999999;
+            flex-direction: column; padding: 15px; box-sizing: border-box;
+        }
+        .fullscreen-view-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+            border-bottom: 2px solid #94A3B8; padding-bottom: 10px;
+        }
+        .fullscreen-view-title { color: #0F172A; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        .close-view-modal {
+            background: #EF4444; color: white; border: none; padding: 8px 16px; border-radius: 8px;
+            font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        .fullscreen-view-content {
+            flex: 1; overflow-y: auto; width: 100%; max-width: 1000px; margin: 0 auto;
+        }
+        .excel-table {
+            width: 100%; border-collapse: collapse; background: #FFFFFF; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #CBD5E1; font-size: 12px;
+        }
+        .excel-table th {
+            background: #0F172A; color: #FFFFFF; padding: 12px 10px; text-align: left; font-weight: 900;
+            border-bottom: 2px solid #CBD5E1; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+        }
+        .excel-table td {
+            padding: 12px 10px; color: #0F172A; border-bottom: 1px solid #E2E8F0; font-weight: 600; white-space: nowrap;
+        }
+        .excel-table tr:hover { background: #F1F5F9; }
+        .excel-select-btn {
+            background: linear-gradient(135deg, #0F172A, #334155); color: #FFFFFF; border: none; padding: 6px 14px;
+            border-radius: 6px; font-weight: 800; font-size: 11px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        .excel-select-btn:hover { transform: scale(1.05); }
+
+        .choice-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); z-index: 99999;
+            justify-content: center; align-items: center; padding: 15px;
+        }
+        .choice-content {
+            background: #F8FAFC; width: 100%; max-width: 320px; border-radius: 20px;
+            padding: 24px; display: flex; flex-direction: column; gap: 12px; text-align: center;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #94A3B8;
+        }
+        .choice-content h4 { color: #0F172A; font-weight: 900; }
+        .choice-btn { background: #10B981; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; text-align: center; display: block; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+        .choice-btn.gallery { background: #3B82F6; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .choice-btn.cancel { background: #EF4444; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+
+        .fullscreen-modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: rgba(0, 0, 0, 0.95); z-index: 999999; justify-content: center; align-items: center; padding: 0; margin: 0;
+        }
+        .fullscreen-modal img { 
+            width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; object-fit: contain; border-radius: 0; display: block;
+        }
+        .close-fullscreen { 
+            position: fixed; top: 20px; right: 20px; background: #EF4444; color: white; border: none; 
+            padding: 10px 18px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; z-index: 1000000; box-shadow: 0 6px 18px rgba(239,68,68,0.4); 
+        }
+
+        .hidden-file-input { opacity: 0; position: absolute; z-index: -1; width: 0; height: 0; }
+
+        .weave-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 99999;
+            align-items: center; justify-content: center;
+        }
+        .weave-dropdown-box {
+            background-color: #F8FAFC; color: #0F172A; width: 90%; max-width: 350px;
+            border-radius: 20px; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #94A3B8;
+        }
+        .weave-option {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; font-size: 14px; border-bottom: 1px solid #E2E8F0;
+            cursor: pointer; transition: background 0.2s ease; font-weight: 600;
+        }
+        .weave-option:active { background-color: #F1F5F9; }
+        .weave-option:last-child { border-bottom: none; }
+        .weave-option input[type="radio"] {
+            appearance: none; -webkit-appearance: none; width: 22px; height: 22px;
+            border: 2px solid #94A3B8; border-radius: 50%; outline: none; position: relative; cursor: pointer;
+        }
+        .weave-option input[type="radio"]:checked { border-color: #0F172A; }
+        .weave-option input[type="radio"]:checked::before {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 12px; height: 12px;
+            background: #0F172A; border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <h2 class="card-header">🎨 Design Setup Master</h2>
+    
+    <!-- DATA RECOVERY BUTTON -->
+    <button onclick="forceCloudRestore()" style="background:linear-gradient(135deg, #0F172A, #334155); color:white; padding:12px; border-radius:10px; border:none; font-weight:800; width:100%; margin-bottom:12px; cursor:pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+        ☁️ RECOVER ALL DATA FROM CLOUD
+    </button>
+
+    <div class="form-section">
+        
+        <!-- 🟢 Updated 4 Tabs Menu 🟢 -->
+        <div class="mgmt-tabs-container">
+            <button type="button" class="mgmt-tab-btn active" onclick="switchMgmtTab('newPane', this)">➕ Add New</button>
+            <button type="button" class="mgmt-tab-btn" onclick="switchMgmtTab('editPane', this)">✏ Edit Design</button>
+            <button type="button" class="mgmt-tab-btn" onclick="switchMgmtTab('deletePane', this)">🗑️ Delete Design</button>
+            <button type="button" class="mgmt-tab-btn" onclick="openFullscreenViewModal()">📁 Saved List</button>
+        </div>
+
+        <!-- Tab 1: Entering new design -->
+        <div id="newPane" class="mgmt-pane active">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>New Design Number / Name</label>
+                    <input type="text" id="newDesign" placeholder="Enter New Design No" style="width: 100%;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="action-btn btn-add" id="addBtn" onclick="addDesign()" style="height: 42px;">💾 Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Edit design (Dropdown Listed) -->
+        <div id="editPane" class="mgmt-pane">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Design to Edit</label>
+                    <select id="editDesignSelect" onchange="loadDesignForEdit(this.value)" style="width: 100%;"></select>
+                </div>
+                <!-- Rename Design Input -->
+                <div class="form-group" style="flex: 1;">
+                    <label>Rename Design</label>
+                    <input type="text" id="renameDesignInput" placeholder="New Name / No" style="width: 100%;">
+                </div>
+                <div style="display: flex; gap: 6px; align-items: flex-end;">
+                    <button class="action-btn btn-edit" id="renameBtn" onclick="updateDesignWithConfirm()" style="height: 42px;">💾 Save Edit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Delete design (Dropdown Listed) -->
+        <div id="deletePane" class="mgmt-pane">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Select Design to Delete</label>
+                    <select id="deleteDesignSelect" onchange="loadDesignForEdit(this.value)" style="width: 100%;"></select>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: flex-end;">
+                    <button class="action-btn btn-del" id="delBtn" onclick="deleteDesignWithConfirm()" style="height: 42px;">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+        
+        <hr style="border: 0; height: 1px; background: #CBD5E1; margin: 6px 0;">
+
+        <!-- 🟢 Auto-Populating Form Data 🟢 -->
+        <div class="form-row">
+            <div class="form-group"><label>Warp 1 (Grnd / Base)</label><input type="text" id="warpCount" placeholder=""></div>
+            <div class="form-group"><label>Warp 2 (Top Beam)</label><input type="text" id="warpCount2" placeholder=""></div>
+            <div class="form-group"><label>Weft 1</label><input type="text" id="weftCount" placeholder=""></div>
+            <div class="form-group"><label>Weft 2</label><input type="text" id="weftCount2" placeholder="-"></div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group"><label>Finish Reed</label><input type="number" id="reed" oninput="updateFinishReed()"></div>
+            <div class="form-group"><label>Finish Pick</label><input type="number" id="pick" oninput="updateFinishPick()"></div>
+            <div class="form-group"><label>Finish Width</label><input type="number" id="width" placeholder="" step="0.01" oninput="updateFinishWidth()"></div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex: 100%;">
+                <label>Weave</label>
+                <input type="text" id="weave" readonly placeholder="Select Weave" onclick="openWeaveDropdown()" style="cursor: pointer;">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group"><label>Onloom Reed</label><input type="number" id="onloomReed" oninput="calcOnloomWidth()"></div>
+            <div class="form-group"><label>Onloom Pick</label><input type="number" id="onloomPick"></div>
+            <div class="form-group"><label>Onloom Width</label><input type="number" id="onloomWidth" step="0.01"></div>
+            <div class="form-group"><label>Type of Process</label><input type="text" id="typeOfProcess" placeholder="e.g., Bleaching, Dyeing"></div>
+        </div>
+        
+        <!-- 🟢 Dedicated Photo Upload Section with Design Selector 🟢 -->
+        <div class="form-group" style="margin-top: 8px; padding-top: 10px; border-top: 2px dashed #CBD5E1;">
+            <label style="font-size: 12px; color: #0F172A; margin-bottom: 4px; font-weight: 900;">🖼️ Upload Design Photo</label>
+            <select id="photoDesignSelect" onchange="loadDesignForEdit(this.value)" style="width: 100%; margin-bottom: 10px; border: 2px solid #94A3B8; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 700;"></select>
+            <button type="button" class="custom-upload-btn" onclick="openChoiceModal()">📷 Take Photo / 🖼️ Choose from Gallery</button>
+            
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleFileSelect(this)">
+            <input type="file" id="galleryInput" accept="image/*" class="hidden-file-input" onchange="handleFileSelect(this)">
+        </div>
+
+        <div id="bitmapPreviewBox">
+            <img id="bitmapImgTag" src="" alt="Bitmap" onclick="openFullscreenImage(this.src)">
+        </div>
+        
+        <!-- 🟢 Separate Photo Save Button 🟢 -->
+        <button class="action-btn btn-photo-save" id="photoSaveBtn" onclick="savePhotoOnly()">🖼 Save Photo</button>
+    </div>
+</div>
+
+<!-- Full Screen Excel Spreadsheet Style Modal -->
+<div id="fullscreenViewModal" class="fullscreen-view-modal">
+    <div class="fullscreen-view-header">
+        <div class="fullscreen-view-title" style="color: #FFFFFF;">📁 All Design Entries Details</div>
+        <button class="close-view-modal" onclick="closeFullscreenViewModal()">Close ✕</button>
+    </div>
+    <div class="fullscreen-view-content">
+        <table class="excel-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Design Number</th>
+                    <th>Reed</th>
+                    <th>Pick</th>
+                    <th>Counts</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="excelTableBody">
+                <!-- Populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="choiceModal" class="choice-modal">
+    <div class="choice-content">
+        <h4 style="color: #0F172A; font-weight: 900;">Select Image Source</h4>
+        <label for="cameraInput" class="choice-btn" onclick="setTimeout(closeChoiceModal, 100)">📷 Camera</label>
+        <label for="galleryInput" class="choice-btn gallery" onclick="setTimeout(closeChoiceModal, 100)">🖼️ Gallery</label>
+        <button class="choice-btn cancel" onclick="closeChoiceModal()">Cancel</button>
+    </div>
+</div>
+
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen" onclick="closeFullscreenImage()">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<!-- Custom Weave Dropdown Modal -->
+<div id="weaveOverlay" class="weave-overlay" onclick="closeWeaveDropdown(event)">
+    <div class="weave-dropdown-box">
+        <label class="weave-option"><span>Plain stripe</span><input type="radio" name="weaveSelection" value="Plain stripe"></label>
+        <label class="weave-option"><span>Plain check</span><input type="radio" name="weaveSelection" value="Plain check"></label>
+        <label class="weave-option"><span>Dobby stripe</span><input type="radio" name="weaveSelection" value="Dobby stripe"></label>
+        <label class="weave-option"><span>Dobby check</span><input type="radio" name="weaveSelection" value="Dobby check"></label>
+        <label class="weave-option"><span>Seersucker stripe</span><input type="radio" name="weaveSelection" value="Seersucker stripe"></label>
+        <label class="weave-option"><span>Seersucker check</span><input type="radio" name="weaveSelection" value="Seersucker check"></label>
+        <label class="weave-option"><span>Twill Checks</span><input type="radio" name="weaveSelection" value="Twill Checks"></label>
+        <label class="weave-option"><span>Twill Stripes</span><input type="radio" name="weaveSelection" value="Twill Stripes"></label>
+    </div>
+</div>
+
+<script>
+    let designList = [];
+    let tempBitmapData = "";
+
+    function cleanDesignName(str) { 
+        return str ? str.toString().replace(/#/g, '').replace(/\s+/g, ' ').trim().toLowerCase() : ''; 
+    }
+    
+    function formatDisplayDesignName(str) {
+        if(!str) return '';
+        let s = str.toString().replace(/#/g, '').replace(/\s+/g, ' ').trim();
+        return "# " + s;
+    }
+
+    function checkUserPermission() {
+        let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+        if (userRole !== 'Administrator' && userRole !== 'Admin') {
+            let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+            if (permissions['design_master.html'] === false || permissions['design_master'] === false) { return false; }
+        }
+        return true; 
+    }
+
+    function switchMgmtTab(paneId, btnElem) {
+        document.querySelectorAll('.mgmt-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.mgmt-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(paneId).classList.add('active');
+        btnElem.classList.add('active');
+    }
+
+    function openFullscreenViewModal() {
+        let tbody = document.getElementById('excelTableBody');
+        let html = '';
+
+        if(designList.length === 0) {
+            html = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748B;">No designs found.</td></tr>';
+        } else {
+            let specs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+            let masters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+
+            designList.forEach((dName, idx) => {
+                let key = getSpecKey(dName);
+                let specData = specs[key] || {};
+                let masterData = masters.find(m => cleanDesignName(m.name || m.designNo) === cleanDesignName(dName)) || {};
+                let data = { ...masterData, ...specData };
+
+                let fReed = data.reed || data.finishReed || '-';
+                let fPick = data.pick || data.finishPick || '-';
+                let w1 = data.warp || data.baseBeamCount || data.warp1 || '';
+                let wf1 = data.weft || data.weftCount || data.weft1 || '';
+                let countsStr = w1 && wf1 ? `W: ${w1} | Wf: ${wf1}` : (w1 || wf1 || '-');
+
+                html += `
+                    <tr>
+                        <td style="text-align: center; color: #64748B; font-weight: 700;">${idx + 1}.</td>
+                        <td style="font-weight: 800; color: #0F172A;">${dName}</td>
+                        <td>${fReed}</td>
+                        <td>${fPick}</td>
+                        <td style="color: #334155;">${countsStr}</td>
+                        <td style="text-align: center; display: flex; gap: 4px; justify-content: center;">
+                            <button class="excel-select-btn" onclick="selectDesignFromModal('${dName}')">Select</button>
+                            <button class="excel-select-btn" style="background:#F59E0B; color:#FFF;" onclick="editDesignFromModal('${dName}')">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        tbody.innerHTML = html;
+        document.getElementById('fullscreenViewModal').style.display = 'flex';
+    }
+
+    function closeFullscreenViewModal() {
+        document.getElementById('fullscreenViewModal').style.display = 'none';
+    }
+
+    function selectDesignFromModal(dName) {
+        selectDesign(dName);
+        closeFullscreenViewModal();
+    }
+
+    function editDesignFromModal(dName) {
+        selectDesign(dName);
+        closeFullscreenViewModal();
+        let editTabBtn = document.querySelectorAll('.mgmt-tab-btn')[1];
+        switchMgmtTab('editPane', editTabBtn);
+    }
+    
+    function getSpecKey(designNo) {
+        let specs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+        let clean = cleanDesignName(designNo);
+        let foundKey = Object.keys(specs).find(k => cleanDesignName(k) === clean);
+        return foundKey ? foundKey : designNo;
+    }
+
+    window.forceCloudRestore = async function() {
+        let client = window.supabaseClient || (window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null);
+        
+        if (!client) {
+            alert("Supabase connect ஆகவில்லை! config.js பைலில் உங்களின் URL மற்றும் KEY சரியாக உள்ளதா என சரிபார்க்கவும்."); 
+            return;
+        }
+        try {
+            document.querySelector('button[onclick="forceCloudRestore()"]').innerText = "Downloading Data... ⏳";
+            
+            let { data: masters } = await client.from('design_masters_data').select('*');
+            if (masters && masters.length > 0) {
+                localStorage.setItem('design_masters_data', JSON.stringify(masters));
+                let preList = masters.map(m => m.designNo || m.name);
+                localStorage.setItem('pre_design_numbers', JSON.stringify(preList));
+            }
+            
+            let { data: specs } = await client.from('design_specs').select('*');
+            if (specs && specs.length > 0) {
+                let specObj = {};
+                specs.forEach(s => { specObj[s.designNo || s.id] = s; });
+                localStorage.setItem('design_specs', JSON.stringify(specObj));
+            }
+            
+            let { data: weave } = await client.from('weave_designs').select('*');
+            if (weave && weave.length > 0) localStorage.setItem('weave_designs', JSON.stringify(weave));
+            
+            let { data: warp } = await client.from('warp_entry_data').select('*');
+            if (warp && warp.length > 0) localStorage.setItem('warp_entry_data', JSON.stringify(warp));
+            
+            let { data: weft } = await client.from('weft_entry_data').select('*');
+            if (weft && weft.length > 0) localStorage.setItem('weft_entry_data', JSON.stringify(weft));
+            
+            let { data: dent } = await client.from('denting_drawing_data').select('*');
+            if (dent && dent.length > 0) localStorage.setItem('denting_drawing_data', JSON.stringify(dent));
+
+            alert("✅ Cloud-ல் இருந்து Data முழுமையாக Local-க்கு வந்துவிட்டது! பேஜ் Reload ஆகிறது.");
+            window.location.reload();
+        } catch (e) {
+            alert("Error: " + e.message);
+            document.querySelector('button[onclick="forceCloudRestore()"]').innerText = "☁️ RECOVER ALL DATA FROM CLOUD";
+        }
+    };
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!checkUserPermission()) {
+            alert("Access Denied! You do not have permission to access this page. ❌");
+            window.location.href = "dashboard.html";
+            return;
+        }
+
+        let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+        let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let masters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+        
+        let masterNames = Array.isArray(masters) ? masters.map(d => d.name || d.designNo).filter(Boolean) : [];
+        let allRawNames = [...new Set([...preDesigns, ...masterNames, ...Object.keys(specs)])];
+        
+        let uniqueCleanNames = new Set();
+        designList = [];
+        
+        allRawNames.forEach(rawName => {
+            let cln = cleanDesignName(rawName);
+            let hasSpec = Object.keys(specs).some(k => cleanDesignName(k) === cln);
+            
+            // design_specs-ல் உண்மையிலேயே டேட்டா உள்ளவை மற்றும் மாஸ்டரில் உள்ளவை மட்டும் எடுக்கப்படும்
+            if(cln && (hasSpec || masterNames.some(m => cleanDesignName(m) === cln)) && !uniqueCleanNames.has(cln)) {
+                uniqueCleanNames.add(cln);
+                designList.push(formatDisplayDesignName(rawName)); 
+            }
+        });
+
+        loadDesignDropdowns();
+
+        document.querySelectorAll('input[name="weaveSelection"]').forEach((radioBtn) => {
+            radioBtn.addEventListener("change", function(event) {
+                document.getElementById("weave").value = event.target.value;
+                setTimeout(() => { document.getElementById('weaveOverlay').style.display = 'none'; }, 200);
+            });
+        });
+    });
+
+    window.openWeaveDropdown = function() {
+        document.getElementById('weaveOverlay').style.display = 'flex';
+        let currentValue = document.getElementById('weave').value;
+        document.querySelectorAll('input[name="weaveSelection"]').forEach(radio => {
+            radio.checked = (radio.value === currentValue);
+        });
+    };
+
+    window.closeWeaveDropdown = function(event) {
+        if(event.target.id === 'weaveOverlay') document.getElementById('weaveOverlay').style.display = 'none';
+    };
+
+    function updateFinishReed() {
+        let fReed = parseFloat(document.getElementById('reed').value) || 0;
+        document.getElementById('onloomReed').value = (fReed > 0) ? fReed - 8 : '';
+        calcOnloomWidth();
+    }
+
+    function updateFinishPick() {
+        let fPick = parseFloat(document.getElementById('pick').value) || 0;
+        document.getElementById('onloomPick').value = (fPick > 0) ? fPick - 4 : '';
+    }
+
+    function updateFinishWidth() { calcOnloomWidth(); }
+
+    function calcOnloomWidth() {
+        let fReed = parseFloat(document.getElementById('reed').value) || 0;
+        let fWidth = parseFloat(document.getElementById('width').value) || 0;
+        let oReed = parseFloat(document.getElementById('onloomReed').value) || 0;
+        
+        if(fWidth > 0 && fReed > 0 && oReed > 0) {
+            document.getElementById('onloomWidth').value = ((fReed * fWidth) / oReed).toFixed(2);
+        } else if (fWidth > 0) {
+            document.getElementById('onloomWidth').value = fWidth.toFixed(2);
+        } else {
+            document.getElementById('onloomWidth').value = '';
+        }
+    }
+
+    window.openChoiceModal = () => document.getElementById('choiceModal').style.display = 'flex';
+    window.closeChoiceModal = () => document.getElementById('choiceModal').style.display = 'none';
+
+    window.openFullscreenImage = (src) => { 
+        if(!src || src === '' || src === 'null') return;
+        document.getElementById('fullscreenImg').src = src; 
+        document.getElementById('fullscreenModal').style.display = 'flex'; 
+    };
+    window.closeFullscreenImage = () => { document.getElementById('fullscreenModal').style.display = 'none'; };
+
+    window.handleFileSelect = function(input) {
+        if (input.files && input.files[0]) {
+            compressImage(input.files[0], 800, 800, 0.8, function(compressedB64) {
+                tempBitmapData = compressedB64;
+                document.getElementById('bitmapImgTag').src = tempBitmapData;
+                document.getElementById('bitmapPreviewBox').style.display = 'block';
+                input.value = ''; 
+            });
+        }
+    };
+
+    function compressImage(file, maxWidth, maxHeight, quality, callback) {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            let img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                let canvas = document.createElement('canvas');
+                let width = img.width; let height = img.height;
+                if (width > height && width > maxWidth) { height = Math.round((height *= maxWidth / width)); width = maxWidth; } 
+                else if (height > maxHeight) { width = Math.round((width *= maxHeight / height)); height = maxHeight; }
+                canvas.width = width; canvas.height = height;
+                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg', quality));
+            };
+        };
+    }
+
+    async function syncDesignMasterToCloud(updatedList, updatedSpecs, activeDesignNo, isDelete = false, deleteDesignName = null) {
+        let designMasters = Array.isArray(JSON.parse(localStorage.getItem('design_masters_data'))) ? JSON.parse(localStorage.getItem('design_masters_data')) : [];
+        
+        if (activeDesignNo && !isDelete) {
+            let specKey = getSpecKey(activeDesignNo);
+            let s = updatedSpecs[specKey] || {};
+            let mIndex = designMasters.findIndex(m => cleanDesignName(m.name || m.designNo) === cleanDesignName(activeDesignNo));
+            let masterObj = {
+                name: activeDesignNo, designNo: activeDesignNo,
+                warp1: s.warp || '', baseBeamCount: s.warp || '', warp2: s.warp2 || '', topBeamCount: s.warp2 || '',
+                weftCount: s.weft || '', weft2: s.weft2 || '', width: s.width || '', reed: s.reed || '', pick: s.pick || '',
+                onloomReed: s.onloomReed || '', onloomPick: s.onloomPick || '', onloomWidth: s.onloomWidth || '', 
+                weave: s.weave || '', typeOfProcess: s.typeOfProcess || '', status: s.status || 'running', bitmap: s.bitmap || ''
+            };
+
+            if (mIndex > -1) { designMasters[mIndex] = { ...designMasters[mIndex], ...masterObj }; } 
+            else { designMasters.push(masterObj); }
+        }
+
+        localStorage.setItem('pre_design_numbers', JSON.stringify(updatedList));
+        localStorage.setItem('design_specs', JSON.stringify(updatedSpecs));
+        localStorage.setItem('design_masters_data', JSON.stringify(designMasters));
+        if(activeDesignNo && !isDelete) localStorage.setItem('selected_design_number', activeDesignNo);
+
+        if (window.supabaseSave) {
+            await window.supabaseSave('pre_design_numbers', updatedList);
+            await window.supabaseSave('design_specs', updatedSpecs);
+            await window.supabaseSave('design_masters_data', designMasters);
+        }
+        
+        if (window.supabaseSaveIndividual && activeDesignNo && !isDelete) {
+            let key = getSpecKey(activeDesignNo);
+            await window.supabaseSaveIndividual(key, updatedSpecs[key]);
+        }
+    }
+    
+    window.deleteDesignWithConfirm = async function() {
+        if (!checkUserPermission()) { alert("Access Denied!"); return; }
+        
+        let designNo = document.getElementById('deleteDesignSelect').value;
+        if(!designNo) { alert("Delete செய்ய ஒரு Design-ஐ தேர்ந்தெடுக்கவும்!"); return; }
+        
+        if(confirm("Are you sure you want to delete '" + designNo + "'?")) {
+            document.getElementById('delBtn').innerText = "⏳...";
+            let cleanDelName = cleanDesignName(designNo);
+            
+            designList = designList.filter(x => cleanDesignName(x) !== cleanDelName);
+            
+            let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+            preDesigns = preDesigns.filter(x => cleanDesignName(x) !== cleanDelName);
+            localStorage.setItem('pre_design_numbers', JSON.stringify(preDesigns));
+
+            let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+            let newSpecs = {};
+            for(let k in designSpecs) {
+                if(cleanDesignName(k) !== cleanDelName) newSpecs[k] = designSpecs[k];
+            }
+            localStorage.setItem('design_specs', JSON.stringify(newSpecs));
+
+            let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+            if(Array.isArray(designMasters)) {
+                designMasters = designMasters.filter(m => cleanDesignName(m.name || m.designNo) !== cleanDelName);
+                localStorage.setItem('design_masters_data', JSON.stringify(designMasters));
+            }
+            
+            try {
+                localStorage.removeItem('selected_design_number');
+                let delKey = getSpecKey(designNo) || designNo;
+                if (window.supabaseDelete) {
+                    await window.supabaseDelete('design_specs', delKey);
+                    await window.supabaseDelete('design_masters_data', delKey);
+                    await window.supabaseDelete('weave_designs', delKey); 
+                    await window.supabaseDelete('denting_drawing_data', delKey);
+                    await window.supabaseDelete('warp_entry_data', delKey);
+                    await window.supabaseDelete('weft_entry_data', delKey);
+                }
+                if (window.supabaseSave) {
+                    await window.supabaseSave('pre_design_numbers', preDesigns);
+                    await window.supabaseSave('design_specs', newSpecs);
+                    await window.supabaseSave('design_masters_data', designMasters);
+                }
+                
+                alert("Design Deleted Successfully!");
+                loadDesignDropdowns(); 
+                clearForm();
+                window.location.reload();
+                
+            } catch (err) {
+                alert("Error deleting! " + err.message);
+            } finally { document.getElementById('delBtn').innerText = "🗑️ Delete"; }
+        }
+    };
+
+    window.addDesign = async function() {
+        if (!checkUserPermission()) { alert("Access Denied!"); return; }
+        
+        let designNo = document.getElementById('newDesign').value.trim();
+        if(!designNo) { alert("Design Number type pannu"); return; }
+
+        let cleanDNo = cleanDesignName(designNo);
+        let alreadyExists = designList.some(d => cleanDesignName(d) === cleanDNo);
+
+        if(alreadyExists) {
+            let activeSelected = document.getElementById('editDesignSelect').value;
+            if (activeSelected && cleanDesignName(activeSelected) === cleanDNo) {
+                updateDesign();
+                return;
+            }
+            if(!confirm("இந்த டிசைனுக்கு ஏற்கனவே என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?")) return;
+            designList = designList.filter(d => cleanDesignName(d) !== cleanDNo);
+        }
+
+        document.getElementById('addBtn').innerText = "⏳...";
+        designList.push(formatDisplayDesignName(designNo));
+        
+        let warp1 = document.getElementById('warpCount').value.trim();
+        let warp2 = document.getElementById('warpCount2').value.trim();
+        let weft1 = document.getElementById('weftCount').value.trim();
+        let weft2 = document.getElementById('weftCount2').value.trim();
+
+        let specs = { 
+            warp: warp1, baseBeamCount: warp1, warp2: warp2, topBeamCount: warp2,
+            baseCount: warp2 ? `${warp1}, ${warp2}` : warp1,
+            weft: weft1, weftCount: weft1, weft2: weft2,
+            width: document.getElementById('width').value.trim(), reed: document.getElementById('reed').value.trim(), 
+            pick: document.getElementById('pick').value.trim(), onloomReed: document.getElementById('onloomReed').value.trim(),
+            onloomPick: document.getElementById('onloomPick').value.trim(), onloomWidth: document.getElementById('onloomWidth').value.trim(),
+            weave: document.getElementById('weave').value.trim(), weaveType: document.getElementById('weave').value.trim(), 
+            typeOfProcess: document.getElementById('typeOfProcess').value.trim(), status: 'running', bitmap: tempBitmapData 
+        };
+        
+        let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+        let key = getSpecKey(designNo);
+        designSpecs[key] = specs; 
+        
+        try {
+            await syncDesignMasterToCloud(designList, designSpecs, designNo);
+            tempBitmapData = ""; loadDesignDropdowns(); document.getElementById('newDesign').value = '';
+            if(window.showNotification) window.showNotification("Design Saved Successfully!");
+        } catch (err) {
+            if(window.showNotification) window.showNotification("Error saving: " + err.message, "error");
+        } finally { document.getElementById('addBtn').innerText = "💾 Save"; }
+    };
+
+    window.loadDesignForEdit = function(val) {
+        if(val) {
+            selectDesign(val);
+        }
+    };
+    
+    window.updateDesignWithConfirm = function() {
+        if(confirm("Are you sure you want to save changes to this design? (Yes/No)")) {
+            updateDesign();
+        }
+    }
+
+    window.updateDesign = async function() {
+        if (!checkUserPermission()) { alert("Access Denied!"); return; }
+        
+        let oldDesignNo = document.getElementById('editDesignSelect').value;
+        if(!oldDesignNo) { alert("Select Design First from Edit dropdown!"); return; }
+        
+        let newDesignInputVal = document.getElementById('renameDesignInput').value.trim();
+        let newDesignNo = newDesignInputVal ? formatDisplayDesignName(newDesignInputVal) : oldDesignNo;
+        
+        document.getElementById('renameBtn').innerText = "⏳...";
+        
+        let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+        let oldKey = getSpecKey(oldDesignNo);
+        let existing = designSpecs[oldKey] || {};
+        
+        let finalBitmap = (tempBitmapData && tempBitmapData !== "") ? tempBitmapData : (existing.bitmap || "");
+        let warp1 = document.getElementById('warpCount').value.trim();
+        let warp2 = document.getElementById('warpCount2').value.trim();
+        let weft1 = document.getElementById('weftCount').value.trim();
+        let weft2 = document.getElementById('weftCount2').value.trim();
+
+        let updatedSpecs = { 
+            ...existing, warp: warp1, baseBeamCount: warp1, warp2: warp2, topBeamCount: warp2,
+            baseCount: warp2 ? `${warp1}, ${warp2}` : warp1, weft: weft1, weftCount: weft1, weft2: weft2,
+            width: document.getElementById('width').value.trim(), reed: document.getElementById('reed').value.trim(), 
+            pick: document.getElementById('pick').value.trim(), onloomReed: document.getElementById('onloomReed').value.trim(),
+            onloomPick: document.getElementById('onloomPick').value.trim(), onloomWidth: document.getElementById('onloomWidth').value.trim(),
+            weave: document.getElementById('weave').value.trim(), weaveType: document.getElementById('weave').value.trim(), 
+            typeOfProcess: document.getElementById('typeOfProcess').value.trim(), status: existing.status || 'running', bitmap: finalBitmap 
+        };
+
+        let newKey = getSpecKey(newDesignNo);
+        
+        if (cleanDesignName(oldDesignNo) !== cleanDesignName(newDesignNo)) {
+            delete designSpecs[oldKey];
+            designSpecs[newKey] = updatedSpecs;
+            
+            let cleanOld = cleanDesignName(oldDesignNo);
+            
+            designList = designList.filter(d => cleanDesignName(d) !== cleanOld);
+            
+            let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+            preDesigns = preDesigns.filter(x => cleanDesignName(x) !== cleanOld);
+            let rawNewName = newDesignInputVal.replace(/#/g, '').trim();
+            if (!preDesigns.some(p => cleanDesignName(p) === cleanDesignName(rawNewName))) {
+                preDesigns.push(rawNewName);
+            }
+            localStorage.setItem('pre_design_numbers', JSON.stringify(preDesigns));
+
+            let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+            designMasters = designMasters.filter(m => cleanDesignName(m.name || m.designNo) !== cleanOld);
+            localStorage.setItem('design_masters_data', JSON.stringify(designMasters));
+
+            if (!designList.some(d => cleanDesignName(d) === cleanDesignName(newDesignNo))) {
+                designList.push(newDesignNo);
+            }
+
+            if (window.supabaseDelete) {
+                await window.supabaseDelete('design_specs', oldKey);
+                await window.supabaseDelete('design_masters_data', oldKey);
+            }
+        } else {
+            designSpecs[newKey] = updatedSpecs;
+        }
+        
+        try {
+            await syncDesignMasterToCloud(designList, designSpecs, newDesignNo);
+            tempBitmapData = ""; 
+            localStorage.setItem('selected_design_number', newDesignNo);
+            
+            loadDesignDropdowns();
+            alert("Design Renamed & Saved Successfully!");
+        } catch (err) {
+            alert("Error updating! " + err.message);
+        } finally { document.getElementById('renameBtn').innerText = "💾 Save Edit"; }
+    };
+
+    window.savePhotoOnly = async function() {
+        if (!checkUserPermission()) { alert("Access Denied!"); return; }
+        
+        let designNo = document.getElementById('photoDesignSelect').value;
+        if(!designNo) { alert("Please select a Design from Photo section first!"); return; }
+        
+        if(!tempBitmapData || tempBitmapData === "") {
+            alert("Please take a photo or select from gallery first.");
+            return;
+        }
+
+        document.getElementById('photoSaveBtn').innerText = "Saving...⏳";
+
+        let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+        let key = getSpecKey(designNo);
+        
+        if (!designSpecs[key]) {
+            let masters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+            let masterData = masters.find(m => cleanDesignName(m.name || m.designNo) === cleanDesignName(designNo)) || {};
+            designSpecs[key] = { ...masterData };
+        }
+        
+        designSpecs[key].bitmap = tempBitmapData;
+
+        try {
+            await syncDesignMasterToCloud(designList, designSpecs, designNo);
+            tempBitmapData = ""; 
+            if(window.showNotification) window.showNotification("Photo Uploaded Successfully!");
+            else alert("Photo Uploaded Successfully!");
+        } catch (err) {
+            if(window.showNotification) window.showNotification("Error saving photo: " + err.message, "error");
+        } finally { document.getElementById('photoSaveBtn').innerText = "🖼️ Save Photo"; }
+    };
+
+    function loadDesignDropdowns() {
+        let dropdownIds = ['editDesignSelect', 'deleteDesignSelect', 'photoDesignSelect'];
+        let html = '<option value="">Select Design</option>';
+        designList.forEach(d => { html += `<option value="${d}">${d}</option>`; });
+        
+        dropdownIds.forEach(id => {
+            let el = document.getElementById(id);
+            if(el) el.innerHTML = html;
+        });
+        
+        let active = localStorage.getItem('selected_design_number');
+        if(active && designList.includes(active)) { 
+            dropdownIds.forEach(id => { document.getElementById(id).value = active; });
+            window.selectDesign(active); 
+        } else if(designList.length > 0) { 
+            dropdownIds.forEach(id => { document.getElementById(id).value = designList[0]; });
+            window.selectDesign(designList[0]); 
+        } else { clearForm(); }
+    }
+
+    window.selectDesign = function(val){
+        localStorage.setItem('selected_design_number', val);
+        tempBitmapData = ""; 
+
+        ['editDesignSelect', 'deleteDesignSelect', 'photoDesignSelect'].forEach(id => {
+            let el = document.getElementById(id);
+            if(el && el.value !== val) el.value = val;
+        });
+
+        let renameInput = document.getElementById('renameDesignInput');
+        if(renameInput) renameInput.value = val;
+
+        if(val) {
+            let specs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+            let key = getSpecKey(val);
+            let specData = specs[key] || {};
+
+            let masters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+            let masterData = masters.find(m => cleanDesignName(m.name || m.designNo) === cleanDesignName(val)) || {};
+
+            let data = { ...masterData, ...specData };
+
+            document.getElementById('warpCount').value = data.warp || data.baseBeamCount || data.warp1 || '';
+            document.getElementById('warpCount2').value = data.warp2 || data.topBeamCount || '';
+            document.getElementById('weftCount').value = data.weft || data.weftCount || data.weft1 || '';
+            document.getElementById('weftCount2').value = data.weft2 || '';
+            
+            let fReed = data.reed || data.finishReed || ''; 
+            let fPick = data.pick || data.finishPick || ''; 
+            let fWidth = data.width || data.finishWidth || '';
+            
+            document.getElementById('reed').value = fReed; 
+            document.getElementById('pick').value = fPick; 
+            document.getElementById('width').value = fWidth;
+            
+            let oReed = data.onloomReed || ''; 
+            let oPick = data.onloomPick || ''; 
+            let oWidth = data.onloomWidth || '';
+
+            let parsedFReed = parseFloat(fReed) || 0; 
+            let parsedFPick = parseFloat(fPick) || 0; 
+            let parsedFWidth = parseFloat(fWidth) || 0;
+            
+            if (!oReed && parsedFReed > 0) oReed = parsedFReed - 8;
+            if (!oPick && parsedFPick > 0) oPick = parsedFPick - 4;
+            
+            if (!oWidth && parsedFWidth > 0 && parsedFReed > 0 && parseFloat(oReed) > 0) {
+                oWidth = ((parsedFReed * parsedFWidth) / parseFloat(oReed)).toFixed(2);
+            } else if (!oWidth && parsedFWidth > 0) {
+                oWidth = parsedFWidth.toFixed(2);
+            }
+
+            document.getElementById('onloomReed').value = oReed; 
+            document.getElementById('onloomPick').value = oPick; 
+            document.getElementById('onloomWidth').value = oWidth;
+            
+            document.getElementById('weave').value = data.weave || data.weaveType || '';
+            document.getElementById('typeOfProcess').value = data.typeOfProcess || '';
+            
+            if(data.bitmap && data.bitmap !== "") {
+                document.getElementById('bitmapImgTag').src = data.bitmap;
+                document.getElementById('bitmapPreviewBox').style.display = 'block';
+            } else { 
+                document.getElementById('bitmapImgTag').src = "";
+                document.getElementById('bitmapPreviewBox').style.display = 'none'; 
+            }
+
+            document.querySelectorAll('input[name="weaveSelection"]').forEach(radio => {
+                radio.checked = (radio.value === document.getElementById('weave').value);
+            });
+
+        } else { clearForm(); }
+    };
+
+    function clearForm() {
+        document.querySelectorAll('input[type="text"]:not(#newDesign):not(#renameInput), input[type="number"]').forEach(el => el.value = '');
+        tempBitmapData = ""; 
+        document.getElementById('bitmapImgTag').src = "";
+        document.getElementById('bitmapPreviewBox').style.display = 'none';
+        document.querySelectorAll('input[name="weaveSelection"]').forEach(radio => radio.checked = false);
+    }
+</script>
+</body>
+</html>

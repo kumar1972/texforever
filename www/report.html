@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+    <title>Report - TEX FOR EVER</title>
+
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: #030712;
+            color: #1E2B23;
+            overflow-x: hidden;
+        }
+
+        body {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-card {
+            width: 100%;
+            max-width: 1200px;
+            background: #FFFFFF;
+            border: 1px solid rgba(82, 110, 81, 0.15);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 11px;
+            background: #1A1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            background: #2F4F38;
+            transform: translateY(-2px);
+        }
+
+        #bitmapDisplayContainer {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 35px;
+        }
+
+        #bitmapDisplayContainer img {
+            max-height: 35px;
+            max-width: 90px;
+            border-radius: 6px;
+            border: 1px solid rgba(82, 110, 81, 0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            cursor: zoom-in;
+            object-fit: contain;
+        }
+
+        .card-header {
+            font-size: 14px;
+            font-weight: 800;
+            color: #2F4F38;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #EAF0EA;
+            padding-bottom: 8px;
+        }
+
+        .form-section {
+            background: #F8FAF8;
+            border: 1px solid #E2E8E2;
+            border-radius: 12px;
+            padding: 14px 10px 10px 10px;
+            position: relative;
+            margin-top: 4px;
+        }
+
+        .section-badge {
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: #4A7C59;
+            color: #FFF;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #4A554A;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #D1DED1;
+            background: #FFFFFF;
+            color: #1E2B23;
+            font-size: 11px;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .report-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .tab-btn {
+            background: #F4F7F4;
+            color: #4A554A;
+            border: 1px solid #D1DED1;
+            padding: 10px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4A7C59, #2F4F38);
+            color: #FFFFFF;
+            border-color: transparent;
+            box-shadow: 0 4px 10px rgba(74, 124, 89, 0.3);
+        }
+
+        .special-tab-btn {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            border: none;
+        }
+
+        .invoice-tab-btn {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #3B82F6, #1E3A8A);
+            color: #FFFFFF;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+        }
+
+        .report-header-bar {
+            background: #F8FAF8;
+            padding: 10px 12px;
+            border-radius: 10px 10px 0 0;
+            border: 1px solid #E2E8E2;
+            border-bottom: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .report-header-bar span {
+            font-size: 11px;
+            font-weight: 800;
+            color: #2F4F38;
+            text-transform: uppercase;
+        }
+
+        .header-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .action-btn {
+            flex: 1;
+            color: white;
+            border: none;
+            padding: 8px 6px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(30,43,35,0.1);
+        }
+
+        .preview-btn { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .print-btn { background: linear-gradient(135deg, #10B981, #059669); }
+        .excel-btn { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+        .table-container {
+            width: 100%;
+            border-radius: 0 0 10px 10px;
+            overflow-x: auto;
+            border: 1px solid #E2E8E2;
+            background: #FFFFFF;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #E2E8E2;
+            color: #1E2B23;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #EAF0EA;
+            color: #2F4F38;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 9px;
+            border-bottom: 2px solid #D1DED1;
+        }
+
+        tfoot td {
+            background: #F4F7F4;
+            color: #2F4F38;
+            font-weight: 800;
+            border-top: 2px solid #D1DED1;
+        }
+
+        .badge-stock {
+            background: #ECFDF5;
+            color: #059669;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .badge-pending {
+            background: #FEF2F2;
+            color: #DC2626;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .badge-excess {
+            background: #FFFBEB;
+            color: #D97706;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            padding: 12px;
+        }
+
+        .analytic-card {
+            background: #F8FAF8;
+            border: 1px solid #E2E8E2;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .analytic-card h3 {
+            font-size: 10px;
+            color: #4A554A;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .analytic-card p {
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .progress-wrapper {
+            padding: 0 12px 12px 12px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 18px;
+            background: #E2E8E2;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10B981, #059669);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay-modal, .fullscreen-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 10px 15px;
+            background: #F4F7F4;
+            display: flex;
+            justify-content: flex-end;
+            border-bottom: 1px solid #E2E8E2;
+        }
+
+        .close-btn, .close-fullscreen {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .modal-body {
+            padding: 12px;
+            overflow-y: auto;
+            flex: 1;
+            background: #FAFCFA;
+        }
+
+        .fullscreen-modal img {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 8px;
+            margin: auto;
+        }
+
+        @media (min-width: 600px) {
+            .report-tabs { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+            .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-btns { width: auto; }
+            .action-btn { flex: unset; }
+        }
+
+        /* 🟢 PRINT STYLES FOR CLEAR & FULL WIDTH A4 OUTPUT 🟢 */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+
+            html, body {
+                background: #FFFFFF !important;
+                background-color: #FFFFFF !important;
+                color: #000000 !important;
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .main-card, .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                background: #FFFFFF !important;
+            }
+
+            .top-nav, .report-tabs, .form-section, .header-btns, .close-btn, .no-print {
+                display: none !important;
+            }
+
+            .table-container {
+                border: none !important;
+                overflow: visible !important;
+                width: 100% !important;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 11px !important;
+            }
+
+            th {
+                background: #EAF0EA !important;
+                color: #000000 !important;
+                border: 1px solid #444444 !important;
+                padding: 6px !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            td {
+                border: 1px solid #999999 !important;
+                padding: 6px !important;
+                color: #000000 !important;
+            }
+
+            tfoot td {
+                background: #F4F7F4 !important;
+                color: #000000 !important;
+                border-top: 2px solid #000000 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="main-card">
+
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <div id="bitmapDisplayContainer"></div>
+    </div>
+
+    <h2 class="color: #ffffff; /* Inga unga color-a change pannikalam */" id="pageMainHeader">Management Reports & Analytics</h2>
+
+    <div class="form-section" id="filterSection">
+        <div class="section-badge">Filter Records</div>
+        <div class="form-group">
+            <label for="designFilter">🔍 Select Design Number:</label>
+            <select id="designFilter" onchange="switchTab(currentTab)">
+                <option value="All">All Designs (மொத்தம்)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="report-tabs">
+        <button type="button" class="tab-btn active" id="tab-KoraDyeing" onclick="switchTab('KoraDyeing')">🏭 Kora at Dyeing</button>
+        <button type="button" class="tab-btn" id="tab-KoraStock" onclick="switchTab('KoraStock')">🧵 Kora Stock</button>
+        <button type="button" class="tab-btn" id="tab-Dyeing" onclick="switchTab('Dyeing')">🎨 Dyeing Balance</button>
+        <button type="button" class="tab-btn special-tab-btn" id="tab-Analytics360" onclick="switchTab('Analytics360')">🌟 360° Analytics</button>
+        <button type="button" class="invoice-tab-btn" id="tab-Invoice" onclick="switchTab('Invoice')">📄 Invoice / Financial Report</button>
+    </div>
+
+    <div id="standardReportContainer">
+        <div class="report-header-bar">
+            <span id="reportTitle">📊 Report Data</span>
+            <div class="header-btns" id="exportBtns">
+                <button type="button" class="action-btn preview-btn" onclick="previewReport()">👁️ Preview</button>
+                <button type="button" class="action-btn print-btn" onclick="printReport()">🖨️ Print</button>
+                <button type="button" class="action-btn excel-btn" onclick="exportToExcel()">📥 Excel</button>
+            </div>
+        </div>
+
+        <div class="table-container" id="tableWrapper">
+            <table id="reportTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot id="tableFoot"></tfoot>
+            </table>
+        </div>
+
+        <div id="analyticsWrapper" style="display:none; border:1px solid #E2E8E2; border-top:none; border-radius:0 0 10px 10px; background:#FFFFFF;"></div>
+    </div>
+
+</div>
+
+<div id="previewModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close-btn" onclick="closePreviewModal()">Close ✕</button>
+        </div>
+        <div class="modal-body" id="previewContent"></div>
+    </div>
+</div>
+
+<div id="fullscreenModal" class="fullscreen-modal">
+    <button type="button" class="close-fullscreen" onclick="closeFullscreenImage()" style="align-self: flex-end; margin-bottom: 10px;">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+(function () {
+    "use strict";
+    window.currentTab = "KoraDyeing";
+
+    function safeGetItem(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+    }
+    function safeJSON(key, fallback) {
+        const raw = safeGetItem(key);
+        if (!raw) return fallback;
+        try { return JSON.parse(raw); } catch (e) { return fallback; }
+    }
+    function num(value) {
+        const n = parseFloat(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+    function str(value, fallback = "") {
+        if (value === null || value === undefined) return fallback;
+        return String(value);
+    }
+    function escapeHTML(value) {
+        return str(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+    function el(id) { return document.getElementById(id); }
+
+    function cleanDesignName(value) {
+        return str(value).replace(/#/g, "").trim().toLowerCase();
+    }
+
+    window.openFullscreenImage = function (src) {
+        if (!src || src === "null") return;
+        const modal = el("fullscreenModal"), image = el("fullscreenImg");
+        if (modal && image) { image.src = src; modal.style.display = "flex"; }
+    };
+    window.closeFullscreenImage = function () {
+        const modal = el("fullscreenModal"), image = el("fullscreenImg");
+        if (modal) modal.style.display = "none";
+        if (image) image.src = "";
+    };
+
+    function loadBitmapImage() {
+        const select = el("designFilter"), container = el("bitmapDisplayContainer");
+        if (!select || !container) return;
+        let activeDesign = select.value;
+        if (!activeDesign || activeDesign === "All") activeDesign = safeGetItem("selected_design_number");
+        const designSpecs = safeJSON("design_specs", {});
+        container.innerHTML = "";
+        if (!activeDesign || activeDesign === "All" || !designSpecs) return;
+        const clean = cleanDesignName(activeDesign);
+        const specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === clean);
+        if (!specKey || !designSpecs[specKey].bitmap) return;
+        const image = document.createElement("img");
+        image.src = designSpecs[specKey].bitmap;
+        image.alt = "Bitmap";
+        image.addEventListener("click", () => openFullscreenImage(image.src));
+        container.appendChild(image);
+    }
+
+    function loadDesignFilter() {
+        const allDesigns = new Set();
+        const preDesigns = safeJSON("pre_design_numbers", []);
+        if (Array.isArray(preDesigns)) preDesigns.forEach(d => { if (d) allDesigns.add(str(d).trim()); });
+        const designMasters = safeJSON("design_masters_data", []);
+        if (Array.isArray(designMasters)) designMasters.forEach(d => { if (d && (d.name || d.designNo)) allDesigns.add(str(d.name || d.designNo).trim()); });
+        const designSpecs = safeJSON("design_specs", {});
+        if (designSpecs && typeof designSpecs === "object") Object.keys(designSpecs).forEach(k => { if (k) allDesigns.add(str(k).trim()); });
+        const orders = safeJSON("party_orders_data", []);
+        if (Array.isArray(orders)) orders.forEach(o => { if (o && (o.designNumber || o.designNo)) allDesigns.add(str(o.designNumber || o.designNo).trim()); });
+
+        const select = el("designFilter");
+        if (!select) return;
+        const oldValue = select.value;
+        select.innerHTML = '<option value="All">All Designs (மொத்தம்)</option>';
+        Array.from(allDesigns).filter(Boolean).sort().forEach(design => {
+            const option = document.createElement("option");
+            option.value = design; option.textContent = design;
+            select.appendChild(option);
+        });
+        if (oldValue && Array.from(select.options).some(o => o.value === oldValue)) {
+            select.value = oldValue;
+        } else {
+            const activeDesign = safeGetItem("selected_design_number");
+            if (activeDesign && Array.from(select.options).some(o => o.value === activeDesign)) select.value = activeDesign;
+        }
+        loadBitmapImage();
+    }
+
+    window.switchTab = function (tabName) {
+        const validTabs = ["KoraDyeing", "KoraStock", "Dyeing", "Analytics360", "Invoice"];
+        if (!validTabs.includes(tabName)) tabName = "KoraDyeing";
+        window.currentTab = tabName;
+        loadBitmapImage();
+
+        document.querySelectorAll(".tab-btn, .special-tab-btn, .invoice-tab-btn").forEach(btn => btn.classList.remove("active"));
+        const activeBtn = el("tab-" + tabName);
+        if (activeBtn) activeBtn.classList.add("active");
+
+        const filter = el("designFilter"), title = el("reportTitle"), tableWrap = el("tableWrapper"), analyticsWrap = el("analyticsWrapper"), exportBtns = el("exportBtns"), filterSection = el("filterSection"), head = el("tableHead"), foot = el("tableFoot");
+        if (!filter) return;
+        if (head) head.innerHTML = "";
+        if (foot) foot.innerHTML = "";
+
+        filterSection.style.display = (tabName === "KoraStock") ? "none" : "block";
+        const filterVal = filter.value;
+
+        if (tabName === "Analytics360") {
+            title.innerText = "🌟 360° DESIGN LIFECYCLE";
+            tableWrap.style.display = "none";
+            exportBtns.style.display = "none";
+            analyticsWrap.style.display = "block";
+            render360Analytics(filterVal);
+            return;
+        }
+
+        tableWrap.style.display = "block";
+        exportBtns.style.display = "flex";
+        analyticsWrap.style.display = "none";
+
+        if (tabName === "KoraDyeing") {
+            title.innerText = "🏭 KORA AT DYEING";
+            head.innerHTML = `<tr><th>Date</th><th>Unit</th><th>Design</th><th>Mill</th><th>Count</th><th>Kora (Kg)</th><th>Dye (Kg)</th><th>Bal (Kg)</th><th>Ex (Kg)</th><th>Status</th></tr>`;
+            renderKoraDyeingTable(filterVal);
+        } else if (tabName === "KoraStock") {
+            title.innerText = "🧵 KORA STOCK";
+            head.innerHTML = `<tr><th>Mill / Count</th><th>In (Kg)</th><th>Out (Kg)</th><th>Stock (Kg)</th></tr>`;
+            renderKoraStockTable();
+        } else if (tabName === "Dyeing") {
+            title.innerText = "🎨 DYEING BALANCE";
+            head.innerHTML = `<tr><th>Unit</th><th>Design</th><th>Color</th><th>Sent</th><th>Rcvd</th><th>Bal</th></tr>`;
+            renderDyeingTable(filterVal);
+        } else if (tabName === "Invoice") {
+            title.innerText = "📄 INVOICE REPORT";
+            head.innerHTML = `<tr><th>Inv No</th><th>Date</th><th>Party</th><th>Design</th><th>Qty</th><th>Total (₹)</th></tr>`;
+            renderInvoiceTable(filterVal);
+        }
+    };
+
+    function renderKoraDyeingTable(filterVal) {
+        let koraOutward = safeJSON("kora_outward_records", null) || safeJSON("kora_issue_records", []);
+        const dyeingIssue = safeJSON("dyeing_issue_records", []);
+        const map = new Map();
+
+        function createEntry(dNo, cnt, date) {
+            const key = cleanDesignName(dNo) + "_" + str(cnt).trim().toLowerCase();
+            if (!map.has(key)) map.set(key, { date: date || "-", designNo: dNo || "-", count: cnt || "-", mill: new Set(), unit: new Set(), koraWt: 0, dyeWt: 0 });
+            return map.get(key);
+        }
+
+        koraOutward.forEach(k => {
+            if (!k) return;
+            const entry = createEntry(k.designNo || k.designNumber, k.count, k.date);
+            entry.koraWt += num(k.weight || k.issueWt || k.qty);
+            if (k.millName || k.mill) entry.mill.add(str(k.millName || k.mill).trim());
+            if (k.dyeingName || k.unit) entry.unit.add(str(k.dyeingName || k.unit).trim());
+        });
+
+        dyeingIssue.forEach(d => {
+            if (!d) return;
+            const entry = createEntry(d.designNo || d.designNumber, d.count, d.date);
+            entry.dyeWt += num(d.issueWt || d.orderWt);
+            if (d.millName || d.mill) entry.mill.add(str(d.millName || d.mill).trim());
+            if (d.unit || d.dyeingName) entry.unit.add(str(d.unit || d.dyeingName).trim());
+        });
+
+        const mappedData = Array.from(map.values()).map(item => {
+            const diff = item.koraWt - item.dyeWt;
+            item.balance = diff > 0.005 ? diff : 0;
+            item.excess = diff < -0.005 ? Math.abs(diff) : 0;
+            item.status = item.balance > 0.005 ? "Pending" : (item.excess > 0.005 ? "Excess" : "Settled");
+            item.millStr = item.mill.size ? Array.from(item.mill).join(", ") : "-";
+            item.unitStr = item.unit.size ? Array.from(item.unit).join(", ") : "-";
+            return item;
+        });
+
+        const body = el("tableBody"), foot = el("tableFoot");
+        body.innerHTML = ""; foot.innerHTML = "";
+        const filtered = filterVal !== "All" ? mappedData.filter(i => cleanDesignName(i.designNo) === cleanDesignName(filterVal)) : mappedData;
+
+        if (!filtered.length) {
+            body.innerHTML = `<tr><td colspan="10" class="no-data">No records found.</td></tr>`;
+            return;
+        }
+
+        let totalKora = 0, totalDye = 0;
+        filtered.slice().reverse().forEach(item => {
+            totalKora += item.koraWt; totalDye += item.dyeWt;
+            body.insertAdjacentHTML("beforeend", `
+                <tr>
+                    <td>${escapeHTML(item.date)}</td>
+                    <td><b>${escapeHTML(item.unitStr)}</b></td>
+                    <td><b>${escapeHTML(item.designNo)}</b></td>
+                    <td><b>${escapeHTML(item.millStr)}</b></td>
+                    <td>${escapeHTML(item.count)}</td>
+                    <td>${item.koraWt.toFixed(3)}</td>
+                    <td style="color:#10B981;font-weight:bold;">${item.dyeWt.toFixed(3)}</td>
+                    <td>${item.balance > 0 ? `<span class="badge-pending">${item.balance.toFixed(3)}</span>` : "-"}</td>
+                    <td>${item.excess > 0 ? `<span class="badge-excess">${item.excess.toFixed(3)}</span>` : "-"}</td>
+                    <td><span class="${item.status === 'Settled' ? 'badge-stock' : (item.status === 'Pending' ? 'badge-pending' : 'badge-excess')}">${item.status}</span></td>
+                </tr>
+            `);
+        });
+
+        const net = totalKora - totalDye;
+        foot.innerHTML = `<tr><td colspan="5" style="text-align:right;">Total:</td><td><b>${totalKora.toFixed(3)}</b></td><td style="color:#10B981;"><b>${totalDye.toFixed(3)}</b></td><td><b style="color:#DC2626;">${net > 0.005 ? net.toFixed(3) : '-'}</b></td><td><b style="color:#D97706;">${net < -0.005 ? Math.abs(net).toFixed(3) : '-'}</b></td><td></td></tr>`;
+    }
+
+    function render360Analytics(filterVal) {
+        const wrap = el("analyticsWrapper");
+        if (!wrap) return;
+        if (filterVal === "All") {
+            wrap.innerHTML = `<div class="no-data" style="margin:15px;">ℹ️ தயவுசெய்து மேலே ஒரு குறிப்பிட்ட டிசைனை தேர்ந்தெடுக்கவும்.</div>`;
+            return;
+        }
+        const cleanD = cleanDesignName(filterVal);
+        const orders = safeJSON("party_orders_data", []), koraIssues = safeJSON("kora_outward_records", []) || safeJSON("kora_issue_records", []), weaving = safeJSON("weaving_master_data", []), despatch = safeJSON("despatch_records", []);
+
+        const totalOrderMtrs = orders.filter(o => cleanDesignName(o.designNumber || o.designNo) === cleanD).reduce((s, o) => s + num(o.orderMtr || o.productionMeter || o.meters), 0);
+        const totalKoraKg = koraIssues.filter(k => cleanDesignName(k.designNo || k.designNumber) === cleanD).reduce((s, k) => s + num(k.weight || k.issueWt || k.qty), 0);
+        const totalWovenMtrs = weaving.filter(w => cleanDesignName(w.designNo || w.designNumber) === cleanD).reduce((s, w) => s + num(w.weavingMts || w.meters), 0);
+        const totalDespatchMtrs = despatch.filter(d => cleanDesignName(d.designNo || d.designNumber) === cleanD).reduce((s, d) => s + num(d.mtr || d.meters), 0);
+
+        let progress = totalOrderMtrs > 0 ? (totalDespatchMtrs / totalOrderMtrs) * 100 : 0;
+        progress = Math.max(0, Math.min(100, progress));
+
+        wrap.innerHTML = `
+            <div class="analytics-grid">
+                <div class="analytic-card"><h3>Order Target</h3><p style="color:#3B82F6;">${totalOrderMtrs.toFixed(2)} Mtrs</p></div>
+                <div class="analytic-card"><h3>Kora Outward</h3><p style="color:#D97706;">${totalKoraKg.toFixed(2)} Kg</p></div>
+                <div class="analytic-card"><h3>Fabric Woven</h3><p style="color:#8B5CF6;">${totalWovenMtrs.toFixed(2)} Mtrs</p></div>
+                <div class="analytic-card"><h3>Despatched</h3><p style="color:#10B981;">${totalDespatchMtrs.toFixed(2)} Mtrs</p></div>
+            </div>
+            <div class="progress-wrapper">
+                <h4 style="margin:0 0 4px 0; color:#2F4F38; font-size:12px; text-transform:uppercase;">Completion Lifecycle</h4>
+                <div class="progress-bar-container"><div class="progress-bar-fill" style="width:${progress}%">${progress.toFixed(1)}%</div></div>
+            </div>
+        `;
+    }
+
+    function renderKoraStockTable() {
+        const inwards = safeJSON("kora_stock_records", []) || safeJSON("kora_inward_records", []);
+        const issues = safeJSON("kora_outward_records", []) || safeJSON("kora_issue_records", []);
+        const millMap = new Map();
+
+        inwards.forEach(item => {
+            if (!item) return;
+            const mill = str(item.millName || item.supplier || item.mill || "General").trim();
+            const count = str(item.count || "Unknown").trim();
+            if (!millMap.has(mill)) millMap.set(mill, new Map());
+            if (!millMap.get(mill).has(count)) millMap.get(mill).set(count, { inward: 0, issued: 0 });
+            millMap.get(mill).get(count).inward += num(item.weight || item.qty);
+        });
+
+        issues.forEach(item => {
+            if (!item) return;
+            const mill = str(item.millName || item.supplier || item.mill || "General").trim();
+            const count = str(item.count || "Unknown").trim();
+            if (!millMap.has(mill)) millMap.set(mill, new Map());
+            if (!millMap.get(mill).has(count)) millMap.get(mill).set(count, { inward: 0, issued: 0 });
+            millMap.get(mill).get(count).issued += num(item.weight || item.issueWt || item.qty);
+        });
+
+        const body = el("tableBody"), foot = el("tableFoot");
+        body.innerHTML = ""; foot.innerHTML = "";
+
+        if (millMap.size === 0) {
+            body.innerHTML = `<tr><td colspan="4" class="no-data">No stock records found.</td></tr>`;
+            return;
+        }
+
+        let grandIn = 0, grandOut = 0;
+        Array.from(millMap.keys()).sort().forEach(mill => {
+            body.insertAdjacentHTML("beforeend", `<tr style="background:#EAF0EA;font-weight:bold;"><td colspan="4" style="text-align:left;padding-left:10px;color:#2F4F38;">MILL: ${escapeHTML(mill.toUpperCase())}</td></tr>`);
+            let millIn = 0, millOut = 0;
+            Array.from(millMap.get(mill).keys()).sort().forEach(count => {
+                const data = millMap.get(mill).get(count);
+                const bal = data.inward - data.issued;
+                millIn += data.inward; millOut += data.issued;
+                body.insertAdjacentHTML("beforeend", `<tr><td style="text-align:left;padding-left:20px;">↳ ${escapeHTML(count)}</td><td style="color:#10B981;">${data.inward.toFixed(3)}</td><td style="color:#D97706;">${data.issued.toFixed(3)}</td><td><span class="${bal >= 0 ? 'badge-stock' : 'badge-pending'}">${bal.toFixed(3)}</span></td></tr>`);
+            });
+            grandIn += millIn; grandOut += millOut;
+        });
+
+        const grandBal = grandIn - grandOut;
+        foot.innerHTML = `<tr><td style="text-align:right;">Total:</td><td style="color:#10B981;"><b>${grandIn.toFixed(3)}</b></td><td style="color:#D97706;"><b>${grandOut.toFixed(3)}</b></td><td><span class="${grandBal >= 0 ? 'badge-stock' : 'badge-pending'}"><b>${grandBal.toFixed(3)}</b></span></td></tr>`;
+    }
+
+    function renderDyeingTable(filterVal) {
+        const issues = safeJSON("dyeing_issue_records", []), receives = safeJSON("dyeing_receive_records", []);
+        const unitMap = new Map();
+
+        issues.forEach(iss => {
+            if (!iss) return;
+            const unit = str(iss.unit || iss.dyeingName || "Unknown").trim();
+            const designNo = iss.designNo || iss.designNumber || "-";
+            const color = str(iss.color || "-") + " (" + str(iss.count || "") + ")";
+            const key = unit + "_" + cleanDesignName(designNo) + "_" + color;
+            if (!unitMap.has(key)) unitMap.set(key, { unit, designNo, color, sentWt: 0, rcvdWt: 0 });
+            unitMap.get(key).sentWt += num(iss.issueWt || iss.orderWt);
+        });
+
+        receives.forEach(rcv => {
+            if (!rcv) return;
+            const unit = str(rcv.unit || rcv.dyeingName || "Unknown").trim();
+            const designNo = rcv.designNo || rcv.designNumber || "-";
+            const color = str(rcv.color || "-") + " (" + str(rcv.count || "") + ")";
+            const key = unit + "_" + cleanDesignName(designNo) + "_" + color;
+            if (!unitMap.has(key)) unitMap.set(key, { unit, designNo, color, sentWt: 0, rcvdWt: 0 });
+            unitMap.get(key).rcvdWt += num(rcv.receivedWt || rcv.netWt);
+        });
+
+        const data = Array.from(unitMap.values()).map(item => { item.balance = item.sentWt - item.rcvdWt; return item; });
+        generateBalanceHTML(data, filterVal, ["unit", "designNo", "color", "sentWt", "rcvdWt", "balance"], "balance", "Kg");
+    }
+
+    function renderInvoiceTable(filterVal) {
+        const raw = safeJSON("saved_invoices_data", []);
+        const data = raw.map(item => ({
+            invNo: item.invNo || "-",
+            date: item.invDate || "-",
+            partyName: str(item.partyAddress || "").split("\n")[0].trim() || "-",
+            designNo: item.design || item.designNo || "-",
+            meters: num(item.totalQty),
+            amount: num(item.grandTotal)
+        }));
+        generateBalanceHTML(data, filterVal, ["invNo", "date", "partyName", "designNo", "meters", "amount"], null, "");
+    }
+
+    function generateBalanceHTML(dataList, filterVal, keys, balanceKey, unitStr) {
+        const body = el("tableBody"), foot = el("tableFoot");
+        body.innerHTML = ""; foot.innerHTML = "";
+
+        const filtered = filterVal !== "All" ? dataList.filter(item => cleanDesignName(item.designNo) === cleanDesignName(filterVal)) : dataList;
+        if (!filtered.length) {
+            body.innerHTML = `<tr><td colspan="${keys.length}" class="no-data">No records found.</td></tr>`;
+            return;
+        }
+
+        const totals = {};
+        keys.forEach(k => { totals[k] = 0; });
+
+        filtered.forEach(item => {
+            let rowHtml = "<tr>";
+            keys.forEach(key => {
+                const rawValue = item[key];
+                if (typeof rawValue === "number" && Number.isFinite(rawValue)) totals[key] += rawValue;
+                let display = escapeHTML(rawValue);
+                if (key === "designNo" || key === "mill" || key === "unit") display = `<b>${display}</b>`;
+                else if (key === balanceKey) {
+                    const bal = num(rawValue);
+                    display = bal > 0.05 ? `<span class="badge-pending">${bal.toFixed(3)} ${unitStr}</span>` : (bal < -0.05 ? `<span class="badge-excess">Ex: ${Math.abs(bal).toFixed(3)}</span>` : `<span class="badge-stock">Settled</span>`);
+                } else if (key === "amount") display = `<span style="color:#10B981;font-weight:bold;">₹${num(rawValue).toFixed(2)}</span>`;
+                else if (typeof rawValue === "number") display = num(rawValue).toFixed(3);
+                rowHtml += `<td>${display}</td>`;
+            });
+            body.insertAdjacentHTML("beforeend", rowHtml + "</tr>");
+        });
+
+        const labelCols = keys.findIndex(k => k === "sentWt" || k === "rcvdWt" || k === "meters" || k === "amount" || k === balanceKey);
+        const labelColumns = labelCols > 0 ? labelCols : 2;
+
+        let footHtml = `<tr><td colspan="${labelColumns}" style="text-align:right;">Total:</td>`;
+        for (let i = labelColumns; i < keys.length; i++) {
+            const key = keys[i];
+            if (key === balanceKey) {
+                const bal = totals[key];
+                footHtml += `<td>${bal > 0.05 ? `<span class="badge-pending">${bal.toFixed(3)}</span>` : (bal < -0.05 ? `<span class="badge-excess">Ex: ${Math.abs(bal).toFixed(3)}</span>` : `<span class="badge-stock">Settled</span>`)}</td>`;
+            } else if (key === "amount") {
+                footHtml += `<td style="color:#10B981;"><b>₹${totals[key].toFixed(2)}</b></td>`;
+            } else if (totals[key] !== undefined && totals[key] !== 0) {
+                footHtml += `<td><b>${totals[key].toFixed(3)}</b></td>`;
+            } else {
+                footHtml += `<td>-</td>`;
+            }
+        }
+        foot.innerHTML = footHtml + "</tr>";
+    }
+
+    window.previewReport = function () {
+        const titleEl = el("reportTitle"), filterEl = el("designFilter"), table = el("reportTable"), content = el("previewContent"), modal = el("previewModal");
+        if (!table || !content || !modal) return;
+        content.innerHTML = `<div style="text-align:center;margin-bottom:15px;"><h2 style="color:#2F4F38;font-size:16px;">${escapeHTML(titleEl?.innerText || '')}</h2><p style="font-size:11px;">Filter: ${escapeHTML(filterEl?.value || '')}</p></div>${table.outerHTML}`;
+        modal.style.display = "flex";
+    };
+
+    window.closePreviewModal = function () { const m = el("previewModal"); if (m) m.style.display = "none"; };
+    window.printReport = function () { previewReport(); setTimeout(() => window.print(), 300); };
+
+    window.exportToExcel = function () {
+        const table = el("reportTable");
+        if (!table) return;
+        const blob = new Blob(["\ufeff", table.outerHTML], { type: "application/vnd.ms-excel;charset=utf-8;" });
+        const url = URL.createObjectURL(blob), link = document.createElement("a");
+        link.href = url; link.download = (window.currentTab || "Report") + ".xls";
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    };
+
+    function initializeReport() {
+        loadDesignFilter();
+        const params = new URLSearchParams(window.location.search);
+        const initialTab = params.get("tab") || "KoraDyeing";
+        window.currentTab = initialTab;
+        switchTab(initialTab);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeReport);
+    } else {
+        initializeReport();
+    }
+})();
+</script>
+
+</body>
+</html>

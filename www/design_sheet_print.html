@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+      maximum-scale=1.0, user-scalable=no">
+
+<title> Design Sheet Print - TEX FOR EVER </title>
+
+<script src="config.js"></script>
+<script src="translator.js"></script>
+<script src="printer.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:'Poppins',sans-serif;
+}
+
+html,
+body{
+    width:100%;
+    min-height:100%;
+    background:#ffffff !important;
+    color:#1E2B23;
+}
+
+body{
+    padding:8px;
+}
+
+/* =========================================================
+   MAIN CARD
+========================================================= */
+
+.main-card{
+    width:100%;
+    max-width:980px;
+    margin:0 auto;
+    background:#ffffff !important;
+    border:1px solid #e2e8e2;
+    border-radius:12px;
+    padding:10px;
+    box-shadow:0 4px 18px rgba(0,0,0,.06);
+}
+
+/* =========================================================
+   TOP NAV
+========================================================= */
+
+.top-nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+}
+
+.back-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    color:#ffffff;
+    text-decoration:none;
+    font-weight:600;
+    font-size:11px;
+    background:#1A2421;
+    padding:7px 14px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2px solid #10B981;
+    padding-bottom:6px;
+    margin-bottom:7px;
+}
+
+.header-bar h3{
+    font-size:13px;
+    color:#DAA520;
+    font-weight:700;
+}
+
+.print-btn{
+    border:0;
+    color:white;
+    padding:7px 14px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    background:linear-gradient(135deg,#10B981,#059669);
+}
+
+.close-btn{
+    background:#FEE2E2;
+    color:#DC2626;
+    border:0;
+    padding:7px 12px;
+    border-radius:7px;
+    font-size:10px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.top-form-row-single{
+    background:#F8FAF8 !important;
+    border:1px solid #E2E8E2;
+    border-radius:7px;
+    padding:7px 10px;
+    margin-bottom:7px;
+}
+
+.form-group label{
+    display:block;
+    font-size:10px;
+    font-weight:600;
+    color:#4A554A;
+    margin-bottom:4px;
+}
+
+select{
+    width:100%;
+    padding:7px 10px;
+    border-radius:6px;
+    border:1px solid #D1DED1;
+    background:#ffffff !important;
+    color:#1E2B23 !important;
+    font-size:11px;
+    font-weight:600;
+    outline:none;
+}
+
+/* =========================================================
+   COMPANY HEADER
+========================================================= */
+
+.company-header{
+    text-align:center;
+    border-bottom:2px solid #4A7C59;
+    padding-bottom:5px;
+    margin-bottom:7px;
+}
+
+.company-header h1{
+    font-size:16px;
+    color:#DAA520;
+    font-weight:700;
+    text-transform:uppercase;
+}
+
+.company-header p{
+    font-size:9px;
+    color:#DAA520;
+    white-space:pre-line;
+}
+
+/* =========================================================
+   DESIGN INFO
+========================================================= */
+
+.design-info-box,
+.weft-info-box{
+    background:#FFF8E1 !important;
+    border:2px solid #4A7C59;
+    border-radius:6px;
+    padding:9px 10px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+    font-size:12px;
+    font-weight:700;
+    color:#1F2937 !important;
+    margin-bottom:6px;
+}
+
+.design-info-box div span,
+.weft-info-box div span{
+    color:#1B4D2E !important;
+    font-weight:800;
+}
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.section-title{
+    font-size:10px;
+    color:#ffffff !important;
+    background:#4A7C59 !important;
+    padding:5px 8px;
+    border-radius:6px;
+    display:inline-block;
+    margin-top:3px;
+    margin-bottom:4px;
+    font-weight:700;
+}
+
+/* =========================================================
+   TABLE (NO ROW GRID LINES)
+========================================================= */
+
+.dual-table-wrapper{
+    display:flex;
+    gap:2%;
+    width:100%;
+    flex-wrap:wrap;
+    margin-bottom: 10px;
+}
+
+.single-table-col{
+    flex:0 0 49%;
+    max-width:49%;
+}
+
+.table-container{
+    width:100%;
+    overflow:hidden;
+    background:#ffffff !important;
+    margin-bottom:4px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:11px;
+    text-align:center;
+    background:#ffffff !important;
+}
+
+th,
+td{
+    padding:6px 4px;
+    color:#1E2B23 !important;
+    border:none !important; 
+    background:#ffffff !important;
+}
+
+th{
+    background:#EAF0EA !important;
+    color:#2F4F38 !important;
+    font-weight:700;
+    font-size:10px;
+    border-top:2px solid #4A7C59 !important;
+    border-bottom:2px solid #4A7C59 !important; 
+}
+
+.col-no{
+    width:10%;
+    text-align:center;
+}
+
+.col-count{
+    width:17%;
+    text-align:center;
+}
+
+.col-color{
+    width:35%;
+    text-align:left;
+    padding-left:6px;
+}
+
+.col-val{
+    width:18%;
+    text-align:center;
+    font-weight:700;
+}
+
+.col-set{
+    width:20%;
+    text-align:center;
+    font-weight:700;
+    white-space:nowrap;
+    border-left:1px dashed #CBD5CB !important;
+}
+
+.dash-sep{
+    color:#889988;
+    font-size:7px;
+    letter-spacing:1px;
+}
+
+/* DOTTED LEADER CSS */
+.color-flex {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+}
+.color-text {
+    flex-shrink: 0;
+}
+.dot-leader {
+    flex-grow: 1;
+    border-bottom: 2px dotted #888;
+    margin-left: 6px;
+    margin-bottom: 4px;
+}
+
+/* =========================================================
+   SUMMARY (SINGLE CLEAN BOX)
+========================================================= */
+
+.summary-box{
+    background:#F4F7F4 !important;
+    border:1px dashed #CBD5CB;
+    border-radius:6px;
+    padding:6px 8px;
+    text-align:center;
+    font-size:10px;
+    font-weight:600;
+    color:#2F4F38 !important;
+    margin-bottom:8px;
+    margin-top:5px;
+    line-height:1.6;
+}
+
+.summary-box .line-1{
+    border-bottom:1px dashed #CBD5CB;
+    padding-bottom:2px;
+    margin-bottom:2px;
+}
+
+.summary-box b{
+    color:#1E2B23 !important;
+}
+
+/* Table Footer for Exact Column Alignment */
+.total-label-cell {
+    text-align: right;
+    font-weight: 700;
+    padding-right: 8px;
+    border-top: 1px dashed #CBD5CB !important;
+}
+
+.total-val-cell {
+    text-align: center;
+    font-weight: 700;
+    border-top: 1px dashed #CBD5CB !important;
+}
+
+.empty-footer-cell {
+    border-top: 1px dashed #CBD5CB !important;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px){
+
+    body{
+        padding:5px;
+        background:#ffffff !important;
+    }
+
+    .main-card{
+        padding:7px;
+        border-radius:8px;
+        box-shadow:none;
+    }
+
+    .header-bar h3{
+        font-size:11px;
+    }
+
+    .design-info-box,
+    .weft-info-box{
+        grid-template-columns:repeat(4,1fr);
+        font-size:10px;
+        gap:4px;
+        padding:7px;
+    }
+
+    .section-title{
+        font-size:8px;
+        padding:4px 6px;
+    }
+
+    table{
+        font-size:10px;
+    }
+
+    th{
+        font-size:9px;
+    }
+
+    th,
+    td{
+        padding:6px 3px;
+    }
+
+    .dash-sep{
+        font-size:5px;
+        letter-spacing:0;
+    }
+
+    .summary-box{
+        font-size:9px;
+        padding:5px;
+    }
+}
+
+/* =========================================================
+   PRINT CONFIGURATION
+========================================================= */
+
+@media print{
+
+    @page{
+        size:A4 portrait;
+        margin:5mm;
+    }
+
+    html,
+    body{
+        width:100% !important;
+        min-height:0 !important;
+        height:auto !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:#ffffff !important;
+        color:#000000 !important;
+    }
+
+    body{
+        display:block !important;
+    }
+
+    body *{
+        visibility:hidden !important;
+    }
+
+    .main-card,
+    .main-card *{
+        visibility:visible !important;
+    }
+
+    .main-card{
+        position:absolute !important;
+        inset:0 !important;
+        width:100% !important;
+        height:auto !important;
+        background:#ffffff !important;
+        border:none !important;
+        box-shadow:none !important;
+        padding:0 !important;
+        margin:0 !important;
+    }
+
+    .hide-on-print, .no-print{
+        display:none !important;
+    }
+
+    .company-header{
+        display:block !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 2px !important;
+    }
+
+    #warpDesignTitle,
+    #weftDesignTitle {
+        display: block !important;
+        visibility: visible !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        color: #000000 !important;
+        margin-bottom: 3px !important;
+    }
+    
+    .design-info-box, .weft-info-box{
+        margin-bottom: 4px !important;
+        padding: 4px !important;
+        background:#ffffff !important;
+        border:1px solid #000000 !important;
+        color:#000000 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .design-info-box div span, .weft-info-box div span{
+        color:#000000 !important;
+    }
+    
+    .section-title{
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+    .dual-table-wrapper{
+        display:block !important; 
+        width:100% !important;
+        clear:both !important;
+        overflow:hidden !important;
+        page-break-inside:avoid !important; 
+        break-inside: avoid !important;
+        margin-bottom: 6px !important;
+    }
+    
+    .single-table-col{
+        display:block !important;
+        float:left !important;
+        width:49% !important;
+        max-width:49% !important;
+    }
+
+    .single-table-col:nth-child(2) {
+        float:right !important;
+    }
+
+    table{
+        width:100% !important;
+        border-collapse:collapse !important;
+        background:#ffffff !important;
+        font-size:10px !important; 
+    }
+
+    th,
+    td{
+        border:none !important;
+        background:#ffffff !important;
+        color:#000000 !important;
+        padding:2px 2px !important; 
+        font-size:10px !important; 
+        line-height: 1.1 !important;
+    }
+
+    .col-set {
+        border-left: 1px dashed #888888 !important;
+    }
+
+    th{
+        background:#EAF0EA !important;
+        color:#000000 !important;
+        font-size:9px !important;
+        border-top:2px solid #4A7C59 !important;
+        border-bottom:2px solid #4A7C59 !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .dot-leader {
+        border-bottom: 2px dotted #000000 !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .section-title{
+        background:#4A7C59 !important;
+        color:#ffffff !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .summary-box{
+        background:#F4F7F4 !important;
+        color:#000000 !important;
+        font-size:9px !important;
+        padding:3px 5px !important;
+        border:1px dashed #888 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .total-label-cell,
+    .total-val-cell,
+    .empty-footer-cell {
+        border-top: 1px dashed #888 !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    #weftSection {
+        page-break-before: always !important;
+        break-before: page !important;
+    }
+}
+
+/* PRINT FONT SIZE — ONLY */
+.company-header h1 {
+    font-size: 20px !important;
+}
+
+.company-header p {
+    font-size: 12px !important;
+}
+
+.design-info-box,
+.weft-info-box {
+    font-size: 13px !important;
+}
+
+.section-title {
+    font-size: 13px !important;
+}
+
+table {
+    font-size: 13px !important;
+}
+
+th {
+    font-size: 12px !important;
+}
+
+td {
+    font-size: 13px !important;
+}
+
+.summary-box {
+    font-size: 12px !important;
+}
+
+.summary-box * {
+    font-size: inherit !important;
+}
+</style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     MAIN PAGE
+========================================================= -->
+
+<div class="main-card">
+
+    <div class="top-nav hide-on-print">
+        <button type="button" class="back-btn" onclick="navigateDashboard(event)">
+            ← மெனுவிற்குச் செல்ல
+        </button>
+    </div>
+
+    <div class="header-bar">
+
+        <h3>📋 டிசைன் ஷீட் பிரிண்ட்</h3>
+
+        <div style="display: flex; gap: 5px;" class="hide-on-print">
+            <button
+                type="button"
+                class="print-btn"
+                onclick="executePrint(event)">
+                🖨️ Print
+            </button>
+
+            <button
+                type="button"
+                class="close-btn"
+                onclick="navigateDashboard(event)">
+                Close ✕
+            </button>
+        </div>
+
+    </div>
+
+    <!-- COMPANY -->
+    <div class="company-header" id="companyHeaderPrint">
+
+        <h1 id="printCompName">
+            TEX FOR EVER
+        </h1>
+
+        <p id="printCompAddr">
+            -
+        </p>
+
+    </div>
+
+    <!-- DESIGN SELECT -->
+    <div class="top-form-row-single hide-on-print">
+
+        <div class="form-group">
+
+            <label>
+                டிசைன் எண்ணைத் தேர்ந்தெடுக்கவும்
+            </label>
+
+            <select
+                id="designNumber"
+                onchange="loadDesignDetails()">
+
+                <option value="">
+                    டிசைனைத் தேர்ந்தெடுக்கவும்
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         WARP HEADER
+    ====================================================== -->
+
+    <div style="font-weight: 700; font-size: 12px; margin-bottom: 4px; display: block;" id="warpDesignTitle">
+        * WARP DESIGN *
+    </div>
+
+    <div
+        id="designHeaderBox"
+        class="design-info-box"
+        style="display:none;">
+
+        <div>
+            டிசைன்:
+            <span id="hdrDesign">-</span>
+        </div>
+
+        <div>
+            கவுண்ட்ஸ்:
+            <span id="hdrCounts">-</span>
+        </div>
+
+        <div>
+            ஆர்டர் மீட்டர்:
+            <span id="hdrMtr">-</span>
+        </div>
+
+        <div>
+            டாப் பீம்:
+            <span id="hdrTopBeam">-</span>
+        </div>
+
+        <div>
+            வகை:
+            <span id="hdrType">-</span>
+        </div>
+
+        <div>
+            OnLoom.ரீட்:
+            <span id="hdrReed">-</span>
+        </div>
+
+        <div>
+            OnLoom.பிக்:
+            <span id="hdrPick">-</span>
+        </div>
+
+        <div>
+            OnLoom.அகலம்:
+            <span id="hdrWidth">-</span>
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         WARP
+    ====================================================== -->
+
+    <div id="warpSection">
+
+        <div id="warpContainerWrapper">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th class="col-no">NO</th>
+                            <th class="col-count">COUNT</th>
+                            <th class="col-color">COLOUR</th>
+                            <th class="col-val">ENDS <br><span style="font-size: 8px; font-weight: normal;">BOTTOM / SSKR</span></th>
+                            <th class="col-set">SET</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="warpTableBody">
+
+                        <tr>
+                            <td colspan="5">
+                                தரவுகள் இல்லை
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div
+            id="warpSummaryBox"
+            class="summary-box"
+            style="display:none;">
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         WEFT
+    ====================================================== -->
+
+    <div id="weftSection">
+
+        <div style="font-weight: 700; font-size: 12px; margin-top: 10px; margin-bottom: 4px; display: block;" id="weftDesignTitle">
+            * WEFT DESIGN *
+        </div>
+
+        <h3 class="section-title">
+                 🧶 வெப்ட்  என்ட்ரி 
+        </h3>
+
+        <!-- WEFT HEADER -->
+
+        <div
+            id="weftHeaderBox"
+            class="weft-info-box"
+            style="display:none;">
+
+            <div>
+                Design:
+                <span id="weftHdrDesign">-</span>
+            </div>
+
+            <div>
+                Weft Count:
+                <span id="weftHdrCount">-</span>
+            </div>
+
+            <div>
+                Weft Width:
+                <span id="weftHdrWidth">-</span>
+            </div>
+
+            <div>
+                Pick:
+                <span id="weftHdrPick">-</span>
+            </div>
+
+            <div style="grid-column:span 4;">
+                Weave:
+                <span id="weftHdrWeave">-</span>
+            </div>
+
+        </div>
+
+        <div id="weftContainerWrapper">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th class="col-no">NO</th>
+                            <th class="col-count">COUNT</th>
+                            <th class="col-color">COLOUR</th>
+                            <th class="col-val">PICKS</th>
+                            <th class="col-set">SET</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="weftTableBody">
+
+                        <tr>
+                            <td colspan="5">
+                                தரவுகள் இல்லை
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div
+            id="weftSummaryBox"
+            class="summary-box"
+            style="display:none;">
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   START
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    initDropdown();
+    loadCompanySettings();
+
+});
+
+
+/* =========================================================
+   COMPANY SETTINGS
+========================================================= */
+
+function loadCompanySettings(){
+
+    let savedAddr =
+        localStorage.getItem("company_full_address") ||
+        localStorage.getItem("set_comp_addr") ||
+        localStorage.getItem("company_address") ||
+        "";
+
+    let savedCompName =
+        localStorage.getItem("app_heading_name") ||
+        localStorage.getItem("company_name") ||
+        "TEX FOR EVER";
+
+    let nameEl =
+        document.getElementById("printCompName");
+
+    let addrEl =
+        document.getElementById("printCompAddr");
+
+    if(nameEl){
+        nameEl.innerText = savedCompName;
+    }
+
+    if(addrEl){
+
+        if(savedAddr.trim() !== ""){
+
+            addrEl.innerHTML =
+                savedAddr
+                .replace(/\n/g,"<br>");
+
+        }else{
+
+            addrEl.innerText =
+                "முகவரி கிடைக்கவில்லை";
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   CLEAN DESIGN NAME
+========================================================= */
+
+function cleanDesignName(str){
+
+    if(!str) return "";
+
+    return String(str)
+        .replace("#","")
+        .trim()
+        .toLowerCase();
+
+}
+
+
+
+
+/* =========================================================
+   DROPDOWN
+========================================================= */
+
+function initDropdown(){
+
+    let preDesignList =
+        JSON.parse(
+            localStorage.getItem("pre_design_numbers")
+        ) || [];
+
+    let designMastersList =
+        JSON.parse(
+            localStorage.getItem("design_masters_data")
+        ) || [];
+
+    let specs =
+        JSON.parse(
+            localStorage.getItem("design_specs")
+        ) || {};
+
+    let masterNames =
+        Array.isArray(designMastersList)
+        ? designMastersList
+            .map(d => d.name || d.designNo)
+            .filter(Boolean)
+        : [];
+
+    let combined =
+        Array.from(
+            new Set([
+                ...preDesignList,
+                ...masterNames,
+                ...Object.keys(specs)
+            ])
+        );
+
+    let select =
+        document.getElementById("designNumber");
+
+    if(!select)
+        return;
+
+    select.innerHTML =
+        `<option value="">
+            டிசைனைத் தேர்ந்தெடுக்கவும்
+         </option>`;
+
+    combined.forEach(function(d){
+
+        if(d){
+
+            let option =
+                document.createElement("option");
+
+            option.value = d;
+            option.textContent = d;
+
+            select.appendChild(option);
+
+        }
+
+    });
+
+    let activeDesign =
+        localStorage.getItem(
+            "selected_design_number"
+        );
+
+    if(
+        activeDesign &&
+        combined.includes(activeDesign)
+    ){
+
+        select.value = activeDesign;
+        loadDesignDetails();
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD DESIGN
+========================================================= */
+
+function loadDesignDetails(){
+
+    let select =
+        document.getElementById("designNumber");
+
+    let dName =
+        select ? select.value : "";
+
+    if(!dName){
+
+        document.getElementById(
+            "designHeaderBox"
+        ).style.display = "none";
+
+        document.getElementById(
+            "weftHeaderBox"
+        ).style.display = "none";
+
+        document.getElementById(
+            "warpSummaryBox"
+        ).style.display = "none";
+
+        document.getElementById(
+            "weftSummaryBox"
+        ).style.display = "none";
+
+        return;
+
+    }
+
+    localStorage.setItem(
+        "selected_design_number",
+        dName
+    );
+
+    let cleanDNo =
+        cleanDesignName(dName);
+
+
+    /* -----------------------------------------------------
+       MASTER
+    ----------------------------------------------------- */
+
+    let designMastersList =
+        JSON.parse(
+            localStorage.getItem(
+                "design_masters_data"
+            )
+        ) || [];
+
+    let foundMaster =
+        Array.isArray(designMastersList)
+        ? designMastersList.find(
+            d =>
+            cleanDesignName(
+                d.name || d.designNo
+            ) === cleanDNo
+          ) || {}
+        : {};
+
+
+    /* -----------------------------------------------------
+       SPECS
+    ----------------------------------------------------- */
+
+    let specs =
+        JSON.parse(
+            localStorage.getItem("design_specs")
+        ) || {};
+
+    let specKey =
+        Object.keys(specs).find(
+            k =>
+            cleanDesignName(k) === cleanDNo
+        );
+
+    let sp =
+        specKey ? specs[specKey] : {};
+
+
+    /* -----------------------------------------------------
+       ORDERS
+    ----------------------------------------------------- */
+
+    let orders =
+        JSON.parse(
+            localStorage.getItem(
+                "party_orders_data"
+            )
+        ) || [];
+
+    let foundOrder =
+        Array.isArray(orders)
+        ? orders.find(
+            o =>
+            cleanDesignName(
+                o.designNumber ||
+                o.designNo
+            ) === cleanDNo
+          ) || {}
+        : {};
+
+
+    /* -----------------------------------------------------
+       REED / PICK / WIDTH
+    ----------------------------------------------------- */
+
+    let finishReed =
+        parseFloat(
+            foundMaster.reed ||
+            sp.reed ||
+            foundOrder.reed
+        ) || 0;
+
+    let finishPick =
+        parseFloat(
+            foundMaster.pick ||
+            sp.pick ||
+            foundOrder.pick
+        ) || 0;
+
+    let finishWidth =
+        parseFloat(
+            foundMaster.width ||
+            sp.width ||
+            sp.finishWidth ||
+            foundOrder.width
+        ) || 0;
+
+
+    let onloomReedVal =
+        foundMaster.onloomReed ||
+        sp.onloomReed ||
+        (
+            finishReed > 0
+            ? finishReed - 8
+            : "-"
+        );
+
+
+    let onloomPickVal =
+        foundMaster.onloomPick ||
+        sp.onloomPick ||
+        (
+            finishPick > 0
+            ? finishPick - 4
+            : "-"
+        );
+
+
+    let onloomWidthVal =
+        foundMaster.onloomWidth ||
+        sp.onloomWidth;
+
+
+    if(
+        !onloomWidthVal &&
+        finishWidth > 0 &&
+        finishReed > 0 &&
+        parseFloat(onloomReedVal) > 0
+    ){
+
+        onloomWidthVal =
+            (
+                finishReed *
+                finishWidth /
+                parseFloat(onloomReedVal)
+            ).toFixed(2);
+
+    }
+    else if(
+        !onloomWidthVal &&
+        finishWidth > 0
+    ){
+
+        onloomWidthVal =
+            finishWidth.toFixed(2);
+
+    }
+
+
+    /* -----------------------------------------------------
+       COUNTS
+    ----------------------------------------------------- */
+
+    let warp1 =
+        foundMaster.warp1 ||
+        sp.baseBeamCount ||
+        sp.warp ||
+        sp.baseCount ||
+        foundMaster.counts ||
+        sp.counts ||
+        foundOrder.baseBeamCount ||
+        "-";
+
+
+    let warp2 =
+        foundMaster.warp2 ||
+        sp.topBeamCount ||
+        sp.warp2 ||
+        sp.topBeam ||
+        foundOrder.topBeamCount ||
+        "";
+
+
+    let warpCountsDisplay =
+        warp2 && warp2 !== "-"
+        ? `${warp1}, ${warp2}`
+        : warp1;
+
+
+    let weft1 =
+        foundMaster.weftCount ||
+        foundMaster.weft ||
+        sp.weftCount ||
+        sp.weft ||
+        foundOrder.weftCount ||
+        "-";
+
+
+    let weft2 =
+        foundMaster.weft2 ||
+        sp.weft2 ||
+        foundOrder.weft2 ||
+        "";
+
+
+    let weftCountsDisplay =
+        weft2 && weft2 !== "-"
+        ? `${weft1}, ${weft2}`
+        : weft1;
+
+
+    /* -----------------------------------------------------
+       ORDER METER
+    ----------------------------------------------------- */
+
+    let orderMeterVal =
+        foundOrder.orderMtr ||
+        foundOrder.productionMeter ||
+        foundOrder.prodMtr ||
+        foundMaster.orderMtr ||
+        sp.yarnOrderMtr ||
+        sp.orderMtr ||
+        foundMaster.meters ||
+        "-";
+
+
+    /* -----------------------------------------------------
+       HEADER DISPLAY
+    ----------------------------------------------------- */
+
+    document.getElementById(
+        "hdrDesign"
+    ).innerText = dName;
+
+    document.getElementById(
+        "hdrCounts"
+    ).innerText = warpCountsDisplay;
+
+    document.getElementById(
+        "hdrMtr"
+    ).innerText = orderMeterVal;
+
+    document.getElementById(
+        "hdrTopBeam"
+    ).innerText =
+        warp2 && warp2 !== "-"
+        ? warp2
+        : "-";
+
+    document.getElementById(
+        "hdrType"
+    ).innerText =
+        foundMaster.type ||
+        sp.type ||
+        foundOrder.weaveType ||
+        sp.weaveType ||
+        "Plain";
+
+    document.getElementById(
+        "hdrReed"
+    ).innerText =
+        onloomReedVal || "-";
+
+    document.getElementById(
+        "hdrPick"
+    ).innerText =
+        onloomPickVal || "-";
+
+    document.getElementById(
+        "hdrWidth"
+    ).innerText =
+        onloomWidthVal || "-";
+
+    document.getElementById(
+        "designHeaderBox"
+    ).style.display = "grid";
+
+
+    /* -----------------------------------------------------
+       WEFT HEADER
+    ----------------------------------------------------- */
+
+    let weftWidthVal =
+        parseFloat(onloomWidthVal) > 0
+        ? (
+            parseFloat(onloomWidthVal) + 3
+          ).toFixed(2)
+        : "-";
+
+
+    let storedWeftWidth =
+        foundMaster.weftWidth ||
+        sp.weftWidth;
+
+
+    let finalWeftWidthDisplay =
+        storedWeftWidth
+        ? storedWeftWidth + '"'
+        : (
+            weftWidthVal !== "-"
+            ? weftWidthVal + '"'
+            : "-"
+          );
+
+
+    document.getElementById(
+        "weftHdrDesign"
+    ).innerText = dName;
+
+    document.getElementById(
+        "weftHdrCount"
+    ).innerText =
+        weftCountsDisplay;
+
+    document.getElementById(
+        "weftHdrWidth"
+    ).innerText =
+        finalWeftWidthDisplay;
+
+    document.getElementById(
+        "weftHdrPick"
+    ).innerText =
+        onloomPickVal || "-";
+
+    document.getElementById(
+        "weftHdrWeave"
+    ).innerText =
+        foundOrder.weaveType ||
+        foundMaster.weaveType ||
+        foundMaster.type ||
+        sp.weave ||
+        sp.type ||
+        "Plain";
+
+    document.getElementById(
+        "weftHeaderBox"
+    ).style.display = "grid";
+
+
+    /* -----------------------------------------------------
+       LINES
+    ----------------------------------------------------- */
+
+    function parseDataSafely(val) {
+        if (!val) return [];
+        if (typeof val === 'string') {
+            try {
+                let parsed = JSON.parse(val);
+                return Array.isArray(parsed) ? parsed : (typeof parsed === 'object' ? Object.values(parsed) : []);
+            } catch(e) { return []; }
+        }
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'object') return Object.values(val);
+        return [];
+    }
+
+    let globalWarpData = JSON.parse(localStorage.getItem("warp_pattern_data") || "{}");
+    let globalWeftData = JSON.parse(localStorage.getItem("weft_pattern_data") || "{}");
+
+    let rawWarpLines = foundMaster.warpLines || sp.warpLines || foundMaster.warpPattern || sp.warpPattern || globalWarpData[dName] || globalWarpData[cleanDNo] || [];
+    let rawWarpRanges = foundMaster.warpRanges || sp.warpRanges || foundMaster.warpRange || sp.warpRange || [];
+    let rawWeftLines = foundMaster.weftLines || sp.weftLines || foundMaster.weftPattern || sp.weftPattern || globalWeftData[dName] || globalWeftData[cleanDNo] || [];
+    let rawWeftRanges = foundMaster.weftRanges || sp.weftRanges || foundMaster.weftRange || sp.weftRange || [];
+
+    let warpLines = parseDataSafely(rawWarpLines);
+    let warpRanges = parseDataSafely(rawWarpRanges);
+    let weftLines = parseDataSafely(rawWeftLines);
+    let weftRanges = parseDataSafely(rawWeftRanges);
+
+
+    /* -----------------------------------------------------
+       RENDER
+    ----------------------------------------------------- */
+
+    renderSplitPreviewTable(
+        "warp",
+        warpLines,
+        warpRanges,
+        "warpContainerWrapper",
+        "warpSummaryBox",
+        "Ends",
+        foundMaster,
+        sp,
+        onloomReedVal,
+        onloomWidthVal,
+        onloomPickVal
+    );
+
+
+    renderSplitPreviewTable(
+        "weft",
+        weftLines,
+        weftRanges,
+        "weftContainerWrapper",
+        "weftSummaryBox",
+        "Picks",
+        foundMaster,
+        sp,
+        onloomReedVal,
+        onloomWidthVal,
+        onloomPickVal
+    );
+
+}
+
+
+/* =========================================================
+   RENDER TABLE
+========================================================= */
+
+function renderSplitPreviewTable(
+    type,
+    lines,
+    ranges,
+    wrapperId,
+    summaryId,
+    unitName,
+    foundMaster,
+    sp,
+    onloomReed,
+    onloomWidth,
+    onloomPick
+){
+
+    let wrapper =
+        document.getElementById(wrapperId);
+
+    let summaryBox =
+        document.getElementById(summaryId);
+
+
+    if(
+        !Array.isArray(lines) ||
+        lines.length === 0
+    ){
+
+        wrapper.innerHTML = `
+            <div class="table-container">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td colspan="5">
+                                தரவுகள் இல்லை
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        summaryBox.style.display = "none";
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       RANGE MAP
+    ----------------------------------------------------- */
+
+    let rangeMap = {};
+
+    if(
+        Array.isArray(ranges) &&
+        ranges.length > 0
+    ){
+
+        ranges.forEach(function(r){
+
+            let start =
+                parseInt(r.start) || 0;
+
+            let end =
+                parseInt(r.end) || 0;
+
+            let set =
+                parseFloat(r.set) || 1;
+
+            for(
+                let j=start;
+                j<=end;
+                j++
+            ){
+
+                rangeMap[j] = {
+
+                    start:start,
+                    end:end,
+                    set:set,
+                    isStart:j === start,
+                    isEnd:j === end
+
+                };
+
+            }
+
+        });
+
+    }
+
+
+    /* -----------------------------------------------------
+       TOTALS
+    ----------------------------------------------------- */
+
+    let rowsData = [];
+
+    let countTotals = {};
+
+    let totalMultiplierSum = 0;
+
+    let totalSetsSum = 0;
+
+    let remainderSum = 0;
+
+    let pureSum = 0;
+
+    let rangeCoveredSum = 0;
+
+    let rangeLineIndices =
+        new Set();
+
+    let patternGroundEnds = 0;
+    
+    let patternTopEnds = 0;
+
+
+    if(
+        Array.isArray(ranges) &&
+        ranges.length > 0
+    ){
+
+        ranges.forEach(function(r){
+
+            let start =
+                parseInt(r.start) || 0;
+
+            let end =
+                parseInt(r.end) || 0;
+
+            for(
+                let k=start;
+                k<=end;
+                k++
+            ){
+
+                rangeLineIndices.add(k);
+
+            }
+
+        });
+
+    }
+
+
+    lines.forEach(function(item,index){
+
+        let rowNum =
+            index + 1;
+
+        let rawVal = type === "warp" 
+            ? (item.ends !== undefined ? item.ends : (item.Ends || item.warp || item.val || item.value || 0))
+            : (item.picks !== undefined ? item.picks : (item.Picks || item.weft || item.val || item.value || 0));
+
+        let val = parseFloat(rawVal) || 0;
+
+        pureSum += val;
+
+        if(
+            rangeLineIndices.has(rowNum)
+        ){
+
+            rangeCoveredSum += val;
+
+        }
+
+    });
+
+
+    remainderSum =
+        pureSum - rangeCoveredSum;
+
+
+    /* -----------------------------------------------------
+       ROW DATA
+    ----------------------------------------------------- */
+
+    lines.forEach(function(item,index){
+
+        let rowNum =
+            index + 1;
+
+        let rawVal = type === "warp" 
+            ? (item.ends !== undefined ? item.ends : (item.Ends || item.warp || item.val || item.value || 0))
+            : (item.picks !== undefined ? item.picks : (item.Picks || item.weft || item.val || item.value || 0));
+
+        let val = parseFloat(rawVal) || 0;
+
+        let rawCount = item.count !== undefined ? item.count : (item.Count || item.yarn || item.yarnCount || "");
+        let cText = rawCount ? String(rawCount).trim() : "-";
+
+        let rawColor = item.color !== undefined ? item.color : (item.Color || item.colour || item.Colour || item.clr || "");
+        
+        let clrText = (typeof translateColorName === 'function') ? translateColorName(rawColor) : rawColor;
+
+        let isTopBeam = false;
+        if(type === "warp") {
+            let checkStr = (cText + " " + clrText + " " + String(item.name || "") + " " + String(item.origName || "")).toLowerCase();
+            if(checkStr.includes("2/40") || checkStr.includes("40/2") || checkStr.includes("seer") || checkStr.includes("sskr") || checkStr.includes("top")) {
+                isTopBeam = true;
+            }
+        }
+
+
+        let setHtml = "";
+
+        let rInfo =
+            rangeMap[rowNum];
+
+        let effectiveVal = val;
+
+        if(rInfo){
+
+            effectiveVal = val * rInfo.set;
+
+            if(rInfo.isStart){
+
+                let rangeSum = 0;
+
+                for(
+                    let k=rInfo.start;
+                    k<=rInfo.end;
+                    k++
+                ){
+
+                    let subItem =
+                        lines[k-1];
+
+                    let subVal = type === "warp" 
+                        ? (subItem.ends !== undefined ? subItem.ends : (subItem.Ends || subItem.warp || subItem.val || subItem.value || 0))
+                        : (subItem.picks !== undefined ? subItem.picks : (subItem.Picks || subItem.weft || subItem.val || subItem.value || 0));
+
+                    rangeSum += parseFloat(subVal) || 0;
+
+                }
+
+
+                let totalProduct =
+                    rangeSum * rInfo.set;
+
+
+                totalMultiplierSum +=
+                    totalProduct;
+
+                totalSetsSum +=
+                    rInfo.set;
+
+
+                let spanRows =
+                    (
+                        rInfo.end -
+                        rInfo.start
+                    ) + 1;
+
+                                setHtml = `
+                    <td
+                        rowspan="${spanRows}"
+                        class="col-set"
+                        style="vertical-align:middle; text-align:left;">
+                        <div style="display:flex; align-items:center; justify-content:flex-start; height:100%;">
+                            <span style="font-size:28px; font-weight:300; margin-right:2px; margin-left:2px; line-height:1.0; padding-top:0px; text-align:left;">}</span>
+                            <div style="display:flex; flex-direction:column; text-align:left; line-height:1.2; font-size:0.9rem;">
+                                <b>X ${rInfo.set}</b>
+                                <b>= ${totalProduct}</b>
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+            }
+            else{
+
+                setHtml = null;
+
+            }
+
+
+            countTotals[cText] =
+                (
+                    countTotals[cText] || 0
+                ) +
+                (
+                    val * rInfo.set
+                );
+
+        }
+        else{
+
+            setHtml =
+                `<td class="col-set"></td>`;
+
+            countTotals[cText] =
+                (
+                    countTotals[cText] || 0
+                ) + val;
+
+        }
+
+        if(type === "warp") {
+            if(isTopBeam) {
+                patternTopEnds += effectiveVal;
+            } else {
+                patternGroundEnds += effectiveVal;
+            }
+        }
+
+        rowsData.push({
+
+            rowNum:rowNum,
+            count:cText,
+            color:clrText,
+            val:val,
+            setHtml:setHtml,
+            type:type,
+            isTopBeam:isTopBeam
+
+        });
+
+    });
+
+
+    /* -----------------------------------------------------
+       HEADER
+    ----------------------------------------------------- */
+
+    let headerHtml = `
+        <tr>
+
+            <th class="col-no">
+                NO
+            </th>
+
+            <th class="col-count">
+                COUNT
+            </th>
+
+            <th class="col-color">
+                COLOUR
+            </th>
+
+            <th class="col-val">
+                ${
+                    unitName === "Ends"
+                    ? 'ENDS <br><span style="font-size: 8px; font-weight: normal;">BOTTOM / SSKR</span>'
+                    : "PICKS"
+                }
+            </th>
+
+            <th class="col-set">
+                SET
+            </th>
+
+        </tr>
+    `;
+
+    /* -----------------------------------------------------
+       CALCULATE TOTAL PATTERN VALUE
+    ----------------------------------------------------- */
+
+    let calculatedPatternValue = totalMultiplierSum + remainderSum;
+    if(calculatedPatternValue === 0){ 
+        calculatedPatternValue = pureSum; 
+    }
+
+    
+
+    let tfootHtml = `
+        <tfoot>
+            <tr>
+                <td colspan="3" class="total-label-cell">
+                    <b>Total Pattern ${unitName}:</b>
+                </td>
+                <td class="total-val-cell">
+                    <b>${calculatedPatternValue}</b>
+                </td>
+                <td class="empty-footer-cell"></td>
+            </tr>
+        </tfoot>
+    `;
+
+
+    /* -----------------------------------------------------
+       SPLIT COLUMN LOGIC (Split dynamically every 35 rows)
+    ----------------------------------------------------- */
+
+    let splitLimit = 35; 
+    let finalHtml = "";
+
+    for(let i = 0; i < rowsData.length; i += (splitLimit * 2)) {
+        
+        let col1 = rowsData.slice(i, i + splitLimit);
+        let col2 = rowsData.slice(i + splitLimit, i + splitLimit * 2);
+
+        let t1 = buildTableRowsHtml(col1);
+        let t2 = buildTableRowsHtml(col2);
+
+        let secondTable = "";
+
+        let isLastBlock = (i + splitLimit * 2) >= rowsData.length;
+        let col1Foot = (!t2 && isLastBlock) ? tfootHtml : "";
+        let col2Foot = (t2 && isLastBlock) ? tfootHtml : "";
+        
+        // Add "continue" indicator if there are more rows after col1
+        if(t2 !== "" || (i + splitLimit * 2) < rowsData.length) {
+            col1Foot = `
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align:right; padding-right:12px; font-weight:900;">
+                            Continue →
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            `;
+        }
+
+        if(t2 !== ""){
+            secondTable = `
+                <div class="single-table-col">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                ${headerHtml}
+                            </thead>
+                            <tbody>
+                                ${t2}
+                            </tbody>
+                            ${col2Foot}
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        finalHtml += `
+            <div class="dual-table-wrapper">
+                <div class="single-table-col">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                ${headerHtml}
+                            </thead>
+                            <tbody>
+                                ${t1}
+                            </tbody>
+                            ${col1Foot}
+                        </table>
+                    </div>
+                </div>
+                ${secondTable}
+            </div>
+        `;
+    }
+
+    wrapper.innerHTML = finalHtml;
+
+
+    /* -----------------------------------------------------
+       GRAND TOTAL
+    ----------------------------------------------------- */
+
+    let finalGrandTotal = 0;
+
+
+    if(type === "warp"){
+
+        let reed =
+            parseFloat(onloomReed) ||
+            parseFloat(
+                foundMaster.reed ||
+                sp.reed
+            ) || 0;
+
+        let width =
+            parseFloat(onloomWidth) ||
+            parseFloat(
+                foundMaster.width ||
+                sp.width
+            ) || 0;
+
+
+        if(
+            reed > 0 &&
+            width > 0
+        ){
+
+            finalGrandTotal =
+                Math.round(
+                    reed * width
+                );
+
+        }
+        else{
+
+            finalGrandTotal =
+                totalMultiplierSum +
+                remainderSum;
+
+            if(finalGrandTotal === 0){
+
+                finalGrandTotal =
+                    pureSum;
+
+            }
+
+        }
+
+    }
+        else{
+
+        let weftWidth =
+            parseFloat(
+                foundMaster.weftWidth ||
+                sp.weftWidth
+            ) ||
+            (
+                parseFloat(onloomWidth) > 0
+                ? parseFloat(onloomWidth) + 3
+                : 67.44
+            );
+
+        // Change to use onloomPick instead of calculatedPatternValue
+        let pickNum = parseFloat(onloomPick) || 0;
+
+        finalGrandTotal =
+            weftWidth * pickNum;
+
+    }
+
+
+    /* -----------------------------------------------------
+       SUMMARY (SINGLE BOX)
+    ----------------------------------------------------- */
+
+    let summaryHtml = "";
+
+        if(type === "weft"){
+
+        let storedWidthVal =
+            parseFloat(
+                foundMaster.weftWidth ||
+                sp.weftWidth
+            ) ||
+            (
+                parseFloat(onloomWidth) > 0
+                ? parseFloat(onloomWidth) + 3
+                : 67.44
+            );
+
+        // Change to use onloomPick instead of calculatedPatternValue
+        let pickNum = parseFloat(onloomPick) || 0;
+        let weftTotal = storedWidthVal * pickNum;
+
+        summaryHtml += `
+            <div>
+                Weft Width ${storedWidthVal} X Pick ${pickNum} = <b>${weftTotal.toFixed(2)} Total Pick</b>
+            </div>
+        `;
+
+    }
+
+    else{
+
+        let calculatedPatternEnds = totalMultiplierSum + remainderSum;
+        if(calculatedPatternEnds === 0){ calculatedPatternEnds = pureSum; }
+
+        let reed = parseFloat(onloomReed) || parseFloat(foundMaster.reed || sp.reed) || 0;
+        let width = parseFloat(onloomWidth) || parseFloat(foundMaster.width || sp.width) || 0;
+
+        if (reed > 0 && width > 0) {
+            let totalEndsInt = Math.round(reed * width);
+            if (calculatedPatternEnds > 0) {
+                let repeats = Math.floor(totalEndsInt / calculatedPatternEnds);
+                let balance = totalEndsInt % calculatedPatternEnds;
+                summaryHtml += `
+                    <div class="line-1">
+                        <b style="color:#1E2B23;">${repeats} repeat + ${balance} ends = ${totalEndsInt}</b>
+                    </div>
+                `;
+            }
+
+            summaryHtml += `
+                <div>
+                    <b style="color:#1E2B23;">Warp Width ${width} X Reed ${reed} = <span style="color:#10B981;">${(reed * width).toFixed(2)}</span> Total Ends</b>
+                </div>
+            `;
+        } else {
+            summaryHtml += `
+                <div>
+                    <b style="color:#1E2B23;">Total Ends: <span style="color:#10B981;">${finalGrandTotal}</span></b>
+                </div>
+            `;
+        }
+
+    }
+
+
+    summaryBox.innerHTML =
+        summaryHtml;
+
+    summaryBox.style.display =
+        "block";
+
+}
+
+
+/* =========================================================
+   BUILD TABLE ROWS
+========================================================= */
+
+function buildTableRowsHtml(rows){
+
+    if(
+        !rows ||
+        rows.length === 0
+    ){
+
+        return "";
+
+    }
+
+
+    let html = "";
+
+
+    rows.forEach(function(r, idx){
+
+        let valDisplay = `<b>${r.val}</b>`;
+        if(r.type === "warp"){
+            if(r.isTopBeam){
+                valDisplay = `<div style="text-align:right; padding-right:12px; color:#8b5cf6 !important;"><b>${r.val}</b></div>`;
+            } else {
+                valDisplay = `<div style="text-align:left; padding-left:12px; color:#1E2B23;"><b>${r.val}</b></div>`;
+            }
+        }
+
+        html += `
+
+            <tr>
+
+                <td class="col-no">
+
+                    <b>${r.rowNum}</b>
+
+                </td>
+
+                <td class="col-count">
+
+                    <b>${r.count}</b>
+
+                </td>
+
+                <td class="col-color">
+
+                    <div class="color-flex">
+                        <span class="color-text"><b>${r.color}</b></span>
+                        <div class="dot-leader"></div>
+                    </div>
+
+                </td>
+
+                <td class="col-val">
+
+                    ${valDisplay}
+
+                </td>
+
+                ${
+                    r.setHtml !== null
+                    ? r.setHtml
+                    : ""
+                }
+
+            </tr>
+
+        `;
+
+    });
+
+
+    return html;
+
+}
+
+
+/* =========================================================
+   PRINT / CLOSE ACTIONS
+========================================================= */
+function executePrint(e){
+    if(e){
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    if (window._isPrintingInProgress) return;
+    window._isPrintingInProgress = true;
+
+    if (typeof window.appPrint === "function") {
+        window.appPrint();
+    } else {
+        window.print();
+    }
+
+    setTimeout(() => {
+        window._isPrintingInProgress = false;
+    }, 1000);
+}
+
+
+function navigateDashboard(e) {
+    if(e){
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    window.location.href = "dashboard.html"; 
+}
+
+</script>
+
+</body>
+</html>
