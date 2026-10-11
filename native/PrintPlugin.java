@@ -1,4 +1,3 @@
-
 package com.texforever;
 
 import android.content.Context;
@@ -20,19 +19,37 @@ import java.nio.charset.StandardCharsets;
 @CapacitorPlugin(name = "PrintPlugin")
 public class PrintPlugin extends Plugin {
 
-    // Wi-Fi / USB: Android system print (A4)
+    private WebView printWebView; // GC ஆகாம இருக்க field-ல வைக்கிறோம்
+
+    // Android system print (A4)
     @PluginMethod
     public void printHtml(PluginCall call) {
         String html = call.getString("html", "");
         String jobName = call.getString("jobName", "TexForever Print");
 
+        if (html == null || html.isEmpty()) {
+            call.reject("Print செய்ய HTML இல்லை");
+            return;
+        }
+
         getActivity().runOnUiThread(() -> {
-            WebView webView = new WebView(getContext());
-            webView.setWebViewClient(new WebViewClient() {
+            printWebView = new WebView(getContext());
+            printWebView.getSettings().setJavaScriptEnabled(true);
+
+            printWebView.setWebViewClient(new WebViewClient() {
+                private boolean printed = false;
+
                 @Override
                 public void onPageFinished(WebView view, String url) {
+                    if (printed) return; // ஒரே முறை மட்டும் print
+                    printed = true;
+
                     PrintManager pm = (PrintManager) getActivity()
                             .getSystemService(Context.PRINT_SERVICE);
+                    if (pm == null) {
+                        call.reject("Print service கிடைக்கவில்லை");
+                        return;
+                    }
 
                     PrintAttributes attrs = new PrintAttributes.Builder()
                             .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
@@ -40,19 +57,16 @@ public class PrintPlugin extends Plugin {
                             .setMinMargins(new PrintAttributes.Margins(400, 400, 400, 400))
                             .build();
 
-                    if (pm != null) {
-                        pm.print(jobName, view.createPrintDocumentAdapter(jobName), attrs);
-                        call.resolve();
-                    } else {
-                        call.reject("Print service கிடைக்கவில்லை");
-                    }
+                    pm.print(jobName, view.createPrintDocumentAdapter(jobName), attrs);
+                    call.resolve();
                 }
             });
-            webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+
+            printWebView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
         });
     }
 
-    // Wi-Fi: printer IP-க்கு நேரடியாக raw data அனுப்பும் (dialog இல்லை)
+    // Wi-Fi printer-க்கு நேரடியாக raw data (dialog இல்லை)
     @PluginMethod
     public void printRawWifi(PluginCall call) {
         String ip = call.getString("ip", "");
