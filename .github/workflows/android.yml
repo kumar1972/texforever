@@ -34,14 +34,48 @@ jobs:
       - name: Sync web files
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Restore keystore and add release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TEXFOREVER_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.TEXFOREVER_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TEXFOREVER_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.TEXFOREVER_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+          python3 <<'EOF'
+          import re
+          p = 'android/app/build.gradle'
+          s = open(p).read()
+          signing = '''
+              signingConfigs {
+                  release {
+                      storeFile file("release.keystore")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+          '''
+          if 'signingConfigs' not in s:
+              s = s.replace('android {', 'android {' + signing, 1)
+          s = re.sub(r'(buildTypes\s*\{\s*release\s*\{)',
+                     r'\1\n            signingConfig signingConfigs.release',
+                     s, count=1)
+          open(p, 'w').write(s)
+          EOF
+
+      - name: Build signed release APK
         working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.TEXFOREVER_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TEXFOREVER_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.TEXFOREVER_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: texforever-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
