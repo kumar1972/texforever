@@ -30,9 +30,22 @@ jobs:
         run: |
           cp native/PrintPlugin.java android/app/src/main/java/com/texforever/
           cp native/MainActivity.java android/app/src/main/java/com/texforever/
-
+     
       - name: Sync web files
         run: npx cap sync android
+    
+      - name: Set app icon from www/icon-512.png
+        run: |
+          SRC=www/icon-512.png
+          RES=android/app/src/main/res
+          declare -A SIZES=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
+          for d in "${!SIZES[@]}"; do
+            s=${SIZES[$d]}
+            mkdir -p "$RES/mipmap-$d"
+            for name in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              convert "$SRC" -resize ${s}x${s} "$RES/mipmap-$d/$name.png"
+            done
+        
 
       - name: Restore keystore and add release signing
         env:
