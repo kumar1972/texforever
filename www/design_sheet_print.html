@@ -7,11 +7,12 @@
       content="width=device-width, initial-scale=1.0,
       maximum-scale=1.0, user-scalable=no">
 
-<title> Design Sheet Print - TEX FOR EVER </title>
+<title> Design Sheet Print - TEXFRIEND PRO</title>
 
 <script src="config.js"></script>
 <script src="translator.js"></script>
-<script src="printer.js"></script>
+  <script src="printer.js"></script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
@@ -71,8 +72,6 @@ body{
     background:#1A2421;
     padding:7px 14px;
     border-radius:8px;
-    border:none;
-    cursor:pointer;
 }
 
 /* =========================================================
@@ -94,6 +93,7 @@ body{
     font-weight:700;
 }
 
+.preview-btn,
 .print-btn{
     border:0;
     color:white;
@@ -102,6 +102,13 @@ body{
     font-size:11px;
     font-weight:700;
     cursor:pointer;
+}
+
+.preview-btn{
+    background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+}
+
+.print-btn{
     background:linear-gradient(135deg,#10B981,#059669);
 }
 
@@ -113,7 +120,6 @@ body{
     border-radius:7px;
     font-size:10px;
     font-weight:700;
-    cursor:pointer;
 }
 
 /* =========================================================
@@ -178,23 +184,23 @@ select{
 
 .design-info-box,
 .weft-info-box{
-    background:#FFF8E1 !important;
-    border:2px solid #4A7C59;
+    background:#F8FAF8 !important;
+    border:1px solid #D1DED1;
     border-radius:6px;
-    padding:9px 10px;
+    padding:7px 8px;
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:6px;
-    font-size:12px;
-    font-weight:700;
-    color:#1F2937 !important;
+    gap:5px;
+    font-size:9px;
+    font-weight:600;
+    color:#2F4F38 !important;
     margin-bottom:6px;
 }
 
 .design-info-box div span,
 .weft-info-box div span{
-    color:#1B4D2E !important;
-    font-weight:800;
+    color:#4A7C59 !important;
+    font-weight:700;
 }
 
 /* =========================================================
@@ -315,7 +321,7 @@ th{
 }
 
 /* =========================================================
-   SUMMARY (SINGLE CLEAN BOX)
+   SUMMARY
 ========================================================= */
 
 .summary-box{
@@ -323,7 +329,7 @@ th{
     border:1px dashed #CBD5CB;
     border-radius:6px;
     padding:6px 8px;
-    text-align:center;
+    text-align:left;
     font-size:10px;
     font-weight:600;
     color:#2F4F38 !important;
@@ -342,22 +348,62 @@ th{
     color:#1E2B23 !important;
 }
 
-/* Table Footer for Exact Column Alignment */
-.total-label-cell {
-    text-align: right;
-    font-weight: 700;
-    padding-right: 8px;
-    border-top: 1px dashed #CBD5CB !important;
+/* =========================================================
+   PREVIEW MODAL
+========================================================= */
+
+.overlay-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.75);
+    z-index:99999;
+    flex-direction:column;
 }
 
-.total-val-cell {
-    text-align: center;
-    font-weight: 700;
-    border-top: 1px dashed #CBD5CB !important;
+.overlay-modal.show{
+    display:flex;
 }
 
-.empty-footer-cell {
-    border-top: 1px dashed #CBD5CB !important;
+.modal-content{
+    background:#ffffff;
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+.modal-header{
+    padding:10px 12px;
+    background:#F4F7F4;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid #E2E8E2;
+    flex-shrink:0;
+}
+
+.modal-header h3{
+    font-size:13px;
+    color:#2F4F38;
+}
+
+.modal-actions{
+    display:flex;
+    gap:5px;
+}
+
+.modal-body{
+    padding:10px;
+    overflow-y:auto;
+    flex:1;
+    background:#ffffff !important;
+    width:100%;
+    max-width:1000px;
+    margin:0 auto;
 }
 
 /* =========================================================
@@ -381,12 +427,17 @@ th{
         font-size:11px;
     }
 
+    .preview-btn{
+        font-size:10px;
+        padding:6px 10px;
+    }
+
     .design-info-box,
     .weft-info-box{
         grid-template-columns:repeat(4,1fr);
-        font-size:10px;
-        gap:4px;
-        padding:7px;
+        font-size:7px;
+        gap:3px;
+        padding:5px;
     }
 
     .section-title{
@@ -419,14 +470,14 @@ th{
 }
 
 /* =========================================================
-   PRINT CONFIGURATION
+   PRINT
 ========================================================= */
 
 @media print{
 
     @page{
         size:A4 portrait;
-        margin:5mm;
+        margin:6mm;
     }
 
     html,
@@ -448,24 +499,43 @@ th{
         visibility:hidden !important;
     }
 
-    .main-card,
-    .main-card *{
+    #previewModal,
+    #previewModal *{
         visibility:visible !important;
     }
 
-    .main-card{
+    #previewModal{
+        display:block !important;
         position:absolute !important;
         inset:0 !important;
         width:100% !important;
         height:auto !important;
         background:#ffffff !important;
-        border:none !important;
-        box-shadow:none !important;
-        padding:0 !important;
-        margin:0 !important;
+        z-index:999999 !important;
     }
 
-    .hide-on-print, .no-print{
+    .modal-content{
+        width:100% !important;
+        height:auto !important;
+        display:block !important;
+        background:#ffffff !important;
+    }
+
+    .modal-header{
+        display:none !important;
+    }
+
+    .modal-body{
+        width:100% !important;
+        max-width:none !important;
+        height:auto !important;
+        overflow:visible !important;
+        padding:0 !important;
+        margin:0 !important;
+        background:#ffffff !important;
+    }
+
+    .no-print{
         display:none !important;
     }
 
@@ -474,36 +544,15 @@ th{
         margin-bottom: 2px !important;
         padding-bottom: 2px !important;
     }
-
-    #warpDesignTitle,
-    #weftDesignTitle {
-        display: block !important;
-        visibility: visible !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        color: #000000 !important;
-        margin-bottom: 3px !important;
-    }
     
     .design-info-box, .weft-info-box{
         margin-bottom: 4px !important;
         padding: 4px !important;
-        background:#ffffff !important;
-        border:1px solid #000000 !important;
-        color:#000000 !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-
-    .design-info-box div span, .weft-info-box div span{
-        color:#000000 !important;
     }
     
     .section-title{
-        margin-top: 4px !important;
-        margin-bottom: 4px !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
+        margin-top: 2px !important;
+        margin-bottom: 2px !important;
     }
     
     .dual-table-wrapper{
@@ -512,8 +561,7 @@ th{
         clear:both !important;
         overflow:hidden !important;
         page-break-inside:avoid !important; 
-        break-inside: avoid !important;
-        margin-bottom: 6px !important;
+        margin-bottom: 10px !important;
     }
     
     .single-table-col{
@@ -531,7 +579,7 @@ th{
         width:100% !important;
         border-collapse:collapse !important;
         background:#ffffff !important;
-        font-size:10px !important; 
+        font-size:11px !important; 
     }
 
     th,
@@ -539,9 +587,9 @@ th{
         border:none !important;
         background:#ffffff !important;
         color:#000000 !important;
-        padding:2px 2px !important; 
-        font-size:10px !important; 
-        line-height: 1.1 !important;
+        padding:3px 2px !important; 
+        font-size:11px !important; 
+        line-height: 1.2 !important;
     }
 
     .col-set {
@@ -551,7 +599,7 @@ th{
     th{
         background:#EAF0EA !important;
         color:#000000 !important;
-        font-size:9px !important;
+        font-size:10px !important;
         border-top:2px solid #4A7C59 !important;
         border-bottom:2px solid #4A7C59 !important;
         -webkit-print-color-adjust:exact !important;
@@ -574,65 +622,17 @@ th{
     .summary-box{
         background:#F4F7F4 !important;
         color:#000000 !important;
-        font-size:9px !important;
-        padding:3px 5px !important;
+        font-size:10px !important;
+        padding:4px 6px !important;
         border:1px dashed #888 !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
         -webkit-print-color-adjust:exact !important;
         print-color-adjust:exact !important;
     }
 
-    .total-label-cell,
-    .total-val-cell,
-    .empty-footer-cell {
-        border-top: 1px dashed #888 !important;
-        -webkit-print-color-adjust:exact !important;
-        print-color-adjust:exact !important;
+    .page-break{
+        page-break-before:always;
+        break-before:page;
     }
-
-    #weftSection {
-        page-break-before: always !important;
-        break-before: page !important;
-    }
-}
-
-/* PRINT FONT SIZE — ONLY */
-.company-header h1 {
-    font-size: 20px !important;
-}
-
-.company-header p {
-    font-size: 12px !important;
-}
-
-.design-info-box,
-.weft-info-box {
-    font-size: 13px !important;
-}
-
-.section-title {
-    font-size: 13px !important;
-}
-
-table {
-    font-size: 13px !important;
-}
-
-th {
-    font-size: 12px !important;
-}
-
-td {
-    font-size: 13px !important;
-}
-
-.summary-box {
-    font-size: 12px !important;
-}
-
-.summary-box * {
-    font-size: inherit !important;
 }
 </style>
 </head>
@@ -645,31 +645,21 @@ td {
 
 <div class="main-card">
 
-    <div class="top-nav hide-on-print">
-        <button type="button" class="back-btn" onclick="navigateDashboard(event)">
+    <div class="top-nav no-print">
+        <a href="dashboard.html" class="back-btn">
             ← மெனுவிற்குச் செல்ல
-        </button>
+        </a>
     </div>
 
     <div class="header-bar">
 
         <h3>📋 டிசைன் ஷீட் பிரிண்ட்</h3>
 
-        <div style="display: flex; gap: 5px;" class="hide-on-print">
-            <button
-                type="button"
-                class="print-btn"
-                onclick="executePrint(event)">
-                🖨️ Print
-            </button>
-
-            <button
-                type="button"
-                class="close-btn"
-                onclick="navigateDashboard(event)">
-                Close ✕
-            </button>
-        </div>
+        <button
+            class="preview-btn no-print"
+            onclick="openPreviewModal()">
+            👁️ Preview
+        </button>
 
     </div>
 
@@ -677,7 +667,7 @@ td {
     <div class="company-header" id="companyHeaderPrint">
 
         <h1 id="printCompName">
-            TEX FOR EVER
+            TEXFRIEND
         </h1>
 
         <p id="printCompAddr">
@@ -687,7 +677,7 @@ td {
     </div>
 
     <!-- DESIGN SELECT -->
-    <div class="top-form-row-single hide-on-print">
+    <div class="top-form-row-single no-print">
 
         <div class="form-group">
 
@@ -712,10 +702,6 @@ td {
     <!-- =====================================================
          WARP HEADER
     ====================================================== -->
-
-    <div style="font-weight: 700; font-size: 12px; margin-bottom: 4px; display: block;" id="warpDesignTitle">
-        * WARP DESIGN *
-    </div>
 
     <div
         id="designHeaderBox"
@@ -748,17 +734,17 @@ td {
         </div>
 
         <div>
-            OnLoom.ரீட்:
+            Onreed.ரீட்:
             <span id="hdrReed">-</span>
         </div>
 
         <div>
-            OnLoom.பிக்:
+            Onreed.பிக்:
             <span id="hdrPick">-</span>
         </div>
 
         <div>
-            OnLoom.அகலம்:
+            Onreed.அகலம்:
             <span id="hdrWidth">-</span>
         </div>
 
@@ -769,6 +755,10 @@ td {
     ====================================================== -->
 
     <div id="warpSection">
+
+        <h3 class="section-title">
+            🧵 வார்ப் பேட்டர்ன் பிரிவ்யூ
+        </h3>
 
         <div id="warpContainerWrapper">
 
@@ -816,12 +806,8 @@ td {
 
     <div id="weftSection">
 
-        <div style="font-weight: 700; font-size: 12px; margin-top: 10px; margin-bottom: 4px; display: block;" id="weftDesignTitle">
-            * WEFT DESIGN *
-        </div>
-
         <h3 class="section-title">
-                 🧶 வெப்ட்  என்ட்ரி 
+            🧶 வெப்ட் பேட்டர்ன் பிரிவ்யூ
         </h3>
 
         <!-- WEFT HEADER -->
@@ -901,6 +887,48 @@ td {
 </div>
 
 
+<!-- =========================================================
+     PREVIEW MODAL
+========================================================= -->
+
+<div id="previewModal" class="overlay-modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header no-print">
+
+            <h3>
+                👁️ Design Sheet Print Preview
+            </h3>
+
+            <div class="modal-actions">
+
+                <button
+                    class="print-btn"
+                    onclick="printPreview()">
+                    🖨️ Print
+                </button>
+
+                <button
+                    class="close-btn"
+                    onclick="closePreviewModal()">
+                    Close ✕
+                </button>
+
+            </div>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="previewContent">
+        </div>
+
+    </div>
+
+</div>
+
+
 <script>
 
 /* =========================================================
@@ -930,7 +958,7 @@ function loadCompanySettings(){
     let savedCompName =
         localStorage.getItem("app_heading_name") ||
         localStorage.getItem("company_name") ||
-        "TEX FOR EVER";
+        "TEXFRIEND";
 
     let nameEl =
         document.getElementById("printCompName");
@@ -1691,6 +1719,7 @@ function renderSplitPreviewTable(
 
         let rawColor = item.color !== undefined ? item.color : (item.Color || item.colour || item.Colour || item.clr || "");
         
+        // Fixed: Using translateColorName from translator.js
         let clrText = (typeof translateColorName === 'function') ? translateColorName(rawColor) : rawColor;
 
         let isTopBeam = false;
@@ -1752,14 +1781,15 @@ function renderSplitPreviewTable(
                         rInfo.start
                     ) + 1;
 
-                                setHtml = `
+                // Here X 2 and = 4 split into 2 lines vertically as requested.
+                setHtml = `
                     <td
                         rowspan="${spanRows}"
                         class="col-set"
-                        style="vertical-align:middle; text-align:left;">
-                        <div style="display:flex; align-items:center; justify-content:flex-start; height:100%;">
-                            <span style="font-size:28px; font-weight:300; margin-right:2px; margin-left:2px; line-height:1.0; padding-top:0px; text-align:left;">}</span>
-                            <div style="display:flex; flex-direction:column; text-align:left; line-height:1.2; font-size:0.9rem;">
+                        style="vertical-align:middle;">
+                        <div style="display:flex; align-items:center; justify-content:center;">
+                            <span style="font-size:32px; font-weight:300; margin-right:4px; line-height:0.7; padding-bottom:2px;">}</span>
+                            <div style="display:flex; flex-direction:column; text-align:left; line-height:1.1; font-size:inherit;">
                                 <b>X ${rInfo.set}</b>
                                 <b>= ${totalProduct}</b>
                             </div>
@@ -1853,31 +1883,6 @@ function renderSplitPreviewTable(
         </tr>
     `;
 
-    /* -----------------------------------------------------
-       CALCULATE TOTAL PATTERN VALUE
-    ----------------------------------------------------- */
-
-    let calculatedPatternValue = totalMultiplierSum + remainderSum;
-    if(calculatedPatternValue === 0){ 
-        calculatedPatternValue = pureSum; 
-    }
-
-    
-
-    let tfootHtml = `
-        <tfoot>
-            <tr>
-                <td colspan="3" class="total-label-cell">
-                    <b>Total Pattern ${unitName}:</b>
-                </td>
-                <td class="total-val-cell">
-                    <b>${calculatedPatternValue}</b>
-                </td>
-                <td class="empty-footer-cell"></td>
-            </tr>
-        </tfoot>
-    `;
-
 
     /* -----------------------------------------------------
        SPLIT COLUMN LOGIC (Split dynamically every 35 rows)
@@ -1896,24 +1901,6 @@ function renderSplitPreviewTable(
 
         let secondTable = "";
 
-        let isLastBlock = (i + splitLimit * 2) >= rowsData.length;
-        let col1Foot = (!t2 && isLastBlock) ? tfootHtml : "";
-        let col2Foot = (t2 && isLastBlock) ? tfootHtml : "";
-        
-        // Add "continue" indicator if there are more rows after col1
-        if(t2 !== "" || (i + splitLimit * 2) < rowsData.length) {
-            col1Foot = `
-                <tfoot>
-                    <tr>
-                        <td colspan="3" style="text-align:right; padding-right:12px; font-weight:900;">
-                            Continue →
-                        </td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tfoot>
-            `;
-        }
-
         if(t2 !== ""){
             secondTable = `
                 <div class="single-table-col">
@@ -1925,7 +1912,6 @@ function renderSplitPreviewTable(
                             <tbody>
                                 ${t2}
                             </tbody>
-                            ${col2Foot}
                         </table>
                     </div>
                 </div>
@@ -1943,7 +1929,6 @@ function renderSplitPreviewTable(
                             <tbody>
                                 ${t1}
                             </tbody>
-                            ${col1Foot}
                         </table>
                     </div>
                 </div>
@@ -2006,7 +1991,7 @@ function renderSplitPreviewTable(
         }
 
     }
-        else{
+    else{
 
         let weftWidth =
             parseFloat(
@@ -2019,8 +2004,11 @@ function renderSplitPreviewTable(
                 : 67.44
             );
 
-        // Change to use onloomPick instead of calculatedPatternValue
-        let pickNum = parseFloat(onloomPick) || 0;
+
+        let pickNum =
+            parseFloat(onloomPick) ||
+            60;
+
 
         finalGrandTotal =
             weftWidth * pickNum;
@@ -2029,12 +2017,12 @@ function renderSplitPreviewTable(
 
 
     /* -----------------------------------------------------
-       SUMMARY (SINGLE BOX)
+       SUMMARY
     ----------------------------------------------------- */
 
     let summaryHtml = "";
 
-        if(type === "weft"){
+    if(type === "weft"){
 
         let storedWidthVal =
             parseFloat(
@@ -2047,22 +2035,46 @@ function renderSplitPreviewTable(
                 : 67.44
             );
 
-        // Change to use onloomPick instead of calculatedPatternValue
-        let pickNum = parseFloat(onloomPick) || 0;
-        let weftTotal = storedWidthVal * pickNum;
+
+        let pickNum =
+            parseFloat(onloomPick) ||
+            60;
 
         summaryHtml += `
+            <div class="line-1">
+                Total Pattern Picks:
+                <b>${pureSum}</b>
+            </div>
             <div>
-                Weft Width ${storedWidthVal} X Pick ${pickNum} = <b>${weftTotal.toFixed(2)} Total Pick</b>
+                Weft Width ${storedWidthVal} X Pick ${pickNum} = <b>${finalGrandTotal.toFixed(2)} Total Pick</b>
             </div>
         `;
 
     }
-
     else{
 
         let calculatedPatternEnds = totalMultiplierSum + remainderSum;
         if(calculatedPatternEnds === 0){ calculatedPatternEnds = pureSum; }
+
+        let hasTopBeam = patternTopEnds > 0;
+
+        summaryHtml += `<div class="line-1" style="text-align:center; padding: 6px 0; font-size: 11px;">`;
+        
+        if (hasTopBeam) {
+            summaryHtml += `
+                <span style="font-weight:700; color:#1E2B23;">
+                    Total Pattern Ends: &nbsp;&nbsp;&nbsp; ${patternGroundEnds} <span style="color:#64748b; font-weight:600;">(Bottom)</span> + <span style="color:#d97706;">${patternTopEnds} (SSKR)</span> = ${calculatedPatternEnds}
+                </span>
+            `;
+        } else {
+            summaryHtml += `
+                <span style="font-weight:700; color:#1E2B23;">
+                    Total Pattern Ends: &nbsp;&nbsp;&nbsp; ${calculatedPatternEnds}
+                </span>
+            `;
+        }
+        
+        summaryHtml += `</div>`;
 
         let reed = parseFloat(onloomReed) || parseFloat(foundMaster.reed || sp.reed) || 0;
         let width = parseFloat(onloomWidth) || parseFloat(foundMaster.width || sp.width) || 0;
@@ -2073,20 +2085,20 @@ function renderSplitPreviewTable(
                 let repeats = Math.floor(totalEndsInt / calculatedPatternEnds);
                 let balance = totalEndsInt % calculatedPatternEnds;
                 summaryHtml += `
-                    <div class="line-1">
+                    <div class="line-1" style="text-align:center; padding: 4px 0; font-size: 11px;">
                         <b style="color:#1E2B23;">${repeats} repeat + ${balance} ends = ${totalEndsInt}</b>
                     </div>
                 `;
             }
 
             summaryHtml += `
-                <div>
+                <div style="text-align:center; padding: 4px 0; font-size: 11px;">
                     <b style="color:#1E2B23;">Warp Width ${width} X Reed ${reed} = <span style="color:#10B981;">${(reed * width).toFixed(2)}</span> Total Ends</b>
                 </div>
             `;
         } else {
             summaryHtml += `
-                <div>
+                <div style="text-align:center; padding: 4px 0; font-size: 11px;">
                     <b style="color:#1E2B23;">Total Ends: <span style="color:#10B981;">${finalGrandTotal}</span></b>
                 </div>
             `;
@@ -2123,7 +2135,7 @@ function buildTableRowsHtml(rows){
     let html = "";
 
 
-    rows.forEach(function(r, idx){
+    rows.forEach(function(r){
 
         let valDisplay = `<b>${r.val}</b>`;
         if(r.type === "warp"){
@@ -2146,14 +2158,14 @@ function buildTableRowsHtml(rows){
 
                 <td class="col-count">
 
-                    <b>${r.count}</b>
+                    ${r.count}
 
                 </td>
 
                 <td class="col-color">
 
                     <div class="color-flex">
-                        <span class="color-text"><b>${r.color}</b></span>
+                        <span class="color-text">${r.color}</span>
                         <div class="dot-leader"></div>
                     </div>
 
@@ -2184,37 +2196,197 @@ function buildTableRowsHtml(rows){
 
 
 /* =========================================================
-   PRINT / CLOSE ACTIONS
+   OPEN PREVIEW
 ========================================================= */
-function executePrint(e){
-    if(e){
-        e.preventDefault();
-        e.stopPropagation();
+
+function openPreviewModal(){
+
+    let dNum =
+        document.getElementById(
+            "designNumber"
+        ).value;
+
+
+    if(!dNum){
+
+        alert(
+            "முதலில் டிசைன் எண்ணைத் தேர்ந்தெடுக்கவும்!"
+        );
+
+        return;
+
     }
 
-    if (window._isPrintingInProgress) return;
-    window._isPrintingInProgress = true;
 
-    if (typeof window.appPrint === "function") {
-        window.appPrint();
+    let compName =
+        document.getElementById(
+            "printCompName"
+        ).innerText;
+
+
+    let compAddr =
+        document.getElementById(
+            "printCompAddr"
+        ).innerHTML;
+
+
+    let headerBox =
+        document.getElementById(
+            "designHeaderBox"
+        ).outerHTML;
+
+
+    let warpSec =
+        document.getElementById(
+            "warpSection"
+        ).outerHTML;
+
+
+    let weftSec =
+        document.getElementById(
+            "weftSection"
+        ).outerHTML;
+
+
+    /* =====================================================
+       IMPORTANT:
+       NO BLACK BACKGROUND HERE
+    ====================================================== */
+
+    let html = `
+
+        <div
+            style="
+                background:#ffffff;
+                color:#000000;
+                width:100%;
+            "
+        >
+
+            <!-- COMPANY -->
+
+            <div
+                style="
+                    text-align:center;
+                    margin-bottom:8px;
+                    border-bottom:2px solid #4A7C59;
+                    padding-bottom:5px;
+                "
+            >
+
+                <h2
+                    style="
+                        margin:0;
+                        font-size:16px;
+                        color:#2F4F38;
+                    "
+                >
+                    ${compName}
+                </h2>
+
+                <p
+                    style="
+                        margin:2px 0 0;
+                        font-size:9px;
+                        color:#4A554A;
+                    "
+                >
+                    ${compAddr}
+                </p>
+
+            </div>
+
+
+            <!-- DESIGN HEADER -->
+
+            ${headerBox.replace(
+                'style="display:none;"',
+                'style="display:grid;"'
+            )}
+
+
+            /* WARP */
+
+            ${warpSec}
+
+
+            <!-- PAGE BREAK -->
+
+            <div class="page-break"></div>
+
+
+            <!-- WEFT -->
+
+            ${weftSec}
+
+        </div>
+
+    `;
+
+
+    document.getElementById(
+        "previewContent"
+    ).innerHTML = html;
+
+
+    let modal =
+        document.getElementById(
+            "previewModal"
+        );
+
+
+    modal.style.display = "flex";
+
+
+    setTimeout(function(){
+
+        modal.classList.add("show");
+
+    },20);
+
+}
+
+
+/* =========================================================
+   CLOSE PREVIEW
+========================================================= */
+
+function closePreviewModal(){
+
+    let modal =
+        document.getElementById(
+            "previewModal"
+        );
+
+    modal.classList.remove("show");
+
+    setTimeout(function(){
+
+        modal.style.display = "none";
+
+    },150);
+
+}
+
+
+/* =========================================================
+   PRINT / PREVIEW
+========================================================= */
+function printPreview(){
+
+    let content =
+        document.getElementById("previewContent");
+
+    let html =
+        content ? content.innerHTML : "";
+
+    if(window.appPrint){
+        window.appPrint(html || undefined);
     } else {
         window.print();
     }
 
-    setTimeout(() => {
-        window._isPrintingInProgress = false;
-    }, 1000);
 }
-
-
-function navigateDashboard(e) {
-    if(e){
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    window.location.href = "dashboard.html"; 
-}
-
 </script>
 
 </body>

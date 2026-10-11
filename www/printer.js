@@ -24,11 +24,28 @@ th{background:#EAF0EA !important; color:#2F4F38 !important; font-weight:700; fon
 .page-break{page-break-after:always; break-after:page;}
 `;
 
+// Page-ஓட <style> blocks-ஐ எடுக்கும் (@media print rules அதுல தான் இருக்கு)
+function getPageStyles() {
+  let css = '';
+  document.querySelectorAll('style').forEach(function (s) {
+    css += s.textContent + '\n';
+  });
+  return css;
+}
+
 function buildPrintHtml(jobName, content) {
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
          '<title>' + jobName + '</title>' +
-         '<style>' + TEX_PRINT_CSS + '</style></head><body>' +
-         content + '</body></html>';
+         '<style>' + TEX_PRINT_CSS + '</style>' +
+         '<style>' + getPageStyles() + '</style>' +
+         '</head><body>' +
+         // page-ஓட print CSS #previewModal-ஐ தான் visible ஆக்கும், அதனால் அதே structure
+         '<div id="previewModal" class="overlay-modal show">' +
+         '<div class="modal-content"><div class="modal-body">' +
+         content +
+         '</div></div></div>' +
+         '</body></html>';
+
 }
 
 window.appPrint = async function (customContent) {
