@@ -26,6 +26,11 @@ jobs:
       - name: Create Android project
         run: npx cap add android
 
+      - name: Bump version
+        run: |
+          sed -i 's/versionCode [0-9]*/versionCode ${{ github.run_number }}/' android/app/build.gradle
+          sed -i 's/versionName ".*"/versionName "1.0.${{ github.run_number }}"/' android/app/build.gradle
+
       - name: Copy native plugin files
         run: |
           cp native/PrintPlugin.java android/app/src/main/java/com/texforever/
