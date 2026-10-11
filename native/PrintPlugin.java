@@ -1,1 +1,74 @@
 
+package com.texforever;
+
+import android.content.Context;
+import android.print.PrintAttributes;
+import android.print.PrintManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+
+@CapacitorPlugin(name = "PrintPlugin")
+public class PrintPlugin extends Plugin {
+
+    // Wi-Fi / USB: Android system print (A4)
+    @PluginMethod
+    public void printHtml(PluginCall call) {
+        String html = call.getString("html", "");
+        String jobName = call.getString("jobName", "TexForever Print");
+
+        getActivity().runOnUiThread(() -> {
+            WebView webView = new WebView(getContext());
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    PrintManager pm = (PrintManager) getActivity()
+                            .getSystemService(Context.PRINT_SERVICE);
+
+                    PrintAttributes attrs = new PrintAttributes.Builder()
+                            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                            .setResolution(new PrintAttributes.Resolution("r1", "print", 600, 600))
+                            .setMinMargins(new PrintAttributes.Margins(400, 400, 400, 400))
+                            .build();
+
+                    if (pm != null) {
+                        pm.print(jobName, view.createPrintDocumentAdapter(jobName), attrs);
+                        call.resolve();
+                    } else {
+                        call.reject("Print service கிடைக்கவில்லை");
+                    }
+                }
+            });
+            webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+        });
+    }
+
+    // Wi-Fi: printer IP-க்கு நேரடியாக raw data அனுப்பும் (dialog இல்லை)
+    @PluginMethod
+    public void printRawWifi(PluginCall call) {
+        String ip = call.getString("ip", "");
+        int port = call.getInt("port", 9100);
+        String data = call.getString("data", "");
+
+        new Thread(() -> {
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(ip, port), 5000);
+                OutputStream out = socket.getOutputStream();
+                out.write(data.getBytes(StandardCharsets.UTF_8));
+                out.flush();
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("Printer error: " + e.getMessage());
+            }
+        }).start();
+    }
+}
