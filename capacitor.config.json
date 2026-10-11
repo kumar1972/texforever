@@ -9,6 +9,6 @@
   "android": {
     "allowMixedContent": false,
     "webContentsDebuggingEnabled": true,
-    "backgroundColor": "#99DDFF"
+    "backgroundColor": "#38DDFF"
   }
 }
