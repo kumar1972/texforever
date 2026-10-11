@@ -10,5 +10,15 @@
     "allowMixedContent": false,
     "webContentsDebuggingEnabled": true,
     "backgroundColor": "#38DDFF"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 5000,
+      "launchAutoHide": true,
+      "backgroundColor": "#FFEDEA",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_INSIDE",
+      "showSpinner": false
+    }
   }
 }
