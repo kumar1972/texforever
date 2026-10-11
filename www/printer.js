@@ -21,6 +21,7 @@ th, td{padding:6px 4px !important; color:#1E2B23 !important; border:none !import
 th{background:#EAF0EA !important; color:#2F4F38 !important; font-weight:700; font-size:10px; border-top:2px solid #4A7C59 !important; border-bottom:2px solid #4A7C59 !important;}
 .col-set{border-left:1px dashed #CBD5CB !important;}
 .summary-box{background:#F4F7F4 !important; border:1px dashed #CBD5CB; border-radius:6px; padding:6px 8px; text-align:center; font-size:10px; font-weight:600; color:#2F4F38 !important; margin:6px 0;}
+.page-break{page-break-after:always; break-after:page;}
 `;
 
 function buildPrintHtml(jobName, content) {
@@ -93,15 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
           e.preventDefault();
           e.stopPropagation();
 
-          if (window._isPrintingInProgress) return;
-          window._isPrintingInProgress = true;
-
-          window.appPrint();
-
-          setTimeout(() => {
-            window._isPrintingInProgress = false;
-          }, 1000);
-        });
+if (window._isPrintingInProgress) return;
+  window._isPrintingInProgress = true;
+  setTimeout(() => { window._isPrintingInProgress = false;
+                   }, 2000);
+               });
       }
     });
   };
