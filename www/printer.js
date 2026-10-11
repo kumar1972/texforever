@@ -34,18 +34,63 @@ function getPageStyles() {
 }
 
 function buildPrintHtml(jobName, content) {
+
+  const printFix = `
+    html,body{
+      background:#ffffff !important;
+      height:auto !important;
+      min-height:0 !important;
+    }
+    body *{
+      visibility:visible !important;
+    }
+    #previewModal,
+    .overlay-modal,
+    .modal-content,
+    .modal-body,
+    #previewContent{
+      position:static !important;
+      display:block !important;
+      inset:auto !important;
+      width:100% !important;
+      height:auto !important;
+      min-height:0 !important;
+      max-width:none !important;
+      background:#ffffff !important;
+      overflow:visible !important;
+      flex:none !important;
+      padding:0 !important;
+      margin:0 !important;
+    }
+    .modal-header,
+    .no-print{
+      display:none !important;
+    }
+    .page-break{
+      display:none !important;
+    }
+    #weftSection{
+      break-before:page !important;
+      page-break-before:always !important;
+      margin-top:0 !important;
+      padding-top:0 !important;
+    }
+    #warpSection{
+      break-after:avoid !important;
+    }
+  `;
+
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
          '<title>' + jobName + '</title>' +
          '<style>' + TEX_PRINT_CSS + '</style>' +
          '<style>' + getPageStyles() + '</style>' +
+         '<style>' + printFix + '</style>' +
          '</head><body>' +
-         // page-ஓட print CSS #previewModal-ஐ தான் visible ஆக்கும், அதனால் அதே structure
          '<div id="previewModal" class="overlay-modal show">' +
          '<div class="modal-content"><div class="modal-body">' +
          content +
          '</div></div></div>' +
          '</body></html>';
-
 }
 
 window.appPrint = async function (customContent) {
