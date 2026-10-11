@@ -34,9 +34,9 @@ jobs:
       - name: Sync web files
         run: npx cap sync android
     
-      - name: Set app icon from www/icon-512.png
+      - name: Set app icon from www/icon-512.ico
         run: |
-          SRC=www/icon-512.png
+          SRC=www/icon-512.ico
           RES=android/app/src/main/res
           declare -A SIZES=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
           for d in "${!SIZES[@]}"; do
