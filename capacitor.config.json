@@ -1,0 +1,14 @@
+{
+  "appId": "com.texforever",
+  "appName": "TexForever",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": true,
+    "backgroundColor": "#99DDFF"
+  }
+}

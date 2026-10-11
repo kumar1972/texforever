@@ -1,0 +1,191 @@
+:root {
+    --bg-color: #0B192C;
+    --container-bg: #1E3E62;
+    --accent-color: #38BDF8;
+    --text-color: #F8FAFC;
+    --input-bg: #0B192C;
+    --input-focus-bg: #14293A;
+    --btn-bg: #0284C7;
+    --btn-hover: #0369A1;
+}
+
+* { 
+    box-sizing: border-box !important; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Poppins', sans-serif; 
+}
+
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden !important;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px;
+}
+
+/* கண்டெய்னர் விளிம்புகள் வெளியே போகாமல் இருக்க */
+.container, .main-card {
+    background: var(--container-bg);
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto 6px auto;
+    padding: 8px 6px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    overflow-x: hidden !important;
+}
+
+.form-group {
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    color: var(--accent-color);
+    font-size: 9px;
+    margin-bottom: 1px;
+}
+
+input, select {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 5px 6px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 4px;
+    font-size: 10px;
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    background: var(--input-focus-bg);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+/* 100% துல்லியமான ஃபார்ம் வரிசைகள் மற்றும் ஓவர்லேப் தடுப்பு */
+.form-row, .pattern-row, div[class*="row"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.form-row .form-group {
+    flex: 1 1 auto !important;
+    margin-bottom: 0 !important;
+}
+
+/* இன்புட் மற்றும் செலக்ட் பாக்ஸ்கள் நெகிழ்வாக இருக்க */
+.form-row input, .form-row select, .pattern-row input, .pattern-row select {
+    flex: 1 1 auto !important;
+    min-width: 50px !important;
+    max-width: 100% !important;
+    padding: 5px 6px;
+    font-size: 10px;
+}
+
+/* பிளஸ் (+) மற்றும் டெலீட் (x) பட்டன்கள் உடையாமல் இருக்க */
+button.action-add, button.action-del, .form-row button, .pattern-row button {
+    flex: 0 0 auto !important;
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-main {
+    width: 100% !important;
+    padding: 7px;
+    margin: 6px 0 2px 0;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    background: var(--btn-bg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn-main:hover { 
+    background: var(--btn-hover); 
+}
+
+.card-header {
+    font-size: 12px;
+    padding-bottom: 2px;
+    margin-bottom: 6px;
+    font-weight: 700;
+    border-bottom: 2px solid rgba(56, 189, 248, 0.4);
+    color: var(--accent-color);
+}
+
+.excel-table {
+    width: 100% !important;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 9px;
+    overflow-x: auto;
+    display: block;
+}
+
+.excel-table th, .excel-table td {
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 3px 4px;
+    text-align: left;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+.excel-table th {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-color);
+}
+
+.action-del {
+    background: #EF4444 !important;
+    color: white !important;
+    border: none;
+    cursor: pointer;
+}
+
+.action-del:hover {
+    background: #DC2626 !important;
+}
+
+/* மாட்யூல் மற்றும் ஸ்டேட்டஸ் பட்டன்கள் */
+.btn-module-1, .btn-module-2, .container button, [class*="btn-"] {
+    background: #1E3E62 !important;
+    color: #38BDF8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+.status-running { 
+    background: #0E4268 !important; 
+    color: #38BDF8 !important; 
+    border: 1px solid rgba(56, 189, 248, 0.4) !important; 
+}
+
+.status-completed { 
+    background: #134E4A !important; 
+    color: #2DD4BF !important; 
+    border: 1px solid rgba(45, 212, 191, 0.4) !important; 
+}

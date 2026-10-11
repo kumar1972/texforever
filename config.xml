@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.texfriend.forever"
+        version="1.0.1"
+        android-versionCode="2"
+        xmlns="http://www.w3.org/ns/widgets"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <name>TEXFRIEND FOREVER</name>
+    <description>TEXFRIEND FOREVER - Web Application</description>
+    <content src="index.html" />
+
+    <preference name="Fullscreen" value="false" />
+    <preference name="Orientation" value="default" />
+
+    <access origin="*" />
+    <allow-navigation href="*" />
+
+    <platform name="android">
+        <allow-intent href="http://*/*" />
+        <allow-intent href="https://*/*" />
+    </platform>
+
+</widget>
