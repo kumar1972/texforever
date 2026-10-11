@@ -97,10 +97,13 @@ jobs:
       - name: Prepare renamed APK
         run: |
           mkdir -p output
-          cp android/app/build/outputs/apk/release/app-release.apk output/texforever-apk.apk
+          cp android/app/build/outputs/apk/release/app-release.apk output/texforever.apk
+          echo "--- output folder ---"
+          ls -la output/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: texforever-apk
           path: output/texforever.apk
+          if-no-files-found: error
