@@ -203,11 +203,11 @@
             <div class="form-group"><label>Weft 2</label><input type="text" id="weftCount2" list="countsList"></div>
             
             <div class="form-group"><label>Finish Reed</label><input type="number" id="finishReed" oninput="updateOnloomReedDefault(); calculateTopData()"></div>
-            <div class="form-group"><label>Finish Pick</label><input type="number" id="finishPick" oninput="updateOnloomPickDefault(); calculateTopData()"></div>
+            <div class="form-group"><label>Finish Pick</label><input type="number" id="finishPick" oninput="forceOnloomPick(); calculateTopData()"></div>
             <div class="form-group"><label>Finish Width</label><input type="number" id="finishWidth" oninput="calculateTopData()"></div>
             
             <div class="form-group"><label>Onloom Reed</label><input type="number" id="onloomReed" oninput="manualOnloomReed=true; calculateTopData()"></div>
-            <div class="form-group"><label>Pick Less</label><input type="number" id="pickLess" value="4" oninput="updateOnloomPickDefault(); calculateTopData()"></div>
+            <div class="form-group"><label>Pick Less</label><input type="number" id="pickLess" value="4" oninput="forceOnloomPick(); calculateTopData()"></div>
             <div class="form-group"><label>Onloom Pick</label><input type="number" id="onloomPick" oninput="manualOnloomPick=true; calculateTopData()"></div>
             
             <div class="form-group"><label>Onloom Width (Auto)</label><input type="number" id="onloomWidth" readonly></div>
@@ -468,6 +468,12 @@
         }
     }
 
+    // Finish Pick / Pick Less changed => Onloom Pick recalculated (manual value is replaced; user can still edit Onloom Pick)
+    function forceOnloomPick() {
+        manualOnloomPick = false;
+        updateOnloomPickDefault();
+    }
+
     function updateOnloomPickDefault() {
         if (!manualOnloomPick) {
             let fPick = parseFloat(document.getElementById('finishPick').value) || 0;
@@ -689,6 +695,7 @@
 
         let targetWarpEnds = Math.round(oReed * autoOnloomWidth) || 4640;
         let targetWeftPicks = Math.round(onloomWeftWidth * onloomPick) || 4991;
+        window._lastWeftTarget = targetWeftPicks;
 
         let resolvedWarp = resolvePatternRepeats(warpLines, foundMaster.warpRanges || sp.warpRanges, targetWarpEnds, 'warp');
         let resolvedWeft = resolvePatternRepeats(weftLines, foundMaster.weftRanges || sp.weftRanges, targetWeftPicks, 'weft');
@@ -774,7 +781,28 @@
             document.getElementById('weftMtrs').value = weftMtrs > 0 ? weftMtrs.toFixed(2) : '';
         }
 
+        rebuildWeftIfTargetChanged();
         calculateTableRows();
+    }
+
+    function rebuildWeftIfTargetChanged() {
+        let width = parseFloat(document.getElementById('onloomWeftWidth').value) || 0;
+        let pick = parseFloat(document.getElementById('onloomPick').value) || 0;
+        let target = Math.round(width * pick);
+        if (!(target > 0) || target === window._lastWeftTarget) return;
+        window._lastWeftTarget = target;
+        let rows = Array.from(document.querySelectorAll('#weftTableBody tr'));
+        if (!rows.length) return;
+        // rpt values already include set multipliers, so no ranges here
+        let lines = rows.map(r => ({
+            colourName: r.querySelector('.weft-color').value,
+            count: r.querySelector('.weft-count').value,
+            picks: parseFloat(r.querySelector('.weft-picks-rpt').value) || 0
+        }));
+        let resolved = resolvePatternRepeats(lines, [], target, 'weft');
+        rows.forEach((r, i) => {
+            if (resolved[i]) r.querySelector('.weft-picks').value = resolved[i].total;
+        });
     }
 
     function calculateTableRows() {
@@ -850,7 +878,9 @@
         });
 
         document.getElementById('weftTotalRpt').innerText = weftTotRpt;
-        document.getElementById('weftTotalPicks').innerText = weftTotPicks;
+        let fWeftW = parseFloat(document.getElementById('onloomWeftWidth').value) || 0;
+        let fOnPick = parseFloat(document.getElementById('onloomPick').value) || 0;
+        document.getElementById('weftTotalPicks').innerText = (fWeftW > 0 && fOnPick > 0) ? Math.round(fWeftW * fOnPick) : weftTotPicks;
         document.getElementById('weftTotalWeight').innerText = weftTotWt.toFixed(3) + ' kg';
         document.getElementById('weftTotalCost').innerText = weftTotCost.toFixed(2);
 
