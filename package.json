@@ -1,12 +1,32 @@
 {
-  "name": "texforever",
+  "name": "texforever-desktop",
   "version": "1.0.0",
+  "main": "main.js",
   "private": true,
-  "dependencies": {
-    "@capacitor/core": "^6.0.0",
-    "@capacitor/android": "^6.0.0"
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.0.0"
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.texforever.desktop",
+    "productName": "TEX FOR EVER",
+    "files": ["main.js", "preload.js", "package.json"],
+    "extraResources": [
+      { "from": "../www", "to": "www" }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "TEX-FOR-EVER-${version}.exe"
+    },
+    "directories": {
+      "output": "dist"
+    }
   }
 }
