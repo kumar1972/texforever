@@ -22,7 +22,18 @@ jobs:
       - name: Install dependencies
         working-directory: desktop
         run: npm install
-
+      - name: Set EXE icon from www/icon-512.png
+        shell: bash
+        run: |
+          python -m pip install pillow
+          mkdir -p desktop/build
+          python <<'EOF'
+          from PIL import Image
+          img = Image.open('www/icon-512.png').convert('RGBA')
+          img.save('desktop/build/icon.ico',
+                   sizes=[(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (16, 16)])
+          print('icon.ico created')
+          EOF
       - name: Build portable EXE
         working-directory: desktop
         env:
