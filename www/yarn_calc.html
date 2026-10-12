@@ -549,20 +549,33 @@
     }
 
     /* வரிசை வாரியாக முழு செட் + மீதி இழைகளை சரியாக பிரிக்கும் அல்காரிதம் (Warp மற்றும் Weft இரண்டிற்கும்) */
+    /* Set (rpt) ranges: a line inside a set range counts ends x set. e.g. lines 5-6 x2 => both lines doubled */
+    function effectiveLineValues(lines, ranges, type) {
+        const base = lines.map(l => parseFloat(type === 'warp' ? (l.ends || l.amount || l.end || l.qty) : (l.picks || l.amount || l.pick || l.qty)) || 0);
+        const mult = lines.map(() => 1);
+        (Array.isArray(ranges) ? ranges : []).forEach(r => {
+            const s = parseInt(r.start), e = parseInt(r.end), rep = parseInt(r.set);
+            if (!s || !e || !(rep > 1)) return;
+            for (let i = s - 1; i <= e - 1 && i < lines.length; i++) if (i >= 0) mult[i] = rep;
+        });
+        return base.map((v, i) => v * mult[i]);
+    }
+
     function resolvePatternRepeats(lines, ranges, targetTotal, type = 'warp') {
         if (!lines || lines.length === 0) return [];
 
         let defaultCount = (type === 'warp' ? document.getElementById('baseCount').value : document.getElementById('weftCount').value) || '40 ccc';
+        const effVals = effectiveLineValues(lines, ranges, type);
 
         // 1. ஒரு ரிப்பீட்டின் மொத்த இழைகள் மற்றும் நிற வாரியான rpt கணக்கீடு
         let patternTotal = 0;
         let colorRptMap = new Map();
 
-        lines.forEach(l => {
+        lines.forEach((l, idx) => {
             let rawCol = l.colourName || l.colour || l.color || l.shade || '';
             let colName = getStandardColourName(rawCol);
             let cnt = l.count || defaultCount;
-            let val = parseFloat(type === 'warp' ? (l.ends || l.amount || l.end || l.qty) : (l.picks || l.amount || l.pick || l.qty)) || 0;
+            let val = effVals[idx];
 
             patternTotal += val;
 
@@ -592,7 +605,7 @@
             let rawCol = l.colourName || l.colour || l.color || l.shade || '';
             let colName = getStandardColourName(rawCol);
             let cnt = l.count || defaultCount;
-            let val = parseFloat(type === 'warp' ? (l.ends || l.amount || l.end || l.qty) : (l.picks || l.amount || l.pick || l.qty)) || 0;
+            let val = effVals[i];
 
             let take = Math.min(val, remLeft);
             let key = cnt + "||" + colName;
