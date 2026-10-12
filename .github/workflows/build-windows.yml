@@ -1,5 +1,6 @@
 name: Build Windows EXE
-
+permissions:
+  contents: write
 on:
   workflow_dispatch:
   push:
@@ -28,9 +29,9 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run build
 
-      - name: Upload EXE
-        uses: actions/upload-artifact@v4
+      - name: Create release
+        uses: softprops/action-gh-release@v2
         with:
-          name: TEX-FOR-EVER-Windows
-          path: desktop/dist/*.exe
-          if-no-files-found: error
+          tag_name: desktop-v${{ github.run_number }}
+          name: TEX FOR EVER Desktop ${{ github.run_number }}
+          files: desktop/dist/*.exe
