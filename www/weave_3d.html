@@ -593,7 +593,7 @@ input, select {
             <button class="btn btn-green" style="padding: 14px; font-size: 0.95rem; font-weight: 900; letter-spacing: 1px;" onclick="openFullscreen()">
                 🧊 3D VIEW PREVIEW
             </button>
-            <button class="btn btn-dark" style="padding: 12px; font-size: 0.8rem;" onclick="printDesign()">
+            <button class="btn btn-dark" data-print-bound="true" style="padding: 12px; font-size: 0.8rem;" onclick="printDesign()">
                 🖨 PRINT DESIGN
             </button>
         </div>
@@ -678,8 +678,8 @@ input, select {
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
-            <button class="btn btn-green" onclick="executeRealA4Print()">🖨️ Print Now</button>
-            <button class="btn btn-blue" onclick="executePrintPdf()" style="font-size: 0.65rem; padding: 6px;">📥 Print PDF</button>
+            <button class="btn btn-green" data-print-bound="true" onclick="executeRealA4Print()">🖨️ Print Now</button>
+            <button class="btn btn-blue" data-print-bound="true" onclick="executePrintPdf()" style="font-size: 0.65rem; padding: 6px;">📥 Print PDF</button>
             <button class="btn btn-dark" onclick="closeCadPrintModal()">✖ Cancel</button>
         </div>
     </div>
@@ -2757,7 +2757,41 @@ function autoFitToA4() {
     if($("cadScaleRange")) $("cadScaleRange").value = fitVal;
     updateCadPrintScale(fitVal);
 }
+function printHtmlSmart(html, jobName) {
+    const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PrintPlugin;
 
+    // APK: Android print dialog (printer தேர்வு / Save as PDF)
+    if (plugin) {
+        return plugin.printHtml({ html: html, jobName: jobName || "TexForever Print" });
+    }
+
+    // Browser: window.open இல்லாமல் hidden iframe
+    return new Promise(function (resolve) {
+        const iframe = document.createElement("iframe");
+        iframe.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;";
+        document.body.appendChild(iframe);
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        const go = function () {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (e) {}
+            setTimeout(function () { iframe.remove(); resolve(); }, 2000);
+        };
+
+        const img = doc.querySelector("img");
+        if (img && !img.complete) {
+            img.onload = function () { setTimeout(go, 200); };
+            img.onerror = go;
+        } else {
+            setTimeout(go, 400);
+        }
+    });
+}
 async function executePrintPdf() {
     executeRealA4Print(true);
 }
@@ -3152,7 +3186,8 @@ async function executeRealA4Print(isPdfMode = false) {
 
         const isPortrait = parseFloat(totalPrintH_cm) >= parseFloat(totalPrintW_cm);
 
-        if (isPdfMode) {
+if (isPdfMode && !(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PrintPlugin)) {
+            // Browser மட்டும்: PNG file download
             const byteString = atob(dataURL.split(',')[1]);
             const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
             const ab = new ArrayBuffer(byteString.length);
@@ -3173,65 +3208,21 @@ async function executeRealA4Print(isPdfMode = false) {
             return;
         }
 
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Printer) {
-            try {
-                await window.Capacitor.Plugins.Printer.print({
-                    content: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-                        @page { size: A4 ${isPortrait ? "portrait" : "landscape"}; margin: 5mm; }
-                        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        body { margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; width: 100%; height: 100vh; }
-                        img { max-width: 100%; max-height: 98vh; width: auto; height: auto; object-fit: contain; display: block; }
-                    </style></head><body>
-                        <img src="${dataURL}">
-                    </body></html>`
-                });
-                closeCadPrintModal();
-            } catch(err) {
-                alert("Native Print Error: " + err.message);
-                closeCadPrintModal();
-            }
-        } else {
-            const printWin = window.open("", "_blank", "width=950,height=1100");
-            if (!printWin) {
-                closeCadPrintModal();
-                return alert("Print window open ஆகவில்லை. Pop-up allow செய்யவும்.");
-            }
+        const docHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>3D Weave A4 Print</title>
+            <style>
+                @page { size: A4 ${isPortrait ? "portrait" : "landscape"}; margin: 8mm; }
+                * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                html, body { margin: 0; padding: 0; background: #fff; font-family: sans-serif; }
+                body { display: flex; flex-direction: column; align-items: center; }
+                .cad-header { font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #111; text-align: center; }
+                img { display: block; width: ${totalPrintW_cm}cm; height: ${totalPrintH_cm}cm; max-width: 100%; max-height: ${isPortrait ? 275 : 185}mm; object-fit: contain; }
+            </style></head><body>
+            <div class="cad-header">TEXFOREVER (Scale: ${selectedCadScalePercent}% = 1 Repeat: ${singleW_cm.toFixed(2)} × ${singleH_cm.toFixed(2)} cm)</div>
+            <img src="${dataURL}" alt="3D Weave">
+            </body></html>`;
 
-            printWin.document.open();
-            printWin.document.write("<!DOCTYPE html>");
-            printWin.document.write('<html><head><meta charset="UTF-8"><title>3D Weave A4 Print</title>');
-            printWin.document.write(`
-                <style>
-                    @page { size: A4 ${isPortrait ? "portrait" : "landscape"}; margin: 8mm; }
-                    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    html, body { margin: 0; padding: 0; background: #fff; width: 100%; height: 100%; font-family: sans-serif; }
-                    body { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-                    .cad-header { font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #111; text-align: center; }
-                    img { display: block; width: ${totalPrintW_cm}cm; height: ${totalPrintH_cm}cm; max-width: 100%; max-height: 94vh; object-fit: contain; border: 1px solid #e2e8f0; }
-                </style>
-            `);
-            printWin.document.write('</head><body>');
-            printWin.document.write(`<div class="cad-header">TEXFOREVER (Scale: ${selectedCadScalePercent}% = 1 Repeat: ${singleW_cm.toFixed(2)} × ${singleH_cm.toFixed(2)} cm)</div>`);
-            printWin.document.write('<img id="print3DImage" src="' + dataURL + '" alt="3D Weave">');
-            printWin.document.write('</body></html>');
-            printWin.document.close();
-
-            const doPrint = function() {
-                try {
-                    printWin.focus();
-                    printWin.print();
-                    setTimeout(() => { printWin.close(); }, 500);
-                } catch(e) {}
-            };
-
-            const img = printWin.document.getElementById("print3DImage");
-            if (img) {
-                img.onload = function() { setTimeout(doPrint, 250); };
-            } else {
-                setTimeout(doPrint, 500);
-            }
-            closeCadPrintModal();
-        }
+        await printHtmlSmart(docHtml, "3D Weave A4 Print");
+        closeCadPrintModal();
     } catch(e) {
         alert("Print Error: " + e.message);
         closeCadPrintModal();
@@ -3416,6 +3407,12 @@ function buildDesignPrintContent() {
     let warpTableHTML = buildWarpTable(data.warpLines);
 
     return `
+        <style>
+        .print-graph-table { width: auto !important; border-collapse: collapse !important; }
+        .print-graph-table td { width: var(--gcell, 18px) !important; height: var(--gcell, 18px) !important; padding: 0 !important; font-size: var(--gfont, 14px) !important; text-align: center !important; }
+        .print-graph-table td[rowspan] { width: auto !important; height: auto !important; }
+        .print-graph-table td.graph-axis { border: none !important; width: auto !important; height: auto !important; padding: 0 6px !important; font-size: 10px !important; }
+    </style>
         <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
             <div>
                 <div style="font-size:18px; font-weight:900; color:#111827; margin-bottom:4px; text-transform: uppercase;">TEXFOREVER <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:none;">| DESIGN SHEET — ${escapeColourText(dName)}</span></div>
@@ -3517,30 +3514,19 @@ async function triggerRealPrint() {
     let wasFsOpen = fs && fs.style.display === "flex";
     if (wasFsOpen) fs.style.display = "none";
 
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Printer) {
-        try {
-            let printContent = $("printDesignContent").innerHTML;
-            await window.Capacitor.Plugins.Printer.print({
-                content: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-                    body { font-family: sans-serif; padding: 10px; color: #000; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #333; padding: 4px; text-align: center; }
-                </style></head><body>${printContent}</body></html>`
-            });
-        } catch (err) {
-            console.error("Native print error:", err);
-            if (typeof window.handleGlobalPrint === "function") {
-                window.handleGlobalPrint();
-            } else {
-                window.print();
-            }
-        }
-    } else {
-        if (typeof window.handleGlobalPrint === "function") {
-            window.handleGlobalPrint();
+    try {
+        let box = $("printDesignContent");
+        if (!box) throw new Error("Print content கிடைக்கல");
+
+        // outerHTML: container-ஓட style (--gcell, --gfont) உம் சேர்ந்து வரும்
+        if (window.appPrint) {
+            await window.appPrint(box.outerHTML);
         } else {
-            window.print();
+            alert("Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.");
         }
+    } catch (err) {
+        console.error("Print error:", err);
+        alert("Print error: " + err.message);
     }
 
     setTimeout(() => {
@@ -3611,7 +3597,7 @@ function buildPrintGraph(m, pickStr) {
         for(let c=0; c<m[r].length; c++) {
             let bTop = rowB.isTop[rowNum] ? "2.5px solid #000" : "1px solid #d1d5db";
             let bBot = rowB.isBot[rowNum] ? "2.5px solid #000" : "1px solid #d1d5db";
-            let borderStyle = `border-top:${bTop}; border-bottom:${bBot}; border-left:1px solid #d1d5db; border-right:1px solid #d1d5db;`;
+            let borderStyle = `border-top:${bTop} !important; border-bottom:${bBot} !important; border-left:1px solid #d1d5db !important; border-right:1px solid #d1d5db !important;`;
             
             html += `<td style="${borderStyle}">${m[r][c] ? "×" : ""}</td>`;
         }

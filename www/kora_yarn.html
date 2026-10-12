@@ -403,7 +403,10 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3>📋 Inward History Registry (வரவு)</h3>
-            <button class="close-btn" onclick="closeModal('inwardModal')">Close ✕</button>
+            <div style="display:flex; gap:8px;">
+                <button class="popup-trigger-btn" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background:#3B82F6;" onclick="printInwardHistory()">🖨️ Print</button>
+                <button class="close-btn" onclick="closeModal('inwardModal')">Close ✕</button>
+            </div>
         </div>
         <div class="modal-body">
             <div class="table-container">
@@ -429,7 +432,10 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3>📋 Issue History Registry (செலவு)</h3>
-            <button class="close-btn" onclick="closeModal('issueModal')">Close ✕</button>
+            <div style="display:flex; gap:8px;">
+                <button class="popup-trigger-btn" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background:#3B82F6;" onclick="printIssueHistory()">🖨️ Print</button>
+                <button class="close-btn" onclick="closeModal('issueModal')">Close ✕</button>
+            </div>
         </div>
         <div class="modal-body">
             <div class="table-container">
@@ -1016,6 +1022,99 @@ async function deleteIssue(id) {
     let records = JSON.parse(localStorage.getItem('kora_issue_records')) || []; records = records.filter(r => r.id != id);
     syncDataToCloud('kora_issue_records', records);
     loadUnitSuggestions(); loadCountSuggestions(); refreshAllTables();
+}
+  var KORA_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
+
+function escKora(v) {
+    return (v === null || v === undefined ? '' : String(v))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function fmtKoraDate(d) {
+    if (!d) return '';
+    var o = new Date(d);
+    if (isNaN(o)) return escKora(d);
+    return ("0" + o.getDate()).slice(-2) + "/" + ("0" + (o.getMonth() + 1)).slice(-2) + "/" + o.getFullYear();
+}
+
+function koraPrintDoc(title, headers, rowsHtml, totalText) {
+    var headHtml = headers.map(function (h) {
+        return '<th style="' + KORA_PRINT_CELL + ' background:#EAF0EA; font-weight:bold;">' + h + '</th>';
+    }).join('');
+
+    var html =
+        '<div style="background:#ffffff; color:#000000; width:100%;">' +
+        '<h2 style="text-align:center; font-size:16px; margin-bottom:8px;">' + title + '</h2>' +
+        '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
+        '<thead><tr>' + headHtml + '</tr></thead>' +
+        '<tbody>' + rowsHtml + '</tbody>' +
+        '</table>' +
+        '<p style="margin-top:8px; font-size:11px; font-weight:bold;">' + totalText + '</p>' +
+        '</div>';
+
+    if (window.appPrint) {
+        window.appPrint(html);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+}
+
+function printInwardHistory() {
+    var records = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    if (records.length === 0) {
+        alert('Print செய்ய Inward தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+
+    var total = 0;
+    var rows = '';
+    records.slice().reverse().forEach(function (r) {
+        total += parseFloat(r.weight) || 0;
+        rows += '<tr>' +
+            '<td style="' + KORA_PRINT_CELL + '">' + fmtKoraDate(r.date) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' text-align:left;">' + escKora(r.supplier) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + '">' + escKora(r.count) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' font-weight:bold;">' + escKora(r.weight) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' text-transform:uppercase;">' + escKora(r.status || 'running') + '</td>' +
+            '</tr>';
+    });
+
+    koraPrintDoc(
+        'Inward History (வரவு)',
+        ['Date', 'Source / Mill Name', 'Count', 'Weight (KG)', 'Status'],
+        rows,
+        'Total Weight: ' + total.toFixed(3) + ' KG'
+    );
+}
+
+function printIssueHistory() {
+    var records = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    if (records.length === 0) {
+        alert('Print செய்ய Issue தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+
+    var total = 0;
+    var rows = '';
+    records.slice().reverse().forEach(function (r) {
+        total += parseFloat(r.issueWt) || 0;
+        rows += '<tr>' +
+            '<td style="' + KORA_PRINT_CELL + '">' + fmtKoraDate(r.date) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + '">' + escKora(r.millName || '-') + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' text-align:left;">' + escKora(r.dyeingName) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' font-weight:bold;">' + escKora(r.designNo) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + '">' + escKora(r.count) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' font-weight:bold;">' + escKora(r.issueWt) + '</td>' +
+            '<td style="' + KORA_PRINT_CELL + ' text-transform:uppercase;">' + escKora(r.status || 'running') + '</td>' +
+            '</tr>';
+    });
+
+    koraPrintDoc(
+        'Issue History (செலவு)',
+        ['Date', 'Mill', 'Unit', 'Design', 'Count', 'Weight (KG)', 'Status'],
+        rows,
+        'Total Weight: ' + total.toFixed(3) + ' KG'
+    );
 }
 </script>
 </body>

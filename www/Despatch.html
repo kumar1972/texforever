@@ -360,7 +360,8 @@
         </div>
     </div>
 
-    <div class="card"color: #ffffff; /* Inga unga color-a change pannikalam */
+<div class="card">
+  
         <h3>🚚 Despatch Details Entry</h3>
         
         <div class="section-title">Despatch Order Details</div>
@@ -445,6 +446,7 @@
             <h3>📊 Saved Despatch List</h3>
             <div style="display: flex; gap: 8px;">
                 <button class="excel-btn" onclick="exportToExcel()">📥 Excel</button>
+                <button class="excel-btn" style="background:#3B82F6;" onclick="printDespatchList()">🖨️ Print</button>
                 <button class="close-btn" onclick="closeModal('despatchListModal')">Close ✕</button>
             </div>
         </div>
@@ -1096,7 +1098,55 @@ function exportToExcel() {
         alert('Export செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
         return;
     }
+function escPrint(v) {
+    return (v === null || v === undefined ? '' : String(v))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
+function printDespatchList() {
+    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    if (despatchList.length === 0) {
+        alert('Print செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+
+    var cell = 'border:1px solid #999; padding:4px; text-align:center;';
+    var headers = ['Date', 'Invoice No', 'Party', 'Design', 'Bale No', 'No Bales',
+                   'Despatched', 'Balance', 'Excess', 'Status'];
+
+    var headHtml = '<tr>' + headers.map(function (h) {
+        return '<th style="' + cell + ' background:#EAF0EA; font-weight:bold;">' + h + '</th>';
+    }).join('') + '</tr>';
+
+    var rowsHtml = '';
+    despatchList.forEach(function (entry) {
+        (entry.items || []).forEach(function (item) {
+            rowsHtml += '<tr>' +
+                '<td style="' + cell + '">' + escPrint(entry.date) + '</td>' +
+                '<td style="' + cell + '">' + escPrint(entry.invoiceNo) + '</td>' +
+                '<td style="' + cell + '">' + escPrint(entry.partyName) + '</td>' +
+                '<td style="' + cell + ' font-weight:bold;">' + escPrint(item.designNo || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.baleNo || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.noOfBales || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.despatchedMtr || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.balanceMtr || '0.00') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.excessMtr || '0.00') + '</td>' +
+                '<td style="' + cell + ' text-transform:uppercase;">' + escPrint(entry.status) + '</td>' +
+                '</tr>';
+        });
+    });
+
+    var html =
+        '<div style="background:#ffffff; color:#000000; width:100%;">' +
+        '<h2 style="text-align:center; font-size:16px; margin-bottom:8px;">Despatch Details</h2>' +
+        '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
+        '<thead>' + headHtml + '</thead>' +
+        '<tbody>' + rowsHtml + '</tbody>' +
+        '</table>' +
+        '</div>';
+
+    appPrint(html);
+}
     let csvContent = "data:text/csv;charset=utf-8,Date,Invoice No,Party Name,PO No,Transport Name,LR Number,Design No,Bale No,No. of Bales,Order Mtr,Despatched Mtr,Balance Mtr,Excess Mtr\r\n";
     
     despatchList.forEach(function(entry) {

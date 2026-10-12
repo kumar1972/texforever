@@ -213,7 +213,7 @@
         <div class="modal-header no-print">
             <h3>🖨️ Weaving Receive - Print Preview</h3>
             <div class="modal-actions">
-                <button class="print-btn" onclick="window.print()">Print Now</button>
+                <button class="print-btn" data-print-bound="true" onclick="printWeavingReceive()">Print Now</button>
                 <button class="close-btn" onclick="closeModal('printModal')">Close ✕</button>
             </div>
         </div>
@@ -715,6 +715,14 @@
         </tr>`;
         openModal('reportModal');
     }
+  function printWeavingReceive() {
+    var content = document.getElementById('printContent');
+    if (window.appPrint) {
+        window.appPrint(content ? content.innerHTML : undefined);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+  }
 </script>
 </body>
 </html>

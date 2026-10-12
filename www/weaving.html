@@ -550,7 +550,7 @@
             <div class="modal-header no-print">
                 <h3 id="previewModalTitle">👁️ Weaving Order Full Screen Preview</h3>
                 <div class="modal-actions">
-                    <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                    <button class="print-btn" data-print-bound="true" onclick="printModalBody(this)">🖨️ Print</button>
                     <button class="close-btn" onclick="closeModal('previewModal')">Close ✕</button>
                 </div>
             </div>
@@ -1551,6 +1551,21 @@
             document.getElementById('previewContent').innerHTML = html;
             openModal('previewModal');
         }
+      function printModalBody(btn) {
+    var modal = btn.closest('.overlay-modal') || btn.closest('.modal-content');
+    var body = modal ? modal.querySelector('.modal-body') : null;
+
+    if (!body) {
+        alert('Print செய்ய content கிடைக்கல.');
+        return;
+    }
+
+    if (window.appPrint) {
+        window.appPrint(body.innerHTML);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+      }
     </script>
 </body>
 </html>

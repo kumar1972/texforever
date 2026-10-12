@@ -1065,11 +1065,13 @@
 
             <div class="modal-actions">
 
-                <button
+                <
+                    <button
                     class="print-btn"
-                    onclick="window.print()">
+                    data-print-bound="true"
+                    onclick="printPreview()">
                     🖨️ Print
-                </button>
+                    </button>
 
                 <button
                     class="close-btn"
@@ -4307,6 +4309,14 @@ function authorizationAlert() {
         "Access Denied! You do not have permission to access this page. ❌"
     );
 }
+  function printPreview() {
+    var content = document.getElementById('previewContent');
+    if (window.appPrint) {
+        window.appPrint(content ? content.innerHTML : undefined);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+  }
 </script>
 </body>
 </html>

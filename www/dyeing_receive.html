@@ -318,5 +318,15 @@ document.getElementById('previewContent').innerHTML=`<div class="preview-title">
 function openPreview(printNow=false){buildPreview();openModal('printPreviewModal');if(printNow)setTimeout(printPreview,350)}
 function printPreview(){buildPreview();window.print()}
 </script>
+  <script>
+function printPreview() {
+    var content = document.getElementById('previewContent');
+    if (window.appPrint) {
+        window.appPrint(content ? content.innerHTML : undefined);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+}
+  </script>
 </body>
 </html>

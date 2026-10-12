@@ -327,7 +327,7 @@
         <div class="modal-header">
             <h3 id="modalTitle">Report Preview</h3>
             <div class="modal-actions">
-                <button class="print-btn-modal" onclick="window.print()">🖨️ Print</button>
+                <button class="print-btn-modal" data-print-bound="true" onclick="printModalBody(this)">🖨️ Print</button>
                 <button class="close-btn" onclick="closeModal()">Close ✕</button>
             </div>
         </div>
@@ -1212,6 +1212,21 @@
         btn.innerText = origText;
         alert(`✅ Design ${dName} Costing Saved to Cloud Successfully!`);
     }
+  function printModalBody(btn) {
+    var modal = btn.closest('.overlay-modal') || btn.closest('.modal-content');
+    var body = modal ? modal.querySelector('.modal-body') : null;
+
+    if (!body) {
+        alert('Print செய்ய content கிடைக்கல.');
+        return;
+    }
+
+    if (window.appPrint) {
+        window.appPrint(body.innerHTML);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+  }
 </script>
 </body>
 </html>

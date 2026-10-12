@@ -297,7 +297,7 @@
 
     <div class="action-btns-row">
         <button class="btn-main btn-preview" onclick="previewPattern()">👁️ Preview</button>
-        <button class="btn-main btn-save" id="saveBtnTxt" onclick="saveWarpDesign(); update3DPreviewData()">💾 Save</button>
+        <button class="btn-main btn-save" id="saveBtnTxt" onclick="saveWarpDesign()">💾 Save</button>
         <button class="btn-main btn-list" onclick="openSavedModal()">📂 Saved List</button>
     </div>
 </div>
@@ -308,7 +308,7 @@
         <div class="modal-header no-print">
             <h3>👁️ Warp Pattern Full Screen Preview</h3>
             <div class="modal-actions">
-                <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                <button class="print-btn" data-print-bound="true" onclick="printWarpPreview()">🖨️ Print</button>
                 <button class="close-btn" onclick="closeModal('previewModal')">Close ✕</button>
             </div>
         </div>
@@ -1442,6 +1442,18 @@ document.addEventListener('input', function(e) {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('btn-del-small')) { setTimeout(calculateLiveWarpTotals, 50); }
 });
+  function printWarpPreview() {
+    var content = document.getElementById('previewContent');
+    if (!content || !content.innerHTML.trim()) {
+        alert('Print செய்ய preview content கிடைக்கல. முதலில் Preview-ஐ திறங்க.');
+        return;
+    }
+    if (window.appPrint) {
+        window.appPrint(content.innerHTML);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+  }
 </script>
 </body>
 </html>

@@ -325,11 +325,7 @@
         </div>
     </div>
 
-    <h2 class=".card-header {
-    color: #ffffff; /* White color text-kku */
-}
-">Invoice / Bill Entry</h2>
-
+<h2 class="card-header">Invoice / Bill Entry</h2>
     <div class="form-section" style="margin-top: 10px;">
         <div class="section-badge">Invoice Info</div>
         <div class="form-grid">
@@ -440,7 +436,7 @@
     </div>
 
     <button class="btn-main" id="saveInvBtn" onclick="saveInvoice()">✅ Save Invoice Details</button>
-    <button class="btn-main print-btn" onclick="showFullPreview()">🖨️ Print / PDF Bill Preview</button>
+    <button class="btn-main print-btn" data-print-bound="true" onclick="showFullPreview()">🖨️ Print / PDF Bill Preview</button>
     <button type="button" class="popup-trigger-btn" onclick="openModal('invoiceListModal')">📊 View Saved Invoices</button>
 </div>
 
@@ -1203,13 +1199,20 @@ function showFullPreview() {
             '<div>For TEX FOR EVER<br><br><br>Authorized Signatory</div>' +
         '</div>' +
         '<div style="text-align:center; margin-top:25px; display:flex; gap:10px; justify-content:center;" class="no-print">' +
-            '<button onclick="window.print()" style="background:#1A2421; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🖨️ Print / Save as PDF</button>' +
+            '<button onclick="printInvoicePreview()" style="background:#1A2421; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🖨️ Print / Save as PDF</button>' +
             '<button onclick="goBackToForm()" style="background:#64748B; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">✏️ Edit Invoice</button>' +
         '</div>';
 
     window.scrollTo(0, 0);
 }
-
+function printInvoicePreview() {
+    var box = document.getElementById('printPreviewContainer');
+    if (window.appPrint) {
+        window.appPrint(box.innerHTML);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+}
 function goBackToForm() {
     document.getElementById('printPreviewContainer').style.display = 'none';
     document.getElementById('mainContainer').style.display = 'flex';

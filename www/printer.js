@@ -122,19 +122,30 @@ window.appPrint = async function (customContent) {
   }
 
   // 3. Browser (Chrome போன்றவை) - window.open இல்லாம hidden iframe
+ // 3. Browser (Chrome) - hidden iframe
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;';
   document.body.appendChild(iframe);
-  const doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(html);
-  doc.close();
 
-  setTimeout(() => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => iframe.remove(), 1000);
-  }, 500);
+  try {
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        alert('Print error: ' + e.message);
+      }
+      setTimeout(() => iframe.remove(), 2000);
+    }, 800);
+  } catch (e) {
+    iframe.remove();
+    alert('Print error: ' + e.message);
+  }
 };
 
 // Print பட்டன்களை தானாக இணைப்பது

@@ -4706,12 +4706,6 @@ function closeIssuePreview(){
     document.body.style.overflow='';
 }
 
-function printIssuePreview(){
-    const modal=document.getElementById('issuePreviewModal');
-    if(!modal) return;
-    if(!modal.classList.contains('show')) openIssuePreview();
-    setTimeout(()=>window.print(),50);
-}
 
 /* ============================================================
    ESC KEY
@@ -4772,6 +4766,15 @@ document.addEventListener(
 );
 
 </script>
-
+<script>
+function printIssuePreview() {
+    var content = document.getElementById('issuePreviewContent');
+    if (window.appPrint) {
+        window.appPrint(content ? content.innerHTML : undefined);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+}
+</script>
 </body>
 </html>

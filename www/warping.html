@@ -239,9 +239,9 @@
     .btn-save { background: linear-gradient(135deg, #4A7221, #33593D); box-shadow: 0 4px 12px rgba(74, 124, 89, 0.25); }
     .btn-save:hover { transform: translateY(-2px); }
     
-    .btn-blue { background: linear-gradient(135deg, #3BBA2F6, #1D4EEE); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); }
+    .btn-blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); }
     .btn-blue:hover { transform: translateY(-2px); }
-
+    
     .popup-trigger-btn {
         background: linear-gradient(135deg, #6366F1, #4338CA);
         color: white; border: none; padding: 14px; border-radius: 10px;
@@ -332,6 +332,19 @@
         position: absolute; top: 15px; right: 15px; background: #EF4444; color: white;
         border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 12px;
         cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+  /* Saved Warping modal - முழுத்திரை overlay */
+    #savedListModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 99999 !important;
+        align-items: center;
+        justify-content: center;
+        background: rgba(18, 25, 20, 0.85);
+        padding: 10px;
     }
 </style>
 </head>
@@ -471,17 +484,13 @@
     <button type="button" class="popup-trigger-btn" onclick="openModal('savedListModal')">View Saved Warping Data</button>
 </div>
 
-<!-- Saved List Modal -->
-<div id="savedListModal" class="overlay-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Saved Warping Data</h3>
-            <button class="close-btn" onclick="closeModal('savedListModal')">Close ✕</button>
-        </div>
-        <div class="modal-body" id="savedCardsContainer"></div>
-    </div>
+<div class="modal-header" style="flex-wrap:wrap; gap:8px;">
+            <h3 style="flex:1; min-width:150px;">Saved Warping Data</h3>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+                <button type="button" class="popup-trigger-btn" data-print-bound="true" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background:#3B82F6; position:relative; z-index:2;" onclick="printWarpingList()">🖨️ Print</button>
+                <button type="button" class="close-btn" style="position:relative; z-index:2;" onclick="document.getElementById('savedListModal').style.display='none'; document.body.style.overflow='';">Close ✕</button>
+            </div>
 </div>
-
 <!-- Fullscreen Image Modal -->
 <div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
     <button class="close-fullscreen">Close ✕</button>
@@ -1278,6 +1287,58 @@ function loadWeaverSuggestions() {
     let html = '<option value="">Select Weaver / Party</option>';
     masterWeavers.forEach(u => html += `<option value="${u}">${u}</option>`);
     if(document.getElementById('topWeaverTo')) document.getElementById('topWeaverTo').innerHTML = html;
+}
+  var WARP_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
+
+function escWarp(v) {
+    return (v === null || v === undefined ? '' : String(v))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function printWarpingList() {
+    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    if (issues.length === 0) {
+        alert('Print செய்ய Warping தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+    if (!window.appPrint) {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        return;
+    }
+
+    let total = 0;
+    let rows = '';
+    issues.slice().reverse().forEach(function (r) {
+        total += parseFloat(r.issueWt) || 0;
+        rows += '<tr>' +
+            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.date) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + ' font-weight:bold;">' + escWarp(r.designNo) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.unit) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.weaverTo || '-') + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.count) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + ' text-align:left;">' + escWarp(r.color) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.orderWt) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + ' font-weight:bold;">' + escWarp(r.issueWt) + '</td>' +
+            '<td style="' + WARP_PRINT_CELL + ' text-transform:uppercase;">' + escWarp(r.status || 'running') + '</td>' +
+            '</tr>';
+    });
+
+    let headers = ['Date', 'Design', 'Unit', 'Weaver', 'Count', 'Colour', 'Order Wt', 'Issued Wt', 'Status'];
+    let headHtml = headers.map(function (h) {
+        return '<th style="' + WARP_PRINT_CELL + ' background:#EAF0EA; font-weight:bold;">' + h + '</th>';
+    }).join('');
+
+    let html =
+        '<div style="background:#ffffff; color:#000000; width:100%;">' +
+        '<h2 style="text-align:center; font-size:16px; margin-bottom:8px;">Warping Details</h2>' +
+        '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
+        '<thead><tr>' + headHtml + '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+        '<p style="margin-top:8px; font-size:11px; font-weight:bold;">Total Issued Wt: ' + total.toFixed(3) + ' KG</p>' +
+        '</div>';
+
+    window.appPrint(html);
 }
 </script>
 </body>
