@@ -465,11 +465,11 @@ input, select {
 .section-code { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
 
 .yarn-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: sans-serif; }
-.yarn-table th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 4px; color: #374151; font-weight: 800; text-align: center; }
-.yarn-table td { border: 1px solid #e5e7eb; padding: 8px 4px; text-align: center; vertical-align: middle; }
+.yarn-table th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 4px 3px; color: #374151; font-weight: 800; text-align: center; }
+.yarn-table td { border: 1px solid #e5e7eb; padding: 3px 3px; text-align: center; vertical-align: middle; }
 .color-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #d1d5db; display: inline-block; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-.denting-box { font-size: 14px; font-weight: 900; text-align: center; line-height: 1.8; padding: 28px 22px; min-height: 120px; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; color: #111827; word-break: break-word; }
+.denting-box { font-size: 12px; font-weight: 900; text-align: center; line-height: 1.4; padding: 6px 10px; min-height: 0; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; color: #111827; word-break: break-word; }
 
 .print-graph-table { border-collapse: collapse; margin: 0 auto; }
 .print-graph-table td { width: var(--gcell, 18px); height: var(--gcell, 18px); text-align: center; font-size: var(--gfont, 14px); font-weight: 900; color: #111; border: 1px solid #d1d5db; }
@@ -2639,10 +2639,8 @@ function setPantoneFor(type, idx, hex) {
     const chosen = (hex || "").toLowerCase();
     inp.setAttribute("data-pantone", chosen);
     inp.value = chosen || orig;   // 3D preview reads this
-    const sw = $(pre + "PanSw" + idx);
-    if (sw) sw.style.background = chosen || "transparent";
-    const sel = $(pre + "Pan" + idx);
-    if (sel && sel.value !== chosen) sel.value = chosen;
+    const btn = $(pre === "w" ? "wBtn" + idx : "weftBtn" + idx);
+    if (btn) btn.style.background = chosen || orig;
     autoRefresh3D();
 }
 
@@ -2650,25 +2648,29 @@ function applySelectedColour() {
     if (!selectedColourForPopup) { closeColourPopup(); return; }
     const target = colourPopupTarget;
     const hex = String(selectedColourForPopup.hex || "").toLowerCase();
-    const type = target.type;
-    const pre = type === "warp" ? "w" : "weft";
-    const count = type === "warp" ? currentWarpCount : currentWeftCount;
-    const targetInp = $(pre + "C" + target.index);
+    const targetInp = $((target.type === "warp" ? "wC" : "weftC") + target.index);
     if (!targetInp) { closeColourPopup(); return; }
 
-    // Same original colour name => same colour line. Every line with that name changes, nothing else.
     const isSync = $("syncColorCheck")?.checked ?? true;
     const nameKey = (n) => cleanBaseColorName(n || "").toLowerCase().trim();
     const key = nameKey(targetInp.getAttribute("data-orig") || targetInp.getAttribute("data-name") || "");
 
-    for (let i = 1; i <= count; i++) {
-        const inp = $(pre + "C" + i);
-        if (!inp) continue;
-        const rk = nameKey(inp.getAttribute("data-orig") || inp.getAttribute("data-name") || "");
-        if (i === target.index || (isSync && key && rk === key)) {
-            setPantoneFor(type, i, hex);
+    // Same original colour name => same colour, in BOTH warp and weft, changes automatically.
+    // A colour that exists only in weft is chosen from the palette on its own row.
+    const groups = [
+        ["warp", "wC", currentWarpCount],
+        ["weft", "weftC", currentWeftCount]
+    ];
+    groups.forEach(([type, prefix, count]) => {
+        for (let i = 1; i <= count; i++) {
+            const inp = $(prefix + i);
+            if (!inp) continue;
+            const isTarget = (type === target.type && i === target.index);
+            const rk = nameKey(inp.getAttribute("data-orig") || inp.getAttribute("data-name") || "");
+            const sameName = isSync && key && rk === key;
+            if (isTarget || sameName) setPantoneFor(type, i, hex);
         }
-    }
+    });
     closeColourPopup();
 }
 
@@ -3398,8 +3400,8 @@ function buildDesignPrintContent() {
             </div>
         </div>
 
-        <div class="print-page-grid" style="display:flex; flex-direction:column; gap:0;">
-            <div class="print-col">
+        <div class="print-page-grid" style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
+            <div class="print-col" style="flex:1 1 0; min-width:0;">
                 <div class="print-section-title" style="margin-top:0;">
                     <span>🧵 WARPING & DRAWING PLAN</span>
                     <span class="section-code">WARP SEQUENCE</span>
@@ -3407,14 +3409,14 @@ function buildDesignPrintContent() {
                 ${warpTableHTML}
             </div>
             
-            <div class="print-col">
-                <div class="print-section-title">
+            <div class="print-col" style="flex:0 0 42%; min-width:0;">
+                <div class="print-section-title" style="margin-top:0;">
                     <span>📊 WEAVE GRAPH</span>
                     <span class="section-code">${m.length} × ${m[0].length} REPEAT</span>
                 </div>
                 <div class="print-graph-wrap" style="margin-bottom:15px; display:flex; justify-content:center;">${buildPrintGraph(m, pickStr)}</div>
                 
-                <div class="print-section-title" style="margin-top:28px;">
+                <div class="print-section-title" style="margin-top:14px;">
                     <span>📐 DENTING PATTERN</span>
                 </div>
                 <div class="denting-box">
