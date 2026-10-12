@@ -1,0 +1,19 @@
+name: Cleanup old runs
+
+on: workflow_dispatch
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh run list --limit 500 --json databaseId --jq '.[].databaseId' | while read id; do
+            gh run delete "$id" || true
+          done
