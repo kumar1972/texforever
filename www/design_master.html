@@ -1050,9 +1050,22 @@
 
             let designMasters = JSON.parse(dmGet('design_masters_data')) || [];
             if (!Array.isArray(designMasters)) designMasters = [];
-            designMasters = designMasters.filter(m => { let c = cleanDesignName(m.name || m.designNo); return c !== cleanOld && c !== cleanNew; });
-            dmSet('design_masters_data', JSON.stringify(designMasters));
 
+            // பழைய design-இன் master record (warp lines உட்பட) எடுத்து வைக்கவும்
+            let oldMasterRec = designMasters.find(m => cleanDesignName(m.name || m.designNo) === cleanOld);
+
+            // பழைய record-ஐ நீக்கவும்
+            designMasters = designMasters.filter(m => { let c = cleanDesignName(m.name || m.designNo); return c !== cleanOld && c !== cleanNew; });
+
+            // புது பெயரில் நகல் சேர்க்கவும் (warp pattern அழியாமல்)
+            if (oldMasterRec) {
+                let copyRec = JSON.parse(JSON.stringify(oldMasterRec));
+                copyRec.name = newDesignNo;
+                copyRec.designNo = newDesignNo;
+                designMasters.push(copyRec);
+            }
+
+            dmSet('design_masters_data', JSON.stringify(designMasters));
             // warp / weft / weave / denting entries-ம் புது டிசைன் நம்பருக்கு மாறும்
             changedEntries = migrateDesignEntries(oldDesignNo, newDesignNo);
         } else {
@@ -1216,5 +1229,6 @@
         document.querySelectorAll('input[name="weaveSelection"]').forEach(radio => radio.checked = false);
     }
 </script>
+  
 </body>
 </html>
