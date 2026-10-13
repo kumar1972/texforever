@@ -6,7 +6,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        registerPlugin(PrintPlugin.class); // super.onCreate-க்கு முன்னாடி இருக்கணும்
+        registerPlugin(PrintPlugin.class);
+        registerPlugin(TexforeverStoragePlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
