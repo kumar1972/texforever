@@ -281,7 +281,8 @@ input, select {
 .yarn-panel.active { display: block; }
 
 .scroll-box {
-    max-height: 280px;
+    max-height: none;
+    min-height: 70vh;
     overflow: auto;
     background: #0d1813;
     padding: 4px;
@@ -465,11 +466,13 @@ input, select {
 .section-code { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
 
 .yarn-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: sans-serif; }
-.yarn-table th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 4px 3px; color: #374151; font-weight: 800; text-align: center; }
-.yarn-table td { border: 1px solid #e5e7eb; padding: 3px 3px; text-align: center; vertical-align: middle; }
+.yarn-table th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 4px; color: #374151; font-weight: 800; text-align: center; }
+.yarn-table td { border: 1px solid #e5e7eb; border-bottom: 1px solid #94a3b8; padding: 8px 4px; text-align: center; vertical-align: middle; }
+.yarn-table tbody tr { border-bottom: 1px solid #94a3b8; }
+.yarn-table { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .color-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #d1d5db; display: inline-block; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-.denting-box { font-size: 12px; font-weight: 900; text-align: center; line-height: 1.4; padding: 6px 10px; min-height: 0; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; color: #111827; word-break: break-word; }
+.denting-box { font-size: 14px; font-weight: 900; text-align: center; line-height: 1.8; padding: 28px 22px; min-height: 120px; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; color: #111827; word-break: break-word; }
 
 .print-graph-table { border-collapse: collapse; margin: 0 auto; }
 .print-graph-table td { width: var(--gcell, 18px); height: var(--gcell, 18px); text-align: center; font-size: var(--gfont, 14px); font-weight: 900; color: #111; border: 1px solid #d1d5db; }
@@ -1159,14 +1162,14 @@ function mergeDesigns(items) {
 
     Object.keys(rawEdits).forEach(k => {
         if (rawEdits[k]) {
-            let cleanKey = cleanDesignName(k);
+            let cleanKey = String(k).trim();
             map.set(cleanKey, sanitizeDesignObj(clone(rawEdits[k])));
         }
     });
 
     (items || []).filter(Boolean).forEach(rawD => {
         let d = sanitizeDesignObj(clone(rawD));
-        let n = cleanDesignName(designName(d)); 
+        let n = String(designName(d)).trim(); 
         if(!n || n === "unnamed") return;
         
         if (!map.has(n)) {
@@ -1208,7 +1211,7 @@ function renderUIWithData(w=[], f=[]) {
             
             let countVal = x.count || "";
             let countPrefix = countVal ? `<span style="color:#f59e0b; font-size:0.72rem; font-weight:bold; margin-right:5px;">[${escapeColourText(countVal)}]</span>` : "";
-            let shadeTagBadge = x.shadeTag ? `<span style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;">${escapeColourText(x.shadeTag)}</span>` : "";
+            let shadeTagBadge = x.shadeTag ? `<span class="shade-tag-badge" style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;">${escapeColourText(x.shadeTag)}</span>` : "";
 
             wh += `<div>
                 <label>W${i+1}</label>
@@ -1234,7 +1237,7 @@ function renderUIWithData(w=[], f=[]) {
             
             let countVal = x.count || "";
             let countPrefix = countVal ? `<span style="color:#f59e0b; font-size:0.72rem; font-weight:bold; margin-right:5px;">[${escapeColourText(countVal)}]</span>` : "";
-            let shadeTagBadge = x.shadeTag ? `<span style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;">${escapeColourText(x.shadeTag)}</span>` : "";
+            let shadeTagBadge = x.shadeTag ? `<span class="shade-tag-badge" style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;">${escapeColourText(x.shadeTag)}</span>` : "";
 
             fh += `<div>
                 <label>Wft${i+1}</label>
@@ -1461,7 +1464,8 @@ function loadSelectedDesign(){
         let foundEdits = null;
         try {
             let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-            let key = Object.keys(editsCache).find(k => cleanDesignName(k) === cleanName);
+            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim());
+            if (!key && editsCache[cleanName] && designName(editsCache[cleanName]).trim() === dName.trim()) key = cleanName;
             if(key) foundEdits = editsCache[key];
         } catch(e) {}
 
@@ -1606,7 +1610,7 @@ function getCurrentData() {
             let origName = c.getAttribute('data-orig') || c.getAttribute('data-name') || "";
             let shadeTag = c.getAttribute('data-tag') || "";
             let cnt = c.getAttribute('data-cnt') || "";
-            let hex = (c.getAttribute("data-orig-hex") || c.value || "#ffffff").toLowerCase();
+            let hex = (c.getAttribute("data-pantone") || c.getAttribute("data-orig-hex") || c.value || "#ffffff").toLowerCase();
             
             w.push({ 
                 colourName: origName || cleanBaseColorName(origName), 
@@ -1632,7 +1636,7 @@ function getCurrentData() {
             let origName = c.getAttribute('data-orig') || c.getAttribute('data-name') || "";
             let shadeTag = c.getAttribute('data-tag') || "";
             let cnt = c.getAttribute('data-cnt') || "";
-            let hex = (c.getAttribute("data-orig-hex") || c.value || "#ffffff").toLowerCase();
+            let hex = (c.getAttribute("data-pantone") || c.getAttribute("data-orig-hex") || c.value || "#ffffff").toLowerCase();
             
             f.push({ 
                 colourName: origName || cleanBaseColorName(origName), 
@@ -1696,14 +1700,14 @@ async function saveCurrentDesign() {
 
         try {
             let edits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-            edits[cleanName] = clone(data);
+            edits[String(name).trim()] = clone(data);
             localStorage.setItem("local_edits_cache", JSON.stringify(edits));
         } catch(e) {}
 
         localStorage.setItem("last_edit_timestamp", Date.now().toString());
         window._lastEditStamp = localStorage.getItem("last_edit_timestamp");
 
-        let cache = Array.isArray(allCloudDesigns) ? allCloudDesigns.filter(x => cleanDesignName(designName(x)) !== cleanName) : []; 
+        let cache = Array.isArray(allCloudDesigns) ? allCloudDesigns.filter(x => String(designName(x)).trim() !== String(name).trim()) : []; 
         cache.push(clone(data));
         allCloudDesigns = mergeDesigns(cache); 
         
@@ -2631,16 +2635,36 @@ function pantoneRowHTML(type, n) {
 }
 
 // Pantone choice is a separate preview-only value. The original colour (data-orig-hex) is never changed.
-function setPantoneFor(type, idx, hex) {
+function setPantoneFor(type, idx, hex, shade) {
     const pre = type === "warp" ? "w" : "weft";
     const inp = $(pre + "C" + idx);
     if (!inp) return;
     const orig = inp.getAttribute("data-orig-hex") || inp.value;
     const chosen = (hex || "").toLowerCase();
     inp.setAttribute("data-pantone", chosen);
-    inp.value = chosen || orig;   // 3D preview reads this
-    const btn = $(pre === "w" ? "wBtn" + idx : "weftBtn" + idx);
-    if (btn) btn.style.background = chosen || orig;
+    inp.value = chosen || orig;
+    if (shade && shade.shadeTag) {
+        inp.setAttribute("data-tag", shade.shadeTag);
+    }
+    const sw = $(pre + "PanSw" + idx);
+    if (sw) sw.style.background = chosen || "transparent";
+    const sel = $(pre + "Pan" + idx);
+    if (sel && sel.value !== chosen) sel.value = chosen;
+    // Card colour button
+    const cardBtn = $((type === "warp" ? "wBtn" : "weftBtn") + idx);
+    if (cardBtn) cardBtn.style.background = chosen || orig;
+    // T-number badge on the card
+    const disp = $((type === "warp" ? "wNameDisp" : "weftNameDisp") + idx);
+    if (disp && shade && shade.shadeTag) {
+        let badge = disp.querySelector(".shade-tag-badge");
+        if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "shade-tag-badge";
+            badge.setAttribute("style", "background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;");
+            disp.appendChild(badge);
+        }
+        badge.textContent = shade.shadeTag;
+    }
     autoRefresh3D();
 }
 
@@ -2648,29 +2672,31 @@ function applySelectedColour() {
     if (!selectedColourForPopup) { closeColourPopup(); return; }
     const target = colourPopupTarget;
     const hex = String(selectedColourForPopup.hex || "").toLowerCase();
-    const targetInp = $((target.type === "warp" ? "wC" : "weftC") + target.index);
+    const shade = selectedColourForPopup;
+    const isWarp = target.type === "warp";
+    const targetInp = $((isWarp ? "wC" : "weftC") + target.index);
     if (!targetInp) { closeColourPopup(); return; }
 
     const isSync = $("syncColorCheck")?.checked ?? true;
     const nameKey = (n) => cleanBaseColorName(n || "").toLowerCase().trim();
     const key = nameKey(targetInp.getAttribute("data-orig") || targetInp.getAttribute("data-name") || "");
 
-    // Same original colour name => same colour, in BOTH warp and weft, changes automatically.
-    // A colour that exists only in weft is chosen from the palette on its own row.
+    // Warp lines of THIS design, then weft lines of THIS design
     const groups = [
-        ["warp", "wC", currentWarpCount],
-        ["weft", "weftC", currentWeftCount]
+        { type: "warp", pre: "w", count: currentWarpCount },
+        { type: "weft", pre: "weft", count: currentWeftCount }
     ];
-    groups.forEach(([type, prefix, count]) => {
-        for (let i = 1; i <= count; i++) {
-            const inp = $(prefix + i);
+    for (const g of groups) {
+        for (let i = 1; i <= g.count; i++) {
+            const inp = $(g.pre + "C" + i);
             if (!inp) continue;
-            const isTarget = (type === target.type && i === target.index);
+            const isTarget = (g.type === target.type && i === target.index);
             const rk = nameKey(inp.getAttribute("data-orig") || inp.getAttribute("data-name") || "");
-            const sameName = isSync && key && rk === key;
-            if (isTarget || sameName) setPantoneFor(type, i, hex);
+            if (isTarget || (isSync && key && rk === key)) {
+                setPantoneFor(g.type, i, hex, shade);
+            }
         }
-    });
+    }
     closeColourPopup();
 }
 
@@ -3205,6 +3231,12 @@ if (isPdfMode && !(window.Capacitor && window.Capacitor.Plugins && window.Capaci
     }
 }
 
+
+function printShadeTag(tag) {
+    if (!tag) return "";
+    return ` <span style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;margin-left:4px;">${escapeColourText(tag)}</span>`;
+}
+
 function buildWarpTable(lines) {
     if(!lines || !lines.length) return "<div style='font-size:8px;text-align:center;padding:5px;border:1px solid #ccc;'>No Yarns</div>";
     
@@ -3308,7 +3340,7 @@ function buildWarpTable(lines) {
                 h += `<tr>
                     <td>${visualRowIdx++}</td>
                     <td><div class="color-swatch" style="background:${l.hex || l.color};"></div></td>
-                    <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}</td>
+                    <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
                     <td style="font-weight:950; font-size:10px;">${amt}</td>
                     ${setTd}
                     ${drawTd}
@@ -3351,7 +3383,7 @@ function buildWarpTable(lines) {
             h += `<tr>
                 <td>${visualRowIdx++}</td>
                 <td><div class="color-swatch" style="background:${l.hex || l.color || colorName(l.colourName || l.origName)};"></div></td>
-                <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}</td>
+                <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
                 <td style="font-weight:950; font-size:10px;">${amt}</td>
                 <td style="font-size:10px; color:#9caea4; vertical-align:middle;">-</td>
                 <td style="color:#1e3a8a; font-weight:900; font-size:9px; vertical-align:middle; text-align:center; letter-spacing:0.5px; word-break: break-all;">${assignedDraw}</td>
@@ -3400,8 +3432,8 @@ function buildDesignPrintContent() {
             </div>
         </div>
 
-        <div class="print-page-grid" style="display:flex; flex-direction:row; gap:14px; align-items:flex-start;">
-            <div class="print-col" style="flex:1 1 0; min-width:0;">
+        <div class="print-page-grid" style="display:flex; flex-direction:column; gap:0;">
+            <div class="print-col">
                 <div class="print-section-title" style="margin-top:0;">
                     <span>🧵 WARPING & DRAWING PLAN</span>
                     <span class="section-code">WARP SEQUENCE</span>
@@ -3409,14 +3441,14 @@ function buildDesignPrintContent() {
                 ${warpTableHTML}
             </div>
             
-            <div class="print-col" style="flex:0 0 42%; min-width:0;">
-                <div class="print-section-title" style="margin-top:0;">
+            <div class="print-col">
+                <div class="print-section-title">
                     <span>📊 WEAVE GRAPH</span>
                     <span class="section-code">${m.length} × ${m[0].length} REPEAT</span>
                 </div>
                 <div class="print-graph-wrap" style="margin-bottom:15px; display:flex; justify-content:center;">${buildPrintGraph(m, pickStr)}</div>
                 
-                <div class="print-section-title" style="margin-top:14px;">
+                <div class="print-section-title" style="margin-top:28px;">
                     <span>📐 DENTING PATTERN</span>
                 </div>
                 <div class="denting-box">
