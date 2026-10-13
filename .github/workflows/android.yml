@@ -1,5 +1,6 @@
 name: Build Android APK
-
+permissions:
+  contents: write
 on:
   workflow_dispatch:
   push:
@@ -161,18 +162,21 @@ jobs:
           mkdir -p output
           cp android/app/build/outputs/apk/debug/app-debug.apk output/texforever-debug.apk
     
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Publish release APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: texforever-apk
-          path: output/texforever.apk
-          retention-days: 2
-          if-no-files-found: error
+          tag_name: v1.0.${{ github.run_number }}
+          name: TexForever v1.0.${{ github.run_number }}
+          files: output/texforever.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+      - name: Publish debug APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: texforever-debug-apk
-          path: output/texforever-debug.apk
-          retention-days: 2
-          if-no-files-found: error
+          tag_name: debug-v1.0.${{ github.run_number }}
+          name: TexForever Debug v1.0.${{ github.run_number }}
+          prerelease: true
+          files: output/texforever-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
