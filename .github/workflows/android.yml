@@ -1,6 +1,5 @@
 name: Build Android APK
-permissions:
-  contents: write
+
 on:
   workflow_dispatch:
   push:
@@ -32,33 +31,79 @@ jobs:
           sed -i 's/versionCode [0-9]*/versionCode ${{ github.run_number }}/' android/app/build.gradle
           sed -i 's/versionName ".*"/versionName "1.0.${{ github.run_number }}"/' android/app/build.gradle
 
+      - name: Add documentfile dependency
+        run: |
+          python3 <<'EOF'
+          p = 'android/app/build.gradle'
+          s = open(p).read()
+          if 'documentfile' not in s:
+              s = s.replace('dependencies {', 'dependencies {\n    implementation "androidx.documentfile:documentfile:1.0.1"', 1)
+              open(p, 'w').write(s)
+          print('documentfile dependency ready')
+          EOF
+
       - name: Copy native plugin files
         run: |
+          mkdir -p android/app/src/main/java/com/texforever
           cp native/PrintPlugin.java android/app/src/main/java/com/texforever/
           cp native/MainActivity.java android/app/src/main/java/com/texforever/
-     
+          cp native/TexforeverStoragePlugin.java android/app/src/main/java/com/texforever/
+
       - name: Sync web files
         run: npx cap sync android
-        
+
       - name: Set app icon from www/icon-512.png
         run: |
           pip install --quiet pillow
           python3 <<'EOF'
-          from PIL import Image
+          from PIL import Image, ImageDraw
           import os
 
           src = Image.open('www/icon-512.png').convert('RGBA')
           res = 'android/app/src/main/res'
-          sizes = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
 
-          for density, s in sizes.items():
-              folder = os.path.join(res, f'mipmap-{density}')
+          def padded(size, scale):
+              canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+              inner = int(size * scale)
+              img = src.resize((inner, inner), Image.LANCZOS)
+              off = (size - inner) // 2
+              canvas.paste(img, (off, off), img)
+              return canvas
+
+          def round_version(img):
+              mask = Image.new('L', img.size, 0)
+              ImageDraw.Draw(mask).ellipse((0, 0, img.size[0], img.size[1]), fill=255)
+              out = img.copy()
+              out.putalpha(mask)
+              return out
+
+          legacy = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
+          adaptive = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432}
+
+          for d, s in legacy.items():
+              folder = os.path.join(res, f'mipmap-{d}')
               os.makedirs(folder, exist_ok=True)
-              resized = src.resize((s, s), Image.LANCZOS)
-              for name in ['ic_launcher', 'ic_launcher_round', 'ic_launcher_foreground']:
-                  resized.save(os.path.join(folder, f'{name}.png'))
+              icon = padded(s, 0.8)
+              icon.save(os.path.join(folder, 'ic_launcher.png'))
+              round_version(icon).save(os.path.join(folder, 'ic_launcher_round.png'))
+
+          for d, s in adaptive.items():
+              folder = os.path.join(res, f'mipmap-{d}')
+              os.makedirs(folder, exist_ok=True)
+              padded(s, 0.66).save(os.path.join(folder, 'ic_launcher_foreground.png'))
+
           print('Icons created')
           EOF
+
+      - name: Check keystore secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TEXFOREVER_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.TEXFOREVER_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "Keystore secrets missing"
+            exit 1
+          fi
 
       - name: Restore keystore and add release signing
         env:
@@ -99,19 +144,33 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
-      
+
       - name: Prepare renamed APK
         run: |
           mkdir -p output
           cp android/app/build/outputs/apk/release/app-release.apk output/texforever.apk
           echo "--- output folder ---"
           ls -la output/
+    
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
 
-      - name: Create release
-        uses: softprops/action-gh-release@v2
+      - name: Prepare debug APK
+        run: |
+          mkdir -p output
+          cp android/app/build/outputs/apk/debug/app-debug.apk output/texforever-debug.apk
+    
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: v${{ github.run_number }}
-          name: TEX FOR EVER build ${{ github.run_number }}
-          files: |
-            output/texforever.apk
-            desktop/dist/*.exe
+          name: texforever-apk
+          path: output/texforever.apk
+          if-no-files-found: error
+    
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: texforever-debug-apk
+          path: output/texforever-debug.apk
+          if-no-files-found: error
