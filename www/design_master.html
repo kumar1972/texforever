@@ -284,12 +284,18 @@
         
         <hr style="border: 0; height: 1px; background: #CBD5E1; margin: 6px 0;">
 
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:6px;">
+            <button type="button" onclick="addCountMaster()" style="background:#0F172A;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;">+ Count Add</button>
+            <button type="button" onclick="openCountDeleteModalDM()" style="background:#EF4444;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;">🗑️ Count Delete</button>
+        </div>
+        <datalist id="dmCountsList"></datalist>
+
         <!-- 🟢 Auto-Populating Form Data 🟢 -->
         <div class="form-row">
-            <div class="form-group"><label>Warp 1 (Grnd / Base)</label><input type="text" id="warpCount" placeholder=""></div>
-            <div class="form-group"><label>Warp 2 (Top Beam)</label><input type="text" id="warpCount2" placeholder=""></div>
-            <div class="form-group"><label>Weft 1</label><input type="text" id="weftCount" placeholder=""></div>
-            <div class="form-group"><label>Weft 2</label><input type="text" id="weftCount2" placeholder="-"></div>
+            <div class="form-group"><label>Warp 1 (Grnd / Base)</label><input type="text" id="warpCount" list="dmCountsList" placeholder=""></div>
+            <div class="form-group"><label>Warp 2 (Top Beam)</label><input type="text" id="warpCount2" list="dmCountsList" placeholder=""></div>
+            <div class="form-group"><label>Weft 1</label><input type="text" id="weftCount" list="dmCountsList" placeholder=""></div>
+            <div class="form-group"><label>Weft 2</label><input type="text" id="weftCount2" list="dmCountsList" placeholder="-"></div>
         </div>
 
         <div class="form-row">
@@ -528,7 +534,8 @@
     };
 
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
         if (!checkUserPermission()) {
             alert("Access Denied! You do not have permission to access this page. ❌");
             window.location.href = "dashboard.html";
@@ -684,9 +691,9 @@
     // ================= DESIGN DELETE / CLOUD HELPERS =================
     // config.js storage: StorageDB (cache + IndexedDB + localStorage) மூலம் மட்டுமே படிக்க/எழுத வேண்டும்.
     // Cloud = erp_sync_data table (id = key name, json_data = value).
-    const dmGet = (k) => (window.StorageDB ? window.StorageDB.getItem(k) : localStorage.getItem(k));
-    const dmSet = (k, v) => (window.StorageDB ? window.StorageDB.setItem(k, v) : localStorage.setItem(k, v));
-    const dmRemove = (k) => (window.StorageDB ? window.StorageDB.removeItem(k) : localStorage.removeItem(k));
+    const dmGet = (k) => (window.StorageDB ? window.StorageDB.getItem(k) : window.StorageDB.getItem(k));
+    const dmSet = (k, v) => (window.StorageDB ? window.StorageDB.setItem(k, v) : window.StorageDB.setItem(k, v));
+    const dmRemove = (k) => (window.StorageDB ? window.StorageDB.removeItem(k) : window.StorageDB.removeItem(k));
 
     const DESIGN_DATA_KEYS = ['design_specs', 'pre_design_numbers', 'design_masters_data', 'weave_designs',
                               'warp_entry_data', 'weft_entry_data', 'denting_drawing_data', 'tex_master_designs'];
@@ -757,7 +764,7 @@
         if (window.StorageDB && window.StorageDB.cache) {
             Object.keys(window.StorageDB.cache).forEach(k => { if (!k.startsWith('__') && isTarget(k)) dmRemove(k); });
         }
-        Object.keys(localStorage).forEach(k => { if (!k.startsWith('__') && isTarget(k)) dmRemove(k); });
+        Array.from(new Set([...Object.keys(window.StorageDB.cache), ...Object.keys(localStorage)])).forEach(k => { if (!k.startsWith('__') && isTarget(k)) dmRemove(k); });
 
         // offline queue – நீக்கிய design மீண்டும் cloud-க்கு போகாமல் தடுக்கும்
         let rawQ = dmGet(OFFLINE_QUEUE_KEY);
@@ -837,6 +844,107 @@
         setPendingCloudDeletes(stillPending);
         return stillPending.length === 0;
     }
+
+    // ================= COUNT MASTER (Warp / Weft count list) =================
+    // Kora page-ல dropdown count-கள் இங்கிருந்து தான் வரும்.
+    const COUNT_MASTER_KEY = 'tex_master_counts';
+    let lastCountInput = null;
+
+    function getCountMaster() {
+        try { const v = JSON.parse(dmGet(COUNT_MASTER_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+    }
+
+    async function setCountMaster(list) {
+        dmSet(COUNT_MASTER_KEY, JSON.stringify(list));
+        if (window.supabaseSave) await window.supabaseSave(COUNT_MASTER_KEY, list);
+    }
+
+    // Count list + counts already used in design masters (so autocomplete shows everything)
+    function getAllCountOptions() {
+        const set = new Set(getCountMaster().map(c => String(c).trim()));
+        let masters = [];
+        try { masters = JSON.parse(dmGet('design_masters_data') || '[]') || []; } catch (e) {}
+        if (Array.isArray(masters)) {
+            masters.forEach(m => {
+                [m.warp1, m.warp2, m.weftCount, m.weft2].forEach(v => {
+                    const t = String(v || '').trim();
+                    if (t && t !== '-') set.add(t);
+                });
+            });
+        }
+        return Array.from(set).filter(Boolean).sort();
+    }
+
+    function renderCountDatalist() {
+        const dl = document.getElementById('dmCountsList');
+        if (dl) dl.innerHTML = getAllCountOptions().map(c => `<option value="${c}">`).join('');
+    }
+
+    window.addCountMaster = async function() {
+        const val = (prompt('புதிய Count பெயரை உள்ளிடவும் (Enter new Count):') || '').trim();
+        if (!val) return;
+        const list = getCountMaster();
+        if (!list.includes(val)) { list.push(val); await setCountMaster(list); }
+        const target = lastCountInput || document.getElementById('warpCount');
+        if (target) target.value = val;
+        renderCountDatalist();
+        alert(`Count '${val}' சேர்க்கப்பட்டது (Added)! ✅`);
+    };
+
+    window.openCountDeleteModalDM = function() {
+        if (getCountMaster().length === 0) { alert('நீக்க Count எதுவும் இல்லை.'); return; }
+        document.getElementById('countDelModal')?.remove();
+
+        const wrap = document.createElement('div');
+        wrap.id = 'countDelModal';
+        wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999999;display:flex;align-items:center;justify-content:center;padding:15px;';
+        wrap.innerHTML = `
+          <div style="background:#fff;border-radius:12px;width:100%;max-width:420px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:12px 16px;background:#F1F5F9;display:flex;justify-content:space-between;align-items:center;">
+              <b style="font-size:14px;">நீக்க வேண்டிய Count-ஐ தேர்வு செய்யவும்</b>
+              <button id="countDelClose" style="background:#EF4444;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-weight:bold;">✕</button>
+            </div>
+            <input id="countDelSearch" placeholder="Search count..." style="margin:10px 16px;padding:10px;border:1px solid #CBD5E1;border-radius:8px;font-size:14px;">
+            <div id="countDelList" style="overflow-y:auto;padding:0 16px 16px;"></div>
+          </div>`;
+        document.body.appendChild(wrap);
+
+        const render = () => {
+            const q = document.getElementById('countDelSearch').value.trim().toLowerCase();
+            const box = document.getElementById('countDelList');
+            box.innerHTML = '';
+            getCountMaster().filter(c => String(c).toLowerCase().includes(q)).forEach(c => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = c;
+                b.style.cssText = 'display:block;width:100%;text-align:left;padding:12px 8px;border:none;border-bottom:1px solid #E2E8F0;background:#fff;font-size:14px;font-weight:600;color:#0F172A;';
+                b.onclick = () => removeCountMaster(c);
+                box.appendChild(b);
+            });
+        };
+        document.getElementById('countDelSearch').oninput = render;
+        document.getElementById('countDelClose').onclick = () => wrap.remove();
+        render();
+    };
+
+    async function removeCountMaster(c) {
+        if (!confirm(`'${c}' Count-ஐ Count list-ல் இருந்து நீக்கவா?\n(ஏற்கனவே ஏதாவது டிசைனில் இருந்தால், அங்கே அப்படியே இருக்கும்)`)) return;
+        await setCountMaster(getCountMaster().filter(x => x !== c));
+        document.getElementById('countDelModal')?.remove();
+        renderCountDatalist();
+        alert(`'${c}' நீக்கப்பட்டது (Deleted)! ✅`);
+    }
+
+    function initCountTools() {
+        ['warpCount', 'warpCount2', 'weftCount', 'weftCount2'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('focus', () => { lastCountInput = el; renderCountDatalist(); });
+        });
+        renderCountDatalist();
+    }
+    const startCountTools = () => (window.StorageDB && window.StorageDB.ready ? window.StorageDB.ready : Promise.resolve()).then(initCountTools);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startCountTools);
+    else startCountTools();
 
     window.deleteDesignWithConfirm = async function() {
         if (!checkUserPermission()) { alert("Access Denied!"); return; }

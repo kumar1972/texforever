@@ -380,7 +380,8 @@
         return clean;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
         if (!checkUserPermission()) {
             alert("Access Denied! You do not have permission to access this page. ❌");
             window.location.href = "dashboard.html";
@@ -390,9 +391,9 @@
     });
 
     function populateMillsDatalist() {
-        let masterMills = JSON.parse(localStorage.getItem('tex_master_mills')) || [];
-        let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
-        let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+        let masterMills = JSON.parse(window.StorageDB.getItem('tex_master_mills')) || [];
+        let inwards = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
+        let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
         
         let millsSet = new Set();
         
@@ -415,8 +416,8 @@
     }
 
     function getMillNameFromKora(designNo, countStr) {
-        let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
-        let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+        let inwards = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
+        let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
         let allRecords = [...(Array.isArray(inwards)?inwards:[]), ...(Array.isArray(issues)?issues:[])];
         
         let cleanDNo = cleanDesignName(designNo);
@@ -437,10 +438,10 @@
     function initDropdowns() {
         populateMillsDatalist(); 
         
-        let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
-        let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
-        let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+        let preDesigns = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
+        let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
+        let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
         
         let allDesigns = new Set([...preDesigns]);
         if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
@@ -454,7 +455,7 @@
         });
         select.innerHTML = html;
 
-        let activeDesign = localStorage.getItem('selected_design_number');
+        let activeDesign = window.StorageDB.getItem('selected_design_number');
         if(activeDesign && allDesigns.has(activeDesign)) {
             select.value = activeDesign;
             loadDesignData();
@@ -482,27 +483,72 @@
         }
     }
 
+    function collectYarnCalcState() {
+        const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+        const q = (r, sel) => { const el = r.querySelector(sel); return el ? el.value : ''; };
+        const warpRows = Array.from(document.querySelectorAll('#warpTableBody tr')).map(r => ({
+            mill: q(r, '.w-mill'), count: q(r, '.w-count'), color: q(r, '.w-color'),
+            rpt: q(r, '.w-ends-rpt'), ends: q(r, '.w-ends'), kora: q(r, '.w-kora-rate'), dye: q(r, '.w-dye-rate')
+        }));
+        const weftRows = Array.from(document.querySelectorAll('#weftTableBody tr')).map(r => ({
+            mill: q(r, '.weft-mill'), count: q(r, '.weft-count'), color: q(r, '.weft-color'),
+            rpt: q(r, '.weft-picks-rpt'), ends: q(r, '.weft-picks'), kora: q(r, '.weft-kora-rate'), dye: q(r, '.weft-dye-rate')
+        }));
+        const top = {};
+        ['finishReed','onloomReed','finishPick','pickLess','onloomPick','finishWidth','orderMtr','exPercentage',
+         'warpCrimpTop','washingShortTop','dyeingLoss','totalDyeingMtr','topBeamPct','weftMtrs']
+            .forEach(id => top[id] = val(id));
+        const costing = {};
+        ['costWarpingWages','costSizing','costWagesPick','costWashingWages','costProfitPct']
+            .forEach(id => costing[id] = val(id));
+        return {
+            top, costing, warpRows, weftRows,
+            flags: { reed: manualOnloomReed, pick: manualOnloomPick, total: manualTotalDyeing }
+        };
+    }
+
+    function applyYarnCalcState(yc) {
+        if (!yc) return;
+        const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== '') el.value = v; };
+        if (yc.top) Object.keys(yc.top).forEach(id => set(id, yc.top[id]));
+        if (yc.costing) Object.keys(yc.costing).forEach(id => set(id, yc.costing[id]));
+        if (yc.flags) {
+            manualOnloomReed = !!yc.flags.reed;
+            manualOnloomPick = !!yc.flags.pick;
+            manualTotalDyeing = !!yc.flags.total;
+        }
+    }
+
+    // Bottom (costing) Warp Crimp / Dyeing Waste / Washing Shortage always follow the top entries by default
+    function syncBottomFromTop() {
+        [['warpCrimpTop', 'costWarpCrimpPct'], ['dyeingLoss', 'costDyeingWastePct'], ['washingShortTop', 'costWashingShortPct']]
+            .forEach(([topId, bottomId]) => {
+                const t = document.getElementById(topId), b = document.getElementById(bottomId);
+                if (t && b && t.value !== '') b.value = t.value;
+            });
+    }
+
     function loadDesignData() {
         let dName = document.getElementById('designNo').value;
         if(!dName) return;
-        localStorage.setItem('selected_design_number', dName);
+        window.StorageDB.setItem('selected_design_number', dName);
 
         manualTotalDyeing = false;
         let cleanDNo = cleanDesignName(dName);
         
-        let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+        let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
         let matchedOrder = Array.isArray(partyOrders) ? partyOrders.find(o => {
             let dNo = o.designNumber || o.designNo || '';
             return cleanDesignName(dNo) === cleanDNo;
         }) || {} : {};
         
-        let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+        let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
         let foundMaster = Array.isArray(designMasters) ? designMasters.find(d => {
             let mName = d.name || d.designNo || '';
             return cleanDesignName(mName) === cleanDNo;
         }) || {} : {};
 
-        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
         let foundSpecKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo);
         let sp = foundSpecKey ? designSpecs[foundSpecKey] : {};
 
@@ -550,6 +596,7 @@
             manualTotalDyeing = true;
         }
 
+        applyYarnCalcState(sp.yarnCalc);
         buildDynamicTables(sp, foundMaster);
         calculateTopData();
     }
@@ -634,25 +681,29 @@
         return result;
     }
 
+    // Kora rate: rows with same Mill + Count get the same rate. Dyeing rate: rows with same Colour get the same rate. Warp + Weft both.
     function syncKoraRates(element) {
-        let row = element.closest('tr');
-        let isWarp = row.classList.contains('warp-row');
-        let millVal = row.querySelector(isWarp ? '.w-mill' : '.weft-mill').value.trim().toLowerCase();
-        let countVal = row.querySelector(isWarp ? '.w-count' : '.weft-count').value.trim().toLowerCase();
-        let newVal = element.value;
+        const isDye = element.classList.contains('w-dye-rate') || element.classList.contains('weft-dye-rate');
+        const row = element.closest('tr');
+        const isWarp = row.classList.contains('warp-row');
+        const get = (r, warp, field) => {
+            const el = r.querySelector(warp ? '.w-' + field : '.weft-' + field);
+            return el ? el.value.trim().toLowerCase() : '';
+        };
+        const mine = { mill: get(row, isWarp, 'mill'), count: get(row, isWarp, 'count'), color: get(row, isWarp, 'color') };
+        const newVal = element.value;
+        const rateField = isDye ? 'dye-rate' : 'kora-rate';
 
         document.querySelectorAll('#warpTableBody tr, #weftTableBody tr').forEach(r => {
             if (r === row) return;
-            let rIsWarp = r.classList.contains('warp-row');
-            let rMill = r.querySelector(rIsWarp ? '.w-mill' : '.weft-mill').value.trim().toLowerCase();
-            let rCount = r.querySelector(rIsWarp ? '.w-count' : '.weft-count').value.trim().toLowerCase();
-            
-            if (rMill === millVal && rCount === countVal) {
-                let targetInput = r.querySelector(rIsWarp ? '.w-kora-rate' : '.weft-kora-rate');
-                if (targetInput && targetInput.value !== newVal) {
-                    targetInput.value = newVal;
-                }
-            }
+            const rIsWarp = r.classList.contains('warp-row');
+            const same = k => mine[k] !== '' && mine[k] === get(r, rIsWarp, k);
+            const ok = isDye
+                ? same('color')
+                : (same('count') && get(r, rIsWarp, 'mill') === mine.mill);
+            if (!ok) return;
+            const target = r.querySelector(rIsWarp ? '.w-' + rateField : '.weft-' + rateField);
+            if (target && target.value !== newVal) target.value = newVal;
         });
     }
 
@@ -667,7 +718,7 @@
         let cleanDNo = cleanDesignName(dNo);
 
         try {
-            let warpEntryData = JSON.parse(localStorage.getItem("warp_entry_data") || "[]");
+            let warpEntryData = JSON.parse(window.StorageDB.getItem("warp_entry_data") || "[]");
             if (Array.isArray(warpEntryData)) {
                 let matchW = warpEntryData.find(w => cleanDesignName(w.designNo || w.name || w.design) === cleanDNo);
                 if (matchW && matchW.warpLines && matchW.warpLines.length > 0) warpLines = matchW.warpLines;
@@ -675,7 +726,7 @@
         } catch(e) {}
 
         try {
-            let weftEntryData = JSON.parse(localStorage.getItem("weft_entry_data") || "[]");
+            let weftEntryData = JSON.parse(window.StorageDB.getItem("weft_entry_data") || "[]");
             if (Array.isArray(weftEntryData)) {
                 let matchF = weftEntryData.find(f => cleanDesignName(f.designNo || f.name || f.design) === cleanDNo);
                 if (matchF && matchF.weftLines && matchF.weftLines.length > 0) weftLines = matchF.weftLines;
@@ -701,8 +752,11 @@
         let resolvedWeft = resolvePatternRepeats(weftLines, foundMaster.weftRanges || sp.weftRanges, targetWeftPicks, 'weft');
 
         let warpHtml = '';
+        const savedWarp = (sp && sp.yarnCalc && sp.yarnCalc.warpRows) || [];
         resolvedWarp.forEach((w, idx) => {
-            let autoMill = getMillNameFromKora(dNo, w.count) || '';
+            const sv = savedWarp[idx] || {};
+            w = { count: sv.count || w.count, color: sv.color || w.color, rpt: sv.rpt || w.rpt, total: sv.ends || w.total };
+            let autoMill = sv.mill || getMillNameFromKora(dNo, w.count) || '';
             warpHtml += `
                 <tr class="warp-row" data-index="${idx}">
                     <td><input type="text" list="millsList" class="w-mill" value="${autoMill}" placeholder="Select Mill"></td>
@@ -711,8 +765,8 @@
                     <td><input type="number" class="w-ends-rpt" value="${w.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends" value="${w.total}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-weight" readonly></td>
-                    <td><input type="number" class="w-kora-rate" value="430" oninput="syncKoraRates(this); calculateTableRows()"></td>
-                    <td><input type="number" class="w-dye-rate" value="${idx===1 ? 140 : 70}" oninput="calculateTableRows()"></td>
+                    <td><input type="number" class="w-kora-rate" value="${sv.kora ?? 430}" oninput="syncKoraRates(this); calculateTableRows()"></td>
+                    <td><input type="number" class="w-dye-rate" value="${sv.dye ?? (idx===1 ? 140 : 70)}" oninput="syncKoraRates(this); calculateTableRows()"></td>
                     <td class="row-total-display w-total-cost">0.00</td>
                 </tr>
             `;
@@ -720,8 +774,11 @@
         document.getElementById('warpTableBody').innerHTML = warpHtml;
 
         let weftHtml = '';
+        const savedWeft = (sp && sp.yarnCalc && sp.yarnCalc.weftRows) || [];
         resolvedWeft.forEach((wf, idx) => {
-            let autoMill = getMillNameFromKora(dNo, wf.count) || '';
+            const sv = savedWeft[idx] || {};
+            wf = { count: sv.count || wf.count, color: sv.color || wf.color, rpt: sv.rpt || wf.rpt, total: sv.ends || wf.total };
+            let autoMill = sv.mill || getMillNameFromKora(dNo, wf.count) || '';
             weftHtml += `
                 <tr class="weft-row" data-index="${idx}">
                     <td><input type="text" list="millsList" class="weft-mill" value="${autoMill}" placeholder="Select Mill"></td>
@@ -730,8 +787,8 @@
                     <td><input type="number" class="weft-picks-rpt" value="${wf.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="weft-picks" value="${wf.total}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="weft-weight" readonly></td>
-                    <td><input type="number" class="weft-kora-rate" value="365" oninput="syncKoraRates(this); calculateTableRows()"></td>
-                    <td><input type="number" class="weft-dye-rate" value="${idx===1 ? 145 : 70}" oninput="calculateTableRows()"></td>
+                    <td><input type="number" class="weft-kora-rate" value="${sv.kora ?? 365}" oninput="syncKoraRates(this); calculateTableRows()"></td>
+                    <td><input type="number" class="weft-dye-rate" value="${sv.dye ?? (idx===1 ? 145 : 70)}" oninput="syncKoraRates(this); calculateTableRows()"></td>
                     <td class="row-total-display weft-total-cost">0.00</td>
                 </tr>
             `;
@@ -781,6 +838,7 @@
             document.getElementById('weftMtrs').value = weftMtrs > 0 ? weftMtrs.toFixed(2) : '';
         }
 
+        syncBottomFromTop();
         rebuildWeftIfTargetChanged();
         calculateTableRows();
     }
@@ -990,12 +1048,12 @@
         let statusText = isCompleted ? 'completed' : 'running';
         let cleanDNo = cleanDesignName(dNo);
 
-        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
         let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
 
         if(!designSpecs[specKey]) designSpecs[specKey] = {};
         designSpecs[specKey].status = statusText;
-        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
         if(window.supabaseSave) {
             await window.supabaseSave('design_specs', designSpecs);
@@ -1012,62 +1070,110 @@
             let dNo = document.getElementById('designNo')?.value || '-';
             let gsm = document.getElementById('displayGsmBadge')?.innerText || 'GSM: 0';
             let orderMtr = document.getElementById('orderMtr')?.value || '-';
-            
+
             let html = `
                 <h3 style="margin-bottom:10px; color:#1E2B23;">Design: ${dNo} (${gsm})</h3>
                 <p style="margin-bottom:15px; font-size:12px;"><b>Order Mtr:</b> ${orderMtr} Mts</p>
-                
+
                 <h4 style="margin-bottom:5px; color:#2F4F38; font-size:12px;">Detailed Yarn Weight</h4>
                 <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom: 20px;" border="1">
                     <tr style="background:#EAF0EA;"><th>Type</th><th>Count</th><th>Colour</th><th>Ends/Picks</th><th>Weight (Kg)</th></tr>
             `;
 
-            let consolidated = {};
+            // Colour-wise grouping: one row per colour (mills collected for reference)
+            let colours = {};
+            let order = [];
+            let getColour = (colour) => {
+                let cName = (colour || '').trim() || '-';
+                let key = cName.toLowerCase();
+                if (!colours[key]) {
+                    colours[key] = { colour: cName, mills: [], warpCounts: [], warpWt: 0, weftCounts: [], weftWt: 0 };
+                    order.push(key);
+                }
+                return colours[key];
+            };
+            let addUnique = (list, v) => { if (v && !list.includes(v)) list.push(v); };
 
             document.querySelectorAll('#warpTableBody tr').forEach(r => {
-                let cnt = r.querySelector('.w-count')?.value || '';
+                let mill = r.querySelector('.w-mill')?.value || '';
+                let cnt = (r.querySelector('.w-count')?.value || '').trim();
                 let clr = r.querySelector('.w-color')?.value || '';
                 let ends = r.querySelector('.w-ends')?.value || '';
                 let wt = r.querySelector('.w-weight')?.value || '';
                 html += `<tr><td>Warp</td><td>${cnt}</td><td>${clr}</td><td>${ends}</td><td>${wt ? wt + ' kg' : ''}</td></tr>`;
 
-                let key = (cnt.trim() + "||" + clr.trim()).toLowerCase();
-                if (!consolidated[key]) consolidated[key] = { count: cnt, color: clr, weight: 0 };
-                consolidated[key].weight += parseFloat(wt) || 0;
+                let w = parseFloat(wt) || 0;
+                if (w > 0) {
+                    let c = getColour(clr);
+                    addUnique(c.mills, mill.trim());
+                    addUnique(c.warpCounts, cnt);
+                    c.warpWt += w;
+                }
             });
+
             document.querySelectorAll('#weftTableBody tr').forEach(r => {
-                let cnt = r.querySelector('.weft-count')?.value || '';
+                let mill = r.querySelector('.weft-mill')?.value || '';
+                let cnt = (r.querySelector('.weft-count')?.value || '').trim();
                 let clr = r.querySelector('.weft-color')?.value || '';
                 let pck = r.querySelector('.weft-picks')?.value || '';
                 let wt = r.querySelector('.weft-weight')?.value || '';
                 html += `<tr><td>Weft</td><td>${cnt}</td><td>${clr}</td><td>${pck}</td><td>${wt ? wt + ' kg' : ''}</td></tr>`;
 
-                let key = (cnt.trim() + "||" + clr.trim()).toLowerCase();
-                if (!consolidated[key]) consolidated[key] = { count: cnt, color: clr, weight: 0 };
-                consolidated[key].weight += parseFloat(wt) || 0;
+                let w = parseFloat(wt) || 0;
+                if (w > 0) {
+                    let c = getColour(clr);
+                    addUnique(c.mills, mill.trim());
+                    addUnique(c.weftCounts, cnt);
+                    c.weftWt += w;
+                }
             });
             html += `</table>`;
 
+            // Colour-wise table: Warp + Weft = Total for each colour
             html += `
-                <h4 style="margin-bottom:5px; color:#2F4F38; font-size:12px;">Consolidated Yarn Weight</h4>
-                <table style="width:100%; border-collapse:collapse; font-size:11px;" border="1">
-                    <tr style="background:#EAF0EA;"><th>Count</th><th>Colour</th><th>Total Weight (Kg)</th></tr>
+                <h4 style="margin-bottom:5px; color:#2F4F38; font-size:12px;">Colour-wise Yarn Weight</h4>
+                <div style="width:100%; overflow-x:auto;">
+                <table style="width:100%; min-width:480px; border-collapse:collapse; font-size:11px;" border="1">
+                    <tr style="background:#EAF0EA;">
+                        <th>Colour</th>
+                        <th>Mill</th>
+                        <th>Warp Count</th>
+                        <th>Warp Wt</th>
+                        <th>Weft Count</th>
+                        <th>Weft Wt</th>
+                        <th>Total</th>
+                    </tr>
             `;
 
-            let grandTotal = 0;
-            Object.values(consolidated).forEach(item => {
-                if (item.weight > 0) {
-                    html += `<tr><td>${item.count}</td><td>${item.color}</td><td style="font-weight:bold;">${item.weight.toFixed(3)} kg</td></tr>`;
-                    grandTotal += item.weight;
-                }
+            let gWarp = 0, gWeft = 0;
+            order.forEach(key => {
+                let c = colours[key];
+                let total = c.warpWt + c.weftWt;
+                if (total <= 0) return;
+                gWarp += c.warpWt;
+                gWeft += c.weftWt;
+
+                html += `<tr>
+                    <td style="font-weight:bold;">${c.colour}</td>
+                    <td>${c.mills.filter(Boolean).join(', ') || '-'}</td>
+                    <td>${c.warpCounts.join(', ') || '-'}</td>
+                    <td>${c.warpWt > 0 ? c.warpWt.toFixed(3) + ' kg' : '-'}</td>
+                    <td>${c.weftCounts.join(', ') || '-'}</td>
+                    <td>${c.weftWt > 0 ? c.weftWt.toFixed(3) + ' kg' : '-'}</td>
+                    <td style="font-weight:bold; color:#D97706;">${total.toFixed(3)} kg</td>
+                </tr>`;
             });
 
             html += `
                     <tr style="background:#F4F7F4;">
-                        <td colspan="2" style="text-align:right; font-weight:bold; padding-right:10px;">Grand Total:</td>
-                        <td style="font-weight:bold; color:#D97706;">${grandTotal.toFixed(3)} kg</td>
+                        <td colspan="3" style="font-weight:bold; text-align:right;">Grand Total:</td>
+                        <td style="font-weight:bold;">${gWarp.toFixed(3)} kg</td>
+                        <td></td>
+                        <td style="font-weight:bold;">${gWeft.toFixed(3)} kg</td>
+                        <td style="font-weight:bold; color:#D97706;">${(gWarp + gWeft).toFixed(3)} kg</td>
                     </tr>
                 </table>
+                </div>
             `;
 
             let modal = document.getElementById('previewModal');
@@ -1158,7 +1264,7 @@
         btn.innerText = "⏳ Saving...";
 
         let cleanDNo = cleanDesignName(dName);
-        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
         let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dName;
 
         if(!designSpecs[specKey]) designSpecs[specKey] = {};
@@ -1177,10 +1283,11 @@
         designSpecs[specKey].onloomPick = document.getElementById('onloomPick').value;
         designSpecs[specKey].finishWidth = document.getElementById('finishWidth').value;
         designSpecs[specKey].onloomWidth = document.getElementById('onloomWidth').value;
+        designSpecs[specKey].yarnCalc = collectYarnCalcState();
 
-        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
-        let yarnDataArray = JSON.parse(localStorage.getItem('yarn_calculation_data')) || [];
+        let yarnDataArray = JSON.parse(window.StorageDB.getItem('yarn_calculation_data')) || [];
         yarnDataArray = yarnDataArray.filter(d => cleanDesignName(d.designNo) !== cleanDNo); 
 
         document.querySelectorAll('#warpTableBody tr').forEach(r => {
@@ -1211,7 +1318,7 @@
             }
         });
 
-        localStorage.setItem('yarn_calculation_data', JSON.stringify(yarnDataArray));
+        window.StorageDB.setItem('yarn_calculation_data', JSON.stringify(yarnDataArray));
 
         if(window.supabaseSave) {
             await window.supabaseSave('design_specs', designSpecs);
@@ -1234,7 +1341,7 @@
         btn.innerText = "⏳ Saving...";
 
         let cleanDNo = cleanDesignName(dName);
-        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
         let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dName;
 
         if(!designSpecs[specKey]) designSpecs[specKey] = {};
@@ -1242,8 +1349,9 @@
         designSpecs[specKey].productionCost = document.getElementById('costProduction').value;
         designSpecs[specKey].sellingRate = document.getElementById('costFabric').value;
         designSpecs[specKey].profitPercentage = document.getElementById('costProfitPct').value;
+        designSpecs[specKey].yarnCalc = collectYarnCalcState();
 
-        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
         if(window.supabaseSave) {
             await window.supabaseSave('design_specs', designSpecs);

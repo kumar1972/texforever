@@ -327,8 +327,6 @@
                 <label>Yarn Count</label>
                 <div class="input-group-btn">
                     <select id="inwardCount"><option value="">Select Count</option></select>
-                    <button type="button" class="btn-add-inline" onclick="addMasterCount('inwardCount')">+ Add</button>
-                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('count')" title="Delete Count">🗑️</button>
                 </div>
             </div>
             <div class="form-group">
@@ -380,8 +378,6 @@
                 <label>Yarn Count</label>
                 <div class="input-group-btn">
                     <select id="issueCount"><option value="">Select Count</option></select>
-                    <button type="button" class="btn-add-inline" onclick="addMasterCount('issueCount')">+ Add</button>
-                    <button type="button" class="btn-del-inline" onclick="deleteMasterItem('count')" title="Delete Count">🗑️</button>
                 </div>
             </div>
             <div class="form-group">
@@ -479,7 +475,8 @@ function checkUserPermission() {
     return true;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     if (!checkUserPermission()) {
         alert("Access Denied! You do not have permission to access this page. ❌");
         window.location.href = "dashboard.html";
@@ -497,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function syncDataToCloud(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
+    window.StorageDB.setItem(key, JSON.stringify(data));
     if (window.supabaseSave) {
         await window.supabaseSave(key, data);
     }
@@ -511,7 +508,7 @@ function addMasterMill(selectId) {
     if(val) {
         val = val.trim();
         if(!val) return;
-        let masterMills = JSON.parse(localStorage.getItem('tex_master_mills')) || [];
+        let masterMills = JSON.parse(window.StorageDB.getItem('tex_master_mills')) || [];
         if(!masterMills.includes(val)) {
             masterMills.push(val);
             syncDataToCloud('tex_master_mills', masterMills);
@@ -527,28 +524,12 @@ function addMasterUnit(selectId) {
     if(val) {
         val = val.trim();
         if(!val) return;
-        let masterUnits = JSON.parse(localStorage.getItem('tex_master_units')) || [];
+        let masterUnits = JSON.parse(window.StorageDB.getItem('tex_master_units')) || [];
         if(!masterUnits.includes(val)) {
             masterUnits.push(val);
             syncDataToCloud('tex_master_units', masterUnits);
             loadUnitSuggestions();
             alert(`Unit '${val}' added & saved to Cloud successfully! ✅`);
-        }
-        document.getElementById(selectId).value = val;
-    }
-}
-
-function addMasterCount(selectId) {
-    let val = prompt("புதிய நூல் கவுண்டை உள்ளிடவும் (Enter new Yarn Count):");
-    if(val) {
-        val = val.trim();
-        if(!val) return;
-        let masterCounts = JSON.parse(localStorage.getItem('tex_master_counts')) || [];
-        if(!masterCounts.includes(val)) {
-            masterCounts.push(val);
-            syncDataToCloud('tex_master_counts', masterCounts);
-            loadCountSuggestions();
-            alert(`Count '${val}' added & saved to Cloud successfully! ✅`);
         }
         document.getElementById(selectId).value = val;
     }
@@ -560,7 +541,7 @@ function deleteMasterItem(type) {
     else if(type === 'unit') { storageKey = 'tex_master_units'; title = "Unit"; }
     else if(type === 'count') { storageKey = 'tex_master_counts'; title = "Count"; }
 
-    let masterList = JSON.parse(localStorage.getItem(storageKey)) || [];
+    let masterList = JSON.parse(window.StorageDB.getItem(storageKey)) || [];
     if(masterList.length === 0) { alert(`No manually added ${title}s found to delete.`); return; }
 
     let listStr = masterList.map((m, i) => `${i + 1}. ${m}`).join('\n');
@@ -582,9 +563,9 @@ function deleteMasterItem(type) {
 }
 
 function loadMillSuggestions() {
-    let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
-    let masterMills = JSON.parse(localStorage.getItem('tex_master_mills')) || [];
+    let inwards = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
+    let masterMills = JSON.parse(window.StorageDB.getItem('tex_master_mills')) || [];
     
     let millsSet = new Set([...masterMills]);
     inwards.forEach(item => { if(item.supplier) millsSet.add(item.supplier.trim()); if(item.millName) millsSet.add(item.millName.trim()); });
@@ -604,8 +585,8 @@ function loadMillSuggestions() {
 }
 
 function loadUnitSuggestions() {
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
-    let masterUnits = JSON.parse(localStorage.getItem('tex_master_units')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
+    let masterUnits = JSON.parse(window.StorageDB.getItem('tex_master_units')) || [];
     
     let unitSet = new Set([...masterUnits]);
     issues.forEach(item => { if(item.dyeingName) unitSet.add(item.dyeingName.trim()); });
@@ -620,52 +601,33 @@ function loadUnitSuggestions() {
 }
 
 function loadCountSuggestions() {
-    let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
-    let masterCounts = JSON.parse(localStorage.getItem('tex_master_counts')) || [];
-    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
-    let masters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-    let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
-    
-    let countSet = new Set([...masterCounts]);
-    inwards.forEach(item => { if(item.count) countSet.add(item.count.trim()); });
-    issues.forEach(item => { if(item.count) countSet.add(item.count.trim()); });
-    
-    Object.values(specs).forEach(s => {
-        if(s.warp) countSet.add(s.warp.trim());
-        if(s.baseBeamCount) countSet.add(s.baseBeamCount.trim());
-        if(s.topBeamCount && s.topBeamCount !== '-') countSet.add(s.topBeamCount.trim());
-        if(s.weft) countSet.add(s.weft.trim());
-        if(s.weftCount) countSet.add(s.weftCount.trim());
-    });
+    let inwards = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
+    let masters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
 
-    if(Array.isArray(masters)) {
+    // Count list = Design Master count list + Design Master counts + Inward (stock) counts
+    let countSet = new Set();
+    (JSON.parse(window.StorageDB.getItem('tex_master_counts')) || []).forEach(c => { if (c && c !== '-') countSet.add(String(c).trim()); });
+    if (Array.isArray(masters)) {
         masters.forEach(m => {
-            if(m.warp1) countSet.add(m.warp1.trim());
-            if(m.warp2 && m.warp2 !== '-') countSet.add(m.warp2.trim());
-            if(m.weftCount) countSet.add(m.weftCount.trim());
+            if (m.warp1) countSet.add(String(m.warp1).trim());
+            if (m.warp2 && m.warp2 !== '-') countSet.add(String(m.warp2).trim());
+            if (m.weftCount) countSet.add(String(m.weftCount).trim());
+            if (m.weft2 && m.weft2 !== '-') countSet.add(String(m.weft2).trim());
         });
     }
-
-    if(Array.isArray(orders)) {
-        orders.forEach(o => {
-            if(o.baseBeamCount) countSet.add(o.baseBeamCount.trim());
-            if(o.topBeamCount && o.topBeamCount !== '-') countSet.add(o.topBeamCount.trim());
-            if(o.weftCount) countSet.add(o.weftCount.trim());
-        });
-    }
+    inwards.forEach(item => { if (item.count) countSet.add(String(item.count).trim()); });
 
     let inVal = document.getElementById('inwardCount').value;
     let issVal = document.getElementById('issueCount').value;
 
     let html = '<option value="">Select Count</option>';
     Array.from(countSet).filter(Boolean).sort().forEach(c => { html += `<option value="${c}">${c}</option>`; });
-    
+
     document.getElementById('inwardCount').innerHTML = html;
     document.getElementById('issueCount').innerHTML = html;
 
-    if(inVal) document.getElementById('inwardCount').value = inVal;
-    if(issVal) document.getElementById('issueCount').value = issVal;
+    if (inVal) document.getElementById('inwardCount').value = inVal;
+    if (issVal) document.getElementById('issueCount').value = issVal;
 }
 
 function openModal(modalId) {
@@ -691,8 +653,8 @@ window.openFullscreenImage = function(src) {
 window.closeFullscreenImage = function() { document.getElementById('fullscreenModal').style.display = 'none'; };
 
 function loadBitmapImage() {
-    let activeDesign = document.getElementById('designNo').value || localStorage.getItem('selected_design_number');
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let activeDesign = document.getElementById('designNo').value || window.StorageDB.getItem('selected_design_number');
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs') || '{}');
     let bitmapContainer = document.getElementById('bitmapDisplayContainer');
     
     let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
@@ -711,10 +673,10 @@ function loadBitmapImage() {
 }
 
 function loadDesignDropdown() {
-    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
-    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
-    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let preDesigns = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
+    let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
+    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
 
     let allDesigns = new Set();
     preDesigns.forEach(d => allDesigns.add(d));
@@ -727,7 +689,7 @@ function loadDesignDropdown() {
     Array.from(allDesigns).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
     select.innerHTML = html;
 
-    let activeDesign = localStorage.getItem('selected_design_number');
+    let activeDesign = window.StorageDB.getItem('selected_design_number');
     if(activeDesign && allDesigns.has(activeDesign)) {
         select.value = activeDesign;
         onDesignSelect(activeDesign);
@@ -737,21 +699,21 @@ function loadDesignDropdown() {
 function onDesignSelect(val) {
     loadBitmapImage();
     if(!val) return;
-    localStorage.setItem('selected_design_number', val);
+    window.StorageDB.setItem('selected_design_number', val);
     
     let clean = cleanDesignName(val);
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs') || '{}');
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === clean) || val;
     let sp = designSpecs[specKey] || {};
 
-    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
     let foundMaster = Array.isArray(designMasters) ? designMasters.find(d => cleanDesignName(d.name || d.designNo) === clean) || {} : {};
 
-    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
     let foundOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === clean) || {} : {};
 
     let specStatus = (sp.status || foundOrder.status || '').toLowerCase();
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
     let rec = issues.find(r => cleanDesignName(r.designNo || r.designNumber) === clean);
 
     let cb = document.getElementById('top_completed_status');
@@ -759,11 +721,9 @@ function onDesignSelect(val) {
         if(cb) cb.checked = true;
     } else { if(cb) cb.checked = false; }
 
-    // Auto-select Count for Issue if available
-    let resolvedCount = foundOrder.baseBeamCount || sp.baseBeamCount || foundMaster.warp1 || sp.warp || foundOrder.weftCount || sp.weft || '';
-    if(resolvedCount && !document.getElementById('issueCount').value) {
-        document.getElementById('issueCount').value = resolvedCount;
-    }
+    // Design Master is the single source: Warp 1 (base) count becomes the Issue default
+    let resolvedCount = foundMaster.warp1 ? String(foundMaster.warp1).trim() : '';
+    document.getElementById('issueCount').value = resolvedCount;
 }
 
 async function quickCompleteToggle() {
@@ -781,16 +741,17 @@ async function quickCompleteToggle() {
     if(!dNo) { alert("Mudhala Design Number select pannunga bro"); if(cb) cb.checked = false; return; }
 
     let statusText = isCompleted ? 'completed' : 'running';
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
     let updated = false;
 
     issues.forEach(r => { if(cleanDesignName(r.designNo || r.designNumber) === cleanDesignName(dNo)) { r.status = statusText; updated = true; } });
 
-    if(!updated) {
+    let issueCountVal = document.getElementById('issueCount').value.trim();
+    if(!updated && issueCountVal) {
         let dateVal = document.getElementById('issueDate').value || new Date().toISOString().split('T')[0];
         let dyeingName = document.getElementById('dyeingName').value.trim() || 'Direct Unit';
         let issueMillName = document.getElementById('issueMillName').value.trim() || 'Main Mill';
-        let count = document.getElementById('issueCount').value.trim() || '20/s';
+        let count = issueCountVal;
         let issueWt = parseFloat(document.getElementById('issueWt').value) || 0;
 
         issues.push({ id: Date.now(), date: dateVal, dyeingName: dyeingName, millName: issueMillName, designNo: dNo, count: count, issueWt: issueWt.toFixed(3), status: statusText });
@@ -798,7 +759,7 @@ async function quickCompleteToggle() {
 
     syncDataToCloud('kora_issue_records', issues);
 
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     let clean = cleanDesignName(dNo);
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === clean) || dNo;
 
@@ -822,7 +783,7 @@ async function saveInward() {
 
     if(!supplier || !count || weight <= 0) { alert("Please enter or select Mill Name, Count, and valid Weight!"); return; }
 
-    let records = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    let records = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
     let cleanSupplier = supplier.replace('#', '').trim().toLowerCase();
 
     if(editingInwardId === null && cleanSupplier) {
@@ -874,7 +835,7 @@ async function saveIssue() {
 
     if(!dyeingName || !dNo || !count || issueWt <= 0 || !issueMillName) { alert("Please fill all details to issue yarn (including Mill Name)!"); return; }
 
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
     let cleanDNo = cleanDesignName(dNo); let cleanDyeing = dyeingName.toLowerCase().trim();
 
     if(editingIssueId === null && cleanDNo) {
@@ -905,7 +866,7 @@ async function saveIssue() {
         alert("Kora Yarn Issued to Cloud Successfully! ✅☁️");
     }
 
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
 
     if(!designSpecs[specKey]) designSpecs[specKey] = {};
@@ -925,7 +886,7 @@ async function saveIssue() {
 async function toggleInwardStatus(id, newStatus) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to change status. ❌"); return; }
     if(confirm(newStatus === 'completed' ? "Change this stock to Completed?" : "Change this stock to Running?")) {
-        let records = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+        let records = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
         let index = records.findIndex(r => r.id == id);
         if(index > -1) {
             records[index].status = newStatus; 
@@ -938,13 +899,13 @@ async function toggleInwardStatus(id, newStatus) {
 async function toggleIssueStatus(id, newStatus) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to change status. ❌"); return; }
     if(confirm(newStatus === 'completed' ? "Change this issue to Completed?" : "Change this issue to Running?")) {
-        let records = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+        let records = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
         let index = records.findIndex(r => r.id == id);
         if(index > -1) {
             records[index].status = newStatus; 
             let dNo = records[index].designNo;
             if(dNo) {
-                let cleanDNo = cleanDesignName(dNo); let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                let cleanDNo = cleanDesignName(dNo); let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
                 let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
                 if(!designSpecs[specKey]) designSpecs[specKey] = {};
                 designSpecs[specKey].status = newStatus; 
@@ -957,8 +918,8 @@ async function toggleIssueStatus(id, newStatus) {
 }
 
 function refreshAllTables() {
-    let inwards = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
-    let issues = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    let inwards = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
 
     let inBody = document.getElementById('inwardHistoryBody'); inBody.innerHTML = '';
     if(inwards.length === 0) {
@@ -987,7 +948,7 @@ function refreshAllTables() {
 
 function editInward(id) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to edit entries. ❌"); return; }
-    let records = JSON.parse(localStorage.getItem('kora_stock_records')) || []; let rec = records.find(r => r.id == id);
+    let records = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || []; let rec = records.find(r => r.id == id);
     if(rec) {
         editingInwardId = id; document.getElementById('inwardDate').value = rec.date; document.getElementById('supplierName').value = rec.supplier;
         document.getElementById('inwardCount').value = rec.count; document.getElementById('inwardWt').value = rec.weight;
@@ -999,14 +960,14 @@ function editInward(id) {
 async function deleteInward(id) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to delete entries. ❌"); return; }
     if(!confirm("Are you sure you want to delete this Inward record?")) return;
-    let records = JSON.parse(localStorage.getItem('kora_stock_records')) || []; records = records.filter(r => r.id != id);
+    let records = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || []; records = records.filter(r => r.id != id);
     syncDataToCloud('kora_stock_records', records);
     loadMillSuggestions(); loadCountSuggestions(); refreshAllTables();
 }
 
 function editIssue(id) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to edit entries. ❌"); return; }
-    let records = JSON.parse(localStorage.getItem('kora_issue_records')) || []; let rec = records.find(r => r.id == id);
+    let records = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || []; let rec = records.find(r => r.id == id);
     if(rec) {
         editingIssueId = id; document.getElementById('issueDate').value = rec.date; document.getElementById('dyeingName').value = rec.dyeingName;
         document.getElementById('issueMillName').value = rec.millName || ''; document.getElementById('designNo').value = rec.designNo;
@@ -1019,7 +980,7 @@ function editIssue(id) {
 async function deleteIssue(id) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to delete entries. ❌"); return; }
     if(!confirm("Are you sure you want to delete this Issue record?")) return;
-    let records = JSON.parse(localStorage.getItem('kora_issue_records')) || []; records = records.filter(r => r.id != id);
+    let records = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || []; records = records.filter(r => r.id != id);
     syncDataToCloud('kora_issue_records', records);
     loadUnitSuggestions(); loadCountSuggestions(); refreshAllTables();
 }
@@ -1060,7 +1021,7 @@ function koraPrintDoc(title, headers, rowsHtml, totalText) {
 }
 
 function printInwardHistory() {
-    var records = JSON.parse(localStorage.getItem('kora_stock_records')) || [];
+    var records = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
     if (records.length === 0) {
         alert('Print செய்ய Inward தரவுகள் எதுவும் இல்லை!');
         return;
@@ -1088,7 +1049,7 @@ function printInwardHistory() {
 }
 
 function printIssueHistory() {
-    var records = JSON.parse(localStorage.getItem('kora_issue_records')) || [];
+    var records = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || [];
     if (records.length === 0) {
         alert('Print செய்ய Issue தரவுகள் எதுவும் இல்லை!');
         return;

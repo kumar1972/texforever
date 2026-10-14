@@ -93,25 +93,39 @@ window.StorageDB = {
         }
         if(migrated) console.log("✅ Migrated localStorage to IndexedDB successfully");
     },
+    // IndexedDB is the primary store. localStorage is used only as a fallback before IndexedDB is ready.
     getItem(key) {
         if (this.cache[key] !== undefined) return this.cache[key];
-        return localStorage.getItem(key);
+        if (!this.isReady) return localStorage.getItem(key);
+        return null;
     },
     setItem(key, value) {
         this.cache[key] = value;
-        try { 
-            localStorage.setItem(key, value); 
-        } catch(e) {
-            console.warn("localStorage quota exceeded, safely relying on IndexedDB");
-        }
-        if(this.db) {
+        if (this.db) {
             try { this.db.transaction("store", "readwrite").objectStore("store").put(value, key); } catch(e){}
+        } else {
+            try { localStorage.setItem(key, value); } catch(e) {}
+        }
+        // Same cloud auto-sync that the old localStorage interceptor did
+        if (key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom")) {
+            if (window.isCloudSyncActive && window.isCloudSyncActive()) {
+                let parsedData = value;
+                try { parsedData = JSON.parse(value); } catch(e) {}
+                if (window.supabaseClient) {
+                    cloudSave(key, parsedData);
+                } else {
+                    window.initializeSupabase(false).then(() => {
+                        if (window.supabaseClient) cloudSave(key, parsedData);
+                    });
+                }
+            }
         }
     },
     removeItem(key) {
         delete this.cache[key];
+        // also remove the legacy copy, otherwise migration would bring the deleted value back
         try { localStorage.removeItem(key); } catch(e) {}
-        if(this.db) {
+        if (this.db) {
             try { this.db.transaction("store", "readwrite").objectStore("store").delete(key); } catch(e){}
         }
     },
@@ -125,7 +139,7 @@ window.StorageDB = {
 };
 
 // Initialize immediately
-window.StorageDB.init();
+window.StorageDB.ready = window.StorageDB.init();
 
 // ============================================================
 // SYSTEM MODE
