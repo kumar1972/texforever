@@ -511,7 +511,8 @@ function checkUserPermission() {
     return true;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     if (!checkUserPermission()) {
         alert("Access Denied! You do not have permission to access this page. ❌");
         window.location.href = "dashboard.html";
@@ -551,8 +552,8 @@ window.closeFullscreenImage = function() {
 };
 
 function loadBitmapImage() {
-    let activeDesign = document.getElementById('topDesignNo').value || localStorage.getItem('selected_design_number');
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let activeDesign = document.getElementById('topDesignNo').value || window.StorageDB.getItem('selected_design_number');
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs') || '{}');
     let bitmapContainer = document.getElementById('bitmapDisplayContainer');
     
     let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
@@ -631,10 +632,10 @@ function addWarpingUnit() {
     if(val) {
         val = val.trim();
         if(!val) return;
-        let masterUnits = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
+        let masterUnits = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
         if(!masterUnits.includes(val)) {
             masterUnits.push(val);
-            localStorage.setItem('tex_master_warping_units', JSON.stringify(masterUnits));
+            window.StorageDB.setItem('tex_master_warping_units', JSON.stringify(masterUnits));
             if (window.supabaseSave) window.supabaseSave('tex_master_warping_units', masterUnits);
             loadWarpingUnitSuggestions();
             alert(`Unit '${val}' added successfully! ✅`);
@@ -646,7 +647,7 @@ function addWarpingUnit() {
 }
 
 function deleteWarpingUnit() {
-    let masterList = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
+    let masterList = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
     if(masterList.length === 0) { alert(`No manually added Units found to delete.`); return; }
     let listStr = masterList.map((m, i) => `${i + 1}. ${m}`).join('\n');
     let idxStr = prompt(`எந்த Unit பெயரை நீக்க வேண்டும்? அதற்கான எண்ணை டைப் செய்யவும்:\n\n${listStr}`);
@@ -654,7 +655,7 @@ function deleteWarpingUnit() {
         let idx = parseInt(idxStr) - 1;
         if(idx >= 0 && idx < masterList.length) {
             let deleted = masterList.splice(idx, 1);
-            localStorage.setItem('tex_master_warping_units', JSON.stringify(masterList));
+            window.StorageDB.setItem('tex_master_warping_units', JSON.stringify(masterList));
             if (window.supabaseSave) window.supabaseSave('tex_master_warping_units', masterList);
             loadWarpingUnitSuggestions();
             alert(`'${deleted[0]}' நீக்கப்பட்டது! ✅`);
@@ -665,8 +666,8 @@ function deleteWarpingUnit() {
 }
 
 function loadWarpingUnitSuggestions() {
-    let masterUnits = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let masterUnits = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     
     let unitSet = new Set([...masterUnits]);
     issues.forEach(item => { if(item.unit) unitSet.add(item.unit.trim()); });
@@ -686,10 +687,10 @@ function addWeaver() {
     if(val) {
         val = val.trim();
         if(!val) return;
-        let masterWeavers = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
+        let masterWeavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
         if(!masterWeavers.includes(val)) {
             masterWeavers.push(val);
-            localStorage.setItem('tex_master_weavers', JSON.stringify(masterWeavers));
+            window.StorageDB.setItem('tex_master_weavers', JSON.stringify(masterWeavers));
             if (window.supabaseSave) window.supabaseSave('tex_master_weavers', masterWeavers);
             loadWeaverSuggestions();
             alert(`Weaver '${val}' added successfully! ✅`);
@@ -701,7 +702,7 @@ function addWeaver() {
 }
 
 function deleteWeaver() {
-    let masterList = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
+    let masterList = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
     if(masterList.length === 0) { alert(`No manually added Weavers found to delete.`); return; }
     let listStr = masterList.map((m, i) => `${i + 1}. ${m}`).join('\n');
     let idxStr = prompt(`எந்த Weaver பெயரை நீக்க வேண்டும்? அதற்கான எண்ணை டைப் செய்யவும்:\n\n${listStr}`);
@@ -709,7 +710,7 @@ function deleteWeaver() {
         let idx = parseInt(idxStr) - 1;
         if(idx >= 0 && idx < masterList.length) {
             let deleted = masterList.splice(idx, 1);
-            localStorage.setItem('tex_master_weavers', JSON.stringify(masterList));
+            window.StorageDB.setItem('tex_master_weavers', JSON.stringify(masterList));
             if (window.supabaseSave) window.supabaseSave('tex_master_weavers', masterList);
             loadWeaverSuggestions();
             alert(`'${deleted[0]}' நீக்கப்பட்டது! ✅`);
@@ -720,8 +721,8 @@ function deleteWeaver() {
 }
 
 function loadWeaverSuggestions() {
-    let masterWeavers = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let masterWeavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     
     let weaverSet = new Set([...masterWeavers]);
     issues.forEach(item => { if(item.weaverTo) weaverSet.add(item.weaverTo.trim()); });
@@ -741,16 +742,16 @@ function loadWeaverSuggestions() {
 
 function loadTopDesignDropdown() {
     let allDesignSet = new Set();
-    let preDesignList = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+    let preDesignList = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
     preDesignList.forEach(d => allDesignSet.add(d));
 
-    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
     if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesignSet.add(d.name || d.designNo); });
 
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     Object.keys(designSpecs).forEach(d => allDesignSet.add(d));
 
-    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
     if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesignSet.add(o.designNumber || o.designNo); });
 
     let select = document.getElementById('topDesignNo');
@@ -758,7 +759,7 @@ function loadTopDesignDropdown() {
     Array.from(allDesignSet).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
     select.innerHTML = html;
 
-    let activeDesign = localStorage.getItem('selected_design_number');
+    let activeDesign = window.StorageDB.getItem('selected_design_number');
     if(activeDesign && allDesignSet.has(activeDesign)) {
         select.value = activeDesign;
         loadTopDesignSpecs(activeDesign);
@@ -781,20 +782,20 @@ function loadTopDesignSpecs(dNo) {
         return;
     }
     
-    localStorage.setItem('selected_design_number', dNo);
+    window.StorageDB.setItem('selected_design_number', dNo);
     
     let cleanDNo = cleanDesignName(dNo);
-    let designMastersList = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designMastersList = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
     let found = Array.isArray(designMastersList) ? designMastersList.find(d => cleanDesignName(d.name || d.designNo) === cleanDNo) || {} : {};
-    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let specs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     let specKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
     let sp = specs[specKey] || {};
 
-    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
     let matchedOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanDNo) || {} : {};
 
     let specStatus = (sp.status || matchedOrder.status || '').toLowerCase();
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     let rec = issues.find(r => cleanDesignName(r.designNo || r.designNumber) === cleanDNo);
 
     let cb = document.getElementById('top_completed_status');
@@ -843,9 +844,9 @@ function loadTopYarnLines() {
     if(!dNo) return;
 
     let cleanDNo = cleanDesignName(dNo);
-    let designMastersList = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designMastersList = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
     let found = Array.isArray(designMastersList) ? designMastersList.find(d => cleanDesignName(d.name || d.designNo) === cleanDNo) || {} : {};
-    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let specs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     let specKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
     let sp = specs[specKey] || {};
 
@@ -857,9 +858,9 @@ function loadTopYarnLines() {
     let defaultWarpCount = document.getElementById('topCount1').value || '20';
 
     let warpList = resolvePattern(found.warpLines || [], found.warpRanges || [], 'warp', defaultWarpCount);
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     let existingIssues = issues.filter(i => cleanDesignName(i.designNo) === cleanDNo);
-    let dyeingReceives = JSON.parse(localStorage.getItem('dyeing_receive_records')) || [];
+    let dyeingReceives = JSON.parse(window.StorageDB.getItem('dyeing_receive_records')) || [];
 
     if(warpList.length > 0) {
         let totalPatternVal = warpList.reduce((a, b) => a + b.patternVal, 0) || 1;
@@ -874,7 +875,6 @@ function loadTopYarnLines() {
             );
 
             let matchedDyeRec = dyeingReceives.find(r => cleanDesignName(r.designNo) === cleanDNo && r.color && item.color && r.color.trim().toLowerCase() === item.color.trim().toLowerCase());
-            if (!matchedDyeRec) matchedDyeRec = dyeingReceives.find(r => cleanDesignName(r.designNo) === cleanDNo);
 
             let initialWt = matchedExisting ? parseFloat(matchedExisting.issueWt) : (matchedDyeRec ? parseFloat(matchedDyeRec.receivedWt || matchedDyeRec.netWt) : weightKg);
 
@@ -906,17 +906,17 @@ async function quickCompleteToggle() {
     let statusText = isCompleted ? 'completed' : 'running';
     let cleanKey = cleanDesignName(dNo);
 
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     issues.forEach(r => {
         if(cleanDesignName(r.designNo) === cleanKey) r.status = statusText;
     });
-    localStorage.setItem('warping_issue_records', JSON.stringify(issues));
+    window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
 
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanKey) || dNo;
     if(!designSpecs[specKey]) designSpecs[specKey] = {};
     designSpecs[specKey].status = statusText;
-    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
     if (window.supabaseSave) {
         await window.supabaseSave('warping_issue_records', issues);
@@ -937,14 +937,18 @@ async function saveTopOrder() {
 
     if(!dNo || !unit) { alert("Please fill Warping Unit and Design Number!"); return; }
 
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     let cleanDNo = cleanDesignName(dNo);
 
+    let oldGroup = [];
     if(editingWarpId) {
-        issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDNo && i.unit === unit));
+        let og = window.editingOriginal || { designNo: dNo, unit: unit };
+        oldGroup = issues.filter(i => cleanDesignName(i.designNo) === cleanDesignName(og.designNo) && i.unit === og.unit);
+        issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDesignName(og.designNo) && i.unit === og.unit));
     } else {
         let alreadyExists = issues.some(i => cleanDesignName(i.designNo) === cleanDNo && i.unit === unit);
         if(alreadyExists) {
+            if(!confirm("இந்த Design + Unit ஏற்கனவே இருக்கு. மேல எழுதவா? (Overwrite?)")) return;
             issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDNo && i.unit === unit));
         }
     }
@@ -964,7 +968,7 @@ async function saveTopOrder() {
 
         if(count && issWt > 0) {
             issues.push({
-                id: Date.now() + Math.random(),
+                id: (function() { let re = oldGroup.find(o => !o._used && o.count === count && o.color === color); if (re) { re._used = true; return re.id; } return Date.now() + Math.random(); })(),
                 date: dateVal,
                 unit: unit,
                 designNo: dNo,
@@ -981,13 +985,13 @@ async function saveTopOrder() {
     });
 
     if(savedCount > 0) {
-        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
         let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === cleanDNo) || dNo;
         if(!designSpecs[specKey]) designSpecs[specKey] = {};
         designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
         
-        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
-        localStorage.setItem('warping_issue_records', JSON.stringify(issues));
+        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
+        window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
         
         if (window.supabaseSave) {
             await window.supabaseSave('warping_issue_records', issues);
@@ -997,6 +1001,7 @@ async function saveTopOrder() {
         alert(editingWarpId ? "Warping Order Updated Successfully! ✅" : "Warping Order Saved Successfully! ✅");
         
         editingWarpId = specKey = null;
+        window.editingOriginal = null;
         document.getElementById('topDesignNo').value = '';
         document.getElementById('topUnit').value = '';
         document.getElementById('topWarpingMts').value = '';
@@ -1009,15 +1014,19 @@ async function saveTopOrder() {
     btn.innerText = origText;
 }
 
+function remainingW(issue, receives) {
+    let got = receives.filter(r => String(r.issueId) === String(issue.id)).reduce((a, r) => a + (parseFloat(r.receivedWt) || 0), 0);
+    return Math.max(0, (parseFloat(issue.issueWt) || 0) - got);
+}
+
 function loadBottomOrderDropdown() {
     let select = document.getElementById('botActiveOrderSelect');
     let html = '<option value="">Select Pending Order</option>';
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
-    let receives = JSON.parse(localStorage.getItem('warping_receive_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
+    let receives = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
 
     let pendingItems = issues.filter(issue => {
-        let hasReceive = receives.some(r => String(r.issueId) === String(issue.id));
-        return !hasReceive; 
+        return remainingW(issue, receives) > 0.005; 
     });
 
     let uniqueMap = new Map();
@@ -1055,12 +1064,11 @@ function loadBottomRows() {
     if(!dNo || !uName) { wrapper.style.display = 'none'; return; }
     wrapper.style.display = 'block';
 
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
-    let receives = JSON.parse(localStorage.getItem('warping_receive_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
+    let receives = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
 
     let pendingItems = issues.filter(issue => {
-        let hasReceive = receives.some(r => String(r.issueId) === String(issue.id));
-        return !hasReceive && issue.designNo === dNo && issue.unit === uName; 
+        return remainingW(issue, receives) > 0.005 && issue.designNo === dNo && issue.unit === uName; 
     });
 
     pendingItems.forEach(item => {
@@ -1071,7 +1079,7 @@ function loadBottomRows() {
             <input type="text" class="b-count" value="${item.count}" readonly>
             <input type="text" class="b-color" value="${item.color}" readonly>
             <input type="text" class="b-orderwt" value="${item.orderWt}" readonly>
-            <input type="text" class="b-isswt" value="${item.issueWt}" readonly>
+            <input type="text" class="b-isswt" value="${remainingW(item, receives).toFixed(3)}" readonly>
             <input type="number" class="b-received" placeholder="Rcvd Wt" step="0.001">
         `;
         container.appendChild(row);
@@ -1089,7 +1097,9 @@ async function saveBottomEntry() {
     btn.innerText = "⏳ Saving...";
 
     let rows = document.querySelectorAll('#botLinesContainer .line-row-bot');
-    let receives = JSON.parse(localStorage.getItem('warping_receive_records')) || [];
+    let overErr = Array.from(rows).some(row => (parseFloat(row.querySelector('.b-received').value) || 0) > (parseFloat(row.querySelector('.b-isswt').value) || 0) + 0.0005);
+    if (overErr) { alert("Received Wt Pending Wt-ஐ விட அதிகமா இருக்கு! ❌"); btn.innerText = "Save Bottom Entry"; return; }
+    let receives = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
     let savedCount = 0;
 
     rows.forEach(row => {
@@ -1109,7 +1119,7 @@ async function saveBottomEntry() {
     });
 
     if(savedCount > 0) {
-        localStorage.setItem('warping_receive_records', JSON.stringify(receives));
+        window.StorageDB.setItem('warping_receive_records', JSON.stringify(receives));
         if (window.supabaseSave) await window.supabaseSave('warping_receive_records', receives);
 
         alert("Bottom Entry Saved Successfully! ✅");
@@ -1124,7 +1134,7 @@ async function saveBottomEntry() {
 }
 
 function renderCards() {
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     let container = document.getElementById('savedCardsContainer');
     container.innerHTML = '';
     
@@ -1165,21 +1175,22 @@ function renderCards() {
 
 async function toggleStatusForGroup(dNo, unitName, newStatus) {
     if(confirm(`Change status to ${newStatus}?`)) {
-        let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+        let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
         issues.forEach(r => { if(cleanDesignName(r.designNo) === cleanDesignName(dNo) && r.unit === unitName) r.status = newStatus; });
-        localStorage.setItem('warping_issue_records', JSON.stringify(issues));
+        window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
         if(window.supabaseSave) await window.supabaseSave('warping_issue_records', issues);
         renderCards();
     }
 }
 
 function editWarpingGroup(dNo, unitName) {
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     let targetIssues = issues.filter(i => cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unitName);
     
     if(targetIssues.length > 0) {
         let targetIssue = targetIssues[0];
         editingWarpId = targetIssue.id;
+        window.editingOriginal = { designNo: targetIssue.designNo, unit: targetIssue.unit };
 
         document.getElementById('topDate').value = targetIssue.date;
         document.getElementById('topUnit').value = targetIssue.unit;
@@ -1213,90 +1224,26 @@ function editWarpingGroup(dNo, unitName) {
 
 async function deleteWarpingGroup(dNo, unitName) {
     if(!confirm("Are you sure you want to delete this entry?")) return;
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
+    let delIds = issues.filter(i => cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unitName).map(i => String(i.id));
     issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unitName));
-    localStorage.setItem('warping_issue_records', JSON.stringify(issues));
+    window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
     if (window.supabaseSave) await window.supabaseSave('warping_issue_records', issues);
+    let recs = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
+    recs = recs.filter(r => !delIds.includes(String(r.issueId)));
+    window.StorageDB.setItem('warping_receive_records', JSON.stringify(recs));
+    if (window.supabaseSave) await window.supabaseSave('warping_receive_records', recs);
     renderCards();
 }
 
 // Masters helpers
-function addWarpingUnit() {
-    let val = prompt("புதிய Warping Unit பெயரை உள்ளிடவும்:");
-    if(val && val.trim()) {
-        let masterUnits = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
-        if(!masterUnits.includes(val.trim())) {
-            masterUnits.push(val.trim());
-            localStorage.setItem('tex_master_warping_units', JSON.stringify(masterUnits));
-            if (window.supabaseSave) window.supabaseSave('tex_master_warping_units', masterUnits);
-            loadWarpingUnitSuggestions();
-            document.getElementById('topUnit').value = val.trim();
-        }
-    }
-}
-function deleteWarpingUnit() {
-    let masterList = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
-    if(masterList.length === 0) return;
-    let idxStr = prompt(`நீக்க வேண்டிய எண்ணை உள்ளிடவும்:\n` + masterList.map((m, i) => `${i + 1}. ${m}`).join('\n'));
-    if(idxStr) {
-        let idx = parseInt(idxStr) - 1;
-        if(idx >= 0 && idx < masterList.length) {
-            masterList.splice(idx, 1);
-            localStorage.setItem('tex_master_warping_units', JSON.stringify(masterList));
-            if (window.supabaseSave) window.supabaseSave('tex_master_warping_units', masterList);
-            loadWarpingUnitSuggestions();
-        }
-    }
-}
-function loadWarpingUnitSuggestions() {
-    let masterUnits = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
-    let html = '<option value="">Select Unit</option>';
-    masterUnits.forEach(u => html += `<option value="${u}">${u}</option>`);
-    document.getElementById('topUnit').innerHTML = html;
-}
-
-function addWeaver() {
-    let val = prompt("புதிய Weaver / Party பெயரை உள்ளிடவும்:");
-    if(val && val.trim()) {
-        let masterWeavers = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
-        if(!masterWeavers.includes(val.trim())) {
-            masterWeavers.push(val.trim());
-            localStorage.setItem('tex_master_weavers', JSON.stringify(masterWeavers));
-            if (window.supabaseSave) window.supabaseSave('tex_master_weavers', masterWeavers);
-            loadWeaverSuggestions();
-            document.getElementById('topWeaverTo').value = val.trim();
-        }
-    }
-}
-function deleteWeaver() {
-    let masterList = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
-    if(masterList.length === 0) return;
-    let idxStr = prompt(`நீக்க வேண்டிய எண்ணை உள்ளிடவும்:\n` + masterList.map((m, i) => `${i + 1}. ${m}`).join('\n'));
-    if(idxStr) {
-        let idx = parseInt(idxStr) - 1;
-        if(idx >= 0 && idx < masterList.length) {
-            masterList.splice(idx, 1);
-            localStorage.setItem('tex_master_weavers', JSON.stringify(masterList));
-            if (window.supabaseSave) window.supabaseSave('tex_master_weavers', masterList);
-            loadWeaverSuggestions();
-        }
-    }
-}
-function loadWeaverSuggestions() {
-    let masterWeavers = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
-    let html = '<option value="">Select Weaver / Party</option>';
-    masterWeavers.forEach(u => html += `<option value="${u}">${u}</option>`);
-    if(document.getElementById('topWeaverTo')) document.getElementById('topWeaverTo').innerHTML = html;
-}
-  var WARP_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
-
 function escWarp(v) {
     return (v === null || v === undefined ? '' : String(v))
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function printWarpingList() {
-    let issues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
     if (issues.length === 0) {
         alert('Print செய்ய Warping தரவுகள் எதுவும் இல்லை!');
         return;

@@ -972,22 +972,6 @@ tfoot td{
                 <button
                     type="button"
                     class="btn-add-inline"
-                    onclick="addMasterMill()"
-                >
-                    + Add Mill
-                </button>
-
-                <button
-                    type="button"
-                    class="btn-del-inline"
-                    onclick="deleteMasterItem('mill')"
-                >
-                    🗑️
-                </button>
-
-                <button
-                    type="button"
-                    class="btn-add-inline"
                     onclick="addMasterUnit()"
                 >
                     + Add Unit
@@ -1059,6 +1043,8 @@ tfoot td{
 
     </div>
 
+
+    <div id="savedIssueDetails" style="margin:12px 0;"></div>
 
     <button
         class="btn-main"
@@ -1205,7 +1191,7 @@ let editingIssueId = null;
 
 function safeArray(key){
     try{
-        const data = JSON.parse(localStorage.getItem(key) || '[]');
+        const data = JSON.parse(window.StorageDB.getItem(key) || '[]');
         return Array.isArray(data) ? data : [];
     }catch(e){
         console.warn('Array parse error:',key,e);
@@ -1215,7 +1201,7 @@ function safeArray(key){
 
 function safeObject(key){
     try{
-        const data = JSON.parse(localStorage.getItem(key) || '{}');
+        const data = JSON.parse(window.StorageDB.getItem(key) || '{}');
         return data && typeof data === 'object' && !Array.isArray(data)
             ? data
             : {};
@@ -1294,7 +1280,8 @@ function checkUserPermission(){
    INITIAL LOAD
 ============================================================ */
 
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('DOMContentLoaded', async function(){
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
 
     if(!checkUserPermission()){
 
@@ -1339,7 +1326,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
 async function syncMasterToCloud(key,data){
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         key,
         JSON.stringify(data)
     );
@@ -1573,9 +1560,6 @@ function getMillOptions(selectedVal=''){
     const issues =
         safeArray('kora_issue_records');
 
-    const dyeIssues =
-        safeArray('dyeing_issue_records');
-
     const millsSet =
         new Set();
 
@@ -1601,15 +1585,6 @@ function getMillOptions(selectedVal=''){
     });
 
     issues.forEach(item=>{
-
-        if(item && item.millName)
-            millsSet.add(
-                String(item.millName).trim()
-            );
-
-    });
-
-    dyeIssues.forEach(item=>{
 
         if(item && item.millName)
             millsSet.add(
@@ -1880,7 +1855,7 @@ function loadBitmapImage(){
 
     const activeDesign =
         select.value ||
-        localStorage.getItem(
+        window.StorageDB.getItem(
             'selected_design_number'
         );
 
@@ -2052,7 +2027,7 @@ function loadDesignDropdowns(){
     select.innerHTML=html;
 
     const activeDesign =
-        localStorage.getItem(
+        window.StorageDB.getItem(
             'selected_design_number'
         );
 
@@ -2572,6 +2547,84 @@ function(btn){
    LOAD DESIGN ITEMS (MODIFIED TO PULL FROM YARN CALCULATIONS)
 ============================================================ */
 
+function renderSavedIssueDetails(){
+    const box = document.getElementById('savedIssueDetails');
+    if(!box) return;
+
+    const dNo = document.getElementById('designNumber')?.value || '';
+    if(!dNo){
+        box.innerHTML = '';
+        return;
+    }
+
+    const cleanDNo = cleanDesignName(dNo);
+    const records = safeArray('dyeing_issue_records').filter(r =>
+        cleanDesignName(r.designNo || r.designNumber) === cleanDNo
+    );
+
+    if(records.length === 0){
+        box.innerHTML = '<div style="padding:10px;color:#64748B;text-align:center;">இந்த டிசைனுக்கு இதுவரை Dyeing Issue எதுவும் இல்லை.</div>';
+        return;
+    }
+
+    const fmtDate = d => {
+        const m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : (d || '-');
+    };
+
+    let totOrd = 0, totIss = 0;
+    const rowsHtml = records.map((r, i) => {
+        totOrd += safeNumber(r.orderWt, 0);
+        totIss += safeNumber(r.issueWt, 0);
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${escapeHTML(fmtDate(r.date))}</td>
+                <td>${escapeHTML(r.unit || '-')}</td>
+                <td>${escapeHTML(r.count || '-')}</td>
+                <td>${escapeHTML(r.millName || '-')}</td>
+                <td>${escapeHTML(r.color || '-')}</td>
+                <td style="text-align:right;">${fixed3(r.orderWt)}</td>
+                <td style="text-align:right;">${fixed3(r.issueWt)}</td>
+                <td>${escapeHTML(r.status === 'completed' ? 'COMPLETED' : 'RUNNING')}</td>
+            </tr>`;
+    }).join('');
+
+    const th = 'padding:6px;background:#E8F0E8;color:#2F5E3A;font-size:11px;border:1px solid #CBD5CB;';
+    const td = 'padding:6px;border:1px solid #DDE5DD;font-size:12px;';
+
+    box.innerHTML = `
+        <div style="font-weight:bold;color:#2F5E3A;margin-bottom:6px;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="${th}">S.No</th>
+                        <th style="${th}">Date</th>
+                        <th style="${th}">Dyeing Unit</th>
+                        <th style="${th}">Count</th>
+                        <th style="${th}">Mill</th>
+                        <th style="${th}">Colour</th>
+                        <th style="${th}">Ord Wt</th>
+                        <th style="${th}">Iss Wt</th>
+                        <th style="${th}">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml.replace(/<td>/g, `<td style="${td}">`).replace(/<td style="text-align:right;">/g, `<td style="${td}text-align:right;">`)}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6" style="${td}font-weight:bold;text-align:right;">Grand Total</td>
+                        <td style="${td}font-weight:bold;text-align:right;">${totOrd.toFixed(3)}</td>
+                        <td style="${td}font-weight:bold;text-align:right;">${totIss.toFixed(3)}</td>
+                        <td style="${td}"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>`;
+}
+
 function loadDesignItems(){
 
     loadBitmapImage();
@@ -2598,11 +2651,12 @@ function loadDesignItems(){
 
     if(!dNo){
 
+        renderSavedIssueDetails();
         updateTotals();
         return;
     }
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'selected_design_number',
         dNo
     );
@@ -3123,27 +3177,16 @@ function loadDesignItems(){
 
     }else{
 
-        const autofillMill =
-            getMillNameFromKora(
-                dNo,
-                defaultWarpCount
-            );
-
-        const row =
-            createIssueRow({
-                count:defaultWarpCount,
-                mill:autofillMill,
-                color:'White',
-                orderWt:0,
-                issueWt:'',
-                unit:'',
-                type:'Combined'
-            });
-
-        container.appendChild(row);
+        container.innerHTML = `
+            <div style="padding:14px;text-align:center;color:#B45309;font-weight:bold;">
+                இந்த டிசைனுக்கு நிலுவை Order Weight இல்லை (Balance 0).<br>
+                புதிய Issue எதுவும் பதிவு செய்ய முடியாது.
+            </div>
+        `;
 
     }
 
+    renderSavedIssueDetails();
     updateTotals();
 }
 
@@ -3378,7 +3421,7 @@ async function quickCompleteToggle(){
     }
 
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'dyeing_issue_records',
         JSON.stringify(records)
     );
@@ -3405,7 +3448,7 @@ async function quickCompleteToggle(){
     designSpecs[specKey].status =
         statusText;
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'design_specs',
         JSON.stringify(designSpecs)
     );
@@ -3694,6 +3737,8 @@ async function saveIssueEntries(){
                         )
                     );
 
+                if(issWt <= 0) return;
+
                 const unit =
                     row.querySelector(
                         '.inp-unit'
@@ -3797,12 +3842,12 @@ async function saveIssueEntries(){
            LOCAL SAVE
         ==================================================== */
 
-        localStorage.setItem(
+        window.StorageDB.setItem(
             'dyeing_issue_records',
             JSON.stringify(records)
         );
 
-        localStorage.setItem(
+        window.StorageDB.setItem(
             'design_specs',
             JSON.stringify(designSpecs)
         );
@@ -3878,7 +3923,7 @@ async function saveIssueEntries(){
             'bitmapDisplayContainer'
         ).innerHTML='';
 
-        localStorage.removeItem(
+        window.StorageDB.removeItem(
             'selected_design_number'
         );
 
@@ -4098,7 +4143,7 @@ async function toggleStatus(
         newStatus;
 
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'dyeing_issue_records',
         JSON.stringify(records)
     );
@@ -4132,7 +4177,7 @@ async function toggleStatus(
         designSpecs[specKey].status =
             newStatus;
 
-        localStorage.setItem(
+        window.StorageDB.setItem(
             'design_specs',
             JSON.stringify(designSpecs)
         );
@@ -4226,7 +4271,7 @@ async function deleteIssuedRecord(id){
     }
 
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'dyeing_issue_records',
         JSON.stringify(records)
     );

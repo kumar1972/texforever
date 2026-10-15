@@ -268,11 +268,12 @@
         return true;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
         if (!checkUserPermission()) { alert("Access Denied! ❌"); window.location.href = "dashboard.html"; return; }
         
-        weavingMasterData = JSON.parse(localStorage.getItem('weaving_master_data')) || [];
-        receiveRecords = JSON.parse(localStorage.getItem('weaving_receive_records')) || [];
+        weavingMasterData = JSON.parse(window.StorageDB.getItem('weaving_master_data')) || [];
+        receiveRecords = JSON.parse(window.StorageDB.getItem('weaving_receive_records')) || [];
         
         document.getElementById('entDate').valueAsDate = new Date();
         initDropdowns();
@@ -280,6 +281,11 @@
 
     function cleanDesignName(str) {
         return str ? str.toString().replace('#', '').trim().toLowerCase() : '';
+    }
+
+    function isCompletedWeaving(d) {
+        let c = cleanDesignName(d);
+        return weavingMasterData.some(x => cleanDesignName(x.designNo || x.designNumber) === c && (x.status || '').toLowerCase() === 'completed');
     }
 
     function initDropdowns() {
@@ -293,14 +299,14 @@
         let allDesigns = new Set();
         weavingMasterData.forEach(d => { if(d.designNo && d.status !== 'completed') allDesigns.add(d.designNo); });
         
-        let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+        let preDesigns = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
         preDesigns.forEach(d => allDesigns.add(d));
 
-        let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+        let orders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
         orders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
 
         designSelect.innerHTML = '<option value="">Select Design</option>';
-        Array.from(allDesigns).filter(Boolean).forEach(d => {
+        Array.from(allDesigns).filter(Boolean).filter(d => !isCompletedWeaving(d)).forEach(d => {
             designSelect.innerHTML += `<option value="${d}">${d}</option>`;
         });
     }
@@ -319,7 +325,7 @@
             weavingMasterData.filter(d => d.status !== 'completed').forEach(d => filteredDesigns.add(d.designNo));
         }
         
-        Array.from(filteredDesigns).filter(Boolean).forEach(d => {
+        Array.from(filteredDesigns).filter(Boolean).filter(d => !isCompletedWeaving(d)).forEach(d => {
             designSelect.innerHTML += `<option value="${d}">${d}</option>`;
         });
     }
@@ -331,14 +337,14 @@
 
             let cleanDNo = cleanDesignName(design);
             let order = weavingMasterData.slice().reverse().find(d => cleanDesignName(d.designNo || d.designNumber) === cleanDNo);
-            let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+            let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
             let matchedPartyOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanDNo) : null;
 
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
             let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || design;
             let sp = designSpecs[specKey] || {};
 
-            let warpingIssues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+            let warpingIssues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
             let matchedWarping = warpingIssues.slice().reverse().find(w => cleanDesignName(w.designNo) === cleanDNo);
 
             if(order && order.weaverName) { 
@@ -417,7 +423,7 @@
             weavingMasterData[orderIndex].weavingMts = wMtrs;
             weavingMasterData[orderIndex].crimpPerc = crimp;
             weavingMasterData[orderIndex].fabricMts = fMtrs;
-            localStorage.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
             if(typeof window.supabaseSave === 'function') window.supabaseSave('weaving_master_data', weavingMasterData);
         }
     }
@@ -487,7 +493,7 @@
         if(orderIndex > -1) {
             weavingMasterData[orderIndex].weavingMts = newWarpMtrs;
             weavingMasterData[orderIndex].fabricMts = newFabricMtrs;
-            localStorage.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
             if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_master_data', weavingMasterData);
         }
 
@@ -512,7 +518,7 @@
             receiveRecords.push(entry);
         }
 
-        localStorage.setItem('weaving_receive_records', JSON.stringify(receiveRecords));
+        window.StorageDB.setItem('weaving_receive_records', JSON.stringify(receiveRecords));
         if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_receive_records', receiveRecords);
 
         alert("Entry Saved Successfully! ✅");
@@ -589,7 +595,7 @@
     async function deleteEntry(id) {
         if(confirm("Are you sure you want to delete this entry?")) {
             receiveRecords = receiveRecords.filter(r => String(r.id) !== String(id));
-            localStorage.setItem('weaving_receive_records', JSON.stringify(receiveRecords));
+            window.StorageDB.setItem('weaving_receive_records', JSON.stringify(receiveRecords));
             if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_receive_records', receiveRecords);
             
             let weaver = document.getElementById('weaverSelect').value;

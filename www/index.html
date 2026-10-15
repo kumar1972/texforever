@@ -2642,6 +2642,21 @@ body::before,
     }
 
 
+    // எங்கும் வேலை செய்யும் கஸ்டம் Hash ஃபங்ஷன் (HTTP, HTTPS, APK, EXE அனைத்திலும் இயங்கும்)
+    function secureHash(str) {
+        const salted = str + "_TEXFOREVER_SECRET_2026";
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0, ch; i < salted.length; i++) {
+            ch = salted.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+    }
+
+
     window.validateLogin = async function () {
 
         const usernameInput =
@@ -2718,12 +2733,13 @@ body::before,
         }
 
 
-        const cleanUsername =
-            username.toLowerCase();
+        const cleanUsername = username.toLowerCase();
 
-        const masterAdmin =
-            cleanUsername === "kumar" &&
-            password === "1972";
+        // "kumar" மற்றும் "1972" என்பதை மறைமுகமாக சரிபார்க்கும் முறை
+        const masterAdmin = (
+            btoa( encodeURIComponent(cleanUsername) ) === "a3VtYXI=" &&
+            btoa( encodeURIComponent(password) ) === "MTk3Mg=="
+        );
 
 
         if (

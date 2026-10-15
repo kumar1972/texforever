@@ -478,11 +478,29 @@
 
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
             <button type="button" class="popup-trigger-btn" onclick="openModal('warpModal')">📊 View Saved Warp Data Registry</button>
+            <button type="button" class="popup-trigger-btn" style="background: linear-gradient(135deg, #6366F1, #4338CA);" onclick="openHistoryModal()">📚 Completed History</button>
             <button type="button" class="popup-trigger-btn" style="background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);" onclick="openModal('weftModal')">📊 View Saved Weft Data Registry</button>
         </div>
     </div>
 
     <!-- Saved Warp Data Modal -->
+    <div id="historyModal" class="overlay-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 Completed Weaving History</h3>
+                <button class="close-btn" onclick="closeModal('historyModal')">Close ✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="excel-table">
+                        <thead><tr><th>Design No</th><th>Weaver</th><th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th><th>Type</th></tr></thead>
+                        <tbody id="historyTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="warpModal" class="overlay-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -565,9 +583,10 @@
     </div>
 
     <script>
-        let weavingMasterData = JSON.parse(localStorage.getItem('weaving_master_data')) || [];
-        let warpTransactions = JSON.parse(localStorage.getItem('weaving_warp_trans')) || [];
-        let weftTransactions = JSON.parse(localStorage.getItem('weaving_weft_trans')) || [];
+        let weavingMasterData = [];
+        let warpTransactions = [];
+        let weftTransactions = [];
+        let weavingHistory = [];
 
         function checkUserPermission() {
             let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -580,7 +599,12 @@
             return true;
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+            weavingMasterData = JSON.parse(window.StorageDB.getItem('weaving_master_data')) || [];
+            warpTransactions = JSON.parse(window.StorageDB.getItem('weaving_warp_trans')) || [];
+            weftTransactions = JSON.parse(window.StorageDB.getItem('weaving_weft_trans')) || [];
+            weavingHistory = JSON.parse(window.StorageDB.getItem('weaving_history')) || [];
             if (!checkUserPermission()) {
                 alert("Access Denied! You do not have permission to access this page. ❌");
                 window.location.href = "dashboard.html";
@@ -630,29 +654,34 @@
         }
 
         function getDyeingReceivedWt(dNo, color, yarnType) {
-            let issues = JSON.parse(localStorage.getItem('dyeing_issue_records')) || [];
-            let receives = JSON.parse(localStorage.getItem('dyeing_receive_records')) || [];
+            let issues = JSON.parse(window.StorageDB.getItem('dyeing_issue_records')) || [];
+            let receives = JSON.parse(window.StorageDB.getItem('dyeing_receive_records')) || [];
             let cleanDNo = cleanDesignName(dNo);
             let cleanColor = color.trim().toLowerCase();
-            
-            let dIssue = issues.slice().reverse().find(r => 
-                cleanDesignName(r.designNo) === cleanDNo && 
-                r.yarnType === yarnType && 
-                r.color.trim().toLowerCase() === cleanColor
+
+            let dIssues = issues.filter(r =>
+                cleanDesignName(r.designNo) === cleanDNo &&
+                r.yarnType === yarnType &&
+                (r.color || '').trim().toLowerCase() === cleanColor
             );
-            
-            if (dIssue) {
-                let dRec = receives.slice().reverse().find(r => String(r.issueId) === String(dIssue.id));
-                if (dRec && parseFloat(dRec.receivedWt) > 0) {
-                    return parseFloat(dRec.receivedWt);
+            if (dIssues.length === 0) return null;
+
+            let ids = dIssues.map(i => String(i.id));
+            let total = 0;
+            receives.forEach(r => {
+                if (r.allocs) {
+                    ids.forEach(id => { if (r.allocs[id] !== undefined) total += parseFloat(r.allocs[id]) || 0; });
+                } else {
+                    // older receive entries (before partial-receive tracking)
+                    if ((r.issueIds || [r.issueId]).map(String).some(x => ids.includes(x))) total += parseFloat(r.receivedWt) || 0;
                 }
-            }
-            return null;
+            });
+            return total > 0 ? total : null;
         }
 
         function loadBitmapImage(designNumOverride) {
-            let activeDesign = designNumOverride || document.getElementById('topDesignNo').value || document.getElementById('botDesignNo').value || localStorage.getItem('selected_design_number');
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+            let activeDesign = designNumOverride || document.getElementById('topDesignNo').value || document.getElementById('botDesignNo').value || window.StorageDB.getItem('selected_design_number');
+            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs') || '{}');
             let bitmapContainer = document.getElementById('bitmapDisplayContainer');
             
             let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
@@ -683,7 +712,7 @@
         }
 
         function loadWeaverDropdown() {
-            let weavers = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
+            let weavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
             let select = document.getElementById('topWeaverName');
             let currentVal = select.value;
             let html = '<option value="">Select Weaver</option>';
@@ -699,10 +728,10 @@
             if(name) {
                 name = name.trim();
                 if(!name) return;
-                let weavers = JSON.parse(localStorage.getItem('tex_master_weavers')) || [];
+                let weavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
                 if(!weavers.includes(name)) {
                     weavers.push(name);
-                    localStorage.setItem('tex_master_weavers', JSON.stringify(weavers));
+                    window.StorageDB.setItem('tex_master_weavers', JSON.stringify(weavers));
                     if(window.supabaseSave) window.supabaseSave('tex_master_weavers', weavers);
                     loadWeaverDropdown();
                     alert(`Weaver '${name}' added successfully! ✅`);
@@ -712,7 +741,7 @@
         }
 
         function loadWarpingUnitDropdown() {
-            let units = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
+            let units = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
             let select = document.getElementById('warpingUnitName');
             let currentVal = select.value;
             let html = '<option value="">Select Unit</option>';
@@ -728,10 +757,10 @@
             if(name) {
                 name = name.trim();
                 if(!name) return;
-                let units = JSON.parse(localStorage.getItem('tex_master_warping_units')) || [];
+                let units = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
                 if(!units.includes(name)) {
                     units.push(name);
-                    localStorage.setItem('tex_master_warping_units', JSON.stringify(units));
+                    window.StorageDB.setItem('tex_master_warping_units', JSON.stringify(units));
                     if(window.supabaseSave) window.supabaseSave('tex_master_warping_units', units);
                     loadWarpingUnitDropdown();
                     alert(`Warping Unit '${name}' added successfully! ✅`);
@@ -741,10 +770,10 @@
         }
 
         function loadTopDesignDropdown() {
-            let preDesignList = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
-            let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
-            let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+            let preDesignList = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
+            let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
+            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
+            let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
 
             let allDesigns = new Set([...preDesignList]);
             if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
@@ -756,7 +785,7 @@
             Array.from(allDesigns).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
             select.innerHTML = html;
 
-            let activeDesign = localStorage.getItem('selected_design_number');
+            let activeDesign = window.StorageDB.getItem('selected_design_number');
             if(activeDesign && allDesigns.has(activeDesign)) {
                 select.value = activeDesign;
                 onDesignSelect(activeDesign);
@@ -837,20 +866,20 @@
         function onDesignSelect(val) {
             loadBitmapImage(val);
             if(val) {
-                localStorage.setItem('selected_design_number', val);
+                window.StorageDB.setItem('selected_design_number', val);
                 let cleanDNo = cleanDesignName(val);
-                let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
                 let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || val;
                 let specs = designSpecs[specKey] || {};
 
-                let designMastersList = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+                let designMastersList = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
                 let found = Array.isArray(designMastersList) ? designMastersList.find(d => cleanDesignName(d.name || d.designNo) === cleanDNo) || {} : {};
 
-                let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+                let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
                 let matchedOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanDNo) || {} : {};
 
                 // 🟢 FETCH WARPING MTRS FROM WARPING ISSUE RECORDS OR SPECS 🟢
-                let warpingIssues = JSON.parse(localStorage.getItem('warping_issue_records')) || [];
+                let warpingIssues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
                 let matchedWarping = warpingIssues.slice().reverse().find(w => cleanDesignName(w.designNo) === cleanDNo);
                 
                 let warpingMtrsFound = 0;
@@ -1053,17 +1082,6 @@
 
             if(index > -1) {
                 weavingMasterData[index].status = statusText;
-            } else {
-                weavingMasterData.push({
-                    id: Date.now(),
-                    date: document.getElementById('topDate').value || new Date().toISOString().split('T')[0],
-                    weaverName: weaverName,
-                    designNo: dNo,
-                    weavingMts: document.getElementById('weavingMts').value || '100',
-                    warpRows: [],
-                    weftRows: [],
-                    status: statusText
-                });
             }
 
             warpTransactions.forEach(x => {
@@ -1073,18 +1091,18 @@
                 if((x.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanKey) x.status = statusText;
             });
 
-            localStorage.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
-            localStorage.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-            localStorage.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
+            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
+            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
 
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
             let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanKey) || dNo;
 
             if(!designSpecs[specKey]) {
                 designSpecs[specKey] = {};
             }
             designSpecs[specKey].status = statusText;
-            localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+            window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
             try {
                 if (window.supabaseSave) {
@@ -1134,8 +1152,14 @@
                     return; 
                 }
                 weavingMasterData = weavingMasterData.filter(x => cleanDesignName(x.designNo || x.designNumber) !== cleanDNo);
+                weavingHistory = weavingHistory.concat(
+                    warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDNo && x.status === 'completed').map(x => ({ ...x, type: 'Warp' })),
+                    weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDNo && x.status === 'completed').map(x => ({ ...x, type: 'Weft' }))
+                );
                 warpTransactions = warpTransactions.filter(x => cleanDesignName(x.designNo || x.designNumber) !== cleanDNo);
                 weftTransactions = weftTransactions.filter(x => cleanDesignName(x.designNo || x.designNumber) !== cleanDNo);
+                window.StorageDB.setItem('weaving_history', JSON.stringify(weavingHistory));
+                if (window.supabaseSave) await window.supabaseSave('weaving_history', weavingHistory);
             }
 
             let btn = document.getElementById('saveTopBtnTxt');
@@ -1186,15 +1210,15 @@
                 status: isCompleted ? 'completed' : 'running'
             };
 
-            let existingIndex = weavingMasterData.findIndex(x => x.designNo === designNo && x.weaverName === weaverName);
+            let existingIndex = weavingMasterData.findIndex(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName);
             if(existingIndex > -1) {
                 weavingMasterData[existingIndex] = data;
             } else {
                 weavingMasterData.push(data);
             }
 
-            warpTransactions = warpTransactions.filter(x => !(x.designNo === designNo && (x.weaverName || '') === weaverName && x.status === 'running'));
-            weftTransactions = weftTransactions.filter(x => !(x.designNo === designNo && (x.weaverName || '') === weaverName && x.status === 'running'));
+            warpTransactions = warpTransactions.filter(x => !(cleanDesignName(x.designNo) === cleanDesignName(designNo) && (x.weaverName || '') === weaverName && x.status === 'running'));
+            weftTransactions = weftTransactions.filter(x => !(cleanDesignName(x.designNo) === cleanDesignName(designNo) && (x.weaverName || '') === weaverName && x.status === 'running'));
 
             warpRows.forEach((r, idx) => {
                 warpTransactions.push({
@@ -1226,16 +1250,16 @@
                 });
             });
 
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
             let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || designNo;
 
             if(!designSpecs[specKey]) designSpecs[specKey] = {};
             designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
-            localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+            window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
-            localStorage.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
-            localStorage.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-            localStorage.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
+            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
+            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
 
             if(window.supabaseSave) {
                 await window.supabaseSave('weaving_master_data', weavingMasterData);
@@ -1275,7 +1299,7 @@
             warpTable.innerHTML = '';
             weftTable.innerHTML = '';
 
-            const matchedWarpTrans = warpTransactions.filter(x => x.designNo === selectedDesign && (x.weaverName || '') === selectedWeaver);
+            const matchedWarpTrans = warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(selectedDesign) && (x.weaverName || '') === selectedWeaver);
             if(matchedWarpTrans.length > 0) {
                 let h1 = warpTable.insertRow();
                 h1.innerHTML = `<th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th>`;
@@ -1292,7 +1316,7 @@
                 });
             }
 
-            const matchedWeftTrans = weftTransactions.filter(x => x.designNo === selectedDesign && (x.weaverName || '') === selectedWeaver);
+            const matchedWeftTrans = weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(selectedDesign) && (x.weaverName || '') === selectedWeaver);
             if(matchedWeftTrans.length > 0) {
                 let h2 = weftTable.insertRow();
                 h2.innerHTML = `<th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th>`;
@@ -1327,35 +1351,35 @@
             btn.innerText = "⏳ Saving to Cloud...";
 
             const warpRows = document.querySelectorAll('#botWarpTable tr:not(:first-child)');
-            warpRows.forEach((tr) => {
+            warpRows.forEach((tr, ri) => {
                 const c = tr.querySelector('.bw-count').value;
                 const col = tr.querySelector('.bw-colour').value;
                 const returnWtStr = tr.querySelector('.bw-return').value.trim();
                 
                 let returnWt = returnWtStr !== '' ? parseFloat(returnWtStr) || 0 : '';
 
-                let existing = warpTransactions.find(x => x.designNo === designNo && (x.weaverName || '') === weaverName && x.count === c && x.colour === col);
+                let existing = warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && (x.weaverName || '') === weaverName)[ri];
                 if(existing) {
                     existing.returnWt = returnWt;
                 }
             });
 
             const weftRows = document.querySelectorAll('#botWeftTable tr:not(:first-child)');
-            weftRows.forEach((tr) => {
+            weftRows.forEach((tr, ri) => {
                 const c = tr.querySelector('.bft-count').value;
                 const col = tr.querySelector('.bft-colour').value;
                 const returnWtStr = tr.querySelector('.bft-return').value.trim();
 
                 let returnWt = returnWtStr !== '' ? parseFloat(returnWtStr) || 0 : '';
 
-                let existing = weftTransactions.find(x => x.designNo === designNo && (x.weaverName || '') === weaverName && x.count === c && x.colour === col);
+                let existing = weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && (x.weaverName || '') === weaverName)[ri];
                 if(existing) {
                     existing.returnWt = returnWt;
                 }
             });
 
-            localStorage.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-            localStorage.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
+            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
+            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
 
             if(window.supabaseSave) {
                 await window.supabaseSave('weaving_warp_trans', warpTransactions);
@@ -1378,17 +1402,17 @@
             let msg = newStatus === 'completed' ? "Change this warp entry to Completed?" : "Change this warp entry to Running?";
             if(confirm(msg)) {
                 warpTransactions = warpTransactions.map(x => String(x.id) === String(id) ? {...x, status: newStatus} : x);
-                localStorage.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
+                window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
                 
                 let item = warpTransactions.find(x => String(x.id) === String(id));
                 if(item && item.designNo) {
-                    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
                     let cleanDNo = cleanDesignName(item.designNo);
                     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || item.designNo;
 
                     if(!designSpecs[specKey]) designSpecs[specKey] = {};
                     designSpecs[specKey].status = newStatus;
-                    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
                     
                     if(window.supabaseSave) await window.supabaseSave('design_specs', designSpecs);
                     if(window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
@@ -1404,17 +1428,17 @@
             let msg = newStatus === 'completed' ? "Change this weft entry to Completed?" : "Change this weft entry to Running?";
             if(confirm(msg)) {
                 weftTransactions = weftTransactions.map(x => String(x.id) === String(id) ? {...x, status: newStatus} : x);
-                localStorage.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
+                window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
                 
                 let item = weftTransactions.find(x => String(x.id) === String(id));
                 if(item && item.designNo) {
-                    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+                    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
                     let cleanDNo = cleanDesignName(item.designNo);
                     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || item.designNo;
 
                     if(!designSpecs[specKey]) designSpecs[specKey] = {};
                     designSpecs[specKey].status = newStatus;
-                    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
                     
                     if(window.supabaseSave) await window.supabaseSave('design_specs', designSpecs);
                     if(window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
@@ -1485,13 +1509,50 @@
             });
         }
 
+        function persistWeaving() {
+            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
+            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
+        }
+
+        function removeEmptyWeavingOrders() {
+            weavingMasterData = weavingMasterData.filter(o => {
+                let k = cleanDesignName(o.designNo || o.designNumber);
+                return warpTransactions.some(t => cleanDesignName(t.designNo) === k) ||
+                       weftTransactions.some(t => cleanDesignName(t.designNo) === k);
+            });
+        }
+
+        function openHistoryModal() {
+            let tb = document.getElementById('historyTbody');
+            tb.innerHTML = '';
+            weavingHistory.slice().reverse().forEach(item => {
+                let r = tb.insertRow();
+                r.innerHTML = `
+                    <td><b>${item.designNo}</b></td>
+                    <td>${item.weaverName || '-'}</td>
+                    <td>${item.count || '-'}</td>
+                    <td>${item.colour || '-'}</td>
+                    <td>${Number(item.orderWt || 0).toFixed(3)}</td>
+                    <td>${item.issuedWt !== '' && item.issuedWt !== undefined ? Number(item.issuedWt).toFixed(3) : '-'}</td>
+                    <td>${item.returnWt !== '' && item.returnWt !== undefined ? Number(item.returnWt).toFixed(3) : '-'}</td>
+                    <td>${item.type || '-'}</td>
+                `;
+            });
+            openModal('historyModal');
+        }
+
         async function deleteWarp(id) {
             if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
             closeModal('warpModal');
             if(confirm("Indha warp entry-ai delete pannanuma?")) {
                 warpTransactions = warpTransactions.filter(item => String(item.id) !== String(id));
-                localStorage.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-                if(window.supabaseSave) await window.supabaseSave('weaving_warp_trans', warpTransactions);
+                removeEmptyWeavingOrders();
+                persistWeaving();
+                if(window.supabaseSave) {
+                    await window.supabaseSave('weaving_warp_trans', warpTransactions);
+                    await window.supabaseSave('weaving_master_data', weavingMasterData);
+                }
                 updateTables();
             }
         }
@@ -1501,8 +1562,12 @@
             closeModal('weftModal');
             if(confirm("Indha weft entry-ai delete pannanuma?")) {
                 weftTransactions = weftTransactions.filter(item => String(item.id) !== String(id));
-                localStorage.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
-                if(window.supabaseSave) await window.supabaseSave('weaving_weft_trans', weftTransactions);
+                removeEmptyWeavingOrders();
+                persistWeaving();
+                if(window.supabaseSave) {
+                    await window.supabaseSave('weaving_weft_trans', weftTransactions);
+                    await window.supabaseSave('weaving_master_data', weavingMasterData);
+                }
                 updateTables();
             }
         }
