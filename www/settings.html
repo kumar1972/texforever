@@ -1374,7 +1374,19 @@ async function backupAllData() {
 
             throw new Error("Android JSON backup failed");
         }
-
+/* BROWSER FOLDER BACKUP (Chrome) */
+        if (localStorage.getItem("texforever_save_mode") === "desktop_folder") {
+            try {
+                await saveBackupToFolder(fileName, jsonContent, "application/json");
+                toast("ERP JSON Backup Saved to: " + localStorage.getItem("texforever_selected_folder"), true);
+            } catch (err) {
+                console.error("Folder backup error:", err);
+                alert("❌ Folder backup failed:\n\n" + err.message);
+            }
+            return;
+        }
+      alert("Backup folder தேர்வு செய்யவும். Settings-ல் SELECT FOLDER அழுத்தவும்.");
+return;
         /* NORMAL WEB / DESKTOP BACKUP */
         const blob = new Blob([jsonContent], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -1434,8 +1446,8 @@ async function backupAllDataAsExcel() {
 
             if (!folderUri) {
                 toast("Please select backup folder first!", false);
-                if (typeof selecttexforeverFolder === "function") {
-                    selectTexforeverFolder();
+                if (typeof selectTexforeverFolder === "function") {
+    await selectTexforeverFolder();
                 }
                 return;
             }
@@ -1455,7 +1467,21 @@ async function backupAllDataAsExcel() {
 
             throw new Error("Android backup failed");
         }
-
+/* BROWSER FOLDER BACKUP (Chrome) */
+        if (localStorage.getItem("texforever_save_mode") === "desktop_folder") {
+            try {
+                await saveBackupToFolder(fileName, csvContent, "text/csv;charset=utf-8");
+                toast("Excel/CSV Backup Saved to: " + localStorage.getItem("texforever_selected_folder"), true);
+            } catch (err) {
+                console.error("Folder backup error:", err);
+                alert("❌ Folder backup failed:\n\n" + err.message);
+            }
+            return;
+        }
+      if (localStorage.getItem("texforever_save_mode") !== "desktop_folder") {
+            alert("Backup folder தேர்வு செய்யவும். Settings-ல் SELECT FOLDER அழுத்தவும்.");
+            return;
+      }
         /* NORMAL WEB / DESKTOP BACKUP */
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
         const url = URL.createObjectURL(blob);
