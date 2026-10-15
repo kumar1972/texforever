@@ -474,6 +474,7 @@
     </div>
 
     <button type="button" class="popup-trigger-btn" onclick="openModal('savedListModal')">📊 View Saved Washing Registry</button>
+    <button type="button" class="popup-trigger-btn" style="background: linear-gradient(135deg, #6366F1, #4338CA);" onclick="openModal('historyModal')">📚 Completed History</button>
 </div>
 
 <!-- Selection Modal for Bottom Form -->
@@ -502,6 +503,28 @@
 </div>
 
 <!-- Saved List Modal -->
+<div id="historyModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📚 Completed Washing History</h3>
+            <button class="close-btn" onclick="closeModal('historyModal')">Close ✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Design</th><th>Washing Unit</th><th>Slip</th><th>Piece</th><th>Sent Mtr</th>
+                            <th>Process</th><th>Rcvd Mtr</th><th>Shrink %</th><th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="savedListModal" class="overlay-modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -551,8 +574,11 @@ function checkUserPermission() {
     return true;
 }
 
+let washingHistory = [];
+
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+    washingHistory = JSON.parse(window.StorageDB.getItem('washing_history')) || [];
     if (!checkUserPermission()) {
         alert("Access Denied! You do not have permission to access this page. ❌");
         window.location.href = "dashboard.html";
@@ -566,12 +592,43 @@ document.addEventListener('DOMContentLoaded', async function() {
     renderTable();
 });
 
+function renderWashingHistory() {
+    let tbody = document.getElementById('historyTbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (washingHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="padding:20px; color:#A0AFA0;">No completed history yet.</td></tr>`;
+        return;
+    }
+    washingHistory.slice().reverse().forEach(item => {
+        let recs = item.receives || [];
+        let rcv = recs.reduce((a, r) => a + (parseFloat(r.receivedMtr) || 0), 0);
+        let sent = parseFloat(item.mtr) || 0;
+        let shrink = (rcv > 0 && sent > 0) ? (((sent - rcv) / sent) * 100).toFixed(2) + "%" : "-";
+        tbody.innerHTML += `
+            <tr>
+                <td><b>${item.designNo}</b></td>
+                <td>${item.unit}</td>
+                <td>${item.slip}</td>
+                <td>${item.piece}</td>
+                <td>${item.mtr}</td>
+                <td>${item.process}</td>
+                <td>${rcv.toFixed(2)}</td>
+                <td>${shrink}</td>
+                <td style="color:#526E51; font-weight:bold; text-transform:uppercase;">${item.status}</td>
+            </tr>`;
+    });
+}
+
 function openModal(modalId) {
     let modal = document.getElementById(modalId);
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('show'), 10);
     if(modalId === 'savedListModal') {
         renderTable(); 
+    }
+    if(modalId === 'historyModal') {
+        renderWashingHistory();
     }
 }
 
@@ -831,13 +888,19 @@ async function saveTopOrder() {
     let cleanDNo = dNo.toString().replace('#', '').trim().toLowerCase();
 
     let receivesTop = JSON.parse(window.StorageDB.getItem('washing_receive_records')) || [];
+    let histAdd = [];
     let alreadyExists = issues.some(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanDNo);
     if(alreadyExists) {
         let confirmReEntry = confirm("இந்த டிசைனுக்கு ஏற்கனவே Washing Order என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?");
         if(!confirmReEntry) {
             return; 
         }
-        let reOld = issues.filter(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanDNo).map(i => String(i.id));
+        let oldOrders = issues.filter(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanDNo);
+        histAdd = oldOrders.filter(i => (i.status || '') === 'completed').map(i => ({
+            ...i,
+            receives: receivesTop.filter(r => String(r.issueId) === String(i.id))
+        }));
+        let reOld = oldOrders.map(i => String(i.id));
         receivesTop = receivesTop.filter(r => !reOld.includes(String(r.issueId)));
         issues = issues.filter(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() !== cleanDNo);
     }
@@ -886,6 +949,9 @@ async function saveTopOrder() {
 
         window.StorageDB.setItem('washing_issue_records', JSON.stringify(issues));
         window.StorageDB.setItem('washing_receive_records', JSON.stringify(receivesTop));
+        washingHistory = washingHistory.concat(histAdd);
+        window.StorageDB.setItem('washing_history', JSON.stringify(washingHistory));
+        if (window.supabaseSave) await window.supabaseSave('washing_history', washingHistory);
         
         if (window.supabaseSave) {
             await window.supabaseSave('washing_issue_records', issues);

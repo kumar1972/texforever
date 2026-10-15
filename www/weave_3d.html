@@ -795,13 +795,13 @@ let singleH_cm = 0;
 let singleW_mm = 0;
 let singleH_mm = 0;
 try {
-    rulerCalibrationMultiplier = parseFloat(localStorage.getItem("weave_ruler_cal") || "1.0");
+    rulerCalibrationMultiplier = parseFloat(window.StorageDB.getItem("weave_ruler_cal") || "1.0");
 } catch(e) {}
 if (!isFinite(rulerCalibrationMultiplier)) rulerCalibrationMultiplier = 1.0;
 
 function adjustRulerDpi(delta) {
     rulerCalibrationMultiplier = Math.max(0.7, Math.min(1.5, rulerCalibrationMultiplier + delta));
-    localStorage.setItem("weave_ruler_cal", rulerCalibrationMultiplier.toFixed(2));
+    window.StorageDB.setItem("weave_ruler_cal", rulerCalibrationMultiplier.toFixed(2));
     updateRulerCalDisplay();
     debounce3DRender();
 }
@@ -923,7 +923,7 @@ function expandPattern(str) {
 }
 
 window.$ = id => document.getElementById(id);
-function safeJSON(key, fallback=null) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; } }
+function safeJSON(key, fallback=null) { try { const raw = window.StorageDB.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; } }
 function clone(x) { 
     try { return typeof structuredClone === "function" ? structuredClone(x) : JSON.parse(JSON.stringify(x)); }
     catch(e) { return JSON.parse(JSON.stringify(x)); }
@@ -1158,7 +1158,7 @@ function sanitizeDesignObj(d) {
 function mergeDesigns(items) {
     let map = new Map();
     let rawEdits = {};
-    try { rawEdits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}"); } catch(e) {}
+    try { rawEdits = JSON.parse(window.StorageDB.getItem("local_edits_cache") || "{}"); } catch(e) {}
 
     Object.keys(rawEdits).forEach(k => {
         if (rawEdits[k]) {
@@ -1343,7 +1343,7 @@ function populateDesignSelect(auto = true) {
     let s = $("designSelect"); 
     if(!s) return;
     
-    let lastSaved = localStorage.getItem("weave_last_design_name") || "";
+    let lastSaved = window.StorageDB.getItem("weave_last_design_name") || "";
     let cur = activeDesignObj ? designName(activeDesignObj) : lastSaved;
 
     let frag = document.createDocumentFragment();
@@ -1410,7 +1410,7 @@ async function importFromFirebase(manual = false) {
         
         if (allCloudDesigns.length > 0) {
             populateDesignSelect(true);
-            localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+            window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
             setStatus("💾 Local designs ready");
         }
 
@@ -1424,7 +1424,7 @@ async function importFromFirebase(manual = false) {
 
                 if (cloudData.length > 0) {
                     allCloudDesigns = mergeDesigns(allCloudDesigns.concat(cloudData));
-                    localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+                    window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
                     populateDesignSelect(manual);
                     setStatus("☁ Local + Cloud designs ready");
                 }
@@ -1459,11 +1459,11 @@ function loadSelectedDesign(){
         if(document.getElementById("activeDesignText")) {
             document.getElementById("activeDesignText").textContent = "Active Design: " + dName;
         }
-        localStorage.setItem("weave_last_design_name", dName);
+        window.StorageDB.setItem("weave_last_design_name", dName);
         
         let foundEdits = null;
         try {
-            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let editsCache = JSON.parse(window.StorageDB.getItem("local_edits_cache") || "{}");
             let key = Object.keys(editsCache).find(k => k.trim() === dName.trim());
             if (!key && editsCache[cleanName] && designName(editsCache[cleanName]).trim() === dName.trim()) key = cleanName;
             if(key) foundEdits = editsCache[key];
@@ -1483,7 +1483,7 @@ function loadSelectedDesign(){
             let warpKeys = ["warp_entry_data", "warp_pattern_data", "warp_data"];
             for(let key of warpKeys) {
                 try {
-                    let data = localStorage.getItem(key);
+                    let data = window.StorageDB.getItem(key);
                     if(data) {
                         let parsed = JSON.parse(data);
                         if(Array.isArray(parsed)) {
@@ -1502,7 +1502,7 @@ function loadSelectedDesign(){
             let weftKeys = ["weft_entry_data", "weft_pattern_data", "weft_data"];
             for(let key of weftKeys) {
                 try {
-                    let data = localStorage.getItem(key);
+                    let data = window.StorageDB.getItem(key);
                     if(data) {
                         let parsed = JSON.parse(data);
                         if(Array.isArray(parsed)) {
@@ -1538,7 +1538,7 @@ function loadSelectedDesign(){
 
         let dentDrawMatch = null;
         try {
-            let ddArr = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
+            let ddArr = JSON.parse(window.StorageDB.getItem("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
                 dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName);
             }
@@ -1699,21 +1699,21 @@ async function saveCurrentDesign() {
         let cleanName = cleanDesignName(name);
 
         try {
-            let edits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let edits = JSON.parse(window.StorageDB.getItem("local_edits_cache") || "{}");
             edits[String(name).trim()] = clone(data);
-            localStorage.setItem("local_edits_cache", JSON.stringify(edits));
+            window.StorageDB.setItem("local_edits_cache", JSON.stringify(edits));
         } catch(e) {}
 
-        localStorage.setItem("last_edit_timestamp", Date.now().toString());
-        window._lastEditStamp = localStorage.getItem("last_edit_timestamp");
+        window.StorageDB.setItem("last_edit_timestamp", Date.now().toString());
+        window._lastEditStamp = window.StorageDB.getItem("last_edit_timestamp");
 
         let cache = Array.isArray(allCloudDesigns) ? allCloudDesigns.filter(x => String(designName(x)).trim() !== String(name).trim()) : []; 
         cache.push(clone(data));
         allCloudDesigns = mergeDesigns(cache); 
         
-        localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+        window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
         activeDesignObj = clone(data); 
-        localStorage.setItem("weave_last_design_name", name);
+        window.StorageDB.setItem("weave_last_design_name", name);
         
         if(document.getElementById("activeDesignText")) {
             document.getElementById("activeDesignText").textContent = "Active Design: " + name; 
@@ -2490,7 +2490,7 @@ if(fsContent) {
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="fsModal") closeFullscreen(); });
 
 window.addEventListener("focus", () => {
-    let lastEdit = localStorage.getItem("last_edit_timestamp");
+    let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
     if (window._lastEditStamp !== lastEdit) {
         window._lastEditStamp = lastEdit;
         importFromFirebase(false);
@@ -3680,7 +3680,7 @@ function buildPrintGraph(m, pickStr) {
         ];
 
         keysToTry.forEach(key => {
-            let val = localStorage.getItem(key);
+            let val = window.StorageDB.getItem(key);
             if (val) {
                 try {
                     let parsed = JSON.parse(val);
@@ -3718,7 +3718,8 @@ function buildPrintGraph(m, pickStr) {
     }
 })();
 
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     try {
         let statusEl = document.getElementById("designStatus");
         if(statusEl) statusEl.textContent = "⚡ Loading designs...";

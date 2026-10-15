@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script src="translator.js"></script>
+  <script src="printer.js"></script>
 
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
@@ -296,7 +297,7 @@
 
     <div class="action-btns-row">
         <button class="btn-main btn-preview" onclick="previewPattern()">👁️ Preview</button>
-        <button class="btn-main btn-save" id="saveBtnTxt" onclick="saveWarpDesign(); update3DPreviewData()">💾 Save</button>
+        <button class="btn-main btn-save" id="saveBtnTxt" onclick="saveWarpDesign()">💾 Save</button>
         <button class="btn-main btn-list" onclick="openSavedModal()">📂 Saved List</button>
     </div>
 </div>
@@ -307,7 +308,7 @@
         <div class="modal-header no-print">
             <h3>👁️ Warp Pattern Full Screen Preview</h3>
             <div class="modal-actions">
-                <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                <button class="print-btn" data-print-bound="true" onclick="printWarpPreview()">🖨️ Print</button>
                 <button class="close-btn" onclick="closeModal('previewModal')">Close ✕</button>
             </div>
         </div>
@@ -364,11 +365,11 @@ function safeJSONParse(value, fallback) {
     } catch (e) { return fallback; }
 }
 function getLocalArray(key) {
-    const data = safeJSONParse(localStorage.getItem(key), []);
+    const data = safeJSONParse(window.StorageDB.getItem(key), []);
     return Array.isArray(data) ? data : [];
 }
 function getLocalObject(key) {
-    const data = safeJSONParse(localStorage.getItem(key), {});
+    const data = safeJSONParse(window.StorageDB.getItem(key), {});
     return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
 }
 
@@ -387,7 +388,8 @@ function checkUserPermission() {
 /* ============================================================
    INITIAL LOAD
 ============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     if (!checkUserPermission()) {
         alert("Access Denied! You do not have permission to access this page. ❌");
         window.location.href = "dashboard.html";
@@ -525,7 +527,7 @@ function loadBitmapImage() {
     const bitmapContainer = document.getElementById('bitmapDisplayContainer');
     if (!designElement || !bitmapContainer) return;
 
-    let activeDesign = designElement.value || localStorage.getItem('selected_design_number');
+    let activeDesign = designElement.value || window.StorageDB.getItem('selected_design_number');
     const designSpecs = getLocalObject('design_specs');
     const clean = activeDesign ? cleanDesignName(activeDesign) : '';
     const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === clean; }) || activeDesign;
@@ -571,7 +573,7 @@ function loadDesignDropdown() {
         });
     }
 
-    const activeDesign = localStorage.getItem('selected_design_number');
+    const activeDesign = window.StorageDB.getItem('selected_design_number');
     if (activeDesign && Array.from(allDesigns).some(d => cleanDesignName(d) === cleanDesignName(activeDesign))) {
         if (designElement) designElement.value = Array.from(allDesigns).find(d => cleanDesignName(d) === cleanDesignName(activeDesign));
         loadDesignData();
@@ -605,7 +607,7 @@ function loadDesignData() {
     const dNo = designElement.value;
     loadBitmapImage();
 
-    if (dNo) localStorage.setItem('selected_design_number', dNo);
+    if (dNo) window.StorageDB.setItem('selected_design_number', dNo);
 
     const linesContainer = document.getElementById('warpLinesContainer');
     const rangesContainer = document.getElementById('warpRangesContainer');
@@ -650,7 +652,7 @@ function loadDesignData() {
     const foundMaster = masters.find(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; }) || null;
 
     // 🟢 PRIORITY 1: Check warp_entry_data directly
-    let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+    let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
     let foundWarpEntry = Array.isArray(warpEntryList) 
         ? warpEntryList.find(w => cleanDesignName(w.name || w.designNo) === cleanDNo) 
         : null;
@@ -757,7 +759,8 @@ async function copyToNewDesign() {
     newDNo = newDNo.trim();
 
     const preDesignList = getLocalArray('pre_design_numbers');
-    const alreadyExists = preDesignList.some(function (d) { return cleanDesignName(d) === cleanDesignName(newDNo); });
+    const alreadyExists = preDesignList.some(function (d) { return cleanDesignName(d) === cleanDesignName(newDNo); })
+        || getLocalArray('design_masters_data').some(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDesignName(newDNo); });
     if (alreadyExists) { alert("இந்த டிசைன் நம்பர் ஏற்கனவே உள்ளது! வேறு நம்பரை கொடுக்கவும்."); return; }
 
     const masters = getLocalArray('design_masters_data');
@@ -769,12 +772,12 @@ async function copyToNewDesign() {
         copiedMaster.designNo = newDNo;
         copiedMaster.status = 'running';
         masters.push(copiedMaster);
-        localStorage.setItem('design_masters_data', JSON.stringify(masters));
+        window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
-        let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+        let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
         if (!Array.isArray(warpEntryList)) warpEntryList = [];
         warpEntryList.push(copiedMaster);
-        localStorage.setItem('warp_entry_data', JSON.stringify(warpEntryList));
+        window.StorageDB.setItem('warp_entry_data', JSON.stringify(warpEntryList));
 
         try {
             if (window.supabaseSave) {
@@ -785,7 +788,7 @@ async function copyToNewDesign() {
     }
 
     preDesignList.push(newDNo);
-    localStorage.setItem('pre_design_numbers', JSON.stringify(preDesignList));
+    window.StorageDB.setItem('pre_design_numbers', JSON.stringify(preDesignList));
 
     try {
         if (window.supabaseSave) await window.supabaseSave('pre_design_numbers', preDesignList);
@@ -798,7 +801,7 @@ async function copyToNewDesign() {
         designElement.appendChild(option);
         designElement.value = newDNo;
     }
-    localStorage.setItem('selected_design_number', newDNo);
+    window.StorageDB.setItem('selected_design_number', newDNo);
     currentBaseSpecs = {};
     document.getElementById('saveBtnTxt').innerText = "💾 Save";
     const cb = document.getElementById('top_completed_status');
@@ -911,14 +914,13 @@ async function quickCompleteToggle() {
 
     let idx = masters.findIndex(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; });
     if (idx > -1) masters[idx].status = statusText;
-    else masters.push({ name: dNo, designNo: dNo, status: statusText, warpLines: [], warpRanges: [] });
-    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+    window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
     const designSpecs = getLocalObject('design_specs');
     const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
     if (!designSpecs[specKey]) designSpecs[specKey] = {};
     designSpecs[specKey].status = statusText;
-    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
     try {
         if (window.supabaseSave) {
@@ -948,7 +950,6 @@ window.saveWarpDesign = async function () {
         const alreadyExists = masters.some(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo && Array.isArray(m.warpLines) && m.warpLines.length > 0; });
         if (alreadyExists) {
             if (!confirm("இந்த டிசைனுக்கு ஏற்கனவே வார்ப் பேட்டர்ன் என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?")) return;
-            masters = masters.filter(function (m) { return cleanDesignName(m.name || m.designNo) !== cleanDNo; });
         }
     }
 
@@ -1017,12 +1018,12 @@ window.saveWarpDesign = async function () {
     else masters[idx] = Object.assign({}, masters[idx], patternData);
 
     // 🟢 SAVE INTO warp_entry_data WITH EXACT DESIGN NO 🟢
-    let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+    let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
     if (!Array.isArray(warpEntryList)) warpEntryList = [];
     // Remove old Live Preview or existing saved copy
     warpEntryList = warpEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo && w.designNo !== "🔴 Live Warp Entry Preview");
     warpEntryList.push(patternData);
-    localStorage.setItem('warp_entry_data', JSON.stringify(warpEntryList));
+    window.StorageDB.setItem('warp_entry_data', JSON.stringify(warpEntryList));
 
     const designSpecs = getLocalObject('design_specs');
     const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
@@ -1034,8 +1035,8 @@ window.saveWarpDesign = async function () {
     designSpecs[specKey].onloomPick = document.getElementById('infoPick').value.trim();
     designSpecs[specKey].onloomWidth = document.getElementById('infoWidth').value.trim();
 
-    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
-    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
+    window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
     try {
         if (window.supabaseSave) {
@@ -1063,13 +1064,13 @@ async function toggleStatus(dNo, newStatus) {
 
     if (index > -1) {
         masters[index].status = newStatus;
-        localStorage.setItem('design_masters_data', JSON.stringify(masters));
+        window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
         const designSpecs = getLocalObject('design_specs');
         const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
         if (!designSpecs[specKey]) designSpecs[specKey] = {};
         designSpecs[specKey].status = newStatus;
-        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
         try {
             if (window.supabaseSave) { await window.supabaseSave('design_masters_data', masters); await window.supabaseSave('design_specs', designSpecs); }
@@ -1367,14 +1368,14 @@ function update3DPreviewData() {
             weftColor: "White" 
         };
 
-        let warpEntryList = safeJSONParse(localStorage.getItem('warp_entry_data'), []);
+        let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
         if (!Array.isArray(warpEntryList)) warpEntryList = [];
         
         // பழைய Preview டேட்டா இருந்தால் அகற்றிவிட்டு புதியதை சேர்க்கவும் (மற்ற டிசைன்களை அழிக்காது)
         warpEntryList = warpEntryList.filter(w => w.designNo !== "🔴 Live Warp Entry Preview");
         warpEntryList.unshift(previewObj); 
         
-        localStorage.setItem('warp_entry_data', JSON.stringify(warpEntryList));
+        window.StorageDB.setItem('warp_entry_data', JSON.stringify(warpEntryList));
     } catch(e) {
         console.error("3D Preview Data Link Error:", e);
     }
@@ -1441,6 +1442,18 @@ document.addEventListener('input', function(e) {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('btn-del-small')) { setTimeout(calculateLiveWarpTotals, 50); }
 });
+  function printWarpPreview() {
+    var content = document.getElementById('previewContent');
+    if (!content || !content.innerHTML.trim()) {
+        alert('Print செய்ய preview content கிடைக்கல. முதலில் Preview-ஐ திறங்க.');
+        return;
+    }
+    if (window.appPrint) {
+        window.appPrint(content.innerHTML);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+  }
 </script>
 </body>
 </html>

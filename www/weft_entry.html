@@ -1249,7 +1249,8 @@ function checkUserPermission() {
    PAGE LOAD
 ============================================================ */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
 
     try {
 
@@ -1367,10 +1368,10 @@ function loadBitmapImage() {
 
     let activeDesign =
         document.getElementById('designNo').value ||
-        localStorage.getItem('selected_design_number');
+        window.StorageDB.getItem('selected_design_number');
 
     let designSpecs = safeParseJSON(
-        localStorage.getItem('design_specs'),
+        window.StorageDB.getItem('design_specs'),
         {}
     );
 
@@ -1468,22 +1469,22 @@ function loadBitmapImage() {
 function loadDesignDropdown() {
 
     let preDesigns = safeParseJSON(
-        localStorage.getItem('pre_design_numbers'),
+        window.StorageDB.getItem('pre_design_numbers'),
         []
     );
 
     let designMasters = safeParseJSON(
-        localStorage.getItem('design_masters_data'),
+        window.StorageDB.getItem('design_masters_data'),
         []
     );
 
     let designSpecs = safeParseJSON(
-        localStorage.getItem('design_specs'),
+        window.StorageDB.getItem('design_specs'),
         {}
     );
 
     let partyOrders = safeParseJSON(
-        localStorage.getItem('party_orders_data'),
+        window.StorageDB.getItem('party_orders_data'),
         []
     );
 
@@ -1559,7 +1560,7 @@ function loadDesignDropdown() {
             designElement.appendChild(option);
         });
 
-    let activeDesign = localStorage.getItem('selected_design_number');
+    let activeDesign = window.StorageDB.getItem('selected_design_number');
 
     if (
         activeDesign &&
@@ -1593,8 +1594,10 @@ function loadWeftDesignData() {
 
     let dNo = select.value;
 
+    window.weftLoadedDesign = dNo;
+
     if (dNo) {
-        localStorage.setItem(
+        window.StorageDB.setItem(
             'selected_design_number',
             dNo
         );
@@ -1669,7 +1672,7 @@ function loadWeftDesignData() {
         cleanDesignName(dNo);
 
     let specs = safeParseJSON(
-        localStorage.getItem('design_specs'),
+        window.StorageDB.getItem('design_specs'),
         {}
     );
 
@@ -1686,7 +1689,7 @@ function loadWeftDesignData() {
             : {};
 
     let masters = safeParseJSON(
-        localStorage.getItem('design_masters_data'),
+        window.StorageDB.getItem('design_masters_data'),
         []
     );
 
@@ -1701,13 +1704,13 @@ function loadWeftDesignData() {
             : {};
 
     // PRIORITY 1: Check weft_entry_data directly
-    let weftEntryList = safeParseJSON(localStorage.getItem('weft_entry_data'), []);
+    let weftEntryList = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
     let foundWeftEntry = Array.isArray(weftEntryList) 
         ? weftEntryList.find(w => cleanDesignName(w.name || w.designNo) === cleanDNo) 
         : null;
 
     let partyOrders = safeParseJSON(
-        localStorage.getItem('party_orders_data'),
+        window.StorageDB.getItem('party_orders_data'),
         []
     );
 
@@ -1936,7 +1939,7 @@ async function copyToNewDesign() {
 
     let preDesignList =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'pre_design_numbers'
             ),
             []
@@ -1944,7 +1947,7 @@ async function copyToNewDesign() {
 
     let masters =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_masters_data'
             ),
             []
@@ -1952,7 +1955,7 @@ async function copyToNewDesign() {
 
     let specs =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_specs'
             ),
             {}
@@ -2096,14 +2099,14 @@ async function copyToNewDesign() {
 
     preDesignList.push(newDNo);
 
-    localStorage.setItem('pre_design_numbers', JSON.stringify(preDesignList));
-    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+    window.StorageDB.setItem('pre_design_numbers', JSON.stringify(preDesignList));
+    window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
-    let weftEntryList = safeParseJSON(localStorage.getItem('weft_entry_data'), []);
+    let weftEntryList = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
     if (!Array.isArray(weftEntryList)) weftEntryList = [];
     weftEntryList = weftEntryList.filter(x => cleanDesignName(x.name || x.designNo) !== cleanNew);
     weftEntryList.push(copiedMaster);
-    localStorage.setItem('weft_entry_data', JSON.stringify(weftEntryList));
+    window.StorageDB.setItem('weft_entry_data', JSON.stringify(weftEntryList));
 
     let cleanCurrent = cleanDesignName(currentDNo);
     let currentSpecKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanCurrent);
@@ -2120,7 +2123,7 @@ async function copyToNewDesign() {
     copiedSpec.weft2 = document.getElementById('infoWeft2').value.trim();
 
     specs[newDNo] = copiedSpec;
-    localStorage.setItem('design_specs', JSON.stringify(specs));
+    window.StorageDB.setItem('design_specs', JSON.stringify(specs));
 
     try {
         if (window.supabaseSave) {
@@ -2146,7 +2149,7 @@ async function copyToNewDesign() {
         designElement.value = newDNo;
     }
 
-    localStorage.setItem('selected_design_number', newDNo);
+    window.StorageDB.setItem('selected_design_number', newDNo);
     loadWeftDesignData();
 
     alert(
@@ -3043,7 +3046,7 @@ async function quickCompleteToggle() {
 
     let masters =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_masters_data'
             ),
             []
@@ -3063,26 +3066,16 @@ async function quickCompleteToggle() {
         masters[idx].status =
             statusText;
 
-    } else {
-
-        masters.push({
-
-            name: dNo,
-            designNo: dNo,
-            status: statusText,
-            weftLines: collectWeftLines(),
-            weftRanges: collectWeftRanges()
-        });
     }
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'design_masters_data',
         JSON.stringify(masters)
     );
 
     let designSpecs =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_specs'
             ),
             {}
@@ -3104,7 +3097,7 @@ async function quickCompleteToggle() {
     designSpecs[specKey].status =
         statusText;
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'design_specs',
         JSON.stringify(
             designSpecs
@@ -3176,6 +3169,13 @@ async function saveWeftDesign() {
         return;
     }
 
+    let cleanCheck = cleanDesignName(dNo);
+    let weftStore = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
+    let hasExisting = Array.isArray(weftStore) && weftStore.some(w => cleanDesignName(w.name || w.designNo) === cleanCheck && Array.isArray(w.weftLines) && w.weftLines.length > 0);
+    if (hasExisting && !(window.weftLoadedDesign && cleanDesignName(window.weftLoadedDesign) === cleanCheck)) {
+        if (!confirm("இந்த டிசைனுக்கு ஏற்கனவே Weft என்ட்ரி செய்யப்பட்டுள்ளது. மேல எழுதவா?")) return;
+    }
+
     let lines = collectWeftLines();
 
     if (lines.length === 0) {
@@ -3219,7 +3219,7 @@ async function saveWeftDesign() {
     };
 
     // 1. UPDATE DESIGN MASTERS
-    let masters = safeParseJSON(localStorage.getItem('design_masters_data'), []);
+    let masters = safeParseJSON(window.StorageDB.getItem('design_masters_data'), []);
     if (!Array.isArray(masters)) masters = [];
     let idx = masters.findIndex(m => cleanDesignName(m.name || m.designNo) === cleanDNo);
     if (idx === -1) {
@@ -3227,54 +3227,19 @@ async function saveWeftDesign() {
     } else {
         masters[idx] = { ...masters[idx], ...masterData };
     }
-    localStorage.setItem('design_masters_data', JSON.stringify(masters));
+    window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
     // 2. 🟢 CRUCIAL FIX: SAVE INTO weft_entry_data WITH EXACT DESIGN NO 🟢
-    let weftEntryList = safeParseJSON(localStorage.getItem('weft_entry_data'), []);
+    let weftEntryList = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
     if (!Array.isArray(weftEntryList)) weftEntryList = [];
     weftEntryList = weftEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo);
     weftEntryList.push(masterData);
-    localStorage.setItem('weft_entry_data', JSON.stringify(weftEntryList));
+    window.StorageDB.setItem('weft_entry_data', JSON.stringify(weftEntryList));
 
-    // 3. 🟢 CRUCIAL FIX: PURGE STALE CACHES IN LOCAL STORAGE 🟢
-    try {
-        let editsCache = safeParseJSON(localStorage.getItem('local_edits_cache'), {});
-        if (editsCache && typeof editsCache === 'object') {
-            let editKey = Object.keys(editsCache).find(k => cleanDesignName(k) === cleanDNo);
-            if (editKey) {
-                editsCache[editKey].weftLines = lines;
-                editsCache[editKey].weftRanges = ranges;
-                localStorage.setItem('local_edits_cache', JSON.stringify(editsCache));
-            }
-        }
-    } catch(e) {}
-
-    try {
-        let weaveDesigns = safeParseJSON(localStorage.getItem('weave_designs'), []);
-        if (Array.isArray(weaveDesigns)) {
-            let wIdx = weaveDesigns.findIndex(w => cleanDesignName(w.name || w.designNo) === cleanDNo);
-            if (wIdx > -1) {
-                weaveDesigns[wIdx].weftLines = lines;
-                weaveDesigns[wIdx].weftRanges = ranges;
-                localStorage.setItem('weave_designs', JSON.stringify(weaveDesigns));
-            }
-        }
-    } catch(e) {}
-
-    try {
-        let weaveCache = safeParseJSON(localStorage.getItem('weave_designs_cache'), []);
-        if (Array.isArray(weaveCache)) {
-            let cIdx = weaveCache.findIndex(w => cleanDesignName(w.name || w.designNo) === cleanDNo);
-            if (cIdx > -1) {
-                weaveCache[cIdx].weftLines = lines;
-                weaveCache[cIdx].weftRanges = ranges;
-                localStorage.setItem('weave_designs_cache', JSON.stringify(weaveCache));
-            }
-        }
-    } catch(e) {}
+    // Weave 3D data (colour hex, span, repeat) belongs to weave_3d.html only; Weft Entry does not touch it.
 
     // 4. DESIGN SPECS
-    let designSpecs = safeParseJSON(localStorage.getItem('design_specs'), {});
+    let designSpecs = safeParseJSON(window.StorageDB.getItem('design_specs'), {});
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
     if (!designSpecs[specKey]) designSpecs[specKey] = {};
     designSpecs[specKey].status = status;
@@ -3285,9 +3250,9 @@ async function saveWeftDesign() {
     designSpecs[specKey].weftWidth = document.getElementById('infoWeftWidth').value.trim();
     designSpecs[specKey].weftPick = document.getElementById('infoPick').value.trim();
     designSpecs[specKey].weaveType = document.getElementById('infoWeave').value.trim();
-    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
 
-    localStorage.setItem('last_edit_timestamp', Date.now().toString());
+    window.StorageDB.setItem('last_edit_timestamp', Date.now().toString());
 
     // 5. CLOUD / SUPABASE OVERWRITE (GUARANTEED SYNC)
     let cloudSuccess = true;
@@ -3349,7 +3314,7 @@ async function toggleStatus(
 
     let masters =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_masters_data'
             ),
             []
@@ -3371,7 +3336,7 @@ async function toggleStatus(
     masters[index].status =
         newStatus;
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'design_masters_data',
         JSON.stringify(
             masters
@@ -3380,7 +3345,7 @@ async function toggleStatus(
 
     let designSpecs =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_specs'
             ),
             {}
@@ -3402,7 +3367,7 @@ async function toggleStatus(
     designSpecs[specKey].status =
         newStatus;
 
-    localStorage.setItem(
+    window.StorageDB.setItem(
         'design_specs',
         JSON.stringify(
             designSpecs
@@ -3474,7 +3439,7 @@ function renderSavedList() {
 
     let masters =
         safeParseJSON(
-            localStorage.getItem(
+            window.StorageDB.getItem(
                 'design_masters_data'
             ),
             []
@@ -3621,7 +3586,7 @@ function editDesignPattern(dNo) {
         select.value = dNo;
     }
 
-    localStorage.setItem('selected_design_number', dNo);
+    window.StorageDB.setItem('selected_design_number', dNo);
 
     loadWeftDesignData();
 
