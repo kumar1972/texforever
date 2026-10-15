@@ -1656,7 +1656,13 @@ async function initialiseSettings() {
 
 /* DOM READY */
 window.addEventListener("DOMContentLoaded", function () {
-    initialiseSettings();
+    /* IndexedDB (StorageDB) load aana apram thaan saved values padikkanum */
+    const ready = (window.StorageDB && window.StorageDB.ready)
+        ? window.StorageDB.ready
+        : Promise.resolve();
+    ready.then(function () {
+        initialiseSettings();
+    });
 });
 </script>
 </body>

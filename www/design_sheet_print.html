@@ -348,6 +348,16 @@ th{
     color:#1E2B23 !important;
 }
 
+/* Warp total: left side, directly under the ENDS column */
+#warpSummaryBox{
+    width:fit-content;
+    min-width:49%;
+    max-width:100%;
+    margin-left:0;
+    margin-right:auto;
+    text-align:left;
+}
+
 /* =========================================================
    PREVIEW MODAL
 ========================================================= */
@@ -627,6 +637,13 @@ th{
         border:1px dashed #888 !important;
         -webkit-print-color-adjust:exact !important;
         print-color-adjust:exact !important;
+    }
+
+    #warpSummaryBox{
+        width:fit-content !important;
+        min-width:49% !important;
+        max-width:100% !important;
+        text-align:left !important;
     }
 
     .page-break{
@@ -937,8 +954,15 @@ th{
 
 document.addEventListener("DOMContentLoaded", function(){
 
-    initDropdown();
-    loadCompanySettings();
+    /* IndexedDB load aana apram thaan data padikkanum */
+    let ready = (window.StorageDB && window.StorageDB.ready)
+        ? window.StorageDB.ready
+        : Promise.resolve();
+
+    ready.then(function(){
+        initDropdown();
+        loadCompanySettings();
+    });
 
 });
 
@@ -950,14 +974,14 @@ document.addEventListener("DOMContentLoaded", function(){
 function loadCompanySettings(){
 
     let savedAddr =
-        localStorage.getItem("company_full_address") ||
-        localStorage.getItem("set_comp_addr") ||
-        localStorage.getItem("company_address") ||
+        storeRaw("company_full_address") ||
+        storeRaw("set_comp_addr") ||
+        storeRaw("company_address") ||
         "";
 
     let savedCompName =
-        localStorage.getItem("app_heading_name") ||
-        localStorage.getItem("company_name") ||
+        storeRaw("app_heading_name") ||
+        storeRaw("company_name") ||
         "TEXFRIEND";
 
     let nameEl =
@@ -991,6 +1015,30 @@ function loadCompanySettings(){
 
 
 /* =========================================================
+   KEY MATCH HELPERS (ignores #, spaces and case)
+========================================================= */
+
+/* Reads from StorageDB (IndexedDB) - where config.js saves all ERP data */
+function storeRaw(key){
+    if(window.StorageDB && typeof window.StorageDB.getItem === "function"){
+        return window.StorageDB.getItem(key);
+    }
+    return localStorage.getItem(key);
+}
+
+function normalizeKey(s){
+    return String(s || "").replace(/[#\s]/g, "").toLowerCase();
+}
+
+function findByDesignKey(obj, dName){
+    if(!obj || typeof obj !== "object") return undefined;
+    let target = normalizeKey(dName);
+    let k = Object.keys(obj).find(key => normalizeKey(key) === target);
+    return k !== undefined ? obj[k] : undefined;
+}
+
+
+/* =========================================================
    CLEAN DESIGN NAME
 ========================================================= */
 
@@ -1016,17 +1064,17 @@ function initDropdown(){
 
     let preDesignList =
         JSON.parse(
-            localStorage.getItem("pre_design_numbers")
+            storeRaw("pre_design_numbers")
         ) || [];
 
     let designMastersList =
         JSON.parse(
-            localStorage.getItem("design_masters_data")
+            storeRaw("design_masters_data")
         ) || [];
 
     let specs =
         JSON.parse(
-            localStorage.getItem("design_specs")
+            storeRaw("design_specs")
         ) || {};
 
     let masterNames =
@@ -1073,7 +1121,7 @@ function initDropdown(){
     });
 
     let activeDesign =
-        localStorage.getItem(
+        storeRaw(
             "selected_design_number"
         );
 
@@ -1139,7 +1187,7 @@ function loadDesignDetails(){
 
     let designMastersList =
         JSON.parse(
-            localStorage.getItem(
+            storeRaw(
                 "design_masters_data"
             )
         ) || [];
@@ -1161,7 +1209,7 @@ function loadDesignDetails(){
 
     let specs =
         JSON.parse(
-            localStorage.getItem("design_specs")
+            storeRaw("design_specs")
         ) || {};
 
     let specKey =
@@ -1180,7 +1228,7 @@ function loadDesignDetails(){
 
     let orders =
         JSON.parse(
-            localStorage.getItem(
+            storeRaw(
                 "party_orders_data"
             )
         ) || [];
@@ -1472,12 +1520,12 @@ function loadDesignDetails(){
         return [];
     }
 
-    let globalWarpData = JSON.parse(localStorage.getItem("warp_pattern_data") || "{}");
-    let globalWeftData = JSON.parse(localStorage.getItem("weft_pattern_data") || "{}");
+    let globalWarpData = JSON.parse(storeRaw("warp_pattern_data") || "{}");
+    let globalWeftData = JSON.parse(storeRaw("weft_pattern_data") || "{}");
 
-    let rawWarpLines = foundMaster.warpLines || sp.warpLines || foundMaster.warpPattern || sp.warpPattern || globalWarpData[dName] || globalWarpData[cleanDNo] || [];
+    let rawWarpLines = foundMaster.warpLines || sp.warpLines || foundMaster.warpPattern || sp.warpPattern || findByDesignKey(globalWarpData, dName) || [];
     let rawWarpRanges = foundMaster.warpRanges || sp.warpRanges || foundMaster.warpRange || sp.warpRange || [];
-    let rawWeftLines = foundMaster.weftLines || sp.weftLines || foundMaster.weftPattern || sp.weftPattern || globalWeftData[dName] || globalWeftData[cleanDNo] || [];
+    let rawWeftLines = foundMaster.weftLines || sp.weftLines || foundMaster.weftPattern || sp.weftPattern || findByDesignKey(globalWeftData, dName) || [];
     let rawWeftRanges = foundMaster.weftRanges || sp.weftRanges || foundMaster.weftRange || sp.weftRange || [];
 
     let warpLines = parseDataSafely(rawWarpLines);
@@ -2058,23 +2106,16 @@ function renderSplitPreviewTable(
 
         let hasTopBeam = patternTopEnds > 0;
 
-        summaryHtml += `<div class="line-1" style="text-align:center; padding: 6px 0; font-size: 11px;">`;
-        
-        if (hasTopBeam) {
-            summaryHtml += `
-                <span style="font-weight:700; color:#1E2B23;">
-                    Total Pattern Ends: &nbsp;&nbsp;&nbsp; ${patternGroundEnds} <span style="color:#64748b; font-weight:600;">(Bottom)</span> + <span style="color:#d97706;">${patternTopEnds} (SSKR)</span> = ${calculatedPatternEnds}
-                </span>
-            `;
-        } else {
-            summaryHtml += `
-                <span style="font-weight:700; color:#1E2B23;">
-                    Total Pattern Ends: &nbsp;&nbsp;&nbsp; ${calculatedPatternEnds}
-                </span>
-            `;
-        }
-        
-        summaryHtml += `</div>`;
+        let endsDetail = hasTopBeam
+            ? ` <span style="color:#64748b; font-weight:600;">(${patternGroundEnds} Bottom + <span style="color:#d97706;">${patternTopEnds} SSKR</span>)</span>`
+            : "";
+
+        summaryHtml += `
+            <div class="line-1">
+                Total Pattern Ends:
+                <b>${calculatedPatternEnds}</b>${endsDetail}
+            </div>
+        `;
 
         let reed = parseFloat(onloomReed) || parseFloat(foundMaster.reed || sp.reed) || 0;
         let width = parseFloat(onloomWidth) || parseFloat(foundMaster.width || sp.width) || 0;
@@ -2085,21 +2126,21 @@ function renderSplitPreviewTable(
                 let repeats = Math.floor(totalEndsInt / calculatedPatternEnds);
                 let balance = totalEndsInt % calculatedPatternEnds;
                 summaryHtml += `
-                    <div class="line-1" style="text-align:center; padding: 4px 0; font-size: 11px;">
-                        <b style="color:#1E2B23;">${repeats} repeat + ${balance} ends = ${totalEndsInt}</b>
+                    <div class="line-1">
+                        ${repeats} repeat + ${balance} ends = <b>${totalEndsInt}</b>
                     </div>
                 `;
             }
 
             summaryHtml += `
-                <div style="text-align:center; padding: 4px 0; font-size: 11px;">
-                    <b style="color:#1E2B23;">Warp Width ${width} X Reed ${reed} = <span style="color:#10B981;">${(reed * width).toFixed(2)}</span> Total Ends</b>
+                <div>
+                    Warp Width ${width} X Reed ${reed} = <b>${(reed * width).toFixed(2)} Total Ends</b>
                 </div>
             `;
         } else {
             summaryHtml += `
-                <div style="text-align:center; padding: 4px 0; font-size: 11px;">
-                    <b style="color:#1E2B23;">Total Ends: <span style="color:#10B981;">${finalGrandTotal}</span></b>
+                <div>
+                    Total Ends: <b>${finalGrandTotal}</b>
                 </div>
             `;
         }

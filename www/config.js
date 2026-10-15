@@ -140,6 +140,9 @@ window.StorageDB = {
 
 // Initialize immediately
 window.StorageDB.ready = window.StorageDB.init();
+window.StorageDB.ready.then(function () {
+    if (typeof window.refreshSupabaseConfig === "function") window.refreshSupabaseConfig();
+});
 
 // ============================================================
 // SYSTEM MODE
@@ -182,6 +185,15 @@ function readSupabaseStoredValue(primaryKey, alternativeKeys = []) {
 window.TEXFOREVER_SUPABASE_CONFIG = {
     url: readSupabaseStoredValue("custom_supabase_url", ["supabase_url", "supabaseUrl", "serverUrl", "db_url"]),
     key: readSupabaseStoredValue("custom_supabase_key", ["supabase_key", "supabaseKey", "apiKey", "db_key"])
+};
+
+// Re-read URL/Key after IndexedDB (StorageDB) has loaded its data
+window.refreshSupabaseConfig = function () {
+    window.TEXFOREVER_SUPABASE_CONFIG = {
+        url: readSupabaseStoredValue("custom_supabase_url", ["supabase_url", "supabaseUrl", "serverUrl", "db_url"]),
+        key: readSupabaseStoredValue("custom_supabase_key", ["supabase_key", "supabaseKey", "apiKey", "db_key"])
+    };
+    return window.TEXFOREVER_SUPABASE_CONFIG;
 };
 
 // ============================================================
@@ -561,6 +573,9 @@ window.initializeSupabase = async function (doFullSync) {
 
     window.cloudSyncPromise = (async function () {
         try {
+            if (window.StorageDB && window.StorageDB.ready) { await window.StorageDB.ready; }
+            if (typeof window.refreshSupabaseConfig === "function") { window.refreshSupabaseConfig(); }
+
             if (!window.TEXFOREVER_SUPABASE_CONFIG.url || !window.TEXFOREVER_SUPABASE_CONFIG.key) {
                 console.log("ℹ️ Supabase URL/Key not set yet. Skipping cloud sync (offline/local mode).");
                 window.supabaseConnected = false;
