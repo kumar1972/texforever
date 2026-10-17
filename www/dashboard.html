@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TEX FOR EVER ">
 
-<title>Dashboard - TEX FOR EVER </title>
+<title>Dashboard - TEXFOREVER </title>
 
 <!-- IMPORTANT: config.js and translator.js already exist -->
 <script src="config.js" defer></script>
@@ -56,7 +56,7 @@ body{
 
 
 /* =========================================================
-   TOP HEADER
+   TOP HEADER (FIXED / STICKY)
 ========================================================= */
 
 .top-header-container{
@@ -67,8 +67,8 @@ body{
     justify-content:space-between;
     align-items:center;
 
-    padding:20px 25px;
-    min-height:110px;
+    padding:16px 22px;
+    min-height:100px;
 
     background:rgba(15,23,42,.95);
     backdrop-filter:blur(12px);
@@ -82,8 +82,9 @@ body{
 
     border:2px solid rgba(56,189,248,.4);
 
-    position:relative;
-    z-index:50;
+    position:sticky;
+    top:10px;
+    z-index:9000;
 }
 
 .header-left-group {
@@ -103,15 +104,37 @@ body{
     border-radius: 12px;
     cursor: pointer;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 5px;
     transition: all 0.3s ease;
     box-shadow: 0 0 10px rgba(56,189,248,.3);
+}
+
+.sidebar-toggle-btn .bar {
+    width: 20px;
+    height: 2.5px;
+    background: #38BDF8;
+    border-radius: 4px;
+}
+.sidebar-toggle-btn .bar:nth-child(2) {
+    width: 14px;
+    align-self: flex-start;
+    margin-left: 10px;
 }
 
 .sidebar-toggle-btn:hover {
     background: rgba(56,189,248,.3);
     transform: scale(1.05);
+}
+
+body:not(.dashboard-modern) .sidebar-toggle-btn {
+    display: none !important;
+}
+
+body.dashboard-modern .sidebar-toggle-btn {
+    display: flex !important;
 }
 
 .top-header-container h3 {
@@ -167,7 +190,7 @@ body{
 
 
 /* =========================================================
-   SIDEBAR NAVIGATION MENU DRAWER (ACCORDION)
+   SIDEBAR NAVIGATION MENU DRAWER (SCROLLABLE FIXED)
 ========================================================= */
 
 .sidebar-overlay {
@@ -175,167 +198,326 @@ body{
     inset: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 99999;
-    display: none;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
 }
 
 .sidebar-overlay.active {
-    display: block;
     opacity: 1;
+    pointer-events: auto;
 }
 
 .sidebar-container {
     position: fixed;
     top: 0;
-    left: -320px;
-    width: 300px;
+    left: 0;
+    width: min(350px, 90vw);
     height: 100vh;
-    background: #0B1120;
-    border-right: 2px solid #38BDF8;
+    background: linear-gradient(165deg, #040814 0%, #091224 50%, #050a18 100%);
+    border-right: 2px solid rgba(56, 189, 248, 0.45);
     z-index: 100000;
     display: flex;
     flex-direction: column;
-    box-shadow: 10px 0 30px rgba(0,0,0,0.9);
-    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 25px 0 60px rgba(0, 0, 0, 0.95);
+    transform: translateX(-105%);
+    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    overflow: hidden;
 }
 
 .sidebar-container.active {
-    left: 0;
+    transform: translateX(0);
 }
 
 .sidebar-header {
-    padding: 20px;
-    background: #0F172A;
-    border-bottom: 1px solid rgba(56,189,248,0.3);
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid rgba(56,189,248,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.sidebar-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.sidebar-header h4 {
-    color: #38BDF8;
+.sidebar-brand-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-brand-emblem {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #38BDF8, #6366F1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
     font-size: 16px;
+}
+
+.sidebar-brand-text h4 {
+    font-size: 14px;
     font-weight: 900;
-    letter-spacing: 1px;
+    color: #38BDF8;
+}
+
+.sidebar-brand-text span {
+    font-size: 9.5px;
+    color: #94A3B8;
 }
 
 .sidebar-close-btn {
-    background: transparent;
-    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.4);
     color: #F87171;
-    font-size: 22px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-search-box {
+    position: relative;
+    width: 100%;
+}
+
+.sidebar-search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    background: rgba(2, 6, 23, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 10px;
+    color: #F8FAFC;
+    font-size: 12px;
+    outline: none;
+}
+
+.sidebar-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #38BDF8;
+    font-size: 12px;
 }
 
 .sidebar-menu-items {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
     padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #38BDF8 rgba(15, 23, 42, 0.5);
 }
 
-/* Accordion Main Menu Item */
-.menu-accordion-group {
+/* ACCORDION CATEGORY HEADER */
+.sidebar-dropdown-group {
     display: flex;
     flex-direction: column;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(56,189,248,0.2);
-    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 14px;
     overflow: hidden;
-    transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
-.menu-accordion-btn {
+.sidebar-dropdown-btn {
     width: 100%;
-    padding: 14px 16px;
+    padding: 12px 14px;
     background: transparent;
     border: none;
     color: #38BDF8;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
     text-align: left;
-    font-size: 14px;
-    font-weight: 800;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    letter-spacing: 0.5px;
 }
 
-.menu-accordion-btn:hover {
+.sidebar-dropdown-btn:hover {
     background: rgba(56,189,248,0.1);
 }
 
-.accordion-arrow {
-    font-size: 12px;
+.dropdown-arrow {
+    font-size: 10px;
     transition: transform 0.3s ease;
 }
 
-.menu-accordion-group.active .accordion-arrow {
+.sidebar-dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(2, 6, 23, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 10px;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+}
+
+.sidebar-dropdown-group.active .sidebar-dropdown-content {
+    max-height: 500px;
+    padding: 8px 10px 12px;
+    border-top: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+.sidebar-dropdown-group.active .dropdown-arrow {
     transform: rotate(180deg);
 }
 
-/* Submenu Container */
-.submenu-list {
-    max-height: 0;
-    overflow: hidden;
-    background: rgba(3,7,18,0.6);
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid transparent;
+/* SPECIAL RED ROUND HEADER */
+.sidebar-dropdown-group.red-round-header {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.25), rgba(153, 27, 27, 0.4));
+    border: 2px solid #EF4444;
+    border-radius: 24px;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
 }
 
-.menu-accordion-group.active .submenu-list {
-    max-height: 300px;
-    border-top: 1px solid rgba(56,189,248,0.15);
-    padding: 6px 0;
+.sidebar-dropdown-group.red-round-header .sidebar-dropdown-btn {
+    color: #FCA5A5;
+    font-size: 12px;
+    font-weight: 900;
 }
 
-.submenu-item {
-    padding: 10px 16px 10px 28px;
-    color: #CBD5E1;
-    text-decoration: none;
-    font-size: 12.5px;
-    font-weight: 600;
-    border-left: 3px solid transparent;
-    transition: all 0.2s ease;
+.sidebar-dropdown-group.red-round-header .sidebar-dropdown-content {
+    background: rgba(10, 5, 5, 0.75);
+    border-top: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 0 0 20px 20px;
 }
 
-.submenu-item:hover {
-    background: rgba(56,189,248,0.15);
-    color: #38BDF8;
-    border-left-color: #38BDF8;
-    padding-left: 32px;
-}
-
-/* Standalone Sidebar Direct Links */
-.sidebar-direct-item {
+/* LUXURY SIDE CARD */
+.luxury-side-card {
+    --card-accent: #38BDF8;
+    position: relative;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid var(--card-accent);
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 13px 16px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(56,189,248,0.15);
-    border-radius: 12px;
-    color: #CBD5E1;
-    text-decoration: none;
-    font-size: 13.5px;
-    font-weight: 700;
-    transition: all 0.2s ease;
+    gap: 10px;
+    cursor: pointer;
+    text-align: left;
+    color: #F8FAFC;
+    transition: all 0.25s ease;
 }
 
-.sidebar-direct-item:hover {
-    background: rgba(56,189,248,0.2);
-    color: #38BDF8;
-    border-color: #38BDF8;
+.luxury-side-card:hover {
     transform: translateX(4px);
+    border-color: var(--card-accent);
+}
+
+.luxury-card-icon {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.luxury-card-icon img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.luxury-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.luxury-card-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.luxury-card-sub {
+    font-size: 9px;
+    color: #94A3B8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.luxury-card-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--card-accent) 20%, rgba(0,0,0,0.5));
+    border: 1px solid color-mix(in srgb, var(--card-accent) 60%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--card-accent);
+    font-size: 10.5px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+.side-theme-1 { --card-accent: #38BDF8; }
+.side-theme-2 { --card-accent: #10B981; }
+.side-theme-3 { --card-accent: #A855F7; }
+.side-theme-4 { --card-accent: #F97316; }
+.side-theme-5 { --card-accent: #EC4899; }
+.side-theme-6 { --card-accent: #14B8A6; }
+.side-theme-7 { --card-accent: #6366F1; }
+.side-theme-8 { --card-accent: #F59E0B; }
+.side-theme-9 { --card-accent: #F43F5E; }
+.side-theme-10 { --card-accent: #22C55E; }
+.side-theme-11 { --card-accent: #C084FC; }
+.side-theme-12 { --card-accent: #0EA5E9; }
+.side-theme-calc { --card-accent: #FBBF24; }
+.side-theme-print { --card-accent: #34D399; }
+.side-theme-sim { --card-accent: #818CF8; }
+.side-theme-dent { --card-accent: #34D399; }
+
+.sidebar-footer {
+    padding: 10px 16px;
+    background: rgba(2, 6, 23, 0.95);
+    border-top: 1px solid rgba(56, 189, 248, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #64748B;
+    flex-shrink: 0;
 }
 
 
@@ -345,44 +527,32 @@ body{
 
 #companyLogoContainer{
     flex:0 0 auto;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     cursor:pointer;
 }
 
 #companyLogoContainer img{
     height:90px;
     width:90px;
-
     border-radius:12px;
     border:2px solid #38BDF8;
-
     object-fit:cover;
-
-    box-shadow:
-        0 0 15px rgba(56,189,248,.5);
+    box-shadow:0 0 15px rgba(56,189,248,.5);
 }
 
 .logo-placeholder{
     height:65px;
     width:65px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     font-size:11px;
-
     background:rgba(56,189,248,.08);
-
     border-radius:12px;
     border:2px dashed #38BDF8;
-
     color:#38BDF8;
-
     font-weight:800;
     text-align:center;
 }
@@ -394,11 +564,9 @@ body{
 
 .header-right-actions{
     flex:1;
-
     display:flex;
     align-items:center;
     justify-content:flex-end;
-
     gap:10px;
 }
 
@@ -409,13 +577,9 @@ body{
 
 .live-clock-box{
     text-align:right;
-
     background:rgba(56,189,248,.08);
-
     padding:6px 14px;
-
     border-radius:12px;
-
     border:1px solid rgba(56,189,248,.3);
 }
 
@@ -441,68 +605,39 @@ body{
 }
 
 .dropdown-btn{
-    background:
-        linear-gradient(
-            135deg,
-            rgba(56,189,248,.2),
-            rgba(129,140,248,.2)
-        );
-
+    background:linear-gradient(135deg, rgba(56,189,248,.2), rgba(129,140,248,.2));
     border:1.5px solid #38BDF8;
-
     color:white;
-
     font-size:16px;
-
     padding:8px 14px;
-
     border-radius:12px;
-
     cursor:pointer;
-
-    box-shadow:
-        0 0 15px rgba(56,189,248,.3);
+    box-shadow:0 0 15px rgba(56,189,248,.3);
 }
 
 .dropdown-menu{
     position:absolute;
-
     right:0;
     top:calc(100% + 12px);
-
     background:#0F172A;
     color:#F8FAFC;
-
     border-radius:16px;
-
-    box-shadow:
-        0 25px 60px rgba(0,0,0,.95);
-
+    box-shadow:0 25px 60px rgba(0,0,0,.95);
     width:240px;
-
     z-index:999999;
     overflow:hidden;
-
     border:2px solid #38BDF8;
-
     display:none;
 }
 
 .dropdown-menu a{
     display:block;
-
     padding:14px 18px;
-
     text-decoration:none;
-
     color:#CBD5E1;
-
     font-size:13px;
     font-weight:600;
-
-    border-bottom:
-        1px solid rgba(255,255,255,.08);
-
+    border-bottom:1px solid rgba(255,255,255,.08);
     line-height:1.5;
 }
 
@@ -518,15 +653,10 @@ body{
 
 .user-info-box{
     padding:16px 18px;
-
     background:#030712;
-
-    border-bottom:
-        1px solid rgba(255,255,255,.1);
-
+    border-bottom:1px solid rgba(255,255,255,.1);
     font-size:12px;
     font-weight:600;
-
     color:#94A3B8;
     line-height:1.8;
 }
@@ -538,41 +668,25 @@ body{
 
 .screen-zoom-popup{
     position:absolute;
-
     right:0;
     top:calc(100% + 12px);
-
     background:#061814;
-
     border:2px solid #10B981;
     border-radius:18px;
-
     padding:16px;
-
     width:250px;
-
     z-index:999999;
-
-    box-shadow:
-        0 20px 50px rgba(0,0,0,.9),
-        0 0 20px rgba(16,185,129,.3);
-
+    box-shadow:0 20px 50px rgba(0,0,0,.9), 0 0 20px rgba(16,185,129,.3);
     display:none;
-
     flex-direction:column;
-
     gap:12px;
-
     text-align:center;
 }
 
 .screen-zoom-popup h4{
     color:#34D399;
-
     font-size:11px;
-
     font-weight:800;
-
     letter-spacing:1px;
     text-transform:uppercase;
 }
@@ -590,40 +704,15 @@ body{
     cursor:pointer;
 }
 
-.resolution-select option{
-    background:#061814;
-    color:#fff;
-}
-
-.resolution-current{
-    font-size:10px;
-    color:#94A3B8;
-    font-weight:700;
-    padding:5px 0;
-}
-
 .fit-screen-action-btn{
     background:#3B82F6;
     color:#FFF;
-
     border:none;
-
     padding:10px;
-
     border-radius:12px;
-
     font-size:12.5px;
-
     font-weight:800;
-
     cursor:pointer;
-
-    box-shadow:
-        0 4px 15px rgba(59,130,246,.4);
-}
-
-.fit-screen-action-btn:hover{
-    background:#2563EB;
 }
 
 
@@ -634,25 +723,14 @@ body{
 .container{
     width:100%;
     max-width:1100px;
-
     background:rgba(11,17,32,.9);
-
     backdrop-filter:blur(20px);
-
     padding:22px;
-
     border-radius:28px;
-
-    box-shadow:
-        0 30px 80px rgba(0,0,0,.9);
-
-    border:
-        2px solid rgba(56,189,248,.35);
-
+    box-shadow:0 30px 80px rgba(0,0,0,.9);
+    border:2px solid rgba(56,189,248,.35);
     display:flex;
-
     flex-direction:column;
-
     gap:18px;
 }
 
@@ -668,98 +746,55 @@ body{
 
 .search-bar-box{
     display:flex;
-
     gap:10px;
-
     background:#FFFFFF !important;
-
     padding:10px 14px;
-
     border-radius:16px;
-
     border:2px solid #38BDF8;
-
     align-items:center;
 }
 
 .search-bar-box input{
     flex:1;
-
     background:transparent !important;
-
     border:none;
-
     color:#0F172A !important;
-
     font-size:12.5px;
-
     outline:none;
-
     font-weight:600;
 }
 
 .search-bar-box button{
-    background:
-        linear-gradient(
-            135deg,
-            #38BDF8,
-            #0284C7
-        );
-
+    background:linear-gradient(135deg, #38BDF8, #0284C7);
     color:#0F172A;
-
     border:none;
-
     padding:8px 18px;
-
     border-radius:12px;
-
     font-weight:900;
-
     cursor:pointer;
 }
 
 .search-suggestions-dropdown{
     position:absolute;
-
     top:100%;
     left:0;
-
     width:100%;
-
     background:#0F172A;
-
     border:2px solid #38BDF8;
-
     border-radius:14px;
-
     margin-top:6px;
-
     max-height:220px;
-
     overflow-y:auto;
-
     z-index:999;
-
     display:none;
 }
 
 .search-suggestion-item{
     padding:11px 16px;
-
     font-size:11.5px;
-
     color:#CBD5E1;
-
     cursor:pointer;
-
-    border-bottom:
-        1px solid rgba(255,255,255,.05);
-}
-
-.search-suggestion-item:hover{
-    background:rgba(56,189,248,.25);
-    color:#38BDF8;
+    border-bottom:1px solid rgba(255,255,255,.05);
 }
 
 
@@ -769,54 +804,34 @@ body{
 
 .stats-banner{
     display:grid;
-
-    grid-template-columns:
-        repeat(3,1fr);
-
+    grid-template-columns:repeat(3,1fr);
     gap:14px;
-
     background:#0F172A;
-
     padding:14px;
-
     border-radius:18px;
-
-    border:
-        2px solid rgba(255,255,255,.08);
-
+    border:2px solid rgba(255,255,255,.08);
     text-align:center;
 }
 
 .stat-box{
     background:rgba(255,255,255,.04);
-
     padding:12px;
-
     border-radius:14px;
-
-    border:
-        1.5px solid rgba(56,189,248,.25);
+    border:1.5px solid rgba(56,189,248,.25);
 }
 
 .stat-title{
     display:block;
-
     font-size:10px;
-
     color:#94A3B8;
-
     font-weight:700;
 }
 
 .stat-value{
     display:block;
-
     font-size:16px;
-
     color:#38BDF8;
-
     font-weight:900;
-
     margin-top:4px;
 }
 
@@ -826,128 +841,79 @@ body{
 ========================================================= */
 
 .master-setup-btn{
-    background:
-        linear-gradient(
-            135deg,
-            #3B82F6,
-            #8B5CF6,
-            #EC4899
-        );
-
+    background:linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
     color:white;
-
     padding:18px;
-
     border-radius:20px;
-
     text-decoration:none;
-
     font-weight:900;
-
     font-size:13.5px;
-
     display:flex;
-
     justify-content:center;
     align-items:center;
-
     gap:14px;
-
-    border:
-        2px solid rgba(255,255,255,.4);
-
+    border:2px solid rgba(255,255,255,.4);
     width:100%;
-
     cursor:pointer;
 }
 
 .master-setup-btn img{
     width:28px;
     height:28px;
-
     object-fit:contain;
-
-    background:transparent !important;
 }
 
 
 /* =========================================================
-   MENU GRID
+   MENU GRID (CLASSIC MODE ONLY - HIDDEN IN MODERN GLASS)
 ========================================================= */
 
 .menu-grid{
     display:grid;
-
-    grid-template-columns:
-        repeat(3,1fr);
-
+    grid-template-columns:repeat(3,1fr);
     gap:14px;
+}
+
+body.dashboard-modern .menu-grid {
+    display: none !important;
 }
 
 .menu-btn{
     color:#FFF;
-
     min-height:120px;
-
     padding:14px 18px;
-
     border-radius:18px;
-
     text-decoration:none;
-
     font-weight:700;
-
     text-align:left;
-
     display:flex;
-
     flex-direction:row;
-
     align-items:center;
-
     justify-content:flex-start;
-
     gap:18px;
-
     font-size:18px;
-
     letter-spacing:.3px;
-
     line-height:1.35;
-
     cursor:pointer;
-
-    border:
-        1.5px solid rgba(255,255,255,.25);
-
-    box-shadow:
-        0 8px 20px rgba(0,0,0,.3);
-
+    border:1.5px solid rgba(255,255,255,.25);
+    box-shadow:0 8px 20px rgba(0,0,0,.3);
     transition:all .3s ease;
-
     overflow:hidden;
 }
 
 .menu-btn:hover{
     transform:translateY(-4px);
-
-    box-shadow:
-        0 12px 25px rgba(0,0,0,.5);
+    box-shadow:0 12px 25px rgba(0,0,0,.5);
 }
 
 .tab-icon{
     width:100px;
     min-width:100px;
-
     height:100px;
-
     display:flex;
-
     align-items:center;
     justify-content:center;
-
     flex-shrink:0;
-
     background:transparent !important;
 }
 
@@ -955,90 +921,37 @@ body{
 .tab-icon .emoji-icon {
     width:96px;
     height:96px;
-
     object-fit:contain;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     background:transparent !important;
-
-    filter:
-        drop-shadow(
-            0 5px 8px rgba(0,0,0,.45)
-        );
-
-    transition:
-        transform .3s ease;
+    filter:drop-shadow(0 5px 8px rgba(0,0,0,.45));
+    transition:transform .3s ease;
 }
 
-.menu-btn:hover .tab-icon img,
-.menu-btn:hover .tab-icon .emoji-icon {
+.menu-btn:hover .tab-icon img{
     transform:scale(1.10);
-}
-
-.menu-btn > .tab-icon + *{
-    flex:1;
-    min-width:0;
 }
 
 
 /* =========================================================
-   THEMES
+   THEMES FOR CARDS
 ========================================================= */
 
-.btn-theme-1{
-    background:linear-gradient(135deg,rgba(29,78,216,.75),rgba(59,130,246,.6));
-}
-
-.btn-theme-2{
-    background:linear-gradient(135deg,rgba(4,120,87,.75),rgba(16,185,129,.6));
-}
-
-.btn-theme-3{
-    background:linear-gradient(135deg,rgba(109,40,217,.75),rgba(139,92,246,.6));
-}
-
-.btn-theme-4{
-    background:linear-gradient(135deg,rgba(194,65,12,.75),rgba(249,115,22,.6));
-}
-
-.btn-theme-5{
-    background:linear-gradient(135deg,rgba(190,24,93,.75),rgba(236,72,153,.6));
-}
-
-.btn-theme-6{
-    background:linear-gradient(135deg,rgba(15,118,110,.75),rgba(20,184,166,.6));
-}
-
-.btn-theme-7{
-    background:linear-gradient(135deg,rgba(67,56,202,.75),rgba(99,102,241,.6));
-}
-
-.btn-theme-8{
-    background:linear-gradient(135deg,rgba(180,83,9,.75),rgba(245,158,11,.6));
-}
-
-.btn-theme-9{
-    background:linear-gradient(135deg,rgba(159,18,57,.75),rgba(225,29,72,.6));
-}
-
-.btn-theme-10{
-    background:linear-gradient(135deg,rgba(21,128,61,.75),rgba(34,197,94,.6));
-}
-
-.btn-theme-11{
-    background:linear-gradient(135deg,rgba(88,28,135,.75),rgba(147,51,234,.6));
-}
-
-.btn-theme-12{
-    background:linear-gradient(135deg,rgba(3,105,161,.75),rgba(14,165,233,.6));
-}
-
-.btn-theme-grey{
-    background:linear-gradient(135deg,rgba(75,85,99,.75),rgba(107,114,128,.6));
-}
+.btn-theme-1{ background:linear-gradient(135deg,rgba(29,78,216,.75),rgba(59,130,246,.6)); }
+.btn-theme-2{ background:linear-gradient(135deg,rgba(4,120,87,.75),rgba(16,185,129,.6)); }
+.btn-theme-3{ background:linear-gradient(135deg,rgba(109,40,217,.75),rgba(139,92,246,.6)); }
+.btn-theme-4{ background:linear-gradient(135deg,rgba(194,65,12,.75),rgba(249,115,22,.6)); }
+.btn-theme-5{ background:linear-gradient(135deg,rgba(190,24,93,.75),rgba(236,72,153,.6)); }
+.btn-theme-6{ background:linear-gradient(135deg,rgba(15,118,110,.75),rgba(20,184,166,.6)); }
+.btn-theme-7{ background:linear-gradient(135deg,rgba(67,56,202,.75),rgba(99,102,241,.6)); }
+.btn-theme-8{ background:linear-gradient(135deg,rgba(180,83,9,.75),rgba(245,158,11,.6)); }
+.btn-theme-9{ background:linear-gradient(135deg,rgba(159,18,57,.75),rgba(225,29,72,.6)); }
+.btn-theme-10{ background:linear-gradient(135deg,rgba(21,128,61,.75),rgba(34,197,94,.6)); }
+.btn-theme-11{ background:linear-gradient(135deg,rgba(88,28,135,.75),rgba(147,51,234,.6)); }
+.btn-theme-12{ background:linear-gradient(135deg,rgba(3,105,161,.75),rgba(14,165,233,.6)); }
+.btn-theme-grey{ background:linear-gradient(135deg,rgba(75,85,99,.75),rgba(107,114,128,.6)); }
 
 
 /* =========================================================
@@ -1049,9 +962,7 @@ body{
 .btn-m-all,
 .btn-matrix{
     grid-column:span 3;
-
     flex-direction:row;
-
     padding:16px 20px;
 }
 
@@ -1065,36 +976,18 @@ body{
 
 .full-span .tab-icon img,
 .btn-m-all .tab-icon img,
-.btn-matrix .tab-icon img,
-.full-span .tab-icon .emoji-icon,
-.btn-m-all .tab-icon .emoji-icon,
-.btn-matrix .tab-icon .emoji-icon{
+.btn-matrix .tab-icon img{
     width:100px;
     height:100px;
 }
 
 .btn-m-all{
-    background:
-        linear-gradient(
-            135deg,
-            rgba(194,65,12,.7),
-            rgba(217,119,6,.7),
-            rgba(236,72,153,.7),
-            rgba(139,92,246,.7)
-        );
-
+    background:linear-gradient(135deg, rgba(194,65,12,.7), rgba(217,119,6,.7), rgba(236,72,153,.7), rgba(139,92,246,.7));
     border:2px solid #FCD34D;
 }
 
 .btn-matrix{
-    background:
-        linear-gradient(
-            135deg,
-            rgba(15,23,42,.6),
-            rgba(30,41,59,.7),
-            rgba(56,189,248,.4)
-        );
-
+    background:linear-gradient(135deg, rgba(15,23,42,.6), rgba(30,41,59,.7), rgba(56,189,248,.4));
     border:2px solid #38BDF8;
 }
 
@@ -1105,67 +998,43 @@ body{
 
 .delayed-orders-section{
     margin-top:12px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(153,27,27,.25),
-            rgba(69,10,10,.4)
-        );
-
+    background:linear-gradient(135deg, rgba(153,27,27,.25), rgba(69,10,10,.4));
     border:2px solid #EF4444;
-
     border-radius:20px;
-
     padding:18px;
 }
 
 .delayed-orders-section h3{
     color:#F87171;
-
     font-size:13px;
-
     font-weight:900;
-
     margin-bottom:12px;
 }
 
 .delayed-table-container{
     width:100%;
-
     border-radius:14px;
-
     overflow-x:auto;
-
-    border:
-        1.5px solid rgba(239,68,68,.5);
+    border:1.5px solid rgba(239,68,68,.5);
 }
 
 .delayed-table{
     width:100%;
-
     border-collapse:collapse;
-
     font-size:11.5px;
-
     text-align:center;
-
     white-space:nowrap;
 }
 
 .delayed-table th,
 .delayed-table td{
     padding:11px 14px;
-
-    border-bottom:
-        1px solid rgba(239,68,68,.2);
-
+    border-bottom:1px solid rgba(239,68,68,.2);
     color:#FCA5A5;
 }
 
 .delayed-table th{
     background:rgba(239,68,68,.3);
-
     color:#F87171;
 }
 
@@ -1181,198 +1050,38 @@ body{
 
 .sync-status{
     display:none !important;
-
     position:fixed;
-
     right:12px;
     bottom:12px;
-
     z-index:999999;
-
     padding:7px 12px;
-
     border-radius:20px;
-
     background:rgba(15,23,42,.95);
-
     border:1px solid #38BDF8;
-
     color:#38BDF8;
-
     font-size:10px;
-
     font-weight:800;
 }
 
-.sync-status.error{
-    border-color:#F87171;
-    color:#F87171;
-}
-
 
 /* =========================================================
-   TABLET
+   TABLET & MOBILE
 ========================================================= */
 
 @media(max-width:768px){
-
-    body{
-        padding:8px;
-    }
-
-    .top-header-container{
-        flex-wrap:wrap;
-
-        justify-content:center;
-
-        gap:15px;
-
-        padding:18px;
-    }
-
-    .header-left-group {
-        width: 100%;
-        justify-content: flex-start;
-    }
-
-    .top-header-container h3{
-        font-size:20px;
-    }
-
-    #companyLogoContainer{
-        flex:1 1 auto;
-    }
-
-    .header-right-actions{
-        flex:1 1 100%;
-
-        justify-content:center;
-
-        flex-wrap:wrap;
-    }
-
-    .menu-grid{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .full-span,
-    .btn-m-all,
-    .btn-matrix{
-        grid-column:span 2;
-    }
-
-    .stats-banner{
-        grid-template-columns:1fr;
-    }
-
-    .menu-btn{
-        min-height:105px;
-
-        padding:12px;
-
-        gap:12px;
-
-        font-size:15px;
-    }
-
-    .tab-icon{
-        width:82px;
-        min-width:82px;
-        height:82px;
-    }
-
-    .tab-icon img,
-    .tab-icon .emoji-icon{
-        width:78px;
-        height:78px;
-    }
-
-    .full-span .tab-icon,
-    .btn-m-all .tab-icon,
-    .btn-matrix .tab-icon{
-        width:88px;
-        min-width:88px;
-        height:88px;
-    }
-
-    .full-span .tab-icon img,
-    .btn-m-all .tab-icon img,
-    .btn-matrix .tab-icon img,
-    .full-span .tab-icon .emoji-icon,
-    .btn-m-all .tab-icon .emoji-icon,
-    .btn-matrix .tab-icon .emoji-icon{
-        width:84px;
-        height:84px;
-    }
+    body{ padding:8px; }
+    .top-header-container{ flex-wrap:wrap; justify-content:center; gap:15px; padding:18px; }
+    .header-left-group { width: 100%; justify-content: flex-start; }
+    .top-header-container h3{ font-size:20px; }
+    .header-right-actions{ flex:1 1 100%; justify-content:center; flex-wrap:wrap; }
+    .menu-grid{ grid-template-columns:repeat(2,1fr); }
+    .full-span, .btn-m-all, .btn-matrix{ grid-column:span 2; }
+    .stats-banner{ grid-template-columns:1fr; }
 }
-
-
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
 
 @media(max-width:480px){
-
-    .menu-grid{
-        grid-template-columns:1fr;
-    }
-
-    .full-span,
-    .btn-m-all,
-    .btn-matrix{
-        grid-column:span 1;
-    }
-
-    .search-bar-box{
-        flex-wrap:wrap;
-    }
-
-    .search-bar-box button{
-        width:100%;
-    }
-
-    .menu-btn{
-        min-height:105px;
-        font-size:16px;
-    }
-
-    .tab-icon{
-        width:85px;
-        min-width:85px;
-        height:85px;
-    }
-
-    .tab-icon img,
-    .tab-icon .emoji-icon{
-        width:80px;
-        height:80px;
-    }
-}
-
-
-/* =========================================================
-   VERY SMALL MOBILE
-========================================================= */
-
-@media(max-width:360px){
-
-    .menu-btn{
-        gap:9px;
-        padding:10px;
-        font-size:14px;
-    }
-
-    .tab-icon{
-        width:72px;
-        min-width:72px;
-        height:72px;
-    }
-
-    .tab-icon img,
-    .tab-icon .emoji-icon{
-        width:68px;
-        height:68px;
-    }
+    .menu-grid{ grid-template-columns:1fr; }
+    .full-span, .btn-m-all, .btn-matrix{ grid-column:span 1; }
 }
 
 
@@ -1447,6 +1156,171 @@ body{
     border-color:#F87171;
 }
 
+
+/* =========================================================
+   DASHBOARD DUAL UI SELECTOR
+========================================================= */
+.dashboard-ui-wrapper{position:relative;display:inline-block}
+.dashboard-ui-btn{
+  background:linear-gradient(135deg,#38BDF8,#6366F1);
+  color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:12px;
+  padding:10px 13px;font-size:12px;font-weight:900;cursor:pointer;
+  box-shadow:0 4px 18px rgba(99,102,241,.35);white-space:nowrap
+}
+.dashboard-ui-menu{
+  display:none;position:absolute;right:0;top:calc(100% + 10px);
+  width:230px;background:#0F172A;border:1.5px solid #38BDF8;
+  border-radius:14px;overflow:hidden;z-index:1000000;
+  box-shadow:0 18px 45px rgba(0,0,0,.7)
+}
+.dashboard-ui-menu button{
+  width:100%;padding:14px 15px;text-align:left;background:transparent;
+  color:#f8fafc;border:0;border-bottom:1px solid rgba(255,255,255,.08);
+  font-weight:800;font-size:13px;cursor:pointer
+}
+.dashboard-ui-menu button:hover{background:rgba(56,189,248,.18);color:#7dd3fc}
+.dashboard-ui-menu button.active{color:#34D399}
+.dashboard-ui-menu button.active::after{content:" ✔"}
+
+/* ---------- MODERN AURORA GLASS DASHBOARD ---------- */
+body.dashboard-modern{
+  background-image:
+    radial-gradient(ellipse 60% 50% at 10% 0%,rgba(56,189,248,.22),transparent 60%),
+    radial-gradient(ellipse 55% 45% at 95% 10%,rgba(168,85,247,.20),transparent 60%),
+    radial-gradient(ellipse 60% 50% at 50% 105%,rgba(16,185,129,.18),transparent 60%)!important;
+  background-attachment:fixed!important;
+}
+.dashboard-modern .top-header-container{
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 12px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15)
+}
+.dashboard-modern .top-header-container h3{letter-spacing:2px}
+.dashboard-modern #companyLogoContainer img{border:2px solid rgba(255,255,255,.5);box-shadow:0 0 25px rgba(56,189,248,.45)}
+.dashboard-modern .live-clock-box{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18)}
+.dashboard-modern .dropdown-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);box-shadow:none}
+.dashboard-modern .dropdown-btn:hover{background:rgba(56,189,248,.25)}
+
+.dashboard-modern .container{
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(24px) saturate(150%);
+  -webkit-backdrop-filter:blur(24px) saturate(150%);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.1)
+}
+
+.dashboard-modern .stats-banner{background:transparent;border:0;padding:0;gap:14px}
+.dashboard-modern .stat-box{
+  position:relative;overflow:hidden;padding:18px 12px;border-radius:18px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+  transition:transform .25s ease
+}
+.dashboard-modern .stat-box:hover{transform:translateY(-3px)}
+.dashboard-modern .stat-box::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:4px;
+  background:linear-gradient(90deg,#38BDF8,#6366F1)
+}
+.dashboard-modern .stat-box:nth-child(2)::before{background:linear-gradient(90deg,#10B981,#34D399)}
+.dashboard-modern .stat-box:nth-child(3)::before{background:linear-gradient(90deg,#F43F5E,#FB923C)}
+.dashboard-modern .stat-title{font-size:11px;letter-spacing:.8px;text-transform:uppercase}
+.dashboard-modern .stat-value{font-size:30px;font-weight:900;color:#fff;margin-top:6px}
+
+.dashboard-modern .master-setup-btn{
+  position:relative;overflow:hidden;border-radius:18px;padding:20px;
+  background:linear-gradient(120deg,#4F46E5,#7C3AED,#DB2777);
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:0 12px 32px rgba(124,58,237,.4);transition:transform .25s ease
+}
+.dashboard-modern .master-setup-btn:hover{transform:translateY(-2px)}
+.dashboard-modern .master-setup-btn::after{
+  content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent);
+  transform:skewX(-20deg);animation:modernShine 4s ease-in-out infinite
+}
+@keyframes modernShine{0%,60%{left:-60%}100%{left:130%}}
+
+.dashboard-modern .menu-grid{gap:16px}
+.dashboard-modern .menu-btn{
+  position:relative;background:rgba(255,255,255,.055)!important;
+  border:1px solid rgba(255,255,255,.14);border-radius:20px;
+  box-shadow:0 10px 28px rgba(0,0,0,.3);
+  --accent:#38BDF8;font-size:16px;font-weight:700
+}
+.dashboard-modern .menu-btn::before{
+  content:"";position:absolute;left:0;top:14%;bottom:14%;width:5px;
+  border-radius:0 6px 6px 0;background:var(--accent);
+  box-shadow:0 0 14px var(--accent)
+}
+.dashboard-modern .menu-btn:hover{
+  transform:translateY(-6px);border-color:var(--accent);
+  box-shadow:0 16px 38px rgba(0,0,0,.5),0 0 26px color-mix(in srgb,var(--accent) 40%,transparent)
+}
+.dashboard-modern .btn-m-all{--accent:#FBBF24}
+.dashboard-modern .btn-matrix{--accent:#38BDF8}
+
+
+
+/* ===== TEXFOREVER ADVANCED CONTROL CENTER (NEW) ===== */
+.advanced-control-center{width:100%;margin:22px 0 26px;display:none;gap:18px;color:#F8FAFC}
+body.dashboard-modern .advanced-control-center{display:grid}
+.advanced-section{position:relative;overflow:hidden;padding:20px;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:linear-gradient(135deg,rgba(15,23,42,.82),rgba(15,35,48,.68));box-shadow:0 16px 40px rgba(0,0,0,.24);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.advanced-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.advanced-section-head h3{font-size:17px;font-weight:850;letter-spacing:.3px;color:#F8FAFC}
+.advanced-section-head p{font-size:11px;color:#94A3B8;margin-top:4px}
+.advanced-live-pill{font-size:10px;font-weight:800;letter-spacing:.7px;padding:6px 9px;border-radius:999px;color:#6EE7B7;background:rgba(16,185,129,.12);border:1px solid rgba(52,211,153,.25);white-space:nowrap}
+.advanced-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.advanced-metric{min-width:0;padding:15px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1)}
+.advanced-metric-top{display:flex;align-items:center;gap:8px;color:#CBD5E1;font-size:11px;font-weight:700;line-height:1.4}
+.advanced-metric-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:11px;background:rgba(56,189,248,.13);font-size:17px;flex-shrink:0}
+.advanced-metric-value{display:block;font-size:27px;font-weight:900;margin-top:10px;color:#fff;line-height:1.1}
+.advanced-metric-note{display:block;font-size:10px;color:#94A3B8;margin-top:6px}
+.advanced-alert-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.advanced-alert{display:flex;align-items:center;gap:13px;padding:15px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1)}
+.advanced-alert-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;font-size:20px;flex-shrink:0;background:rgba(248,113,113,.13)}
+.advanced-alert strong{display:block;font-size:13px;color:#F8FAFC}
+.advanced-alert small{display:block;font-size:10px;line-height:1.5;color:#94A3B8;margin-top:4px}
+.advanced-alert-count{margin-left:auto;font-size:22px;font-weight:900;color:#FCA5A5}
+.advanced-alert.due-today .advanced-alert-icon{background:rgba(251,191,36,.13)}
+.advanced-alert.due-today .advanced-alert-count{color:#FCD34D}
+.advanced-quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.advanced-quick-btn{display:flex;align-items:center;gap:10px;min-width:0;text-align:left;padding:13px 12px;border-radius:15px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);color:#F8FAFC;font-size:12px;font-weight:750;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.advanced-quick-btn:hover{transform:translateY(-3px);border-color:rgba(56,189,248,.65);background:rgba(56,189,248,.1)}
+.advanced-quick-icon{display:grid;place-items:center;width:35px;height:35px;flex-shrink:0;border-radius:11px;background:rgba(99,102,241,.16);font-size:18px}
+.advanced-quick-btn span:last-child{overflow-wrap:anywhere}
+@media(max-width:720px){.advanced-control-center{margin-top:16px;gap:14px}.advanced-section{padding:15px;border-radius:18px}.advanced-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.advanced-metric{padding:12px}.advanced-metric-value{font-size:24px}.advanced-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.advanced-quick-btn{padding:11px 9px;font-size:11px}.advanced-alert-grid{grid-template-columns:1fr}.advanced-section-head h3{font-size:15px}}
+@media(min-width:721px) and (max-width:980px){.advanced-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ===== NORMAL HEADER + PAGE FRAME (NON-FIXED) ===== */
+.top-header-container{
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    transform:none !important;
+    width:100% !important;
+    margin-bottom:14px !important;
+    z-index:9000 !important;
+}
+.dashboard-ui-wrapper{ position:relative; }
+.dashboard-ui-menu{ left:0 !important; right:auto !important; max-width:calc(100vw - 32px); }
+#appHeaderTitle{ cursor:pointer; }
+#pageFrame{
+    display:none;
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    top:auto !important;
+    bottom:auto !important;
+    width:100%;
+    height:80vh;
+    border:0;
+    background:#030e12;
+    z-index:auto !important;
+}
+
+body.dashboard-modern .menu-btn.modern-only{ display:none !important; }
+body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !important; }
 </style>
 
 </head>
@@ -1455,93 +1329,249 @@ body{
 <body>
 
 <!-- =========================================================
-     SIDEBAR NAVIGATION MENU DRAWER (ADVANCED ACCORDION)
+     SIDEBAR NAVIGATION MENU DRAWER
 ========================================================= -->
 
 <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-<div id="sidebarContainer" class="sidebar-container">
+<aside id="sidebarContainer" class="sidebar-container">
     <div class="sidebar-header">
-        <h4>📋 Quick Menu</h4>
-        <button class="sidebar-close-btn" onclick="toggleSidebar()">×</button>
+        <div class="sidebar-header-top">
+            <div class="sidebar-brand-box">
+                <div class="sidebar-brand-emblem">🖥️</div>
+                <div class="sidebar-brand-text">
+                    <h4>TEXFOREVER HUB</h4>
+                    <span>16 Production Modules</span>
+                </div>
+            </div>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+
+        <div class="sidebar-search-box">
+            <span class="sidebar-search-icon">🔍</span>
+            <input type="text" id="sidebarSearchInput" placeholder="Quick search menu..." oninput="filterSidebarCards(this.value)">
+        </div>
     </div>
 
-    <div class="sidebar-menu-items">
+    <div class="sidebar-menu-items" id="sidebarCardsList">
 
-        <!-- 1. ORDER MENU -->
-        <div class="menu-accordion-group" id="accordionOrder">
-            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionOrder')">
-                <span>📦 1. Order</span>
-                <span class="accordion-arrow">▼</span>
+        <!-- 1st Heading -->
+        <div class="sidebar-dropdown-group active" id="group-1">
+            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-1')">
+                <span>📋 Orders & Design Entry</span>
+                <span class="dropdown-arrow">▼</span>
             </button>
-            <div class="submenu-list">
-                <a href="#" class="submenu-item" onclick="navigateToPage('Party_Orders.html');return false;">• Party Order Page</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('Despatch.html');return false;">• Despatched Page</a>
+            <div class="sidebar-dropdown-content">
+                <button class="luxury-side-card side-theme-1" onclick="navigateToPage('Party_Orders.html')">
+                    <div class="luxury-card-icon"><img src="./icon/Party_Orders.png" alt="Party Orders"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">PARTY ORDER Ledger</div>
+                        <div class="luxury-card-sub">Customer Bookings</div>
+                    </div>
+                    <div class="luxury-card-num">01</div>
+                </button>
+                <button class="luxury-side-card side-theme-2" onclick="navigateToPage('warp_entry.html')">
+                    <div class="luxury-card-icon"><img src="./icon/warp_entry.png" alt="Warp Entry"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">WARP DESIGN Entry</div>
+                        <div class="luxury-card-sub">Warp Pattern & Ends</div>
+                    </div>
+                    <div class="luxury-card-num">02</div>
+                </button>
+                <button class="luxury-side-card side-theme-3" onclick="navigateToPage('weft_entry.html')">
+                    <div class="luxury-card-icon"><img src="./icon/weft_entry.png" alt="Weft Entry"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">WEFT DESIGN Entry</div>
+                        <div class="luxury-card-sub">Pick Pattern & Ratio</div>
+                    </div>
+                    <div class="luxury-card-num">2-1</div>
+                </button>
             </div>
         </div>
 
-        <!-- 2. DESIGN MENU -->
-        <div class="menu-accordion-group" id="accordionDesign">
-            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionDesign')">
-                <span>🎨 2. Design</span>
-                <span class="accordion-arrow">▼</span>
+        <!-- 2nd Heading -->
+        <div class="sidebar-dropdown-group" id="group-2">
+            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-2')">
+                <span>🎨 Yarn & Dyeing Control</span>
+                <span class="dropdown-arrow">▼</span>
             </button>
-            <div class="submenu-list">
-                <a href="#" class="submenu-item" onclick="navigateToPage('design_master.html');return false;">• New Design Entry</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('warp_entry.html');return false;">• Warp Entry</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('weft_entry.html');return false;">• Weft Entry</a>
+            <div class="sidebar-dropdown-content">
+                <button class="luxury-side-card side-theme-4" onclick="navigateToPage('kora_yarn.html')">
+                    <div class="luxury-card-icon"><img src="./icon/kora_yarn.png" alt="Kora"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">KORA PURCHASE Entry</div>
+                        <div class="luxury-card-sub">Raw Yarn Inward</div>
+                    </div>
+                    <div class="luxury-card-num">03</div>
+                </button>
+                <button class="luxury-side-card side-theme-5" onclick="navigateToPage('dyeing_issue.html')">
+                    <div class="luxury-card-icon"><img src="./icon/dyeing_issue.png" alt="Dyeing"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">DYEING ORDER Issue</div>
+                        <div class="luxury-card-sub">Send to Dyeing House</div>
+                    </div>
+                    <div class="luxury-card-num">04</div>
+                </button>
+                <button class="luxury-side-card side-theme-6" onclick="navigateToPage('dyeing_receive.html')">
+                    <div class="luxury-card-icon"><img src="./icon/dyeing_receive.png" alt="Receive"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">DYED COLOURS Receive</div>
+                        <div class="luxury-card-sub">Inward Dyed Cones</div>
+                    </div>
+                    <div class="luxury-card-num">4-1</div>
+                </button>
             </div>
         </div>
 
-        <!-- 3. YARN MENU -->
-        <div class="menu-accordion-group" id="accordionYarn">
-            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionYarn')">
-                <span>🧵 3. Yarn</span>
-                <span class="accordion-arrow">▼</span>
+        <!-- 3rd Heading -->
+        <div class="sidebar-dropdown-group" id="group-3">
+            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-3')">
+                <span>⚙️ Production & Looms</span>
+                <span class="dropdown-arrow">▼</span>
             </button>
-            <div class="submenu-list">
-                <a href="#" class="submenu-item" onclick="navigateToPage('kora_yarn.html');return false;">• Kora Purchase</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('dyeing_issue.html');return false;">• Dyeing Order Issue</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('dyeing_receive.html');return false;">• Dyed Colours Receive</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('warping.html');return false;">• Warping Program</a>
+            <div class="sidebar-dropdown-content">
+                <button class="luxury-side-card side-theme-7" onclick="navigateToPage('warping.html')">
+                    <div class="luxury-card-icon"><img src="./icon/warping.png" alt="Warping"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">WARPING Program</div>
+                        <div class="luxury-card-sub">Beam Preparation</div>
+                    </div>
+                    <div class="luxury-card-num">05</div>
+                </button>
+                <button class="luxury-side-card side-theme-8" onclick="navigateToPage('weaving.html')">
+                    <div class="luxury-card-icon"><img src="./icon/weaving.png" alt="Weaving"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">WEAVING Program</div>
+                        <div class="luxury-card-sub">Loom Allocation</div>
+                    </div>
+                    <div class="luxury-card-num">06</div>
+                </button>
+                <button class="luxury-side-card side-theme-6" onclick="navigateToPage('weaving_receive.html')">
+                    <div class="luxury-card-icon"><img src="./icon/weaving_receive.png" alt="Receive"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">WEAVERS FABRICS Receive</div>
+                        <div class="luxury-card-sub">Grey Cloth Inward</div>
+                    </div>
+                    <div class="luxury-card-num">6-1</div>
+                </button>
             </div>
         </div>
 
-        <!-- 4. FABRICS MENU -->
-        <div class="menu-accordion-group" id="accordionFabrics">
-            <button class="menu-accordion-btn" onclick="toggleAccordion('accordionFabrics')">
-                <span>👕 4. Fabrics</span>
-                <span class="accordion-arrow">▼</span>
+        <!-- 4th Heading -->
+        <div class="sidebar-dropdown-group" id="group-4">
+            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-4')">
+                <span>🚚 Finishing & Despatch</span>
+                <span class="dropdown-arrow">▼</span>
             </button>
-            <div class="submenu-list">
-                <a href="#" class="submenu-item" onclick="navigateToPage('weaving.html');return false;">• Weaving Program</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('weaving_receive.html');return false;">• Weavers Fabrics Received</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('washing.html');return false;">• Washing Program</a>
-                <a href="#" class="submenu-item" onclick="navigateToPage('Despatch.html');return false;">• Despatched Page</a>
+            <div class="sidebar-dropdown-content">
+                <button class="luxury-side-card side-theme-9" onclick="navigateToPage('washing.html')">
+                    <div class="luxury-card-icon"><img src="./icon/washing.png" alt="Washing"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">WASHING Program</div>
+                        <div class="luxury-card-sub">Fabric Finishing</div>
+                    </div>
+                    <div class="luxury-card-num">07</div>
+                </button>
+                <button class="luxury-side-card side-theme-10" onclick="navigateToPage('Despatch.html')">
+                    <div class="luxury-card-icon"><img src="./icon/Despatch.png" alt="Despatch"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">DESPATCH Program</div>
+                        <div class="luxury-card-sub">Bale Packing & Delivery</div>
+                    </div>
+                    <div class="luxury-card-num">08</div>
+                </button>
             </div>
         </div>
 
-        <!-- QUICK DIRECT LINKS -->
-        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('process_matrix.html');return false;">📊 Process Matrix</a>
-        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('weave_3d.html');return false;">👕 3D Simulation</a>
-        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('report.html');return false;">📈 All Reports</a>
-        <a href="#" class="sidebar-direct-item" onclick="navigateToPage('settings.html');return false;">🛠️ Settings</a>
+        <!-- 5th Heading -->
+        <div class="sidebar-dropdown-group" id="group-5">
+            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-5')">
+                <span>🔴 Reports & Billing</span>
+                <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="sidebar-dropdown-content">
+                <button class="luxury-side-card side-theme-11" onclick="navigateToPage('report.html')">
+                    <div class="luxury-card-icon"><img src="./icon/report.png" alt="Reports"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">ALL Reports</div>
+                        <div class="luxury-card-sub">Mill Analytics</div>
+                    </div>
+                    <div class="luxury-card-num">1</div>
+                </button>
+                <button class="luxury-side-card side-theme-print" onclick="navigateToPage('design_sheet_print.html')">
+                    <div class="luxury-card-icon"><img src="./icon/design_sheet_print.png" alt="Print"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">DESIGN Sheet Print out</div>
+                        <div class="luxury-card-sub">Export Job Card</div>
+                    </div>
+                    <div class="luxury-card-num">3</div>
+                </button>
+                <button class="luxury-side-card side-theme-12" onclick="navigateToPage('invoice.html')">
+                    <div class="luxury-card-icon"><img src="./icon/invoice.png" alt="Invoice"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">INVOICE / BILL Entry</div>
+                        <div class="luxury-card-sub">GST Billing</div>
+                    </div>
+                    <div class="luxury-card-num">12</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- 6th Heading (Calculation, Simulation & Denting - Red Round Header) -->
+        <div class="sidebar-dropdown-group red-round-header" id="group-6">
+            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-6')">
+                <span>🔴 Calculation, Sim & Denting</span>
+                <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="sidebar-dropdown-content">
+                <button class="luxury-side-card side-theme-calc" onclick="navigateToPage('yarn_calc.html')">
+                    <div class="luxury-card-icon"><img src="./icon/yarn_calc.png" alt="Calc"></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">YARN WEIGHT Calculation</div>
+                        <div class="luxury-card-sub">Count & GSM Calculator</div>
+                    </div>
+                    <div class="luxury-card-num">2</div>
+                </button>
+                <button class="luxury-side-card side-theme-sim" onclick="navigateToPage('weave_3d.html')">
+                    <div class="luxury-card-icon"><span style="font-size:16px;">👕</span></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">3D FABRIC Simulation</div>
+                        <div class="luxury-card-sub">Interactive Preview</div>
+                    </div>
+                    <div class="luxury-card-num">15</div>
+                </button>
+                <button class="luxury-side-card side-theme-dent" onclick="navigateToPage('denting_editor.html')">
+                    <div class="luxury-card-icon"><span style="font-size:16px;">📐</span></div>
+                    <div class="luxury-card-info">
+                        <div class="luxury-card-title">Denting & Drawing Editor</div>
+                        <div class="luxury-card-sub">Advanced Reed Plan</div>
+                    </div>
+                    <div class="luxury-card-num">16</div>
+                </button>
+            </div>
+        </div>
 
     </div>
-</div>
+    <div class="sidebar-footer">
+        <span style="color:#FBBF24;"> 👉TEXFOREVER</span>
+        <span style="color:#FBBF24;">★ ROYAL EDITION</span>
+    </div>
+</aside>
 
 
 <!-- =========================================================
-     HEADER
+     TOP HEADER (FIXED)
 ========================================================= -->
 
 <div class="top-header-container">
 
     <div class="header-left-group">
-        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Open Sidebar Menu">
-            ☰
+        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
         </button>
-        <h3 id="appHeaderTitle">
+        <h3 id="appHeaderTitle" onclick="showDashboardHome()" title="Dashboard Home">
             TEX FOR EVER 
         </h3>
     </div>
@@ -1552,6 +1582,14 @@ body{
     </div>
 
     <div class="header-right-actions">
+
+        <div class="dashboard-ui-wrapper">
+            <button class="dashboard-ui-btn" onclick="toggleDashboardUIMenu(event)" title="Choose Dashboard Design">✨ Dashboard UI ▾</button>
+            <div id="dashboardUIMenu" class="dashboard-ui-menu">
+                <button onclick="setDashboardUI('classic')">🔷 Classic Dashboard</button>
+                <button onclick="setDashboardUI('modern')">✨ Modern Glass Dashboard</button>
+            </div>
+        </div>
 
         <div class="live-clock-box">
             <div id="liveClock" class="live-clock">12:00:00 AM</div>
@@ -1621,12 +1659,7 @@ body{
                    onclick="setTheme('dark');return false;">
                     🔵 Dark Neon
                 </a>
-
-                <a href="#"
-                   onclick="setTheme('softgreen');return false;">
-                    🟢 Soft Green
-                </a>
-
+                
                 <a href="#"
                    onclick="setTheme('darkgreen');return false;">
                     🟩 Dark Green
@@ -1684,6 +1717,9 @@ body{
 </div>
 
 
+<iframe id="pageFrame" title="Page" allow="clipboard-read; clipboard-write"></iframe>
+
+
 <!-- =========================================================
      MAIN
 ========================================================= -->
@@ -1691,85 +1727,6 @@ body{
 <div class="container" id="dashboardMainContainer">
 
 
-    <!-- SEARCH -->
-
-    <div class="search-bar-wrapper">
-
-        <div class="search-bar-box">
-
-            <span>🔍</span>
-
-            <input
-                id="quickSearchInput"
-                type="text"
-                placeholder="Quick Search Design No / Party Name..."
-                autocomplete="off"
-                oninput="handleSearchInput(this.value)">
-
-            <button onclick="quickSearchDesign()">
-                Go Print
-            </button>
-
-        </div>
-
-        <div
-            id="searchSuggestions"
-            class="search-suggestions-dropdown">
-        </div>
-
-    </div>
-
-
-    <!-- STATS -->
-
-    <div class="stats-banner">
-
-        <div class="stat-box">
-
-            <span class="stat-title">
-                Saved Designs
-            </span>
-
-            <span
-                id="statDesignsCount"
-                class="stat-value">
-                0
-            </span>
-
-        </div>
-
-
-        <div class="stat-box">
-
-            <span class="stat-title">
-                Active Orders
-            </span>
-
-            <span
-                id="statOrdersCount"
-                class="stat-value">
-                0
-            </span>
-
-        </div>
-
-
-        <div class="stat-box">
-
-            <span class="stat-title">
-                Delayed Alerts
-            </span>
-
-            <span
-                id="statDelayedCount"
-                class="stat-value"
-                style="color:#F87171;">
-                0
-            </span>
-
-        </div>
-
-    </div>
 
 
     <!-- DESIGN MASTER -->
@@ -1787,21 +1744,61 @@ body{
     </button>
 
 
+
+
+    <!-- TEXFOREVER ADVANCED CONTROL CENTER -->
+    <section class="advanced-control-center" id="advancedControlCenter" aria-label="Advanced Textile Control Center">
+        <div class="advanced-section">
+            <div class="advanced-section-head">
+                <div><h3>📊 Production Overview</h3><p>Live summary from your saved ERP data</p></div>
+                <span class="advanced-live-pill">● LIVE DATA</span>
+            </div>
+            <div class="advanced-metrics">
+                <div class="advanced-metric" onclick="navigateToPage('design_list.html')" style="cursor:pointer" role="button"><div class="advanced-metric-top"><span class="advanced-metric-icon">🧵</span><span>Saved Designs</span></div><strong class="advanced-metric-value" id="advDesignCount">0</strong><small class="advanced-metric-note">Design saved</small></div>
+                <div class="advanced-metric" onclick="navigateToPage('Party_Orders.html')" style="cursor:pointer" role="button"><div class="advanced-metric-top"><span class="advanced-metric-icon">📋</span><span>Active Orders</span></div><strong class="advanced-metric-value" id="advActiveCount">0</strong><small class="advanced-metric-note">Orders not yet completed</small></div>
+                <div class="advanced-metric" onclick="navigateToPage('Party_Orders.html')" style="cursor:pointer" role="button"><div class="advanced-metric-top"><span class="advanced-metric-icon">🚨</span><span>Overdue Orders</span></div><strong class="advanced-metric-value" id="advOverdueCount">0</strong><small class="advanced-metric-note">Delivery date has passed</small></div>
+                <div class="advanced-metric" onclick="navigateToPage('Party_Orders.html')" style="cursor:pointer" role="button"><div class="advanced-metric-top"><span class="advanced-metric-icon">📅</span><span>Due Today</span></div><strong class="advanced-metric-value" id="advDueTodayCount">0</strong><small class="advanced-metric-note">Delivery scheduled for today</small></div>
+            </div>
+        </div>
+
+        <div class="advanced-section">
+            <div class="advanced-section-head"><div><h3>🔔 Smart Alert Center</h3><p>Quick attention items based on party order delivery dates</p></div></div>
+            <div class="advanced-alert-grid">
+                <div class="advanced-alert" onclick="navigateToPage('Party_Orders.html')" style="cursor:pointer" role="button"><span class="advanced-alert-icon">⚠️</span><div><strong>Delayed Party Orders</strong><small>Open the party order ledger to review overdue deliveries.</small></div><span class="advanced-alert-count" id="advDelayedAlert">0</span></div>
+                <div class="advanced-alert due-today" onclick="navigateToPage('Party_Orders.html')" style="cursor:pointer" role="button"><span class="advanced-alert-icon">⏰</span><div><strong>Orders Due Today</strong><small>Check orders scheduled for delivery today.</small></div><span class="advanced-alert-count" id="advDueAlert">0</span></div>
+            </div>
+        </div>
+
+        <div class="advanced-section">
+            <div class="advanced-section-head"><div><h3>⚡ Quick Actions</h3><p>Jump directly to frequently used TEXFOREVER modules</p></div></div>
+            <div class="advanced-quick-grid">
+                <button class="advanced-quick-btn" onclick="navigateToPage('Party_Orders.html')"><span class="advanced-quick-icon">📋</span><span>Party Orders</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('warp_entry.html')"><span class="advanced-quick-icon">🧵</span><span>Warp Entry</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('weft_entry.html')"><span class="advanced-quick-icon">〰️</span><span>Weft Entry</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('design_master.html')"><span class="advanced-quick-icon">🎨</span><span>Design Master</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('dyeing_issue.html')"><span class="advanced-quick-icon">🧪</span><span>Dyeing Issue</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('weaving.html')"><span class="advanced-quick-icon">🏭</span><span>Weaving</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('washing.html')"><span class="advanced-quick-icon">💧</span><span>Washing</span></button>
+                <button class="advanced-quick-btn" onclick="navigateToPage('Despatch.html')"><span class="advanced-quick-icon">🚚</span><span>Despatch</span></button>
+            </div>
+        </div>
+    </section>
+
+
     <!-- =====================================================
-         MENU
+         MENU GRID (Hidden in Modern Glass Dashboard)
     ===================================================== -->
 
     <div class="menu-grid">
 
 
+        <!-- 1 ~ PARTY ORDER LEDGER -->
         <button
             class="menu-btn btn-theme-1"
             onclick="navigateToPage('Party_Orders.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/Party_Orders.png"
-                    alt="Party Orders">
+                <img src="./icon/Party_Orders.png" alt="Party Orders">
             </span>
 
             <span>
@@ -1811,14 +1808,13 @@ body{
         </button>
 
 
+        <!-- 2 ~ WARP DESIGN Entry -->
         <button
             class="menu-btn btn-theme-2"
             onclick="navigateToPage('warp_entry.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/warp_entry.png"
-                    alt="Warp Entry">
+                <img src="./icon/warp_entry.png" alt="Warp Entry">
             </span>
 
             <span>
@@ -1828,14 +1824,13 @@ body{
         </button>
 
 
+        <!-- 2.1 ~ WEFT DESIGN Entry -->
         <button
             class="menu-btn btn-theme-3"
             onclick="navigateToPage('weft_entry.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/weft_entry.png"
-                    alt="Weft Entry">
+                <img src="./icon/weft_entry.png" alt="Weft Entry">
             </span>
 
             <span>
@@ -1845,14 +1840,13 @@ body{
         </button>
 
 
+        <!-- 3 ~ KORA PURCHASE Entry -->
         <button
             class="menu-btn btn-theme-4"
             onclick="navigateToPage('kora_yarn.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/kora_yarn.png"
-                    alt="Kora">
+                <img src="./icon/kora_yarn.png" alt="Kora">
             </span>
 
             <span>
@@ -1862,14 +1856,13 @@ body{
         </button>
 
 
+        <!-- 4 ~ DYEING ORDER Issue -->
         <button
             class="menu-btn btn-theme-5"
             onclick="navigateToPage('dyeing_issue.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/dyeing_issue.png"
-                    alt="Dyeing Issue">
+                <img src="./icon/dyeing_issue.png" alt="Dyeing Issue">
             </span>
 
             <span>
@@ -1884,9 +1877,7 @@ body{
             onclick="navigateToPage('dyeing_receive.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/dyeing_receive.png"
-                    alt="Dyeing Receive">
+                <img src="./icon/dyeing_receive.png" alt="Dyeing Receive">
             </span>
 
             <span>
@@ -1901,9 +1892,7 @@ body{
             onclick="navigateToPage('warping.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/warping.png"
-                    alt="Warping">
+                <img src="./icon/warping.png" alt="Warping">
             </span>
 
             <span>
@@ -1918,9 +1907,7 @@ body{
             onclick="navigateToPage('weaving.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/weaving.png"
-                    alt="Weaving">
+                <img src="./icon/weaving.png" alt="Weaving">
             </span>
 
             <span>
@@ -1935,9 +1922,7 @@ body{
             onclick="navigateToPage('weaving_receive.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/weaving_receive.png"
-                    alt="Weaving Receive">
+                <img src="./icon/weaving_receive.png" alt="Weaving Receive">
             </span>
 
             <span>
@@ -1952,9 +1937,7 @@ body{
             onclick="navigateToPage('washing.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/washing.png"
-                    alt="Washing">
+                <img src="./icon/washing.png" alt="Washing">
             </span>
 
             <span>
@@ -1969,9 +1952,7 @@ body{
             onclick="navigateToPage('Despatch.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/Despatch.png"
-                    alt="Despatch">
+                <img src="./icon/Despatch.png" alt="Despatch">
             </span>
 
             <span>
@@ -1986,9 +1967,7 @@ body{
             onclick="navigateToPage('report.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/report.png"
-                    alt="Report">
+                <img src="./icon/report.png" alt="Report">
             </span>
 
             <span>
@@ -2000,29 +1979,10 @@ body{
 
         <button
             class="menu-btn btn-theme-grey"
-            onclick="navigateToPage('yarn_calc.html')">
-
-            <span class="tab-icon">
-                <img
-                    src="./icon/yarn_calc.png"
-                    alt="Yarn Calculation">
-            </span>
-
-            <span>
-                10 ~ YARN WIGHT Calculation
-            </span>
-
-        </button>
-
-
-        <button
-            class="menu-btn btn-theme-grey"
             onclick="navigateToPage('design_sheet_print.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/design_sheet_print.png"
-                    alt="Design Sheet Print">
+                <img src="./icon/design_sheet_print.png" alt="Design Sheet Print">
             </span>
 
             <span>
@@ -2037,9 +1997,7 @@ body{
             onclick="navigateToPage('invoice.html')">
 
             <span class="tab-icon">
-                <img
-                    src="./icon/invoice.png"
-                    alt="Invoice">
+                <img src="./icon/invoice.png" alt="Invoice">
             </span>
 
             <span>
@@ -2054,12 +2012,7 @@ body{
             onclick="navigateToPage('design_list.html?type=all&status=all')">
 
             <span class="tab-icon">
-
-                <img
-                    src="./icon/design_list.png"
-                    alt="Design List"
-                    style="width:50px;height:50px;object-fit:contain;">
-
+                <img src="./icon/design_list.png" alt="Design List" style="width:50px;height:50px;object-fit:contain;">
             </span>
 
             <span>
@@ -2074,102 +2027,11 @@ body{
             onclick="navigateToPage('process_matrix.html')">
 
             <span class="tab-icon">
-
-                <img
-                    src="./icon/process_matrix.png"
-                    alt="Process Matrix"
-                    style="width:100px;height:100px;object-fit:contain;">
-
+                <img src="./icon/process_matrix.png" alt="Process Matrix" style="width:60px;height:60px;object-fit:contain;">
             </span>
 
             <span>
                 14 ~ Live MULTI-DESIGN Process Status
-            </span>
-
-        </button>
-
-
-        <!-- 15 -->
-
-        <button
-            class="menu-btn full-span"
-            onclick="navigateToPage('weave_3d.html')"
-            style="
-                background:linear-gradient(
-                    135deg,
-                    #1e1b4b,
-                    #312e81,
-                    #4338ca
-                );
-                border:2px solid #818cf8;
-                box-shadow:0 0 15px rgba(99,102,241,.4);
-            ">
-
-            <span class="tab-icon">
-
-                <span class="emoji-icon"
-                    style="
-                        font-size:60px;
-                        filter:drop-shadow(
-                            0 5px 8px rgba(0,0,0,.5)
-                        );
-                    ">
-                    👕
-                </span>
-
-            </span>
-
-            <span
-                style="
-                    color:#c7d2fe;
-                    text-shadow:0 2px 4px rgba(0,0,0,.5);
-                ">
-
-                15 ~ 3D FABRIC Simulation / Preview
-
-            </span>
-
-        </button>
-
-
-        <!-- 16 -->
-
-        <button
-            class="menu-btn full-span"
-            onclick="navigateToPage('denting_editor.html')"
-            style="
-                background:linear-gradient(
-                    135deg,
-                    #064e3b,
-                    #0f766e,
-                    #059669
-                );
-                border:2px solid #34d399;
-                box-shadow:0 0 15px rgba(52,211,153,.4);
-            ">
-
-            <span class="tab-icon">
-
-                <span class="emoji-icon"
-                    style="
-                        font-size:55px;
-                        filter:drop-shadow(
-                            0 5px 8px rgba(0,0,0,.5)
-                        );
-                    ">
-                    📐
-                </span>
-
-            </span>
-
-            <span
-                style="
-                    color:#d1fae5;
-                    text-shadow:0 2px 4px rgba(0,0,0,.5);
-                ">
-
-                16 ~ ADVANCED Denting & Drawing Editor
-
             </span>
 
         </button>
@@ -2181,7 +2043,7 @@ body{
          ONLINE STATUS
     ===================================================== -->
 
-    <div id="connectionStatusIndicator"
+    <div id="connectionStatusIndicator" class="modern-only"
         style="
             font-size:16px;
             background:#000;
@@ -2322,12 +2184,17 @@ function toggleSidebar() {
 function toggleAccordion(groupId) {
     const group = document.getElementById(groupId);
     if (group) {
-        // Optional: close other accordions if you want only one open at a time
-        // document.querySelectorAll('.menu-accordion-group').forEach(el => {
-        //     if(el.id !== groupId) el.classList.remove('active');
-        // });
         group.classList.toggle("active");
     }
+}
+
+function filterSidebarCards(query) {
+    const term = String(query || "").trim().toLowerCase();
+    const cards = document.querySelectorAll("#sidebarCardsList .luxury-side-card");
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(term) ? "flex" : "none";
+    });
 }
 
 
@@ -2408,12 +2275,75 @@ function setSyncStatus(message, error){
    NAVIGATION
 ========================================================= */
 
+
+/* =========================================================
+   PAGE FRAME (header stays fixed on every page)
+========================================================= */
+
+function updateHeaderHeight(){
+    const h=document.querySelector(".top-header-container");
+    if(h) document.documentElement.style.setProperty("--hdr-h",h.offsetHeight+"px");
+}
+window.addEventListener("load",updateHeaderHeight);
+window.addEventListener("resize",updateHeaderHeight);
+setTimeout(updateHeaderHeight,300);
+
+function showDashboardHome(){
+    const f=document.getElementById("pageFrame");
+    const c=document.getElementById("dashboardMainContainer");
+    if(f){
+        f.style.display="none"; f.onload=null;
+        try{ f.contentWindow.location.replace("about:blank"); }catch(e){ f.src="about:blank"; }
+    }
+    if(c) c.style.display="";
+    window.scrollTo(0,0);
+}
+
+function openPageInFrame(url){
+    const f=document.getElementById("pageFrame");
+    const c=document.getElementById("dashboardMainContainer");
+    if(!f){ location.href=url; return; }
+    updateHeaderHeight();
+    if(c) c.style.display="none";
+    f.style.display="block";
+    f.onload=function(){
+        try{
+            const path=f.contentWindow.location.pathname||"";
+            if(f.contentWindow.location.href==="about:blank"){
+                if(f.style.display==="block") showDashboardHome();
+                return;
+            }
+            if(/\/dashboard(\.html)?\/?$/i.test(path)){ showDashboardHome(); return; }
+            if(/(^\/$)|\/(index|login)(\.html)?$/i.test(path)){ location.href=f.contentWindow.location.href; }
+        }catch(e){}
+    };
+    try{ f.contentWindow.location.replace(url); }catch(e){ f.src=url; }
+}
+
+/* ---- Mobile swipe-back / Back button handling ----
+   Back from a module closes the module (returns to dashboard home).
+   Back from dashboard home stays on the dashboard (no jump to login). */
+(function(){
+    function pushGuard(){ try{ history.pushState({tfeGuard:true},"",location.href); }catch(e){} }
+    try{ history.replaceState({tfeBase:true},"",location.href); }catch(e){}
+    pushGuard();
+    window.addEventListener("popstate",function(){
+        const f=document.getElementById("pageFrame");
+        if(f && f.style.display==="block") showDashboardHome();
+        pushGuard();
+    });
+})();
+
 function navigateToPage(pageUrl){
 
     if(!pageUrl)
         return;
 
-    // Close sidebar when navigating
+    // Close all open header menus/dropdowns and sidebar when any tab/card is clicked
+    closeAllMenus();
+    const uiMenu = document.getElementById("dashboardUIMenu");
+    if(uiMenu) uiMenu.style.display = "none";
+
     const sidebar = document.getElementById("sidebarContainer");
     const overlay = document.getElementById("sidebarOverlay");
     if(sidebar) sidebar.classList.remove("active");
@@ -2435,7 +2365,7 @@ function navigateToPage(pageUrl){
         role === "Admin"
     ){
 
-        location.href = pageUrl;
+        openPageInFrame(pageUrl);
         return;
     }
 
@@ -2480,7 +2410,7 @@ function navigateToPage(pageUrl){
     }
 
 
-    location.href = pageUrl;
+    openPageInFrame(pageUrl);
 }
 
 
@@ -2540,6 +2470,32 @@ function normalizeDate(value){
     return "";
 }
 
+
+/* =========================================================
+   ADVANCED DASHBOARD LIVE METRICS
+========================================================= */
+function updateAdvancedDashboard(designs, activeOrders, delayedList){
+    const allOrders = Array.isArray(activeOrders) ? activeOrders : [];
+    const delayed = Array.isArray(delayedList) ? delayedList : [];
+    const today = getLocalDateString();
+    const dueToday = allOrders.filter(order => {
+        if(!order) return false;
+        const delivery = normalizeDate(order.deliveryDate || order.delivery_date || order.delivery || "");
+        return delivery === today;
+    });
+    const values = {
+        advDesignCount: Array.isArray(designs) ? designs.length : 0,
+        advActiveCount: allOrders.length,
+        advOverdueCount: delayed.length,
+        advDueTodayCount: dueToday.length,
+        advDelayedAlert: delayed.length,
+        advDueAlert: dueToday.length
+    };
+    Object.keys(values).forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.textContent = String(values[id]);
+    });
+}
 
 /* =========================================================
    DASHBOARD STATS
@@ -2662,6 +2618,11 @@ function loadDashboardStats(){
             delayedList
         );
 
+        updateAdvancedDashboard(
+            designs,
+            activeOrders,
+            delayedList
+        );
 
     }catch(error){
 
@@ -2698,6 +2659,7 @@ function loadDashboardStats(){
 
 
         renderDelayedOrders([]);
+        updateAdvancedDashboard([], [], []);
     }
 }
 
@@ -3580,7 +3542,8 @@ function closeAllMenus(){
         "dropdownMenu",
         "themeDropdownMenu",
         "searchSuggestions",
-        "screenZoomMenu"
+        "screenZoomMenu",
+        "dashboardUIMenu"
     ]
     .forEach(id=>{
 
@@ -3662,8 +3625,7 @@ async function confirmLogout(){
     });
 
 
-    location.href =
-        "index.html";
+    location.replace("index.html");
 }
 
 
@@ -3937,6 +3899,28 @@ function waitForCloudSync(timeout){
 }
 
 
+
+/* =========================================================
+   DASHBOARD UI SELECTION (Classic + Modern Glass)
+========================================================= */
+function toggleDashboardUIMenu(event){
+    if(event) event.stopPropagation();
+    const menu=document.getElementById("dashboardUIMenu");
+    if(menu) menu.style.display=menu.style.display==="block"?"none":"block";
+}
+function setDashboardUI(mode){
+    mode = (mode==="modern") ? "modern" : "classic";
+    document.body.classList.toggle("dashboard-modern",mode==="modern");
+    try{localStorage.setItem("erp_dashboard_ui",mode);}catch(e){}
+    const menu=document.getElementById("dashboardUIMenu");
+    if(menu){
+        menu.style.display="none";
+        menu.querySelectorAll("button").forEach(function(b){
+            b.classList.toggle("active", b.getAttribute("onclick").indexOf("'"+mode+"'")>-1);
+        });
+    }
+}
+
 /* =========================================================
    INITIALIZATION
 ========================================================= */
@@ -3946,6 +3930,8 @@ window.addEventListener(
     async function(){
 
         try{
+
+            setDashboardUI(localStorage.getItem("erp_dashboard_ui") || "classic");
 
             const savedTheme = localStorage.getItem("erp_theme_mode") || "dark";
             const themeBgs = {
@@ -4137,6 +4123,11 @@ window.addEventListener(
                     "none";
         }
 
+
+        if(!target || !target.closest(".dashboard-ui-wrapper")){
+            const uiMenu=document.getElementById("dashboardUIMenu");
+            if(uiMenu) uiMenu.style.display="none";
+        }
 
         if(
             !target ||
