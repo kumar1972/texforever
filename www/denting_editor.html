@@ -321,14 +321,20 @@
 </div>
 
 <script>
+    // All reads/writes go through StorageDB (IndexedDB) so they match the other pages (e.g. weave 3D)
+    const DB = {
+        get(k) { try { return window.StorageDB ? window.StorageDB.getItem(k) : localStorage.getItem(k); } catch(e) { return null; } },
+        set(k, v) { if (window.StorageDB) window.StorageDB.setItem(k, v); else localStorage.setItem(k, v); }
+    };
+
     function safeJSON(key, fallback=null) { 
-        try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } 
+        try { const raw = DB.get(key); return raw ? JSON.parse(raw) : fallback; } 
         catch(e) { return fallback; } 
     }
 
     function safeLocalStorageSet(key, value) {
         try {
-            localStorage.setItem(key, value);
+            DB.set(key, value);
             return true;
         } catch (e) {
             console.error("LocalStorage save error:", key, e);
@@ -379,7 +385,7 @@
         // 4) already-loaded active design
         if (activeDesignObj) return activeDesignObj;
         // 5) last used design name
-        const last = localStorage.getItem("selected_design_number") || localStorage.getItem("weave_last_design_name");
+        const last = DB.get("selected_design_number") || DB.get("weave_last_design_name");
         if (last) { const f = findByName(last); if (f) return f; }
         // 6) dropdown shows a real design but list is out of sync -> minimal object
         if (!isPlaceholder && visibleName) return { designNo: visibleName, name: visibleName };
@@ -484,7 +490,7 @@
 
     function safeJSONParse(key, fallback) {
         try {
-            const raw = localStorage.getItem(key);
+            const raw = DB.get(key);
             if (!raw) return fallback;
             const parsed = JSON.parse(raw);
             return parsed === null || parsed === undefined ? fallback : parsed;
@@ -526,7 +532,7 @@
             sel.innerHTML += `<option value="${i}">🎨 ${n}</option>`;
         });
 
-        let last = localStorage.getItem("selected_design_number") || localStorage.getItem("weave_last_design_name");
+        let last = DB.get("selected_design_number") || DB.get("weave_last_design_name");
         if(last) {
             let cleanLast = cleanDesignName(last);
             let idx = allCloudDesigns.findIndex(d => cleanDesignName(designName(d)) === cleanLast);
@@ -548,14 +554,14 @@
 
             let foundEdits = null;
             try {
-                let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+                let editsCache = JSON.parse(DB.get("local_edits_cache") || "{}");
                 let matchedKey = Object.keys(editsCache).find(k => cleanDesignName(k) === cleanTargetName);
                 if(matchedKey) foundEdits = editsCache[matchedKey];
             } catch(e) {}
 
             let warpMatch = null;
             try {
-                let parsedW = JSON.parse(localStorage.getItem("warp_entry_data") || "[]");
+                let parsedW = JSON.parse(DB.get("warp_entry_data") || "[]");
                 if(Array.isArray(parsedW)){
                     warpMatch = parsedW.find(w => cleanDesignName(designName(w)) === cleanTargetName);
                 }
@@ -563,7 +569,7 @@
 
             let dentDrawMatch = null;
             try {
-                let parsedDD = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
+                let parsedDD = JSON.parse(DB.get("denting_drawing_data") || "[]");
                 if(Array.isArray(parsedDD)){
                     dentDrawMatch = parsedDD.find(w => cleanDesignName(designName(w)) === cleanTargetName);
                 }
@@ -670,7 +676,7 @@
 
     function getLocalEditsCache() {
         try {
-            const raw = localStorage.getItem("local_edits_cache") || "{}";
+            const raw = DB.get("local_edits_cache") || "{}";
             const obj = JSON.parse(raw);
             return (obj && typeof obj === "object" && !Array.isArray(obj)) ? obj : {};
         } catch (e) {
@@ -714,7 +720,7 @@
             safeLocalStorageSet("local_edits_cache", JSON.stringify(edits));
             safeLocalStorageSet("last_edit_timestamp", Date.now().toString());
 
-            let local = JSON.parse(localStorage.getItem("design_masters_data") || "[]");
+            let local = JSON.parse(DB.get("design_masters_data") || "[]");
             if (!Array.isArray(local)) local = [];
 
             const idx = local.findIndex(x => x && cleanDesignName(designName(x)) === cleanName);
@@ -727,7 +733,7 @@
 
             ["weave_designs", "weave_designs_cache", "denting_drawing_data"].forEach(key => {
                 try {
-                    let list = JSON.parse(localStorage.getItem(key) || "[]");
+                    let list = JSON.parse(DB.get(key) || "[]");
                     if (Array.isArray(list)) {
                         let filtered = list.filter(x => cleanDesignName(designName(x)) !== cleanName);
                         filtered.push(fullData);
@@ -1144,7 +1150,7 @@
     }
 
     function pasteFullGraph() {
-        let saved = localStorage.getItem("copied_full_graph");
+        let saved = DB.get("copied_full_graph");
         if(!saved) { 
             alert("⚠️ முதலில் ஒரு Graph-ஐ காப்பி (Copy) செய்யவும்!"); 
             return; 
@@ -1355,19 +1361,21 @@
           </div>`;
     }
 
-    window.addEventListener("focus", () => {
-        let lastEdit = localStorage.getItem("last_edit_timestamp");
+    window.addEventListener("focus", async () => {
+        if (window.StorageDB && typeof window.StorageDB.reload === "function") await window.StorageDB.reload();
+        let lastEdit = DB.get("last_edit_timestamp");
         if (window._lastEditStamp !== lastEdit) {
             window._lastEditStamp = lastEdit;
         }
     });
 
-    window.onload = () => {
+    window.onload = async () => {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
         loadDesignList();
         populateWeaveTypeDropdown();
         if(!activeDesignObj) {
-            if(localStorage.getItem("saved_denting_pattern")) document.getElementById("dentingPatternInput").value = localStorage.getItem("saved_denting_pattern");
-            if(localStorage.getItem("saved_drawing_pattern")) document.getElementById("drawingPatternInput").value = localStorage.getItem("saved_drawing_pattern");
+            if(DB.get("saved_denting_pattern")) document.getElementById("dentingPatternInput").value = DB.get("saved_denting_pattern");
+            if(DB.get("saved_drawing_pattern")) document.getElementById("drawingPatternInput").value = DB.get("saved_drawing_pattern");
             onWeaveChange();
         }
         updateAll();

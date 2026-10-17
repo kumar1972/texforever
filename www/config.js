@@ -121,6 +121,21 @@ window.StorageDB = {
             }
         }
     },
+    // Re-read IndexedDB into the in-memory cache (picks up saves made by other pages/tabs)
+    reload() {
+        return new Promise((resolve) => {
+            if (!this.db) return resolve();
+            try {
+                const cur = this.db.transaction("store", "readonly").objectStore("store").openCursor();
+                cur.onsuccess = (e) => {
+                    const c = e.target.result;
+                    if (c) { this.cache[c.key] = c.value; c.continue(); }
+                    else resolve();
+                };
+                cur.onerror = () => resolve();
+            } catch (err) { resolve(); }
+        });
+    },
     removeItem(key) {
         delete this.cache[key];
         // also remove the legacy copy, otherwise migration would bring the deleted value back
@@ -1291,15 +1306,7 @@ window.addEventListener("DOMContentLoaded", function () {
             .menu-btn { border-color: #38BDF8 !important; }
             input, select, textarea { background: #FFFFFF !important; color: #0F172A !important; border-color: #38BDF8 !important; }
             `;
-        } else if (savedMode === "softgreen") {
-            css += `
-            html, body { background: #ECFDF5 !important; color: #064E3B !important; }
-            .top-header-container, .container, .main-card, .form-container, .card { background: #D1FAE5 !important; color: #064E3B !important; border-color: #10B981 !important; }
-            .stats-banner, .stat-box { background: #ECFDF5 !important; color: #064E3B !important; border-color: #34D399 !important; }
-            .stat-value, .live-clock { color: #059669 !important; }
-            .menu-btn { border-color: #34D399 !important; }
-            input, select, textarea { background: #FFFFFF !important; color: #064E3B !important; border-color: #10B981 !important; }
-            `;
+        
         } else if (savedMode === "darkgreen") {
             css += `
             html, body { background: #021C12 !important; color: #ECFDF5 !important; }
