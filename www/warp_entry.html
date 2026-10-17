@@ -704,7 +704,7 @@ function loadDesignData() {
 
         effectiveLines.forEach(function (l) {
             if (!l) return;
-            addWarpLine(l.count || '', l.color || '', l.beam || 'Ground', l.seer || '', l.ends || '');
+            addWarpLine(l.count || '', warpLineColorName(l), l.beam || 'Ground', l.seer || '', l.ends || '');
         });
 
         effectiveRanges.forEach(function (r) {
@@ -1054,64 +1054,103 @@ window.saveWarpDesign = async function () {
     }
 };
 
+/* Colour shown in this page must be a NAME, never a hex code (hex lines come from 3D/denting pages) */
+function warpLineColorName(l) {
+    if (!l) return '';
+    const c = (l.color === undefined || l.color === null) ? '' : String(l.color).trim();
+    if (c.charAt(0) === '#') {
+        const nm = l.colourName || l.colorName || l.colour_name || '';
+        if (nm) return String(nm).trim();
+    }
+    return c;
+}
+
 async function toggleStatus(dNo, newStatus) {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission to change status. ❌"); return; }
     if (!confirm(newStatus === 'completed' ? "Change this pattern to Completed?" : "Change this pattern to Running?")) return;
 
     const cleanDNo = cleanDesignName(dNo);
+
+    // design_masters_data (only status is changed)
     const masters = getLocalArray('design_masters_data');
     const index = masters.findIndex(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; });
-
     if (index > -1) {
         masters[index].status = newStatus;
         window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
-
-        const designSpecs = getLocalObject('design_specs');
-        const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
-        if (!designSpecs[specKey]) designSpecs[specKey] = {};
-        designSpecs[specKey].status = newStatus;
-        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
-
-        try {
-            if (window.supabaseSave) { await window.supabaseSave('design_masters_data', masters); await window.supabaseSave('design_specs', designSpecs); }
-            if (window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
-        } catch (e) { console.error("supabase status sync error:", e); }
-        renderSavedList();
     }
+
+    // warp_entry_data (only status is changed)
+    const entries = getLocalArray('warp_entry_data');
+    let entryChanged = false;
+    entries.forEach(function (w) {
+        if (w && cleanDesignName(w.name || w.designNo) === cleanDNo) { w.status = newStatus; entryChanged = true; }
+    });
+    if (entryChanged) window.StorageDB.setItem('warp_entry_data', JSON.stringify(entries));
+
+    // design_specs
+    const designSpecs = getLocalObject('design_specs');
+    const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
+    if (!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = newStatus;
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
+
+    try {
+        if (window.supabaseSave) {
+            if (index > -1) await window.supabaseSave('design_masters_data', masters);
+            if (entryChanged) await window.supabaseSave('warp_entry_data', entries);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+    } catch (e) { console.error("supabase status sync error:", e); }
+    renderSavedList();
 }
 
 function openSavedModal() { renderSavedList(); openModal('savedListModal'); }
 
 function renderSavedList() {
     const masters = getLocalArray('design_masters_data');
+    const entries = getLocalArray('warp_entry_data');
     const tbody = document.getElementById('savedPatternsBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    let hasData = false;
 
+    function hasLines(x) { return x && Array.isArray(x.warpLines) && x.warpLines.length > 0; }
+
+    // Merge design_masters_data + warp_entry_data by design name (Edit loads warp_entry_data first, so its line count wins)
+    const rows = new Map();
     masters.forEach(function (m) {
-        if (!m || !Array.isArray(m.warpLines) || m.warpLines.length === 0) return;
-        hasData = true;
-        if (!m.status) m.status = "running";
-        const designName = m.name || m.designNo || '-';
-        const statusColor = m.status === 'running' ? '#D97706' : '#526E51';
-        const safeDesign = String(designName).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        if (!hasLines(m)) return;
+        const nm = m.name || m.designNo || '-';
+        rows.set(cleanDesignName(nm), { name: nm, count: m.warpLines.length, status: m.status });
+    });
+    entries.forEach(function (w) {
+        if (!hasLines(w)) return;
+        const nm = w.name || w.designNo || '';
+        if (!nm || String(nm).indexOf('Live Warp Entry Preview') !== -1) return;
+        const key = cleanDesignName(nm);
+        const ex = rows.get(key);
+        rows.set(key, { name: ex ? ex.name : nm, count: w.warpLines.length, status: (ex && ex.status) || w.status });
+    });
 
-        const statusBtn = m.status === 'running'
-            ? `<button class="action-complete" onclick="toggleStatus('${safeDesign}', 'completed')">Complete</button>`
-            : `<button class="action-running" onclick="toggleStatus('${safeDesign}', 'running')">Running</button>`;
-
-        tbody.innerHTML += `
+    let html = '';
+    rows.forEach(function (r) {
+        const status = r.status || 'running';
+        const statusColor = status === 'running' ? '#D97706' : '#526E51';
+        const arg = escapeHtmlText(JSON.stringify(String(r.name)));
+        const statusBtn = status === 'running'
+            ? `<button class="action-complete" onclick="toggleStatus(${arg}, 'completed')">Complete</button>`
+            : `<button class="action-running" onclick="toggleStatus(${arg}, 'running')">Running</button>`;
+        html += `
             <tr>
-                <td><b>${escapeHtmlText(designName)}</b></td>
-                <td>${m.warpLines.length} Lines</td>
-                <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${escapeHtmlText(m.status)}</td>
-                <td><div class="action-cell">${statusBtn}<button class="edit-action-btn" onclick="editDesignPattern('${safeDesign}')">✏️ Edit</button></div></td>
+                <td><b>${escapeHtmlText(r.name)}</b></td>
+                <td>${r.count} Lines</td>
+                <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${escapeHtmlText(status)}</td>
+                <td><div class="action-cell">${statusBtn}<button class="edit-action-btn" onclick="editDesignPattern(${arg})">✏️ Edit</button></div></td>
             </tr>
         `;
     });
 
-    if (!hasData) tbody.innerHTML = `<tr><td colspan="4" style="padding:15px; color:#D97706;">No Warp Patterns saved yet.</td></tr>`;
+    tbody.innerHTML = html || `<tr><td colspan="4" style="padding:15px; color:#D97706;">No Warp Patterns saved yet.</td></tr>`;
 }
 
 function escapeHtmlText(value) {
