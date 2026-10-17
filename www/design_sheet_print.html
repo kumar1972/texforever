@@ -1520,13 +1520,42 @@ function loadDesignDetails(){
         return [];
     }
 
+    /* Extra lookup: warp/weft entry pages + edit caches (all read from StorageDB / IndexedDB) */
+    function findInStores(keys, name, fields){
+        let target = normalizeKey(name);
+        for (let key of keys){
+            let data;
+            try { data = JSON.parse(storeRaw(key) || "null"); } catch(e) { continue; }
+            if (!data || typeof data !== "object") continue;
+            let list = Array.isArray(data)
+                ? data
+                : Object.keys(data).map(function(k){
+                    let v = data[k];
+                    return (v && typeof v === "object" && !Array.isArray(v)) ? Object.assign({ designNo: k }, v) : null;
+                  });
+            for (let i = list.length - 1; i >= 0; i--){
+                let it = list[i];
+                if (!it || typeof it !== "object") continue;
+                let nm = it.designNo || it.design_no || it.designNumber || it.design_number || it.name || it.design || it.id;
+                if (normalizeKey(nm) !== target) continue;
+                for (let f of fields){
+                    let v = it[f];
+                    if (v && ((Array.isArray(v) && v.length) || (!Array.isArray(v) && typeof v === "object" && Object.keys(v).length) || (typeof v === "string" && v.trim()))) return v;
+                }
+            }
+        }
+        return undefined;
+    }
+    let warpStores = ["warp_entry_data", "local_edits_cache", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
+    let weftStores = ["weft_entry_data", "local_edits_cache", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
+
     let globalWarpData = JSON.parse(storeRaw("warp_pattern_data") || "{}");
     let globalWeftData = JSON.parse(storeRaw("weft_pattern_data") || "{}");
 
-    let rawWarpLines = foundMaster.warpLines || sp.warpLines || foundMaster.warpPattern || sp.warpPattern || findByDesignKey(globalWarpData, dName) || [];
-    let rawWarpRanges = foundMaster.warpRanges || sp.warpRanges || foundMaster.warpRange || sp.warpRange || [];
-    let rawWeftLines = foundMaster.weftLines || sp.weftLines || foundMaster.weftPattern || sp.weftPattern || findByDesignKey(globalWeftData, dName) || [];
-    let rawWeftRanges = foundMaster.weftRanges || sp.weftRanges || foundMaster.weftRange || sp.weftRange || [];
+    let rawWarpLines = foundMaster.warpLines || sp.warpLines || foundMaster.warpPattern || sp.warpPattern || findByDesignKey(globalWarpData, dName) || findInStores(warpStores, dName, ["warpLines", "warpPattern"]) || [];
+    let rawWarpRanges = foundMaster.warpRanges || sp.warpRanges || foundMaster.warpRange || sp.warpRange || findInStores(warpStores, dName, ["warpRanges", "warpRange"]) || [];
+    let rawWeftLines = foundMaster.weftLines || sp.weftLines || foundMaster.weftPattern || sp.weftPattern || findByDesignKey(globalWeftData, dName) || findInStores(weftStores, dName, ["weftLines", "weftPattern"]) || [];
+    let rawWeftRanges = foundMaster.weftRanges || sp.weftRanges || foundMaster.weftRange || sp.weftRange || findInStores(weftStores, dName, ["weftRanges", "weftRange"]) || [];
 
     let warpLines = parseDataSafely(rawWarpLines);
     let warpRanges = parseDataSafely(rawWarpRanges);
