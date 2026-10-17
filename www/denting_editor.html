@@ -352,19 +352,38 @@
         return String(d?.designNo ?? d?.design_no ?? d?.designNumber ?? d?.design_number ?? d?.name ?? d?.design ?? d?.id ?? "Unnamed").trim(); 
     }
 
-    // Fallback: if the dropdown's numeric index no longer matches allCloudDesigns
-    // (e.g. list was rebuilt/out of sync), try to resolve by the visible option text instead.
+    // Robust resolver: tries index value -> name value -> visible text -> active design -> last saved name.
+    // If the dropdown clearly shows a design but it isn't in the list, a minimal design object is created.
     function resolveSelectedDesign() {
         const selEl = document.getElementById("designSelect");
-        const sel = selEl.value;
-        if (sel !== "" && allCloudDesigns[sel]) return allCloudDesigns[sel];
+        if (!selEl) return activeDesignObj || null;
+        const val = String(selEl.value ?? "").trim();
+        const findByName = (nm) => {
+            const c = cleanDesignName(nm);
+            return c ? (allCloudDesigns.find(d => cleanDesignName(designName(d)) === c) || null) : null;
+        };
 
-        const optionText = selEl.options[selEl.selectedIndex]?.text || "";
-        const cleanVisible = cleanDesignName(optionText.replace(/^[^\w#]*/, ""));
-        if (!cleanVisible) return null;
-
-        const found = allCloudDesigns.find(d => cleanDesignName(designName(d)) === cleanVisible);
-        return found || null;
+        // 1) numeric index
+        if (val !== "" && /^\d+$/.test(val) && allCloudDesigns[Number(val)]) return allCloudDesigns[Number(val)];
+        // 2) value is the design name itself
+        if (val !== "") { const f = findByName(val); if (f) return f; }
+        // 3) visible option text (emoji / symbols stripped)
+        const opt = selEl.options[selEl.selectedIndex];
+        const optionText = opt ? String(opt.text || "") : "";
+        const visibleName = optionText.replace(/^[^\w#]*/, "").trim();
+        const isPlaceholder = (selEl.selectedIndex <= 0) && (val === "");
+        if (!isPlaceholder) {
+            const f = findByName(visibleName);
+            if (f) return f;
+        }
+        // 4) already-loaded active design
+        if (activeDesignObj) return activeDesignObj;
+        // 5) last used design name
+        const last = localStorage.getItem("selected_design_number") || localStorage.getItem("weave_last_design_name");
+        if (last) { const f = findByName(last); if (f) return f; }
+        // 6) dropdown shows a real design but list is out of sync -> minimal object
+        if (!isPlaceholder && visibleName) return { designNo: visibleName, name: visibleName };
+        return null;
     }
     
     function saveHistory() {
@@ -682,7 +701,7 @@
 
     async function updateDesignStorage(d) {
         if (!d) return false;
-        const name = String(d.designNo || d.name || "").trim();
+        const name = String(d.designNo || d.name || designName(d) || "").trim();
         if (!name) return false;
 
         let cleanName = cleanDesignName(name);
