@@ -1766,6 +1766,10 @@ function renderSplitPreviewTable(
         let cText = rawCount ? String(rawCount).trim() : "-";
 
         let rawColor = item.color !== undefined ? item.color : (item.Color || item.colour || item.Colour || item.clr || "");
+        // If colour is stored as a hex code and a colour name exists on the same line, show the name
+        if (typeof rawColor === "string" && /^\s*#/.test(rawColor) && (item.colourName || item.colorName)) {
+            rawColor = item.colourName || item.colorName;
+        }
         
         // Fixed: Using translateColorName from translator.js
         let clrText = (typeof translateColorName === 'function') ? translateColorName(rawColor) : rawColor;
