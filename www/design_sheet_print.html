@@ -203,6 +203,13 @@ select{
     font-weight:700;
 }
 
+/* BOLD & LARGE DESIGN NUMBER IN HEADER */
+#hdrDesign, #weftHdrDesign {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #1E2B23 !important;
+}
+
 /* =========================================================
    SECTION TITLE
 ========================================================= */
@@ -334,14 +341,14 @@ td.col-color{
     display: flex;
     align-items: flex-end;
     width: 100%;
-    padding-left: 10px; /* Colour dot-ல் இருந்து கொஞ்சம் space தள்ளி வர */
+    padding-left: 10px;
 }
 
 .val-flex-top {
     display: flex;
     align-items: flex-end;
     width: 100%;
-    padding-left: 2px; /* Colour dot உடன் தொடர்ந்து வர */
+    padding-left: 2px;
 }
 
 .val-text {
@@ -396,7 +403,6 @@ td.col-color{
     color:#1E2B23 !important;
 }
 
-/* Warp total: left side, directly under the ENDS column */
 #warpSummaryBox{
     width:fit-content;
     min-width:49%;
@@ -737,10 +743,6 @@ td.col-color{
 
 <body>
 
-<!-- =========================================================
-     MAIN PAGE
-========================================================= -->
-
 <div class="main-card">
 
     <div class="top-nav no-print">
@@ -761,7 +763,6 @@ td.col-color{
 
     </div>
 
-    <!-- COMPANY -->
     <div class="company-header" id="companyHeaderPrint">
 
         <h1 id="printCompName">
@@ -774,7 +775,6 @@ td.col-color{
 
     </div>
 
-    <!-- DESIGN SELECT -->
     <div class="top-form-row-single no-print">
 
         <div class="form-group">
@@ -796,10 +796,6 @@ td.col-color{
         </div>
 
     </div>
-
-    <!-- =====================================================
-         WARP HEADER
-    ====================================================== -->
 
     <div
         id="designHeaderBox"
@@ -848,10 +844,6 @@ td.col-color{
 
     </div>
 
-    <!-- =====================================================
-         WARP
-    ====================================================== -->
-
     <div id="warpSection">
 
         <h3 class="section-title">
@@ -898,17 +890,11 @@ td.col-color{
 
     </div>
 
-    <!-- =====================================================
-         WEFT
-    ====================================================== -->
-
     <div id="weftSection">
 
         <h3 class="section-title">
             🧶 வெப்ட் பேட்டர்ன் பிரிவ்யூ
         </h3>
-
-        <!-- WEFT HEADER -->
 
         <div
             id="weftHeaderBox"
@@ -984,11 +970,6 @@ td.col-color{
 
 </div>
 
-
-<!-- =========================================================
-     PREVIEW MODAL
-========================================================= -->
-
 <div id="previewModal" class="overlay-modal">
 
     <div class="modal-content">
@@ -1029,13 +1010,8 @@ td.col-color{
 
 <script>
 
-/* =========================================================
-   START
-========================================================= */
-
 document.addEventListener("DOMContentLoaded", function(){
 
-    /* IndexedDB load aana apram thaan data padikkanum */
     let ready = (window.StorageDB && window.StorageDB.ready)
         ? window.StorageDB.ready
         : Promise.resolve();
@@ -1046,11 +1022,6 @@ document.addEventListener("DOMContentLoaded", function(){
     });
 
 });
-
-
-/* =========================================================
-   COMPANY SETTINGS
-========================================================= */
 
 function loadCompanySettings(){
 
@@ -1094,12 +1065,6 @@ function loadCompanySettings(){
 
 }
 
-
-/* =========================================================
-   KEY MATCH HELPERS (ignores #, spaces and case)
-========================================================= */
-
-/* Reads from StorageDB (IndexedDB) - where config.js saves all ERP data */
 function storeRaw(key){
     if(window.StorageDB && typeof window.StorageDB.getItem === "function"){
         return window.StorageDB.getItem(key);
@@ -1118,11 +1083,6 @@ function findByDesignKey(obj, dName){
     return k !== undefined ? obj[k] : undefined;
 }
 
-
-/* =========================================================
-   CLEAN DESIGN NAME
-========================================================= */
-
 function cleanDesignName(str){
 
     if(!str) return "";
@@ -1133,13 +1093,6 @@ function cleanDesignName(str){
         .toLowerCase();
 
 }
-
-
-
-
-/* =========================================================
-   DROPDOWN
-========================================================= */
 
 function initDropdown(){
 
@@ -1218,11 +1171,6 @@ function initDropdown(){
 
 }
 
-
-/* =========================================================
-   LOAD DESIGN
-========================================================= */
-
 function loadDesignDetails(){
 
     let select =
@@ -1261,11 +1209,6 @@ function loadDesignDetails(){
     let cleanDNo =
         cleanDesignName(dName);
 
-
-    /* -----------------------------------------------------
-       MASTER
-    ----------------------------------------------------- */
-
     let designMastersList =
         JSON.parse(
             storeRaw(
@@ -1283,11 +1226,6 @@ function loadDesignDetails(){
           ) || {}
         : {};
 
-
-    /* -----------------------------------------------------
-       SPECS
-    ----------------------------------------------------- */
-
     let specs =
         JSON.parse(
             storeRaw("design_specs")
@@ -1301,11 +1239,6 @@ function loadDesignDetails(){
 
     let sp =
         specKey ? specs[specKey] : {};
-
-
-    /* -----------------------------------------------------
-       ORDERS
-    ----------------------------------------------------- */
 
     let orders =
         JSON.parse(
@@ -1324,11 +1257,6 @@ function loadDesignDetails(){
             ) === cleanDNo
           ) || {}
         : {};
-
-
-    /* -----------------------------------------------------
-       REED / PICK / WIDTH
-    ----------------------------------------------------- */
 
     let finishReed =
         parseFloat(
@@ -1352,7 +1280,6 @@ function loadDesignDetails(){
             foundOrder.width
         ) || 0;
 
-
     let onloomReedVal =
         foundMaster.onloomReed ||
         sp.onloomReed ||
@@ -1361,7 +1288,6 @@ function loadDesignDetails(){
             ? finishReed - 8
             : "-"
         );
-
 
     let onloomPickVal =
         foundMaster.onloomPick ||
@@ -1372,11 +1298,9 @@ function loadDesignDetails(){
             : "-"
         );
 
-
     let onloomWidthVal =
         foundMaster.onloomWidth ||
         sp.onloomWidth;
-
 
     if(
         !onloomWidthVal &&
@@ -1403,11 +1327,6 @@ function loadDesignDetails(){
 
     }
 
-
-    /* -----------------------------------------------------
-       COUNTS
-    ----------------------------------------------------- */
-
     let warp1 =
         foundMaster.warp1 ||
         sp.baseBeamCount ||
@@ -1418,7 +1337,6 @@ function loadDesignDetails(){
         foundOrder.baseBeamCount ||
         "-";
 
-
     let warp2 =
         foundMaster.warp2 ||
         sp.topBeamCount ||
@@ -1427,12 +1345,10 @@ function loadDesignDetails(){
         foundOrder.topBeamCount ||
         "";
 
-
     let warpCountsDisplay =
         warp2 && warp2 !== "-"
         ? `${warp1},${warp2}`
         : warp1;
-
 
     let weft1 =
         foundMaster.weftCount ||
@@ -1442,23 +1358,16 @@ function loadDesignDetails(){
         foundOrder.weftCount ||
         "-";
 
-
     let weft2 =
         foundMaster.weft2 ||
         sp.weft2 ||
         foundOrder.weft2 ||
         "";
 
-
     let weftCountsDisplay =
         weft2 && weft2 !== "-"
         ? `${weft1},${weft2}`
         : weft1;
-
-
-    /* -----------------------------------------------------
-       ORDER METER
-    ----------------------------------------------------- */
 
     let orderMeterVal =
         foundOrder.orderMtr ||
@@ -1469,11 +1378,6 @@ function loadDesignDetails(){
         sp.orderMtr ||
         foundMaster.meters ||
         "-";
-
-
-    /* -----------------------------------------------------
-       HEADER DISPLAY
-    ----------------------------------------------------- */
 
     document.getElementById(
         "hdrDesign"
@@ -1522,11 +1426,6 @@ function loadDesignDetails(){
         "designHeaderBox"
     ).style.display = "grid";
 
-
-    /* -----------------------------------------------------
-       WEFT HEADER
-    ----------------------------------------------------- */
-
     let weftWidthVal =
         parseFloat(onloomWidthVal) > 0
         ? (
@@ -1534,11 +1433,9 @@ function loadDesignDetails(){
           ).toFixed(2)
         : "-";
 
-
     let storedWeftWidth =
         foundMaster.weftWidth ||
         sp.weftWidth;
-
 
     let finalWeftWidthDisplay =
         storedWeftWidth
@@ -1548,7 +1445,6 @@ function loadDesignDetails(){
             ? weftWidthVal + '"'
             : "-"
           );
-
 
     document.getElementById(
         "weftHdrDesign"
@@ -1583,11 +1479,6 @@ function loadDesignDetails(){
         "weftHeaderBox"
     ).style.display = "grid";
 
-
-    /* -----------------------------------------------------
-       LINES
-    ----------------------------------------------------- */
-
     function parseDataSafely(val) {
         if (!val) return [];
         if (typeof val === 'string') {
@@ -1601,7 +1492,6 @@ function loadDesignDetails(){
         return [];
     }
 
-    /* Extra lookup: warp/weft entry pages + edit caches (all read from StorageDB / IndexedDB) */
     function findInStores(keys, name, fields){
         let target = normalizeKey(name);
         for (let key of keys){
@@ -1627,6 +1517,7 @@ function loadDesignDetails(){
         }
         return undefined;
     }
+    
     let warpStores = ["warp_entry_data", "local_edits_cache", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
     let weftStores = ["weft_entry_data", "local_edits_cache", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
 
@@ -1643,11 +1534,6 @@ function loadDesignDetails(){
     let weftLines = parseDataSafely(rawWeftLines);
     let weftRanges = parseDataSafely(rawWeftRanges);
 
-
-    /* -----------------------------------------------------
-       RENDER
-    ----------------------------------------------------- */
-
     renderSplitPreviewTable(
         "warp",
         warpLines,
@@ -1661,7 +1547,6 @@ function loadDesignDetails(){
         onloomWidthVal,
         onloomPickVal
     );
-
 
     renderSplitPreviewTable(
         "weft",
@@ -1678,11 +1563,6 @@ function loadDesignDetails(){
     );
 
 }
-
-
-/* =========================================================
-   RENDER TABLE
-========================================================= */
 
 function renderSplitPreviewTable(
     type,
@@ -1703,7 +1583,6 @@ function renderSplitPreviewTable(
 
     let summaryBox =
         document.getElementById(summaryId);
-
 
     if(
         !Array.isArray(lines) ||
@@ -1728,11 +1607,6 @@ function renderSplitPreviewTable(
 
         return;
     }
-
-
-    /* -----------------------------------------------------
-       RANGE MAP
-    ----------------------------------------------------- */
 
     let rangeMap = {};
 
@@ -1774,11 +1648,6 @@ function renderSplitPreviewTable(
 
     }
 
-
-    /* -----------------------------------------------------
-       TOTALS
-    ----------------------------------------------------- */
-
     let rowsData = [];
 
     let countTotals = {};
@@ -1799,7 +1668,6 @@ function renderSplitPreviewTable(
     let patternGroundEnds = 0;
     
     let patternTopEnds = 0;
-
 
     if(
         Array.isArray(ranges) &&
@@ -1828,7 +1696,6 @@ function renderSplitPreviewTable(
 
     }
 
-
     lines.forEach(function(item,index){
 
         let rowNum =
@@ -1852,14 +1719,8 @@ function renderSplitPreviewTable(
 
     });
 
-
     remainderSum =
         pureSum - rangeCoveredSum;
-
-
-    /* -----------------------------------------------------
-       ROW DATA
-    ----------------------------------------------------- */
 
     lines.forEach(function(item,index){
 
@@ -1876,12 +1737,10 @@ function renderSplitPreviewTable(
         let cText = rawCount ? String(rawCount).trim() : "-";
 
         let rawColor = item.color !== undefined ? item.color : (item.Color || item.colour || item.Colour || item.clr || "");
-        // If colour is stored as a hex code and a colour name exists on the same line, show the name
         if (typeof rawColor === "string" && /^\s*#/.test(rawColor) && (item.colourName || item.colorName)) {
             rawColor = item.colourName || item.colorName;
         }
         
-        // Fixed: Using translateColorName from translator.js
         let clrText = (typeof translateColorName === 'function') ? translateColorName(rawColor) : rawColor;
 
         let isTopBeam = false;
@@ -1891,7 +1750,6 @@ function renderSplitPreviewTable(
                 isTopBeam = true;
             }
         }
-
 
         let setHtml = "";
 
@@ -1925,10 +1783,8 @@ function renderSplitPreviewTable(
 
                 }
 
-
                 let totalProduct =
                     rangeSum * rInfo.set;
-
 
                 totalMultiplierSum +=
                     totalProduct;
@@ -1936,14 +1792,12 @@ function renderSplitPreviewTable(
                 totalSetsSum +=
                     rInfo.set;
 
-
                 let spanRows =
                     (
                         rInfo.end -
                         rInfo.start
                     ) + 1;
 
-                // Here X 2 and = 4 split into 2 lines vertically as requested.
                 setHtml = `
                     <td
                         rowspan="${spanRows}"
@@ -1965,7 +1819,6 @@ function renderSplitPreviewTable(
                 setHtml = null;
 
             }
-
 
             countTotals[cText] =
                 (
@@ -2011,11 +1864,6 @@ function renderSplitPreviewTable(
 
     });
 
-
-    /* -----------------------------------------------------
-       HEADER
-    ----------------------------------------------------- */
-
     let headerHtml = `
         <tr>
 
@@ -2045,11 +1893,6 @@ function renderSplitPreviewTable(
 
         </tr>
     `;
-
-
-    /* -----------------------------------------------------
-       SPLIT COLUMN LOGIC (Split dynamically every 35 rows)
-    ----------------------------------------------------- */
 
     let splitLimit = 35; 
     let finalHtml = "";
@@ -2102,13 +1945,7 @@ function renderSplitPreviewTable(
 
     wrapper.innerHTML = finalHtml;
 
-
-    /* -----------------------------------------------------
-       GRAND TOTAL
-    ----------------------------------------------------- */
-
     let finalGrandTotal = 0;
-
 
     if(type === "warp"){
 
@@ -2125,7 +1962,6 @@ function renderSplitPreviewTable(
                 foundMaster.width ||
                 sp.width
             ) || 0;
-
 
         if(
             reed > 0 &&
@@ -2167,21 +2003,14 @@ function renderSplitPreviewTable(
                 : 67.44
             );
 
-
         let pickNum =
             parseFloat(onloomPick) ||
             60;
-
 
         finalGrandTotal =
             weftWidth * pickNum;
 
     }
-
-
-    /* -----------------------------------------------------
-       SUMMARY
-    ----------------------------------------------------- */
 
     let summaryHtml = "";
 
@@ -2197,7 +2026,6 @@ function renderSplitPreviewTable(
                 ? parseFloat(onloomWidth) + 3
                 : 67.44
             );
-
 
         let pickNum =
             parseFloat(onloomPick) ||
@@ -2262,7 +2090,6 @@ function renderSplitPreviewTable(
 
     }
 
-
     summaryBox.innerHTML =
         summaryHtml;
 
@@ -2270,11 +2097,6 @@ function renderSplitPreviewTable(
         "block";
 
 }
-
-
-/* =========================================================
-   BUILD TABLE ROWS
-========================================================= */
 
 function buildTableRowsHtml(rows){
 
@@ -2287,9 +2109,7 @@ function buildTableRowsHtml(rows){
 
     }
 
-
     let html = "";
-
 
     rows.forEach(function(r){
 
@@ -2361,15 +2181,9 @@ function buildTableRowsHtml(rows){
 
     });
 
-
     return html;
 
 }
-
-
-/* =========================================================
-   OPEN PREVIEW
-========================================================= */
 
 function openPreviewModal(){
 
@@ -2377,7 +2191,6 @@ function openPreviewModal(){
         document.getElementById(
             "designNumber"
         ).value;
-
 
     if(!dNum){
 
@@ -2389,41 +2202,30 @@ function openPreviewModal(){
 
     }
 
-
     let compName =
         document.getElementById(
             "printCompName"
         ).innerText;
-
 
     let compAddr =
         document.getElementById(
             "printCompAddr"
         ).innerHTML;
 
-
     let headerBox =
         document.getElementById(
             "designHeaderBox"
         ).outerHTML;
-
 
     let warpSec =
         document.getElementById(
             "warpSection"
         ).outerHTML;
 
-
     let weftSec =
         document.getElementById(
             "weftSection"
         ).outerHTML;
-
-
-    /* =====================================================
-       IMPORTANT:
-       NO BLACK BACKGROUND HERE
-    ====================================================== */
 
     let html = `
 
@@ -2434,8 +2236,6 @@ function openPreviewModal(){
                 width:100%;
             "
         >
-
-            <!-- COMPANY -->
 
             <div
                 style="
@@ -2468,50 +2268,39 @@ function openPreviewModal(){
 
             </div>
 
-
-            <!-- DESIGN HEADER -->
-
             ${headerBox.replace(
                 'style="display:none;"',
                 'style="display:grid;"'
             )}
 
-<div style="font-size:11px; font-weight:700; margin:4px 0;">
+            <div style="font-size:11px; font-weight:700; margin:4px 0;">
                 * WARP DESIGN *
             </div>
 
             ${warpSec}
 
-
-            <!-- PAGE BREAK -->
-
             <div class="page-break"></div>
 
-<div style="font-size:11px; font-weight:700; margin:4px 0;">
+            <div style="font-size:11px; font-weight:700; margin:4px 0;">
                 * WEFT DESIGN *
             </div>
             
-
             ${weftSec}
 
         </div>
 
     `;
 
-
     document.getElementById(
         "previewContent"
     ).innerHTML = html;
-
 
     let modal =
         document.getElementById(
             "previewModal"
         );
 
-
     modal.style.display = "flex";
-
 
     setTimeout(function(){
 
@@ -2520,11 +2309,6 @@ function openPreviewModal(){
     },20);
 
 }
-
-
-/* =========================================================
-   CLOSE PREVIEW
-========================================================= */
 
 function closePreviewModal(){
 
@@ -2543,10 +2327,6 @@ function closePreviewModal(){
 
 }
 
-
-/* =========================================================
-   PRINT / PREVIEW
-========================================================= */
 function printPreview(){
 
     let content =
