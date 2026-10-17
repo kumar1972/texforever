@@ -2496,8 +2496,10 @@ if(fsContent) {
 
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="fsModal") closeFullscreen(); });
 
-function refreshIfEditedElsewhere() {
+async function refreshIfEditedElsewhere() {
     try {
+        if (!(window.StorageDB && window.StorageDB.isReady)) return;
+        if (typeof window.StorageDB.reload === "function") await window.StorageDB.reload();
         let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
         if (window._lastEditStamp !== lastEdit) {
             window._lastEditStamp = lastEdit;
@@ -2507,7 +2509,6 @@ function refreshIfEditedElsewhere() {
 }
 window.addEventListener("focus", refreshIfEditedElsewhere);
 window.addEventListener("pageshow", refreshIfEditedElsewhere);
-window.addEventListener("storage", (e) => { if (!e.key || e.key === "last_edit_timestamp") refreshIfEditedElsewhere(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshIfEditedElsewhere(); });
 
 /* ================= SMART COLOR STUDIO LOGIC (60 TONES) ================= */
@@ -3733,6 +3734,7 @@ function buildPrintGraph(m, pickStr) {
 
 window.addEventListener("load", async () => {
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+    window._lastEditStamp = window.StorageDB.getItem("last_edit_timestamp");
     try {
         let statusEl = document.getElementById("designStatus");
         if(statusEl) statusEl.textContent = "⚡ Loading designs...";
