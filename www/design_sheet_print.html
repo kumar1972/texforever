@@ -363,6 +363,11 @@ td.col-color{
     margin-bottom: 4px;
 }
 
+.no-dot-end-space {
+    width: 16px;
+    flex-shrink: 0;
+}
+
 /* =========================================================
    SUMMARY
 ========================================================= */
@@ -522,6 +527,10 @@ td.col-color{
 
     .dot-leader-end-short {
         width: 8px;
+    }
+
+    .no-dot-end-space {
+        width: 12px;
     }
 
     .dash-sep{
@@ -1421,7 +1430,7 @@ function loadDesignDetails(){
 
     let warpCountsDisplay =
         warp2 && warp2 !== "-"
-        ? `${warp1}, ${warp2}`
+        ? `${warp1},${warp2}`
         : warp1;
 
 
@@ -1443,7 +1452,7 @@ function loadDesignDetails(){
 
     let weftCountsDisplay =
         weft2 && weft2 !== "-"
-        ? `${weft1}, ${weft2}`
+        ? `${weft1},${weft2}`
         : weft1;
 
 
@@ -1995,7 +2004,8 @@ function renderSplitPreviewTable(
             val:val,
             setHtml:setHtml,
             type:type,
-            isTopBeam:isTopBeam
+            isTopBeam:isTopBeam,
+            hasSet:Boolean(rInfo)
 
         });
 
@@ -2286,18 +2296,23 @@ function buildTableRowsHtml(rows){
         let valDisplay = `<b>${r.val}</b>`;
         if(r.type === "warp"){
             if(r.isTopBeam){
+                let afterDot = r.hasSet 
+                    ? `<div class="dot-leader-end-short"></div>` 
+                    : `<div class="no-dot-end-space"></div>`;
                 valDisplay = `
                     <div class="val-flex-top" style="color:#8b5cf6 !important;">
                         <div class="dot-leader-left"></div>
-                        <span class="val-text"><b>${r.val}</b></span>
-                        <div class="dot-leader-end-short"></div>
+                        <span class="val-text"><b>${r.val}</b></span>${afterDot}
                     </div>
                 `;
             } else {
+                let afterDot = r.hasSet 
+                    ? `<div class="dot-leader"></div>` 
+                    : ``;
                 valDisplay = `
                     <div class="val-flex-bottom" style="color:#1E2B23;">
                         <span class="val-text"><b>${r.val}</b></span>
-                        <div class="dot-leader"></div>
+                        ${afterDot}
                     </div>
                 `;
             }
