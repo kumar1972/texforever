@@ -282,12 +282,21 @@ th{
     width:35%;
     text-align:left;
     padding-left:6px;
+    padding-right:0px !important;
+}
+
+/* COUNT & COLOUR NEXT FONT SIZE */
+td.col-count,
+td.col-color{
+    font-size:12px;
 }
 
 .col-val{
     width:18%;
     text-align:center;
     font-weight:700;
+    padding-left:0px !important;
+    padding-right:4px !important;
 }
 
 .col-set{
@@ -317,6 +326,40 @@ th{
     flex-grow: 1;
     border-bottom: 2px dotted #888;
     margin-left: 6px;
+    margin-bottom: 4px;
+}
+
+/* BOTTOM BEAM & TOP BEAM (SSKR) ALIGNMENT + DOTS */
+.val-flex-bottom {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    padding-left: 10px; /* Colour dot-ல் இருந்து கொஞ்சம் space தள்ளி வர */
+}
+
+.val-flex-top {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    padding-left: 2px; /* Colour dot உடன் தொடர்ந்து வர */
+}
+
+.val-text {
+    flex-shrink: 0;
+}
+
+.dot-leader-left {
+    flex-grow: 1;
+    border-bottom: 2px dotted #888;
+    margin-right: 6px;
+    margin-bottom: 4px;
+}
+
+.dot-leader-end-short {
+    width: 12px;
+    flex-shrink: 0;
+    border-bottom: 2px dotted #888;
+    margin-left: 4px;
     margin-bottom: 4px;
 }
 
@@ -468,6 +511,19 @@ th{
         padding:6px 3px;
     }
 
+    td.col-count,
+    td.col-color{
+        font-size:11px;
+    }
+
+    .val-flex-bottom {
+        padding-left: 7px;
+    }
+
+    .dot-leader-end-short {
+        width: 8px;
+    }
+
     .dash-sep{
         font-size:5px;
         letter-spacing:0;
@@ -602,6 +658,20 @@ th{
         line-height: 1.2 !important;
     }
 
+    td.col-count,
+    td.col-color{
+        font-size:12px !important;
+    }
+
+    .col-color{
+        padding-right:0px !important;
+    }
+
+    .col-val{
+        padding-left:0px !important;
+        padding-right:3px !important;
+    }
+
     .col-set {
         border-left: 1px dashed #888888 !important;
     }
@@ -616,7 +686,9 @@ th{
         print-color-adjust:exact !important;
     }
 
-    .dot-leader {
+    .dot-leader,
+    .dot-leader-left,
+    .dot-leader-end-short {
         border-bottom: 2px dotted #000000 !important;
         -webkit-print-color-adjust:exact !important;
         print-color-adjust:exact !important;
@@ -2214,9 +2286,20 @@ function buildTableRowsHtml(rows){
         let valDisplay = `<b>${r.val}</b>`;
         if(r.type === "warp"){
             if(r.isTopBeam){
-                valDisplay = `<div style="text-align:right; padding-right:12px; color:#8b5cf6 !important;"><b>${r.val}</b></div>`;
+                valDisplay = `
+                    <div class="val-flex-top" style="color:#8b5cf6 !important;">
+                        <div class="dot-leader-left"></div>
+                        <span class="val-text"><b>${r.val}</b></span>
+                        <div class="dot-leader-end-short"></div>
+                    </div>
+                `;
             } else {
-                valDisplay = `<div style="text-align:left; padding-left:12px; color:#1E2B23;"><b>${r.val}</b></div>`;
+                valDisplay = `
+                    <div class="val-flex-bottom" style="color:#1E2B23;">
+                        <span class="val-text"><b>${r.val}</b></span>
+                        <div class="dot-leader"></div>
+                    </div>
+                `;
             }
         }
 
