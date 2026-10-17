@@ -1160,10 +1160,14 @@ function mergeDesigns(items) {
     let rawEdits = {};
     try { rawEdits = JSON.parse(window.StorageDB.getItem("local_edits_cache") || "{}"); } catch(e) {}
 
+    let editKeys = new Set();
     Object.keys(rawEdits).forEach(k => {
         if (rawEdits[k]) {
-            let cleanKey = String(k).trim();
-            map.set(cleanKey, sanitizeDesignObj(clone(rawEdits[k])));
+            let eo = sanitizeDesignObj(clone(rawEdits[k]));
+            let cleanKey = cleanDesignName(designName(eo)) || cleanDesignName(k);
+            if (!cleanKey) return;
+            editKeys.add(cleanKey);
+            map.set(cleanKey, map.has(cleanKey) ? { ...map.get(cleanKey), ...eo } : eo);
         }
     });
 
@@ -1171,13 +1175,14 @@ function mergeDesigns(items) {
         let d = sanitizeDesignObj(clone(rawD));
         let n = String(designName(d)).trim(); 
         if(!n || n === "unnamed") return;
+        let ck = cleanDesignName(n);
         
-        if (!map.has(n)) {
-            map.set(n, d);
+        if (!map.has(ck)) {
+            map.set(ck, d);
         } else {
-            let existing = map.get(n);
-            if (!rawEdits[n]) {
-                map.set(n, { ...d, ...existing });
+            let existing = map.get(ck);
+            if (!editKeys.has(ck)) {
+                map.set(ck, { ...d, ...existing });
             }
         }
     });
@@ -1465,7 +1470,7 @@ function loadSelectedDesign(){
         try {
             let editsCache = JSON.parse(window.StorageDB.getItem("local_edits_cache") || "{}");
             let key = Object.keys(editsCache).find(k => k.trim() === dName.trim());
-            if (!key && editsCache[cleanName] && designName(editsCache[cleanName]).trim() === dName.trim()) key = cleanName;
+            if (!key) key = Object.keys(editsCache).find(k => cleanDesignName(k) === cleanName || cleanDesignName(designName(editsCache[k])) === cleanName);
             if(key) foundEdits = editsCache[key];
         } catch(e) {}
 
@@ -1564,7 +1569,8 @@ function loadSelectedDesign(){
 
         let mCols = (weavePatterns.custom && weavePatterns.custom[0]) ? weavePatterns.custom[0].length : 4;
 
-        let drawVal = (dentDrawMatch && (dentDrawMatch.drawingPatternFormula || dentDrawMatch.drawingPattern || dentDrawMatch.drawingOrder || dentDrawMatch.draft)) || 
+        let drawVal = (foundEdits && (foundEdits.drawingPatternFormula || foundEdits.drawingPattern)) ||
+                      (dentDrawMatch && (dentDrawMatch.drawingPatternFormula || dentDrawMatch.drawingPattern || dentDrawMatch.drawingOrder || dentDrawMatch.draft)) || 
                       sourceObj.drawingPatternFormula || sourceObj.drawingPattern || sourceObj.drawingOrder || sourceObj.drawing_order || sourceObj.draft || "";
         
         if (!drawVal || (drawVal === "1,2,3,4" && mCols > 4)) {
@@ -1573,7 +1579,8 @@ function loadSelectedDesign(){
             drawVal = autoArr.join(",");
         }
 
-        let dentVal = (dentDrawMatch && (dentDrawMatch.dentingPatternFormula || dentDrawMatch.dentingPattern || dentDrawMatch.dentingOrder)) || 
+        let dentVal = (foundEdits && (foundEdits.dentingPatternFormula || foundEdits.dentingPattern)) ||
+                      (dentDrawMatch && (dentDrawMatch.dentingPatternFormula || dentDrawMatch.dentingPattern || dentDrawMatch.dentingOrder)) || 
                       sourceObj.dentingPatternFormula || sourceObj.dentingPattern || sourceObj.dentingOrder || sourceObj.denting_order || "2";
 
         activeDesignObj.drawingPatternFormula = drawVal;
@@ -2489,13 +2496,19 @@ if(fsContent) {
 
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="fsModal") closeFullscreen(); });
 
-window.addEventListener("focus", () => {
-    let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
-    if (window._lastEditStamp !== lastEdit) {
-        window._lastEditStamp = lastEdit;
-        importFromFirebase(false);
-    }
-});
+function refreshIfEditedElsewhere() {
+    try {
+        let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
+        if (window._lastEditStamp !== lastEdit) {
+            window._lastEditStamp = lastEdit;
+            importFromFirebase(false);
+        }
+    } catch(e) {}
+}
+window.addEventListener("focus", refreshIfEditedElsewhere);
+window.addEventListener("pageshow", refreshIfEditedElsewhere);
+window.addEventListener("storage", (e) => { if (!e.key || e.key === "last_edit_timestamp") refreshIfEditedElsewhere(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshIfEditedElsewhere(); });
 
 /* ================= SMART COLOR STUDIO LOGIC (60 TONES) ================= */
 function setToneFilter(tone, btn) {
