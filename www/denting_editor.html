@@ -528,8 +528,8 @@
             let n = cleanDesignName(designName(d));
             if(n) {
                 let existing = map.get(n) || {};
-                let matchedEdit = Object.keys(localEdits).find(k => cleanDesignName(k) === n);
-                let editObj = matchedEdit ? localEdits[matchedEdit] : {};
+                let bestEdit = findLatestEdit(localEdits, n);
+                let editObj = bestEdit ? bestEdit.obj : {};
                 map.set(n, { ...existing, ...d, ...editObj });
             }
         });
@@ -565,8 +565,8 @@
             let foundEdits = null;
             try {
                 let editsCache = JSON.parse(TFDB.get("local_edits_cache") || "{}");
-                let matchedKey = Object.keys(editsCache).find(k => cleanDesignName(k) === cleanTargetName);
-                if(matchedKey) foundEdits = editsCache[matchedKey];
+                let bestEdit = findLatestEdit(editsCache, cleanTargetName);
+                if(bestEdit) foundEdits = bestEdit.obj;
             } catch(e) {}
 
             let warpMatch = null;
@@ -684,6 +684,25 @@
         return total;
     }
 
+    function editStamp(o) {
+        if (!o) return 0;
+        if (typeof o._savedAt === "number") return o._savedAt;
+        const t = Date.parse(o.timestamp || "");
+        return isNaN(t) ? 0 : t;
+    }
+    // Returns {key, obj} of the newest edit entry whose name matches (any key spelling)
+    function findLatestEdit(editsCache, cleanTarget) {
+        let best = null;
+        Object.keys(editsCache || {}).forEach(k => {
+            const v = editsCache[k];
+            if (!v || typeof v !== "object") return;
+            if (cleanDesignName(k) === cleanTarget || cleanDesignName(designName(v)) === cleanTarget) {
+                if (!best || editStamp(v) >= editStamp(best.obj)) best = { key: k, obj: v };
+            }
+        });
+        return best;
+    }
+
     function getLocalEditsCache() {
         try {
             const raw = TFDB.get("local_edits_cache") || "{}";
@@ -711,7 +730,9 @@
             pickPattern: pickStr,
             type: wType,
             customMatrix: matrix,
-            totalWarpEnds: totalWarp
+            totalWarpEnds: totalWarp,
+            timestamp: new Date().toISOString(),
+            _savedAt: Date.now()
         };
     }
 
@@ -726,19 +747,22 @@
 
         try {
             let edits = getLocalEditsCache();
-            edits[cleanName] = { ...(edits[cleanName] || {}), ...fullData };
+            const prevBest = findLatestEdit(edits, cleanName);
+            Object.keys(edits).forEach(k => {
+                const v = edits[k];
+                if (cleanDesignName(k) === cleanName || (v && cleanDesignName(designName(v)) === cleanName)) delete edits[k];
+            });
+            edits[cleanName] = { ...(prevBest ? prevBest.obj : {}), ...fullData };
             safeLocalStorageSet("local_edits_cache", JSON.stringify(edits));
             safeLocalStorageSet("last_edit_timestamp", Date.now().toString());
 
             let local = JSON.parse(TFDB.get("design_masters_data") || "[]");
             if (!Array.isArray(local)) local = [];
 
-            const idx = local.findIndex(x => x && cleanDesignName(designName(x)) === cleanName);
-            if (idx >= 0) {
-                local[idx] = { ...local[idx], ...fullData };
-            } else {
-                local.push(fullData);
-            }
+            let mergedMaster = {};
+            local.forEach(x => { if (x && cleanDesignName(designName(x)) === cleanName) mergedMaster = { ...mergedMaster, ...x }; });
+            local = local.filter(x => !(x && cleanDesignName(designName(x)) === cleanName));
+            local.push({ ...mergedMaster, ...fullData });
             safeLocalStorageSet("design_masters_data", JSON.stringify(local));
 
             ["weave_designs", "weave_designs_cache", "denting_drawing_data"].forEach(key => {
@@ -1397,3 +1421,4 @@
 
 </body>
 </html>
+
