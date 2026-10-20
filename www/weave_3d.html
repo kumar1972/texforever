@@ -1170,6 +1170,44 @@ function extractWeftLines(m) {
     return null;
 }
 
+function deepFindPickLines(o, depth) {
+    depth = depth || 0;
+    if (!o || typeof o !== "object" || depth > 4) return null;
+    if (Array.isArray(o)) {
+        if (o.length > 0 && o.every(x => x && typeof x === "object" && !Array.isArray(x)) &&
+            o.some(x => x.picks !== undefined || x.pick !== undefined || x.Picks !== undefined)) return o;
+        for (let x of o) { let r = deepFindPickLines(x, depth + 1); if (r) return r; }
+        return null;
+    }
+    for (let k in o) { let r = deepFindPickLines(o[k], depth + 1); if (r) return r; }
+    return null;
+}
+
+function scanStorageForWeft(cleanName) {
+    let stores = [];
+    try { stores.push(localStorage); } catch(e) {}
+    let keys = [];
+    try {
+        let db = window.StorageDB;
+        if (db && typeof db.keys === "function") keys = keys.concat(db.keys());
+    } catch(e) {}
+    try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); } catch(e) {}
+    keys = Array.from(new Set(keys));
+    const skip = /^(local_edits_cache|weave_designs_cache|weave_designs|weave_last_design_name)$/;
+    keys.sort((a, b) => (/weft/i.test(b) ? 1 : 0) - (/weft/i.test(a) ? 1 : 0));
+    for (let key of keys) {
+        if (!key || skip.test(key)) continue;
+        let raw = null;
+        try { raw = window.StorageDB.getItem(key); } catch(e) {}
+        if (!raw) { try { raw = localStorage.getItem(key); } catch(e) {} }
+        if (!raw || raw.charAt(0) !== "[" && raw.charAt(0) !== "{") continue;
+        let parsed; try { parsed = JSON.parse(raw); } catch(e) { continue; }
+        let rec = findEntryByDesign(parsed, cleanName);
+        if (rec) { let r = deepFindPickLines(rec); if (r) return r; }
+    }
+    return null;
+}
+
 function mergeDesigns(items) {
     let map = new Map();
     let rawEdits = {};
@@ -1533,6 +1571,10 @@ function loadSelectedDesign(){
                     }
                 } catch(e) {}
             }
+        }
+
+        if (!rawWeft.length) {
+            try { let sw = scanStorageForWeft(cleanName); if (sw) rawWeft = clone(sw); } catch(e) {}
         }
 
         if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
