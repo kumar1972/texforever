@@ -1319,6 +1319,41 @@ body.dashboard-modern .advanced-control-center{display:grid}
     z-index:auto !important;
 }
 
+
+/* ===== MODERN GLASS: REPORTS CENTER ===== */
+.advr-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.advr-search{flex:1 1 180px;min-width:0;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#F8FAFC;font-size:13px;outline:none}
+.advr-search::placeholder{color:#94A3B8}
+.advr-search:focus{border-color:rgba(56,189,248,.7)}
+.advr-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;max-width:100%}
+.advr-tab{flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#CBD5E1;font-size:12px;font-weight:750;cursor:pointer;white-space:nowrap}
+.advr-tab.active{background:linear-gradient(135deg,#2563EB,#7C3AED);border-color:transparent;color:#fff}
+.advr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.advr-card{display:flex;align-items:center;gap:11px;min-width:0;text-align:left;padding:13px 12px;border-radius:15px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);color:#F8FAFC;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.advr-card:hover{transform:translateY(-3px);border-color:rgba(56,189,248,.65);background:rgba(56,189,248,.1)}
+.advr-ico{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border-radius:12px;background:rgba(99,102,241,.18);font-size:19px}
+.advr-info{display:flex;flex-direction:column;min-width:0;flex:1}
+.advr-info b{font-size:12.5px;font-weight:800;overflow-wrap:anywhere}
+.advr-info small{font-size:10.5px;color:#94A3B8;margin-top:2px;overflow-wrap:anywhere}
+.advr-count{flex-shrink:0;min-width:28px;text-align:center;padding:4px 8px;border-radius:999px;background:rgba(56,189,248,.16);color:#7DD3FC;font-size:11px;font-weight:850}
+.advr-empty{grid-column:1/-1;text-align:center;color:#94A3B8;font-size:12px;padding:16px}
+
+.advr-status{flex-shrink:0;padding:4px 8px;border-radius:999px;font-size:10.5px;font-weight:850;white-space:nowrap;background:rgba(56,189,248,.16);color:#7DD3FC}
+.advr-status.ok{background:rgba(16,185,129,.18);color:#6EE7B7}
+.advr-status.warn{background:rgba(239,68,68,.2);color:#FCA5A5}
+.advr-status.idle{background:rgba(148,163,184,.16);color:#CBD5E1}
+#advrPreview{display:none;position:fixed;inset:0;z-index:10050;background:rgba(3,10,18,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-direction:column}
+#advrPreview.open{display:flex}
+.advr-pv-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12);background:rgba(15,23,42,.95);color:#F8FAFC}
+.advr-pv-title{flex:1;min-width:0;display:flex;flex-direction:column}
+.advr-pv-title b{font-size:14px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.advr-pv-title small{font-size:10.5px;color:#94A3B8}
+.advr-pv-btn{flex:0 0 auto;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#F8FAFC;font-size:12px;font-weight:800;cursor:pointer}
+.advr-pv-btn.primary{background:linear-gradient(135deg,#2563EB,#7C3AED);border-color:transparent}
+#advrPreviewFrame{flex:1;width:100%;border:0;background:#030e12}
+@media(max-width:720px){.advr-grid{grid-template-columns:1fr}}
+@media(min-width:721px) and (max-width:980px){.advr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 body.dashboard-modern .menu-btn.modern-only{ display:none !important; }
 body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !important; }
 </style>
@@ -1769,18 +1804,13 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
             </div>
         </div>
 
-        <div class="advanced-section">
-            <div class="advanced-section-head"><div><h3>⚡ Quick Actions</h3><p>Jump directly to frequently used TEXFOREVER modules</p></div></div>
-            <div class="advanced-quick-grid">
-                <button class="advanced-quick-btn" onclick="navigateToPage('Party_Orders.html')"><span class="advanced-quick-icon">📋</span><span>Party Orders</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('warp_entry.html')"><span class="advanced-quick-icon">🧵</span><span>Warp Entry</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('weft_entry.html')"><span class="advanced-quick-icon">〰️</span><span>Weft Entry</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('design_master.html')"><span class="advanced-quick-icon">🎨</span><span>Design Master</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('dyeing_issue.html')"><span class="advanced-quick-icon">🧪</span><span>Dyeing Issue</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('weaving.html')"><span class="advanced-quick-icon">🏭</span><span>Weaving</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('washing.html')"><span class="advanced-quick-icon">💧</span><span>Washing</span></button>
-                <button class="advanced-quick-btn" onclick="navigateToPage('Despatch.html')"><span class="advanced-quick-icon">🚚</span><span>Despatch</span></button>
+        <div class="advanced-section" id="advReportsSection">
+            <div class="advanced-section-head"><div><h3>📑 Reports Center</h3><p>All reports &amp; ledgers in one place — tap a card to open</p></div><span class="advanced-live-pill" id="advrTotal">0</span></div>
+            <div class="advr-tools">
+                <input type="search" class="advr-search" id="advrSearch" placeholder="🔎 Search reports..." oninput="advrSetQuery(this.value)">
+                <div class="advr-tabs" id="advrTabs"></div>
             </div>
+            <div class="advr-grid" id="advrGrid"></div>
         </div>
     </section>
 
@@ -2434,6 +2464,8 @@ function showDashboardHome(){
         try{ f.contentWindow.location.replace("about:blank"); }catch(e){ f.src="about:blank"; }
     }
     if(c) c.style.display="";
+    const hdr=document.querySelector(".top-header-container");
+    if(hdr) hdr.style.display="";
     window.scrollTo(0,0);
 }
 
@@ -2443,6 +2475,8 @@ function openPageInFrame(url){
     if(!f){ location.href=url; return; }
     updateHeaderHeight();
     if(c) c.style.display="none";
+    const hdr=document.querySelector(".top-header-container");
+    if(hdr) hdr.style.display="none";
     f.style.display="block";
     f.onload=function(){
         try{
@@ -4316,5 +4350,199 @@ window.addEventListener(
 })();
 </script>
 
+
+<script>
+/* ===== MODERN GLASS: REPORTS CENTER ===== */
+const ADVR_CATS = [
+    {id:"all", label:"All"},
+    {id:"orders", label:"📋 Orders & Design"},
+    {id:"production", label:"🏭 Production"},
+    {id:"billing", label:"🧾 Billing & Print"}
+];
+const ADVR_ITEMS = [
+    {t:"ALL Reports", s:"Mill analytics", i:"📊", p:"report.html", c:"orders"},
+    {t:"Party Order Ledger", s:"Customer bookings & delivery", i:"📋", p:"Party_Orders.html", c:"orders", k:"party_orders_data"},
+    {t:"Design List", s:"All saved designs", i:"🎨", p:"design_list.html?type=all&status=all", c:"orders", k:"design_masters_data"},
+    {t:"Warp Entry Records", s:"Warp colour & ends", i:"🧵", p:"warp_entry.html", c:"production", k:"warp_entry_data"},
+    {t:"Weft Entry Records", s:"Weft colour & picks", i:"〰️", p:"weft_entry.html", c:"production", k:"weft_entry_data"},
+    {t:"Denting Drawings", s:"Denting editor records", i:"📐", p:"denting_editor.html", c:"production", k:"denting_drawing_data"},
+    {t:"Process Matrix", s:"Stage-wise process status", i:"🧮", p:"process_matrix.html", c:"production"},
+    {t:"Warping", s:"Warping process", i:"🧶", p:"warping.html", c:"production"},
+    {t:"Dyeing Issue", s:"Yarn issued for dyeing", i:"🧪", p:"dyeing_issue.html", c:"production"},
+    {t:"Dyeing Receive", s:"Dyed yarn received", i:"🎽", p:"dyeing_receive.html", c:"production"},
+    {t:"Weaving", s:"Loom production", i:"🏭", p:"weaving.html", c:"production"},
+    {t:"Weaving Receive", s:"Woven fabric received", i:"📥", p:"weaving_receive.html", c:"production"},
+    {t:"Washing", s:"Washing process", i:"💧", p:"washing.html", c:"production"},
+    {t:"Kora Yarn", s:"Kora yarn stock", i:"🪢", p:"kora_yarn.html", c:"production"},
+    {t:"Despatch", s:"Goods despatched", i:"🚚", p:"Despatch.html", c:"billing"},
+    {t:"Design Sheet Print", s:"Export job card", i:"🖨️", p:"design_sheet_print.html", c:"billing"},
+    {t:"Invoice / Bill", s:"GST billing", i:"🧾", p:"invoice.html", c:"billing"}
+];
+let advrCat = "all", advrQuery = "";
+
+function advrCount(key){
+    if(!key) return null;
+    try{
+        const v = safeJSON(key, null);
+        if(Array.isArray(v)) return v.length;
+        if(v && typeof v === "object") return Object.keys(v).length;
+    }catch(e){}
+    return 0;
+}
+function advrStatus(r){
+    try{
+        if(r.k === "party_orders_data"){
+            const all = safeJSON(r.k, []);
+            const list = Array.isArray(all) ? all : [];
+            const done = ["completed","complete","closed","cancelled","canceled"];
+            const active = list.filter(o => o && !done.includes(String(o.status || o.orderStatus || "").toLowerCase().trim()));
+            const today = getLocalDateString();
+            const overdue = active.filter(o => { const d = normalizeDate(o.deliveryDate || o.delivery_date || o.delivery || ""); return d && d < today; });
+            if(overdue.length) return {text: overdue.length + " overdue · " + active.length + " active", cls:"warn"};
+            return {text: active.length + " active", cls: active.length ? "ok" : "idle"};
+        }
+        const n = advrCount(r.k);
+        if(n === null) return {text:"Ready", cls:"idle"};
+        return {text: n + (n === 1 ? " record" : " records"), cls: n ? "ok" : "idle"};
+    }catch(e){ return {text:"Ready", cls:"idle"}; }
+}
+
+let advrCurrent = null;
+function advrAllowed(page){
+    const role = localStorage.getItem("erp_logged_role") || localStorage.getItem("user_role") || "Standard User";
+    if(role === "Administrator" || role === "Admin") return true;
+    try{
+        const saved = localStorage.getItem("user_permissions");
+        if(saved){
+            const perms = JSON.parse(saved);
+            const clean = String(page).split("?")[0];
+            const key = clean.replace(".html","").toLowerCase();
+            if(perms[clean] === false || perms[key] === false){
+                alert("Access Denied! You do not have permission to access this page. 🔒");
+                return false;
+            }
+        }
+    }catch(e){}
+    return true;
+}
+function advrPreview(idx){
+    const r = ADVR_ITEMS[idx];
+    if(!r || !advrAllowed(r.p)) return;
+    advrCurrent = r;
+    document.getElementById("advrPvTitle").textContent = r.i + " " + r.t;
+    document.getElementById("advrPvStatus").textContent = "Status: " + advrStatus(r).text;
+    const f = document.getElementById("advrPreviewFrame");
+    f.onload = function(){ advrAutoOpenList(f); };
+    f.src = r.p;
+    document.getElementById("advrPreview").classList.add("open");
+}
+
+/* Preview opens the page's Saved List / View List / View Records automatically (all pages) */
+function advrAutoOpenList(frame){
+    const textPats = [
+        /saved\s*list/i,
+        /view\s*(saved\s*)?(list|records?|entries|orders|designs?)/i,
+        /saved\s*(records?|entries|orders|designs?|data)/i,
+        /(records?|entries|orders|designs?)\s*list/i,
+        /show\s*(saved\s*)?(list|records?|entries)/i,
+        /(all|saved)\s*(records?|entries|orders|designs?)/i,
+        /\b(history|ledger|register)\b/i,
+        /view\s*all/i,
+        /\b(list|records?)\b/i
+    ];
+    const attrPats = [/saved\s*list/i, /(show|open|view|load|toggle)\w*(saved|list|records?|history)/i, /(saved|list|records?)\w*(show|open|view|modal|panel)/i];
+    const fnNames = ["showSavedList","openSavedList","viewSavedList","toggleSavedList","loadSavedList","showSaved","openSaved","viewSaved","showList","openList","viewList","showRecords","openRecords","viewRecords","showSavedRecords","openSavedRecords","viewSavedRecords","showHistory","openHistory"];
+    const bad = /delete|remove|copy|print|export|clear|reset|new\b|add\b|create|back|menu|save\s*(&|and)?\s*(update)?$|^\s*💾?\s*(save|update)\s*$|reverse|preview/i;
+    let tries = 0, done = false;
+    const timer = setInterval(function(){
+        tries++;
+        if(done || tries > 30 || !frame.src || frame.src === "about:blank"){ clearInterval(timer); return; }
+        try{
+            const doc = frame.contentDocument, win = frame.contentWindow;
+            if(!doc || !doc.body || doc.readyState === "loading") return;
+            const els = Array.from(doc.querySelectorAll("button, a, input[type=button], input[type=submit], [onclick], [role=button]"))
+                .filter(el => el.getClientRects().length > 0 && !el.disabled);
+            const label = e => String(e.value || e.textContent || e.title || e.getAttribute("aria-label") || "").trim();
+            for(const pat of textPats){
+                const el = els.find(e => pat.test(label(e)) && !bad.test(label(e)));
+                if(el){ done = true; clearInterval(timer); el.click(); return; }
+            }
+            for(const pat of attrPats){
+                const el = els.find(e => pat.test(String(e.getAttribute("onclick") || "")) && !bad.test(label(e)));
+                if(el){ done = true; clearInterval(timer); el.click(); return; }
+            }
+            if(tries >= 6){
+                for(const n of fnNames){
+                    if(typeof win[n] === "function"){ done = true; clearInterval(timer); win[n](); return; }
+                }
+            }
+        }catch(e){ clearInterval(timer); }
+    }, 300);
+}
+
+function advrClosePreview(){
+    const m = document.getElementById("advrPreview");
+    if(!m || !m.classList.contains("open")) return;
+    m.classList.remove("open");
+    const f = document.getElementById("advrPreviewFrame");
+    try{ f.contentWindow.location.replace("about:blank"); }catch(e){ f.src = "about:blank"; }
+    advrCurrent = null;
+    try{ renderAdvReports(); }catch(e){}
+}
+function advrOpenFull(){
+    const r = advrCurrent;
+    advrClosePreview();
+    if(r) navigateToPage(r.p);
+}
+window.addEventListener("popstate", function(){ advrClosePreview(); });
+
+function advrSetCat(id){ advrCat = id; renderAdvReports(); }
+function advrSetQuery(q){ advrQuery = String(q || "").toLowerCase().trim(); renderAdvReports(); }
+
+function renderAdvReports(){
+    const grid = document.getElementById("advrGrid");
+    const tabs = document.getElementById("advrTabs");
+    if(!grid || !tabs) return;
+    tabs.innerHTML = ADVR_CATS.map(c =>
+        '<button type="button" class="advr-tab' + (c.id === advrCat ? ' active' : '') + '" onclick="advrSetCat(\'' + c.id + '\')">' + c.label + '</button>'
+    ).join("");
+    const list = ADVR_ITEMS.filter(r =>
+        (advrCat === "all" || r.c === advrCat) &&
+        (!advrQuery || (r.t + " " + r.s).toLowerCase().includes(advrQuery))
+    );
+    const total = document.getElementById("advrTotal");
+    if(total) total.textContent = ADVR_ITEMS.length + " REPORTS";
+    if(!list.length){ grid.innerHTML = '<div class="advr-empty">No reports found</div>'; return; }
+    grid.innerHTML = list.map(r => {
+        const st = advrStatus(r);
+        return '<button type="button" class="advr-card" onclick="advrPreview(' + ADVR_ITEMS.indexOf(r) + ')">' +
+            '<span class="advr-ico">' + r.i + '</span>' +
+            '<span class="advr-info"><b>' + r.t + '</b><small>' + r.s + '</small></span>' +
+            '<span class="advr-status ' + st.cls + '">' + st.text + '</span>' +
+            '</button>';
+    }).join("");
+}
+
+(function(){
+    const orig = window.updateAdvancedDashboard;
+    if(typeof orig === "function"){
+        window.updateAdvancedDashboard = function(){
+            const r = orig.apply(this, arguments);
+            try{ renderAdvReports(); }catch(e){}
+            return r;
+        };
+    }
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", renderAdvReports);
+    else renderAdvReports();
+})();
+</script>
+<div id="advrPreview" role="dialog" aria-modal="true">
+    <div class="advr-pv-bar">
+        <div class="advr-pv-title"><b id="advrPvTitle">Preview</b><small id="advrPvStatus"></small></div>
+        <button type="button" class="advr-pv-btn primary" onclick="advrOpenFull()">Open Full Page ↗</button>
+        <button type="button" class="advr-pv-btn" onclick="advrClosePreview()">✕</button>
+    </div>
+    <iframe id="advrPreviewFrame" title="Report Preview" allow="clipboard-read; clipboard-write"></iframe>
+</div>
 </body>
 </html>
