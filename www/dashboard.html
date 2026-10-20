@@ -4441,6 +4441,7 @@ function advrPreview(idx){
                 d.head.appendChild(st);
             }
         }catch(e){}
+        advrEnableTouchScroll(f);
         advrAutoOpenList(f);
     };
     f.src = r.p;
@@ -4490,23 +4491,49 @@ function advrAutoOpenList(frame){
     }, 300);
 }
 
-/* Scroll buttons for preview */
-function advrScroll(dir){
+/* Natural finger-scroll inside the preview (works even when the page blocks its own scrolling) */
+function advrScrollable(el, win){
+    if(!el || el.scrollHeight - el.clientHeight < 8) return false;
+    const oy = win.getComputedStyle(el).overflowY;
+    return oy === "auto" || oy === "scroll";
+}
+function advrBestScroller(doc, win){
+    let best = doc.scrollingElement || doc.documentElement, room = best.scrollHeight - best.clientHeight;
+    doc.querySelectorAll("body *").forEach(el => {
+        if(el.clientHeight > 80 && advrScrollable(el, win)){
+            const r = el.scrollHeight - el.clientHeight;
+            if(r > room || room < 8){ best = el; room = r; }
+        }
+    });
+    return best;
+}
+function advrEnableTouchScroll(frame){
     try{
-        const f = document.getElementById("advrPreviewFrame");
-        const doc = f.contentDocument, win = f.contentWindow;
-        let best = doc.scrollingElement || doc.documentElement, bestRoom = best.scrollHeight - best.clientHeight;
-        doc.querySelectorAll("body *").forEach(el => {
-            if(el.scrollHeight - el.clientHeight > 20 && el.clientHeight > 80){
-                const oy = win.getComputedStyle(el).overflowY;
-                if(oy === "auto" || oy === "scroll"){
-                    const room = el.scrollHeight - el.clientHeight;
-                    if(room > bestRoom || bestRoom < 20){ best = el; bestRoom = room; }
-                }
+        const doc = frame.contentDocument, win = frame.contentWindow;
+        if(!doc || doc.__advrTouch) return;
+        doc.__advrTouch = true;
+        let startY = 0, target = null, manual = false;
+        doc.addEventListener("touchstart", function(e){
+            startY = e.touches[0].clientY;
+            manual = false; target = null;
+            let n = e.target;
+            while(n && n.nodeType === 1){
+                if(advrScrollable(n, win)){ return; }   // native scrolling will handle it
+                n = n.parentElement;
             }
-        });
-        best.scrollBy({top: dir * Math.max(200, best.clientHeight * 0.8), behavior: "smooth"});
-    }catch(e){}
+            const dse = doc.scrollingElement || doc.documentElement;
+            if(dse.scrollHeight - dse.clientHeight >= 8 && win.getComputedStyle(doc.body).overflowY !== "hidden") return;
+            target = advrBestScroller(doc, win);
+            manual = !!target;
+        }, {passive:true});
+        doc.addEventListener("touchmove", function(e){
+            if(!manual || !target) return;
+            const y = e.touches[0].clientY;
+            target.scrollTop += (startY - y);
+            startY = y;
+            e.preventDefault();
+        }, {passive:false});
+    }catch(err){}
 }
 
 function advrClosePreview(){
@@ -4524,6 +4551,72 @@ function advrOpenFull(){
     if(r) navigateToPage(r.p);
 }
 window.addEventListener("popstate", function(){ advrClosePreview(); });
+
+/* Opened pages: show full height (no cut at bottom) and keep "Saved ..." popups inside the page container */
+(function(){
+    function contentBottom(doc, win){
+        let max = 0;
+        Array.from(doc.body.children).forEach(el => {
+            const cs = win.getComputedStyle(el);
+            if(cs.position === "fixed" || cs.display === "none" || /^(SCRIPT|STYLE|LINK)$/.test(el.tagName)) return;
+            const r = el.getBoundingClientRect();
+            if(r.height > 0) max = Math.max(max, r.bottom + (win.scrollY || 0) + (parseFloat(cs.marginBottom) || 0));
+        });
+        const bcs = win.getComputedStyle(doc.body);
+        return max + (parseFloat(bcs.paddingBottom) || 0);
+    }
+    function keepPopupInside(doc, win){
+        const kids = Array.from(doc.body.children).filter(el => el.offsetHeight > 200 && win.getComputedStyle(el).position !== "fixed" && !/^(SCRIPT|STYLE)$/.test(el.tagName));
+        if(!kids.length) return;
+        const container = kids.reduce((a, b) => (b.offsetHeight > a.offsetHeight ? b : a));
+        const heads = Array.from(doc.querySelectorAll("body *")).filter(el => {
+            if(el.children.length > 2) return false;
+            const t = (el.textContent || "").trim();
+            return t.length < 60 && /^[^a-z]*saved\s.*(data|list|orders?|registry|records?)/i.test(t) && el.getClientRects().length > 0;
+        });
+        for(const h of heads){
+            let root = h;
+            while(root.parentElement && root.parentElement !== doc.body) root = root.parentElement;
+            if(root === container || container.contains(root) || root === doc.body) continue;
+            const r = root.getBoundingClientRect();
+            if(r.height > win.innerHeight * 0.7 && r.width > win.innerWidth * 0.9) continue;   // real full-screen overlay: leave as is
+            container.appendChild(root);
+            ["position","inset","top","left","right","bottom","transform"].forEach(k => root.style.setProperty(k, k === "position" ? "static" : "auto", "important"));
+            root.style.setProperty("transform","none","important");
+            root.style.setProperty("width","auto","important");
+            root.style.setProperty("margin","16px 0 0","important");
+            break;
+        }
+    }
+    let lastH = 0;
+    setInterval(function(){
+        const pf = document.getElementById("pageFrame");
+        const pv = document.getElementById("advrPreview");
+        const pvf = document.getElementById("advrPreviewFrame");
+        try{
+            if(pv && pv.classList.contains("open") && pvf.contentDocument && pvf.contentDocument.body){
+                keepPopupInside(pvf.contentDocument, pvf.contentWindow);
+            }
+        }catch(e){}
+        if(!pf) return;
+        if(pf.style.display !== "block"){
+            if(pf.style.height){ pf.style.removeProperty("height"); pf.removeAttribute("scrolling"); }
+            lastH = 0;
+            return;
+        }
+        try{
+            const d = pf.contentDocument, w = pf.contentWindow;
+            if(!d || !d.body || d.readyState === "loading" || w.location.href === "about:blank") return;
+            keepPopupInside(d, w);
+            pf.setAttribute("scrolling","no");
+            const need = Math.max(Math.ceil(contentBottom(d, w)) + 16, window.innerHeight - 20);
+            if(Math.abs(need - lastH) > 24 && need < 30000){
+                lastH = need;
+                pf.style.setProperty("height", need + "px", "important");
+            }
+        }catch(e){}
+    }, 400);
+})();
 
 /* Floating lens icon: show only on dashboard home (hide inside opened pages / preview) */
 (function(){
@@ -4610,8 +4703,6 @@ function renderAdvReports(){
 <div id="advrPreview" role="dialog" aria-modal="true">
     <div class="advr-pv-bar">
         <div class="advr-pv-title"><b id="advrPvTitle">Preview</b><small id="advrPvStatus"></small></div>
-        <button type="button" class="advr-pv-btn" onclick="advrScroll(-1)" title="Scroll up">▲</button>
-        <button type="button" class="advr-pv-btn" onclick="advrScroll(1)" title="Scroll down">▼</button>
         <button type="button" class="advr-pv-btn" onclick="advrClosePreview()">✕</button>
     </div>
     <iframe id="advrPreviewFrame" title="Report Preview" scrolling="yes" allow="clipboard-read; clipboard-write"></iframe>
