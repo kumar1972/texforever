@@ -1158,6 +1158,18 @@ function findEntryByDesign(parsed, cleanName) {
     return Object.values(parsed).find(w => w && typeof w === "object" && cleanDesignName(designName(w)) === cleanName) || null;
 }
 
+function extractWeftLines(m) {
+    if (!m || typeof m !== "object") return null;
+    const names = ["weftLines","weftPattern","weftRows","weftThreads","weftData","weftEntries","weft","pattern","lines","rows","threads","entries"];
+    for (let k of names) {
+        if (Array.isArray(m[k]) && m[k].length > 0 && typeof m[k][0] === "object") return m[k];
+    }
+    for (let k in m) {
+        if (/weft/i.test(k) && Array.isArray(m[k]) && m[k].length > 0 && typeof m[k][0] === "object") return m[k];
+    }
+    return null;
+}
+
 function mergeDesigns(items) {
     let map = new Map();
     let rawEdits = {};
@@ -1484,7 +1496,7 @@ function loadSelectedDesign(){
         if (foundEdits && foundEdits.warpLines && foundEdits.warpLines.length > 0) {
             rawWarp = clone(foundEdits.warpLines);
         }
-        if (foundEdits && foundEdits.weftLines && foundEdits.weftLines.length > 0) {
+        if (foundEdits && foundEdits.weftLines && foundEdits.weftLines.length > 0 && !isDefaultYarnLines(foundEdits.weftLines)) {
             rawWeft = clone(foundEdits.weftLines);
         }
 
@@ -1513,8 +1525,9 @@ function loadSelectedDesign(){
                     if(data) {
                         let parsed = JSON.parse(data);
                         let match = findEntryByDesign(parsed, cleanName);
-                        if(match && match.weftLines && match.weftLines.length > 0) { 
-                            rawWeft = clone(match.weftLines);
+                        let wl = extractWeftLines(match);
+                        if(wl) { 
+                            rawWeft = clone(wl);
                             break; 
                         }
                     }
@@ -1523,7 +1536,7 @@ function loadSelectedDesign(){
         }
 
         if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
-        if(!rawWeft.length && activeDesignObj.weftLines) rawWeft = clone(activeDesignObj.weftLines);
+        if(!rawWeft.length) { let aw = extractWeftLines(activeDesignObj); if(aw) rawWeft = clone(aw); }
 
         if(!rawWarp.length) rawWarp = [
             { color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' },
