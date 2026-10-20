@@ -1074,7 +1074,7 @@ function normLine(x, warp) {
     let color = lowerX.color ?? lowerX.colour ?? lowerX.col ?? "";
     let name = lowerX.colourname ?? lowerX.colourName ?? lowerX.name ?? lowerX.shade ?? "";
     let hexCode = lowerX.hex ?? ""; 
-    let amount = warp ? (lowerX.ends ?? lowerX.end ?? lowerX.amount ?? lowerX.qty ?? lowerX.orderends) : (lowerX.picks ?? lowerX.pick ?? lowerX.amount ?? lowerX.qty ?? lowerX.orderpicks);
+    let amount = warp ? (lowerX.ends ?? lowerX.end ?? lowerX.amount ?? lowerX.count ?? lowerX.qty ?? lowerX.orderends) : (lowerX.picks ?? lowerX.pick ?? lowerX.amount ?? lowerX.count ?? lowerX.qty ?? lowerX.orderpicks);
     let rowSpan = lowerX.span ?? lowerX.setrows ?? lowerX.set_rows ?? lowerX.group ?? lowerX.row_span ?? 1;
     let repCount = lowerX.repeat ?? lowerX.setrep ?? lowerX.set_repeat ?? lowerX.multiplier ?? lowerX.rep_count ?? 1;
     let countVal = lowerX.count || lowerX.yarncount || lowerX.warpcount || lowerX.weftcount || "";
@@ -1139,6 +1139,18 @@ function sanitizeDesignObj(d) {
             if (col || picks) tempWeft.push({ color: col, picks: picks, count: cnt, colourName: name });
         }
         if(tempWeft.length > 0) d.weftLines = tempWeft;
+    }
+    if (!Array.isArray(d.warpLines) || d.warpLines.length === 0) {
+        d.warpLines = [
+            { color: "#1e3a8a", ends: 27, colourName: "Navy", count: "21 ccc" },
+            { color: "#64748b", ends: 1, colourName: "D. Grey", count: "21 ccc" }
+        ];
+    }
+    if (!Array.isArray(d.weftLines) || d.weftLines.length === 0) {
+        d.weftLines = [
+            { color: "#1e3a8a", picks: 27, colourName: "Navy", count: "21 ccc" },
+            { color: "#64748b", picks: 1, colourName: "D. Grey", count: "21 ccc" }
+        ];
     }
     return d;
 }
