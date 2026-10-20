@@ -2209,6 +2209,12 @@ function draw3DWeave(){
         const viewCenterX = W / 2;
         const viewCenterY = H / 2;
 
+        // Keep the complete fabric and its rulers visible on smaller screens / GitHub.
+        if (scale === 1 && pointX === 0 && pointY === 0) {
+            const fitScale = Math.min(1, (W - 24) / Math.max(1, drawW + RULER), (H - 24) / Math.max(1, drawH + RULER));
+            if (fitScale < 1) scale = Math.max(0.05, fitScale);
+        }
+
         ctx.save();
         ctx.translate(viewCenterX + pointX, viewCenterY + pointY);
         ctx.scale(scale, scale);
@@ -2431,6 +2437,10 @@ function draw3DWeave(){
         ctx.font = "bold 10px Arial, sans-serif";
         ctx.fillText("cm", left - RULER / 2, bottom + RULER / 2);
 
+        // Draw the dimension details in viewport coordinates so they stay visible
+        // regardless of fabric size, zoom, or panning.
+        ctx.restore();
+
         const line1 = `Original Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
         const line2 = `Original Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
 
@@ -2438,11 +2448,10 @@ function draw3DWeave(){
         ctx.font = "bold 11px Arial, sans-serif";
         const boxPadX = 10;
         const boxPadY = 8;
-        const boxWidth = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2);
+        const boxWidth = Math.min(W - 16, Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2));
         const boxHeight = 44;
-
-        const boxLeft = right - boxWidth - 8;
-        const boxTop = top + 8;
+        const boxLeft = Math.max(8, W - boxWidth - 8);
+        const boxTop = 8;
 
         ctx.fillStyle = "rgba(10, 24, 18, 0.90)";
         ctx.strokeStyle = "#48bb78";
@@ -2453,10 +2462,8 @@ function draw3DWeave(){
         ctx.fillStyle = "#78d18a";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-        ctx.fillText(line1, boxLeft + boxPadX, boxTop + boxPadY);
-        ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 18);
-        ctx.restore();
-
+        ctx.fillText(line1, boxLeft + boxPadX, boxTop + boxPadY, Math.max(0, boxWidth - boxPadX * 2));
+        ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 18, Math.max(0, boxWidth - boxPadX * 2));
         ctx.restore();
     }); 
 }
