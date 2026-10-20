@@ -1350,7 +1350,7 @@ body.dashboard-modern .advanced-control-center{display:grid}
 .advr-pv-title small{font-size:10.5px;color:#94A3B8}
 .advr-pv-btn{flex:0 0 auto;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#F8FAFC;font-size:12px;font-weight:800;cursor:pointer}
 .advr-pv-btn.primary{background:linear-gradient(135deg,#2563EB,#7C3AED);border-color:transparent}
-#advrPreviewFrame{flex:1;width:100%;border:0;background:#030e12}
+#advrPreviewFrame{flex:1;width:100%;min-height:0;border:0;background:#030e12;overflow:auto;-webkit-overflow-scrolling:touch}
 @media(max-width:720px){.advr-grid{grid-template-columns:1fr}}
 @media(min-width:721px) and (max-width:980px){.advr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
@@ -4432,7 +4432,17 @@ function advrPreview(idx){
     document.getElementById("advrPvTitle").textContent = r.i + " " + r.t;
     document.getElementById("advrPvStatus").textContent = "Status: " + advrStatus(r).text;
     const f = document.getElementById("advrPreviewFrame");
-    f.onload = function(){ advrAutoOpenList(f); };
+    f.onload = function(){
+        try{
+            const d = f.contentDocument;
+            if(d && d.head){
+                const st = d.createElement("style");
+                st.textContent = "html,body{overflow-y:auto !important;}";
+                d.head.appendChild(st);
+            }
+        }catch(e){}
+        advrAutoOpenList(f);
+    };
     f.src = r.p;
     document.getElementById("advrPreview").classList.add("open");
 }
@@ -4480,6 +4490,25 @@ function advrAutoOpenList(frame){
     }, 300);
 }
 
+/* Scroll buttons for preview */
+function advrScroll(dir){
+    try{
+        const f = document.getElementById("advrPreviewFrame");
+        const doc = f.contentDocument, win = f.contentWindow;
+        let best = doc.scrollingElement || doc.documentElement, bestRoom = best.scrollHeight - best.clientHeight;
+        doc.querySelectorAll("body *").forEach(el => {
+            if(el.scrollHeight - el.clientHeight > 20 && el.clientHeight > 80){
+                const oy = win.getComputedStyle(el).overflowY;
+                if(oy === "auto" || oy === "scroll"){
+                    const room = el.scrollHeight - el.clientHeight;
+                    if(room > bestRoom || bestRoom < 20){ best = el; bestRoom = room; }
+                }
+            }
+        });
+        best.scrollBy({top: dir * Math.max(200, best.clientHeight * 0.8), behavior: "smooth"});
+    }catch(e){}
+}
+
 function advrClosePreview(){
     const m = document.getElementById("advrPreview");
     if(!m || !m.classList.contains("open")) return;
@@ -4495,6 +4524,48 @@ function advrOpenFull(){
     if(r) navigateToPage(r.p);
 }
 window.addEventListener("popstate", function(){ advrClosePreview(); });
+
+/* Floating lens icon: show only on dashboard home (hide inside opened pages / preview) */
+(function(){
+    let hiddenLens = [];
+    function fixedLensIn(doc, win, skipRoot){
+        const out = [];
+        doc.querySelectorAll("body *").forEach(el => {
+            if(skipRoot && skipRoot.contains(el)) return;
+            if(el.children.length > 1 || el.textContent.trim() !== "🔍") return;
+            let n = el;
+            while(n && n !== doc.body){
+                if(win.getComputedStyle(n).position === "fixed"){ out.push(n); break; }
+                n = n.parentElement;
+            }
+        });
+        return out;
+    }
+    setInterval(function(){
+        const pf = document.getElementById("pageFrame");
+        const pv = document.getElementById("advrPreview");
+        const pvf = document.getElementById("advrPreviewFrame");
+        const pageOpen = pf && pf.style.display === "block";
+        const prevOpen = pv && pv.classList.contains("open");
+        if(!pageOpen && !prevOpen){
+            hiddenLens.forEach(el => { el.style.removeProperty("display"); });
+            hiddenLens = [];
+            return;
+        }
+        try{
+            fixedLensIn(document, window, pv).forEach(el => {
+                if(!hiddenLens.includes(el)){ el.style.setProperty("display","none","important"); hiddenLens.push(el); }
+            });
+        }catch(e){}
+        [pageOpen ? pf : null, prevOpen ? pvf : null].forEach(fr => {
+            try{
+                if(!fr) return;
+                const d = fr.contentDocument, w = fr.contentWindow;
+                if(d && d.body) fixedLensIn(d, w, null).forEach(el => el.style.setProperty("display","none","important"));
+            }catch(e){}
+        });
+    }, 400);
+})();
 
 function advrSetCat(id){ advrCat = id; renderAdvReports(); }
 function advrSetQuery(q){ advrQuery = String(q || "").toLowerCase().trim(); renderAdvReports(); }
@@ -4539,10 +4610,11 @@ function renderAdvReports(){
 <div id="advrPreview" role="dialog" aria-modal="true">
     <div class="advr-pv-bar">
         <div class="advr-pv-title"><b id="advrPvTitle">Preview</b><small id="advrPvStatus"></small></div>
-        <button type="button" class="advr-pv-btn primary" onclick="advrOpenFull()">Open Full Page ↗</button>
+        <button type="button" class="advr-pv-btn" onclick="advrScroll(-1)" title="Scroll up">▲</button>
+        <button type="button" class="advr-pv-btn" onclick="advrScroll(1)" title="Scroll down">▼</button>
         <button type="button" class="advr-pv-btn" onclick="advrClosePreview()">✕</button>
     </div>
-    <iframe id="advrPreviewFrame" title="Report Preview" allow="clipboard-read; clipboard-write"></iframe>
+    <iframe id="advrPreviewFrame" title="Report Preview" scrolling="yes" allow="clipboard-read; clipboard-write"></iframe>
 </div>
 </body>
 </html>
