@@ -1074,7 +1074,7 @@ function normLine(x, warp) {
     let color = lowerX.color ?? lowerX.colour ?? lowerX.col ?? "";
     let name = lowerX.colourname ?? lowerX.colourName ?? lowerX.name ?? lowerX.shade ?? "";
     let hexCode = lowerX.hex ?? ""; 
-    let amount = warp ? (lowerX.ends ?? lowerX.end ?? lowerX.count ?? lowerX.qty ?? lowerX.orderends) : (lowerX.picks ?? lowerX.pick ?? lowerX.count ?? lowerX.qty ?? lowerX.orderpicks);
+    let amount = warp ? (lowerX.ends ?? lowerX.end ?? lowerX.amount ?? lowerX.qty ?? lowerX.orderends) : (lowerX.picks ?? lowerX.pick ?? lowerX.amount ?? lowerX.qty ?? lowerX.orderpicks);
     let rowSpan = lowerX.span ?? lowerX.setrows ?? lowerX.set_rows ?? lowerX.group ?? lowerX.row_span ?? 1;
     let repCount = lowerX.repeat ?? lowerX.setrep ?? lowerX.set_repeat ?? lowerX.multiplier ?? lowerX.rep_count ?? 1;
     let countVal = lowerX.count || lowerX.yarncount || lowerX.warpcount || lowerX.weftcount || "";
@@ -1140,19 +1140,22 @@ function sanitizeDesignObj(d) {
         }
         if(tempWeft.length > 0) d.weftLines = tempWeft;
     }
-    if (!Array.isArray(d.warpLines) || d.warpLines.length === 0) {
-        d.warpLines = [
-            { color: "#1e3a8a", ends: 27, colourName: "Navy", count: "21 ccc" },
-            { color: "#64748b", ends: 1, colourName: "D. Grey", count: "21 ccc" }
-        ];
-    }
-    if (!Array.isArray(d.weftLines) || d.weftLines.length === 0) {
-        d.weftLines = [
-            { color: "#1e3a8a", picks: 27, colourName: "Navy", count: "21 ccc" },
-            { color: "#64748b", picks: 1, colourName: "D. Grey", count: "21 ccc" }
-        ];
-    }
     return d;
+}
+
+function isDefaultYarnLines(lines) {
+    if (!Array.isArray(lines) || lines.length !== 2) return false;
+    let a = lines[0] || {}, b = lines[1] || {};
+    return String(a.colourName) === "Navy" && String(b.colourName) === "D. Grey" &&
+           (parseInt(a.ends ?? a.picks) === 27) && (parseInt(b.ends ?? b.picks) === 1);
+}
+
+function findEntryByDesign(parsed, cleanName) {
+    if (!parsed || typeof parsed !== "object") return null;
+    if (Array.isArray(parsed)) return parsed.find(w => w && cleanDesignName(designName(w)) === cleanName) || null;
+    let k = Object.keys(parsed).find(key => cleanDesignName(key) === cleanName);
+    if (k && parsed[k] && typeof parsed[k] === "object") return parsed[k];
+    return Object.values(parsed).find(w => w && typeof w === "object" && cleanDesignName(designName(w)) === cleanName) || null;
 }
 
 function mergeDesigns(items) {
@@ -1177,7 +1180,13 @@ function mergeDesigns(items) {
         } else {
             let existing = map.get(n);
             if (!rawEdits[n]) {
-                map.set(n, { ...d, ...existing });
+                let merged = { ...d, ...existing };
+                ["warpLines", "weftLines"].forEach(k => {
+                    let eOk = Array.isArray(existing[k]) && existing[k].length > 0 && !isDefaultYarnLines(existing[k]);
+                    let dOk = Array.isArray(d[k]) && d[k].length > 0;
+                    if (!eOk && dOk) merged[k] = d[k];
+                });
+                map.set(n, merged);
             }
         }
     });
@@ -1486,12 +1495,10 @@ function loadSelectedDesign(){
                     let data = window.StorageDB.getItem(key);
                     if(data) {
                         let parsed = JSON.parse(data);
-                        if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName);
-                            if(match && match.warpLines && match.warpLines.length > 0) { 
-                                rawWarp = clone(match.warpLines);
-                                break; 
-                            }
+                        let match = findEntryByDesign(parsed, cleanName);
+                        if(match && match.warpLines && match.warpLines.length > 0) { 
+                            rawWarp = clone(match.warpLines);
+                            break; 
                         }
                     }
                 } catch(e) {}
@@ -1505,12 +1512,10 @@ function loadSelectedDesign(){
                     let data = window.StorageDB.getItem(key);
                     if(data) {
                         let parsed = JSON.parse(data);
-                        if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName);
-                            if(match && match.weftLines && match.weftLines.length > 0) { 
-                                rawWeft = clone(match.weftLines);
-                                break; 
-                            }
+                        let match = findEntryByDesign(parsed, cleanName);
+                        if(match && match.weftLines && match.weftLines.length > 0) { 
+                            rawWeft = clone(match.weftLines);
+                            break; 
                         }
                     }
                 } catch(e) {}
