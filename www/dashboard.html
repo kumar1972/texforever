@@ -4601,17 +4601,26 @@ window.addEventListener("popstate", function(){ advrClosePreview(); });
         if(!pf) return;
         if(pf.style.display !== "block"){
             if(pf.style.height){ pf.style.removeProperty("height"); pf.removeAttribute("scrolling"); }
-            lastH = 0;
+            lastH = 0; pf._upd = 0; pf._bad = false; pf._href = "";
             return;
         }
         try{
             const d = pf.contentDocument, w = pf.contentWindow;
             if(!d || !d.body || d.readyState === "loading" || w.location.href === "about:blank") return;
+            if(pf._href !== w.location.href){ pf._href = w.location.href; pf._upd = 0; pf._bad = false; lastH = 0; pf.style.removeProperty("height"); pf.removeAttribute("scrolling"); }
             keepPopupInside(d, w);
-            pf.setAttribute("scrolling","no");
+            if(pf._bad) return;
             const need = Math.max(Math.ceil(contentBottom(d, w)) + 16, window.innerHeight - 20);
             if(Math.abs(need - lastH) > 24 && need < 30000){
+                /* pages whose layout depends on viewport height keep growing: stop after a few steps and go back to normal scrolling frame */
+                if((pf._upd = (pf._upd || 0) + 1) > 3){
+                    pf._bad = true;
+                    pf.style.removeProperty("height");
+                    pf.removeAttribute("scrolling");
+                    return;
+                }
                 lastH = need;
+                pf.setAttribute("scrolling","no");
                 pf.style.setProperty("height", need + "px", "important");
             }
         }catch(e){}
