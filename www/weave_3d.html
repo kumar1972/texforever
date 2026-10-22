@@ -2,7 +2,7 @@
 <html lang="ta">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <!-- Full Screen Web App Meta Tags -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -436,7 +436,7 @@ input, select {
 
 .fs-content { 
     position: absolute;
-    top: calc(82px + env(safe-area-inset-top, 0px));
+    top: 82px;
     bottom: 0;
     left: 0;
     right: 0;
@@ -448,21 +448,45 @@ input, select {
     touch-action: none; 
 }
 
-.fs-content canvas { width: 100%; height: 100%; display: block; }
+.fs-content canvas { width: 100%; height: 100%; display: block; max-width: 100%; max-height: 100%; }
 @media (max-width: 520px) {
-    .fs-header { height: 42px; padding: 0 4px; gap: 3px; }
-    .fs-title { font-size: .62rem; max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
-    .fs-header-actions { gap: 2px; min-width: 0; }
-    .fs-header-actions > div { padding: 2px !important; gap: 1px !important; }
-    .fs-header-actions span { font-size: .5rem !important; }
-    .fs-header-actions select { max-width: 42px; font-size: .6rem !important; }
-    .fs-header-actions button { padding: 4px 5px !important; font-size: .62rem !important; min-width: 26px; }
-    .effect-bar { height: 38px; padding: 3px 5px; gap: 4px; font-size: .58rem; }
-    .effect-group { min-width: 0; gap: 3px; }
+    .fs-header { min-height: 44px; height: auto; padding: 4px; gap: 4px; align-items: center; }
+    .fs-title { font-size: .68rem; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+    .fs-header-actions { gap: 3px; min-width: 0; flex: 1; justify-content: flex-end; }
+    .fs-header-actions > div { padding: 2px 3px !important; gap: 2px !important; }
+    .fs-header-actions span { font-size: .55rem !important; }
+    .fs-header-actions select { max-width: 48px; font-size: .62rem !important; }
+    .fs-header-actions button { padding: 5px 6px !important; font-size: .65rem !important; min-width: 28px; }
+    .effect-bar { min-height: 42px; height: auto; padding: 5px; gap: 7px; font-size: .62rem; }
+    .effect-group { min-width: 0; gap: 4px; }
     .effect-group span { white-space: nowrap; }
-    .effect-group input[type="range"] { min-width: 22px; }
-    .effect-group input[type="checkbox"] { width: 14px; height: 14px; flex: 0 0 14px; }
-    .fs-content { top: calc(80px + env(safe-area-inset-top, 0px)); }
+    .effect-group input[type="range"] { min-width: 24px; }
+    .effect-group input[type="checkbox"] { width: 15px; height: 15px; flex: 0 0 15px; }
+    .fs-content { top: 88px; }
+}
+/* Mobile browser-safe fullscreen controls: keep bars above the canvas and visible. */
+.fs-top-fixed-bar {
+    position: fixed !important;
+    top: env(safe-area-inset-top, 0px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1000000 !important;
+}
+.fs-modal { inset: 0; width: 100%; height: 100%; height: 100dvh; }
+.fs-content { z-index: 1; }
+.fs-top-fixed-bar, .fs-header, .effect-bar { box-sizing: border-box; }
+@media (max-width: 380px) {
+    .fs-title { max-width: 56px; font-size: .58rem; }
+    .fs-header-actions { gap: 2px; }
+    .fs-header-actions button { min-width: 24px; padding: 4px !important; }
+    .fs-header-actions > div { max-width: 82px; }
+    .effect-bar { gap: 4px; }
+    .effect-group { gap: 2px; }
+    .effect-group span { font-size: .55rem; }
 }
 .fs-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
 
@@ -678,8 +702,8 @@ input, select {
             <div class="effect-group">
                 <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
                 <span>🪶 Brush:</span>
-                <input type="range" id="brushIntensity" min="1" max="100" value="60" oninput="debounce3DRender()" title="Micro-Fibre Density (max 100%)">
-                <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">60%</span>
+                <input type="range" id="brushIntensity" min="1" max="200" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
+                <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">50%</span>
             </div>
         </div>
     </div>
@@ -808,7 +832,10 @@ let colourPopupTarget = { type: null, index: null };
 let liveDesignDimensions = { widthCm: 0, heightCm: 0 };
 let selectedCadScalePercent = 100;
 let simulationRepeatFactor = 1.25;
-window.addEventListener("resize", () => { if ($("fsModal")?.style.display === "block") { scale = 1; pointX = 0; pointY = 0; debounce3DRender(); } });
+// Keep the current zoom/pan when the mobile browser chrome or orientation changes.
+window.addEventListener("resize", () => {
+    if ($("fsModal")?.style.display === "block") scheduleWeaveResize();
+}, { passive: true });
 
 function changeSimulationRepeats(val) {
     simulationRepeatFactor = Math.max(1, Math.min(4, parseFloat(val) || 1.25));
@@ -2220,7 +2247,7 @@ function draw3DWeave(){
         if($("seerValDisplay")) $("seerValDisplay").textContent = rawSeer + "%";
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
+        const rawBrush = Math.max(1, Math.min(200, parseInt($("brushIntensity")?.value || 60, 10) || 60));
         if($("brushValDisplay")) $("brushValDisplay").textContent = rawBrush + "%";
 
         const warpPositions = []; let endIndex = 0; let dentIndex = 0;
@@ -2372,7 +2399,7 @@ function draw3DWeave(){
                 ctx.rect(scrX1, scrY1, scrW, scrH);
                 ctx.clip();
 
-                let intensity = rawBrush / 100;
+                let intensity = rawBrush / 200;
                 let fogAlpha = Math.min(0.28, intensity * 0.12);
                 ctx.globalAlpha = fogAlpha;
                 ctx.filter = `blur(${intensity * 1.2}px)`; 
