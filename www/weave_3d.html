@@ -249,6 +249,11 @@ input, select {
     grid-template-columns: 1fr 1fr;
     gap: 6px;
     margin-bottom: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 120;
+    padding: 4px 0;
+    background: var(--card, #14251e);
 }
 
 .yarn-tab {
@@ -1017,9 +1022,8 @@ function colorName(n) {
     if(/^#[0-9a-f]{3}$/i.test(s)) return "#" + s[1]+s[1] + s[2]+s[2] + s[3]+s[3];
 
     if (s.includes('t-04') || s.includes('t-60') || s.includes('white') || s.includes('salavai')) return "#ffffff";
-    if (s.includes('t-51') || s.includes('t-52') || s.includes('blue')) return "#1688d8";
-    if (s.includes('t-32') || s.includes('t-01') || s.includes('r. blue')) return "#1e3a8a";
-
+    // Match the complete original shade name first. Generic "blue" rules must
+    // not override distinct names such as D. Pink, Cad Blue, or R. Blue.
     if (typeof texforeverColourMaster !== 'undefined') {
         for (let group of texforeverColourMaster) {
             for (let shade of group.shades) {
@@ -1032,6 +1036,9 @@ function colorName(n) {
         }
     }
 
+    if (s.includes('t-51') || s.includes('t-52')) return "#1688d8";
+    if (s.includes('t-32') || s.includes('t-01') || s.includes('r. blue')) return "#1e3a8a";
+    if (s.includes('blue')) return "#1688d8";
     return "#3b82f6"; 
 }
 
@@ -1094,10 +1101,12 @@ function normLine(x, warp) {
         finalColor = hTrim.toLowerCase();
     } else if (/^#[0-9a-f]{3,6}$/i.test(cTrim)) {
         finalColor = cTrim.toLowerCase();
+    } else if (name) {
+        // Entry pages may store a display colour in `color` and the actual
+        // original shade in `colourName`; preserve the named shade in previews.
+        finalColor = colorName(name).toLowerCase();
     } else if (cTrim) {
         finalColor = colorName(cTrim).toLowerCase();
-    } else if (name) {
-        finalColor = colorName(name).toLowerCase();
     }
 
     return { 
@@ -1792,6 +1801,17 @@ async function saveCurrentDesign() {
         allCloudDesigns = mergeDesigns(cache); 
         
         window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+        // Keep the same design record in the shared local edit store and cache;
+        // other ERP pages can read the saved original colour names and hex values.
+        try {
+            const sharedCache = JSON.parse(window.StorageDB.getItem("weave_designs_cache") || "[]");
+            const savedRecord = sharedCache.find(x => cleanDesignName(designName(x)) === cleanName);
+            if (savedRecord) {
+                const edits = JSON.parse(window.StorageDB.getItem("local_edits_cache") || "{}");
+                edits[String(name).trim()] = clone(savedRecord);
+                window.StorageDB.setItem("local_edits_cache", JSON.stringify(edits));
+            }
+        } catch (persistErr) { console.warn("Shared design cache update skipped", persistErr); }
         activeDesignObj = clone(data); 
         window.StorageDB.setItem("weave_last_design_name", name);
         
