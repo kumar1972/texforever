@@ -631,7 +631,9 @@ input, select {
                 <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
                     <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">🔁 Rep:</span>
                     <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#203b30; color:#fff; border:0; padding:2px; font-size:0.65rem; border-radius:3px; width:auto; min-height:auto; height:22px;">
-                        <option value="1" selected>1x</option>
+                        <option value="1">1x</option>
+                        <option value="1.25" selected>1.25x</option>
+                        <option value="1.5">1.5x</option>
                         <option value="2">2x</option>
                         <option value="3">3x</option>
                         <option value="4">4x</option>
@@ -660,14 +662,15 @@ input, select {
             <div class="effect-group">
                 <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
                 <span>🪶 Brush:</span>
-                <input type="range" id="brushIntensity" min="1" max="200" value="60" oninput="debounce3DRender()" title="Micro-Fibre Density">
+                <input type="range" id="brushIntensity" min="1" max="100" value="60" oninput="debounce3DRender()" title="Micro-Fibre Density (max 100%)">
                 <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">60%</span>
             </div>
         </div>
     </div>
 
     <div id="fsContent" class="fs-content">
-        <canvas id="weaveCanvas"></canvas>
+        <canvas id="weaveCanvas" aria-label="GPU-rendered weave simulation"></canvas>
+        <canvas id="weaveCanvas2D" aria-hidden="true" style="display:none"></canvas>
         <div class="fs-hint">
             <span>👆 Drag Scroll</span> • <span>🤏 Pinch Zoom</span> • <span>📏 Ruler Active</span>
         </div>
@@ -789,9 +792,10 @@ let colourPopupTarget = { type: null, index: null };
 let liveDesignDimensions = { widthCm: 0, heightCm: 0 };
 let selectedCadScalePercent = 100;
 let simulationRepeatFactor = 1.25;
+window.addEventListener("resize", () => { if ($("fsModal")?.style.display === "block") { scale = 1; pointX = 0; pointY = 0; debounce3DRender(); } });
 
 function changeSimulationRepeats(val) {
-    simulationRepeatFactor = parseInt(val) || 1.25;
+    simulationRepeatFactor = Math.max(1, Math.min(4, parseFloat(val) || 1.25));
     debounce3DRender();
 }
 
@@ -1765,10 +1769,22 @@ async function saveCurrentDesign() {
         window.StorageDB.setItem("last_edit_timestamp", Date.now().toString());
         window._lastEditStamp = window.StorageDB.getItem("last_edit_timestamp");
 
-        let cache = Array.isArray(allCloudDesigns) ? allCloudDesigns.filter(x => String(designName(x)).trim() !== String(name).trim()) : []; 
+        // Preserve designs saved by other pages/apps: merge the persisted cache first,
+        // then the current in-memory list, and replace only this design's entry.
+        let persistedCache = [];
+        try {
+            const savedCache = JSON.parse(window.StorageDB.getItem("weave_designs_cache") || "[]");
+            if (Array.isArray(savedCache)) persistedCache = savedCache;
+        } catch(e) {}
+        const existingDesigns = [
+            ...persistedCache,
+            ...(Array.isArray(allCloudDesigns) ? allCloudDesigns : [])
+        ];
+        let cache = existingDesigns.filter(x =>
+            String(designName(x)).trim().toLowerCase() !== String(name).trim().toLowerCase()
+        );
         cache.push(clone(data));
-        allCloudDesigns = mergeDesigns(cache); 
-        
+        allCloudDesigns = mergeDesigns(cache);
         window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
         activeDesignObj = clone(data); 
         window.StorageDB.setItem("weave_last_design_name", name);
@@ -1863,7 +1879,8 @@ function removeRow(i) { if(weavePatterns.custom.length<=2) return; weavePatterns
 function removeLastRow() { removeRow(weavePatterns.custom.length-1); }
 function removeLastCol() { removeCol((weavePatterns.custom[0]?.length||1)-1); }
 
-/* ================= FAST CANVAS 3D RENDER ENGINE ================= */
+/* ================= OPTIMIZED CANVAS 3D RENDER ENGINE ================= */
+/* Canvas 2D is browser/GPU accelerated where supported; no external GPU library required. */
 let renderTimer = null;
 let scale = 1, pointX = 0, pointY = 0, panning = false, startX = 0, startY = 0, lastDist = 0;
 
@@ -1966,35 +1983,56 @@ function shadeFast(r, g, b, factor) {
     return `rgb(${Math.min(255, Math.max(0, Math.round(r * factor)))}, ${Math.min(255, Math.max(0, Math.round(g * factor)))}, ${Math.min(255, Math.max(0, Math.round(b * factor)))})`;
 }
 
+// Repeat an array by a fractional amount without rounding 1.25x up to 2x.
+function appendFractionalRepeats(target, source, factor) {
+    if (!Array.isArray(source) || source.length === 0) return target;
+    const whole = Math.floor(factor);
+    const fraction = factor - whole;
+    for (let i = 0; i < whole; i++) target.push(...source);
+    if (fraction > 0) target.push(...source.slice(0, Math.max(1, Math.ceil(source.length * fraction))));
+    return target;
+}
+
 let drawFramePending = false;
 function draw3DWeave(){
     if(drawFramePending) return;
     drawFramePending = true;
     requestAnimationFrame(()=>{
         drawFramePending = false;
-        const c = $("weaveCanvas"); 
+        const c = $("weaveCanvas2D");
+        const gpuCanvas = $("weaveCanvas");
         const host = $("fsContent");
         if(!c || !host) return;
         
         let rect = host.getBoundingClientRect();
         let cssW = Math.floor(rect.width) || window.innerWidth || 320; 
         let cssH = Math.floor(rect.height) || (window.innerHeight - 86) || 240;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
-        const vk = cssW < 980 ? 980 / cssW : 1;
-        window.__weaveVk = vk;
-        let W = cssW * vk; 
-        let H = cssH * vk;
-        const dprDraw = dpr / vk;
+        // Draw in CSS-pixel coordinates; DPR only scales the backing bitmap.
+        // This keeps the fabric centered and correctly sized on mobile screens.
+        const vk = 1;
+        window.__weaveVk = 1;
+        let W = cssW;
+        let H = cssH;
+        const dprDraw = dpr;
 
         if (c.width !== Math.floor(cssW * dpr) || c.height !== Math.floor(cssH * dpr)) {
-            c.width = Math.floor(cssW * dpr); 
+            c.width = Math.floor(cssW * dpr);
             c.height = Math.floor(cssH * dpr);
-            c.style.width = cssW + "px";
-            c.style.height = cssH + "px";
         }
-        
-        const ctx = c.getContext("2d"); 
+        c.style.width = cssW + "px";
+        c.style.height = cssH + "px";
+        if (gpuCanvas) {
+            if (gpuCanvas.width !== c.width || gpuCanvas.height !== c.height) {
+                gpuCanvas.width = c.width;
+                gpuCanvas.height = c.height;
+            }
+            gpuCanvas.style.width = cssW + "px";
+            gpuCanvas.style.height = cssH + "px";
+        }
+
+        const ctx = c.getContext("2d", { alpha: false, desynchronized: true }); 
         if(!ctx) return;
         
         ctx.imageSmoothingEnabled = false; 
@@ -2103,13 +2141,11 @@ function draw3DWeave(){
         let warp = []; let seerMap = []; let warpYarnInfos = [];
         let weft = []; let weftYarnInfos = [];
 
-        for (let rep = 0; rep < simulationRepeatFactor; rep++) {
-            warp.push(...baseWarp);
-            seerMap.push(...warpSeerMap);
-            warpYarnInfos.push(...baseWarpYarnInfo);
-            weft.push(...baseWeft);
-            weftYarnInfos.push(...baseWeftYarnInfo);
-        }
+        appendFractionalRepeats(warp, baseWarp, simulationRepeatFactor);
+        appendFractionalRepeats(seerMap, warpSeerMap, simulationRepeatFactor);
+        appendFractionalRepeats(warpYarnInfos, baseWarpYarnInfo, simulationRepeatFactor);
+        appendFractionalRepeats(weft, baseWeft, simulationRepeatFactor);
+        appendFractionalRepeats(weftYarnInfos, baseWeftYarnInfo, simulationRepeatFactor);
 
         const realWarpLength = warp.length; 
         const realWeftLength = weft.length;
@@ -2168,7 +2204,7 @@ function draw3DWeave(){
         if($("seerValDisplay")) $("seerValDisplay").textContent = rawSeer + "%";
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = parseInt($("brushIntensity")?.value || 60, 10);
+        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
         if($("brushValDisplay")) $("brushValDisplay").textContent = rawBrush + "%";
 
         const warpPositions = []; let endIndex = 0; let dentIndex = 0;
@@ -2281,16 +2317,18 @@ function draw3DWeave(){
                     ctx.fillStyle = shadeFast(weftColor.r, weftColor.g, weftColor.b, 1.25);
                     ctx.fillRect(curX, hlY, curW, hlH);
 
+                    // Correct edge shading. The previous edgeW reference here was
+                    // undefined, throwing a ReferenceError and aborting canvas drawing.
                     if(effectiveCellH >= 2.0) {
                         ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
                         const edgeH = Math.max(0.3, cellH * 0.12);
                         ctx.fillRect(curX, y, curW, edgeH);
-                        ctx.fillRect(curX + curW - edgeH, y, edgeW, cellH);
+                        ctx.fillRect(curX, y + cellH - edgeH, curW, edgeH);
                     }
                     if(effectiveCellW >= 2.0) {
                         ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
                         const edgeW = Math.max(0.3, curW * 0.12);
-                        ctx.fillRect(curX, y, curW, edgeW);
+                        ctx.fillRect(curX, y, edgeW, cellH);
                         ctx.fillRect(curX + curW - edgeW, y, edgeW, cellH);
                     }
                 }
@@ -2326,7 +2364,7 @@ function draw3DWeave(){
                 ctx.filter = 'none';
                 ctx.globalAlpha = 1.0;
 
-                let count = Math.floor(10000 * intensity); 
+                let count = Math.floor(2500 * intensity); 
                 for(let i = 0; i < count; i++){
                     let px = scrX1 + Math.random() * scrW;
                     let py = scrY1 + Math.random() * scrH;
@@ -2430,8 +2468,8 @@ function draw3DWeave(){
 
         ctx.restore();
 
-        const line1 = `Original Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
-        const line2 = `Original Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
+        const line1 = `1 Repeat: ${singleWarpVal} Ends | ${singleW_cm.toFixed(2)} cm`;
+        const line2 = `1 Repeat: ${singleWeftVal} Picks | ${singleH_cm.toFixed(2)} cm`;
 
         ctx.save();
         ctx.font = "bold 11px Arial, sans-serif";
@@ -2456,7 +2494,90 @@ function draw3DWeave(){
         ctx.fillText(line1, boxLeft + boxPadX, boxTop + boxPadY, Math.max(0, boxWidth - boxPadX * 2));
         ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 18, Math.max(0, boxWidth - boxPadX * 2));
         ctx.restore();
-    }); 
+
+        // WebGL GPU presentation layer. The established 2D yarn, ruler and brush
+        // rendering is preserved exactly, then uploaded as a texture for GPU display.
+        presentWeaveFrameWebGL(c, gpuCanvas);
+    });
+}
+
+/* ================= HYBRID WEBGL PRESENTATION ENGINE =================
+   Uses WebGL for GPU texture presentation, while retaining the existing 2D
+   weave/brush renderer for compatibility. Falls back to the 2D canvas if WebGL
+   is unavailable or its context cannot be created. */
+let weaveGLState = null;
+let weaveGLFailed = false;
+function initWeaveWebGL(canvas) {
+    if (!canvas || weaveGLFailed) return null;
+    if (weaveGLState && weaveGLState.canvas === canvas) return weaveGLState;
+    try {
+        const gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: "high-performance" }) ||
+                   canvas.getContext("experimental-webgl", { alpha: false, antialias: false, depth: false, stencil: false });
+        if (!gl) throw new Error("WebGL unavailable");
+        const vertexSource = "attribute vec2 a_position; attribute vec2 a_uv; varying vec2 v_uv; void main(){ gl_Position=vec4(a_position,0.0,1.0); v_uv=a_uv; }";
+        const fragmentSource = "precision mediump float; varying vec2 v_uv; uniform sampler2D u_frame; void main(){ gl_FragColor=texture2D(u_frame,v_uv); }";
+        function compile(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source); gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader) || "Shader compile failed");
+            return shader;
+        }
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) || "WebGL link failed");
+        const vertices = new Float32Array([
+            -1,-1, 0,1,  1,-1, 1,1,  -1,1, 0,0,
+            -1,1, 0,0,   1,-1, 1,1,   1,1, 1,0
+        ]);
+        const buffer = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buffer); gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+        const texture = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // Keep canvas text/rulers upright: UV coordinates already match the canvas origin.
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        weaveGLState = { canvas, gl, program, buffer, texture,
+            position: gl.getAttribLocation(program, "a_position"),
+            uv: gl.getAttribLocation(program, "a_uv"),
+            sampler: gl.getUniformLocation(program, "u_frame") };
+        return weaveGLState;
+    } catch (err) {
+        console.warn("WebGL presentation unavailable; using 2D canvas fallback.", err);
+        weaveGLFailed = true;
+        return null;
+    }
+}
+function presentWeaveFrameWebGL(sourceCanvas, outputCanvas) {
+    if (!sourceCanvas || !outputCanvas) return;
+    const state = initWeaveWebGL(outputCanvas);
+    if (!state) {
+        outputCanvas.style.display = "none";
+        sourceCanvas.style.display = "block";
+        return;
+    }
+    try {
+        const { gl, program, buffer, texture, position, uv, sampler } = state;
+        outputCanvas.style.display = "block";
+        sourceCanvas.style.display = "none";
+        gl.viewport(0, 0, outputCanvas.width, outputCanvas.height);
+        gl.clearColor(6/255, 12/255, 9/255, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 16, 0);
+        gl.enableVertexAttribArray(uv); gl.vertexAttribPointer(uv, 2, gl.FLOAT, false, 16, 8);
+        gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+        gl.uniform1i(sampler, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    } catch (err) {
+        console.warn("WebGL frame presentation failed; switching to 2D fallback.", err);
+        weaveGLFailed = true;
+        outputCanvas.style.display = "none";
+        sourceCanvas.style.display = "block";
+    }
 }
 
 /* ================= FULLSCREEN INTERACTIONS ================= */
@@ -2956,13 +3077,11 @@ async function executeRealA4Print(isPdfMode = false) {
         const warp = []; const seerMap = []; const warpYarnInfos = [];
         const weft = []; const weftYarnInfos = [];
 
-        for (let rep = 0; rep < simulationRepeatFactor; rep++) {
-            warp.push(...baseWarp);
-            seerMap.push(...warpSeerMap);
-            warpYarnInfos.push(...baseWarpYarnInfo);
-            weft.push(...baseWeft);
-            weftYarnInfos.push(...baseWeftYarnInfo);
-        }
+        appendFractionalRepeats(warp, baseWarp, simulationRepeatFactor);
+        appendFractionalRepeats(seerMap, warpSeerMap, simulationRepeatFactor);
+        appendFractionalRepeats(warpYarnInfos, baseWarpYarnInfo, simulationRepeatFactor);
+        appendFractionalRepeats(weft, baseWeft, simulationRepeatFactor);
+        appendFractionalRepeats(weftYarnInfos, baseWeftYarnInfo, simulationRepeatFactor);
 
         const realWarpLength = warp.length;
         const realWeftLength = weft.length;
@@ -3109,7 +3228,7 @@ async function executeRealA4Print(isPdfMode = false) {
         }
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = parseInt($("brushIntensity")?.value || 60, 10);
+        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
         if(isBrushActive && rawBrush > 0){
             try {
                 let snap = document.createElement('canvas');
@@ -3124,7 +3243,7 @@ async function executeRealA4Print(isPdfMode = false) {
                 pCtx.clip();
 
                 let intensity = rawBrush / 100;
-                let count = Math.floor(10000 * intensity);
+                let count = Math.floor(2500 * intensity);
                 for(let i = 0; i < count; i++){
                     let px = RULER_px + Math.random() * printW;
                     let py = Math.random() * printH;
