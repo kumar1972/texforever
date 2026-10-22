@@ -366,10 +366,12 @@ input, select {
     position: fixed; 
     inset: 0; 
     width: 100vw; 
-    height: 100vh; 
-    background: #060c09; 
-    z-index: 999999; 
-    flex-direction: column; 
+    height: 100vh;
+    height: 100dvh;
+    background: #060c09;
+    z-index: 999999;
+    flex-direction: column;
+    overflow: hidden;
 }
 .fs-header { 
     height: 48px; 
@@ -382,6 +384,11 @@ input, select {
     border-bottom: 1px solid #345947; 
     flex-wrap: nowrap;
     gap: 4px;
+    flex: 0 0 48px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 30;
+    width: 100%;
 }
 .fs-title { color: #9be4a8; font-size: .75rem; font-weight: 900; white-space: nowrap; }
 .fs-header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
@@ -403,6 +410,11 @@ input, select {
     font-weight: 900;
     color: #edf7ef;
     min-height: 34px;
+    height: auto;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 30;
 }
 .effect-group {
     display: flex;
@@ -429,7 +441,9 @@ input, select {
 .fs-content { 
     flex: 1; 
     width: 100vw; 
-    height: calc(100vh - 48px - 34px); 
+    height: auto;
+    min-height: 0;
+    flex: 1 1 auto;
     display: flex; 
     align-items: center; 
     justify-content: center; 
