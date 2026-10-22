@@ -451,7 +451,7 @@ input, select {
 .fs-content { 
     flex: 1; 
     width: 100vw; 
-    height: calc(100% - 48px - 34px); 
+    height: calc(100% - 48px - 42px); 
     display: flex; 
     align-items: center; 
     justify-content: center; 
@@ -663,6 +663,7 @@ input, select {
         </div>
     </div>
 
+    <!-- EFFECT BAR (Puff & Brush Controls RESTORED) -->
     <div class="effect-bar">
         <div class="effect-group">
             <input type="checkbox" id="fsSeerCheck" onchange="syncEffects('seer')">
@@ -1930,7 +1931,7 @@ function debounce3DRender() {
     clearTimeout(renderTimer);
     renderTimer = setTimeout(() => {
         draw3DWeave();
-    }, 100);
+    }, 15);
 }
 
 function autoRefresh3D() { 
@@ -2526,7 +2527,7 @@ function openFullscreen() {
     scale = 1; pointX = 0; pointY = 0; panning = false; 
     drawFramePending = false;
     updateRulerCalDisplay();
-    setTimeout(() => { draw3DWeave(); }, 50); 
+    setTimeout(() => { draw3DWeave(); }, 20); 
 }
 
 function refreshFullscreen3D() { scale = 1; pointX = 0; pointY = 0; drawFramePending = false; draw3DWeave(); }
