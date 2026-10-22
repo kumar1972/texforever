@@ -2,7 +2,7 @@
 <html lang="ta">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- Full Screen Web App Meta Tags -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -39,7 +39,7 @@ function $(id) {
 }
 </script>
 <style>
-  /* Print control bar container - Single line alignment */
+/* Print control bar container */
 .print-controls-bar {
     display: flex;
     align-items: center;
@@ -78,14 +78,12 @@ function $(id) {
     border-color: #dc2626;
 }
 
-/* Hide controls bar completely during printing */
 @media print {
     .print-controls-bar, .print-hide {
         display: none !important;
     }
 }
 
-/* ================= GLOBAL STYLES ================= */
 :root {
     --bg: #0d1713;
     --card: #14251e;
@@ -357,37 +355,46 @@ input, select {
 .main-actions { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 6px; }
 .main-actions button { width: 100%; }
 
-/* FULLSCREEN SIMULATION - FULL SCREEN / IMMERSIVE VIEW */
+/* ================= FULLSCREEN 3D SIMULATION FIX ================= */
 .fs-modal { 
     display: none; 
     position: fixed; 
-    inset: 0; 
-    width: 100%; 
-    height: 100%; 
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw; 
+    height: 100vh;
+    height: 100dvh; 
     background: #060c09; 
     z-index: 999999; 
     flex-direction: column; 
-    padding-top: env(safe-area-inset-top); /* மொபைல் நாட்ச் / ஸ்டேட்டஸ் பாருக்கு கீழே காட்ட */
+    overflow: hidden;
+}
+
+.fs-top-bars-wrap {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000000;
+    background: #14251e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
 
 .fs-header { 
-    height: 48px; 
-    min-height: 48px; 
-    padding: 4px 8px; 
+    height: 44px; 
+    min-height: 44px; 
+    padding: 0 8px; 
     display: flex; 
     align-items: center; 
     justify-content: space-between; 
     background: #14251e; 
-    border-bottom: 1px solid #345947; 
+    border-bottom: 1px solid #233e31; 
     flex-wrap: nowrap;
     gap: 4px;
-    flex: 0 0 48px;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 30;
     width: 100%;
 }
-
 .fs-title { color: #9be4a8; font-size: .75rem; font-weight: 900; white-space: nowrap; }
 .fs-header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
 .fs-header button { border: 0; border-radius: 6px; padding: 4px 8px; color: #fff; font-weight: 800; font-size: .65rem; cursor: pointer; white-space: nowrap; }
@@ -395,45 +402,28 @@ input, select {
 /* EFFECT BAR INTEGRATED */
 .effect-bar {
     width: 100%;
-    max-width: 100vw;
-    min-width: 0;
     background: #0f241a;
     border-bottom: 1px solid #3e6d53;
-    padding: 6px 8px;
+    padding: 4px 8px;
     display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.8);
     font-size: 0.65rem;
     font-weight: 900;
     color: #edf7ef;
-    min-height: 42px;
-    height: auto;
-    flex: 0 0 auto;
+    min-height: 38px;
     box-sizing: border-box;
-    position: relative;
-    z-index: 9999999;
 }
+
 .effect-group {
     display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
     align-items: center;
     gap: 4px;
     flex: 1 1 0;
     min-width: 0;
 }
-@media (max-width: 480px) {
-    .fs-modal { height: 100dvh; height: -webkit-fill-available; }
-    .effect-bar { padding: 6px 5px; gap: 5px; min-height: 46px; }
-    .effect-group { gap: 3px; font-size: .62rem; }
-    .effect-group span { white-space: nowrap; }
-    .effect-group input[type="checkbox"] { width: 16px; height: 16px; }
-    .effect-group input[type="range"] { min-width: 24px; width: 100%; }
-}
+
 .effect-group input[type="range"] {
     flex: 1;
     height: 4px;
@@ -443,27 +433,30 @@ input, select {
     border-radius: 4px;
 }
 .effect-group input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     accent-color: #22c55e;
     cursor: pointer;
     flex-shrink: 0;
 }
 
 .fs-content { 
-    flex: 1; 
-    width: 100vw; 
-    height: calc(100% - 48px - 42px); 
+    position: absolute;
+    top: 82px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     display: flex; 
     align-items: center; 
     justify-content: center; 
     overflow: hidden; 
     background: #060c09; 
     touch-action: none; 
-    position: relative; 
 }
+
 .fs-content canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-.fs-hint { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
+.fs-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
 
 /* CAD PRINT MODAL */
 .cad-print-modal {
@@ -487,7 +480,7 @@ input, select {
     color: #edf7ef;
 }
 
-/* PRINT DESIGN MODAL RE-STYLING */
+/* PRINT DESIGN MODAL */
 .print-modal { display: none; position: fixed; inset: 0; background: #e5e7eb; z-index: 1000000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
 .print-sheet { background: #fff; color: #111827; width: 100%; max-width: 860px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: none; overflow: hidden; margin: auto; }
 .print-sheet-inner { padding: 20px; background: #fff; }
@@ -639,45 +632,47 @@ input, select {
 
 <!-- FULLSCREEN 3D SIMULATION -->
 <div id="fsModal" class="fs-modal">
-    <div class="fs-header">
-        <div class="fs-title">🧊 3D Weave Pro</div>
-        <div class="fs-header-actions">
-            <!-- No. of Repeat Menu Tab Added Here -->
-            <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
-                <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">🔁 Rep:</span>
-                <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#203b30; color:#fff; border:0; padding:2px; font-size:0.65rem; border-radius:3px; width:auto; min-height:auto; height:22px;">
-                    <option value="1">1x</option>
-                    <option value="2" selected>2x</option>
-                    <option value="3">3x</option>
-                    <option value="4">4x</option>
-                </select>
-            </div>
+    <!-- WRAPPER TO GUARANTEE TOP VISIBILITY ON ALL MOBILE SCREENS -->
+    <div class="fs-top-bars-wrap">
+        <div class="fs-header">
+            <div class="fs-title">🧊 3D Weave Pro</div>
+            <div class="fs-header-actions">
+                <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
+                    <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">🔁 Rep:</span>
+                    <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#203b30; color:#fff; border:0; padding:2px; font-size:0.65rem; border-radius:3px; width:auto; min-height:auto; height:22px;">
+                        <option value="1">1x</option>
+                        <option value="2" selected>2x</option>
+                        <option value="3">3x</option>
+                        <option value="4">4x</option>
+                    </select>
+                </div>
 
-            <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
-                <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">📏:</span>
-                <button style="background:#203b30; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(-0.05)" title="Scale Down">-</button>
-                <span id="rulerCalDisplay" style="font-size:0.6rem; color:#f59e0b; min-width:22px; text-align:center;">100%</span>
-                <button style="background:#203b30; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(0.05)" title="Scale Up">+</button>
+                <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
+                    <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">📏:</span>
+                    <button style="background:#203b30; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(-0.05)" title="Scale Down">-</button>
+                    <span id="rulerCalDisplay" style="font-size:0.6rem; color:#f59e0b; min-width:22px; text-align:center;">100%</span>
+                    <button style="background:#203b30; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(0.05)" title="Scale Up">+</button>
+                </div>
+                <button style="background:#244638;border:1px solid #39614f;" onclick="refreshFullscreen3D()">↺</button>
+                <button style="background:#217eaf;font-size:0.7rem;padding:4px 8px;" onclick="openCadPrintModal()">🖨️ CAD</button>
+                <button style="background:#ef4444;font-size:0.7rem;padding:4px 8px;" onclick="closeFullscreen()">✖</button>
             </div>
-            <button style="background:#244638;border:1px solid #39614f;" onclick="refreshFullscreen3D()">↺</button>
-            <button style="background:#217eaf;font-size:0.7rem;padding:4px 8px;" onclick="openCadPrintModal()">🖨️ CAD</button>
-            <button style="background:#ef4444;font-size:0.7rem;padding:4px 8px;" onclick="closeFullscreen()">✖</button>
         </div>
-    </div>
 
-    <!-- EFFECT BAR (Puff & Brush Controls RESTORED) -->
-    <div class="effect-bar">
-        <div class="effect-group">
-            <input type="checkbox" id="fsSeerCheck" onchange="syncEffects('seer')">
-            <span>🌊 Puff:</span>
-            <input type="range" id="seerIntensity" min="5" max="100" value="50" oninput="debounce3DRender()" title="Seersucker 3D Wave Depth">
-            <span id="seerValDisplay" style="color:#f59e0b; min-width:24px;">75%</span>
-        </div>
-        <div class="effect-group">
-            <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
-            <span>🪶 Brush:</span>
-            <input type="range" id="brushIntensity" min="1" max="200" value="100" oninput="debounce3DRender()" title="Micro-Fibre Density">
-            <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">100%</span>
+        <!-- EFFECT BAR (Puff & Brush Controls) -->
+        <div class="effect-bar">
+            <div class="effect-group">
+                <input type="checkbox" id="fsSeerCheck" onchange="syncEffects('seer')">
+                <span>🌊 Puff:</span>
+                <input type="range" id="seerIntensity" min="5" max="100" value="50" oninput="debounce3DRender()" title="Seersucker 3D Wave Depth">
+                <span id="seerValDisplay" style="color:#f59e0b; min-width:24px;">50%</span>
+            </div>
+            <div class="effect-group">
+                <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
+                <span>🪶 Brush:</span>
+                <input type="range" id="brushIntensity" min="1" max="200" value="60" oninput="debounce3DRender()" title="Micro-Fibre Density">
+                <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">60%</span>
+            </div>
         </div>
     </div>
 
@@ -727,13 +722,9 @@ input, select {
 <div id="printModalBox" class="print-modal">
     <div class="print-sheet">
         <div class="print-sheet-inner">
-            
-            <!-- Controls Bar (Single line, hidden during print) -->
             <div class="print-controls-bar">
                 <div style="font-size:11px; font-weight:900; color:#1e293b;">🖨️ Professional Design Sheet</div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    
-                    <!-- Page Orientation Dropdown with Label -->
                     <div style="display:flex; align-items:center; gap:4px;">
                         <span style="font-size:10px; font-weight:800; color:#64748b;">📄 Page:</span>
                         <select id="printOrientation" onchange="updatePrintOrientation()">
@@ -741,8 +732,6 @@ input, select {
                             <option value="landscape">A4 Landscape</option>
                         </select>
                     </div>
-                    
-                    <!-- Graph Scale Dropdown with Label -->
                     <div style="display:flex; align-items:center; gap:4px;">
                         <span style="font-size:10px; font-weight:800; color:#64748b;">📊 Graph:</span>
                         <select id="printGraphScale" onchange="applyPrintGraphScale()">
@@ -751,15 +740,11 @@ input, select {
                             <option value="large">Large</option>
                         </select>
                     </div>
-                    
                     <button class="btn-print-action" onclick="triggerRealPrint()">🖨️ PRINT</button>
                     <button class="btn-close-action" onclick="closeGraphPrintPreview()">✕ CLOSE</button>
                 </div>
             </div>
-
-            <!-- Dynamic Design Sheet Content -->
             <div id="printDesignContent"></div>
-            
         </div>
     </div>
 </div>
@@ -866,11 +851,12 @@ let weavePatterns = {
 const COLOR_TRANSLATIONS = {
     'green': 'பச்சை', 'p. green': 'கிளி பச்சை', 'bottle green': 'பாட்டில் கிரீன்', 'd. green': 'டார்க் கிரீன்', 'l. green': 'லைட் கிரீன்',
     'gold': 'கோல்டு', 'l. olive': 'L. ஆலிவ்', 'd. olive': 'D. ஆலிவ்', 'grey': 'கிரே', 'gray': 'கிரே',
+    'l. grey': 'L. கிரே', 'd. grey': 'D. கிரே', 'l. gray': 'L. கிரே', 'd. gray': 'D. கிரே',
     't.salavai': 'T. சலவை', 't. salavai': 'T. சலவை', 't. white': 'T. சலவை', '1/2 salavai': '1/2 சலவை',
     '1/2 white': '1/2 சலவை', 'white': 'வெள்ளை', 'black': 'கருப்பு', 'blue': 'ப்ளூ', 'yellow': 'மஞ்சள்',
     'red': 'ரெட்', 'brown': 'பிரவுன்', 'khaki': 'காக்கி',
     'l. khaki': 'L. காக்கி', 'd. khaki': 'D. காக்கி', 'rose': 'ரோஸ்', 'orange': 'ஆரஞ்சு', 'violet': 'வைலட்',
-    'pink': 'பிங்க்', 'navy': 'நேவி', 'l. navy': 'L. நேவி', 'd. navy': 'D. நேவி', 'maroon': 'மெரூன்',
+    'pink': 'பிங்க்', 'l. pink': 'L. பிங்க்', 'd. pink': 'D. பிங்க்', 'navy': 'நேவி', 'l. navy': 'L. நேவி', 'd. navy': 'D. நேவி', 'maroon': 'மெரூன்',
     'olive': 'ஆலிவ்', 'l. blue': 'L. ப்ளூ', 'r. blue': 'R. ப்ளூ', 'turq': 'டர்க்', 'purple': 'பர்புள்',
     'cream': 'கிரீம்', 'beige': 'பேஜ்', 'biscuit': 'பிஸ்கட்', 'majenda': 'மெஜந்தா', 'silver': 'சில்வர்',
     'peach': 'பீச்', 'sky blue': 'வான ப்ளூ', 'onion': 'ஆனியன்', 'mint': 'மின்ட்', 'teal': 'டீல்', 
@@ -964,7 +950,7 @@ function designName(d) { return String(d?.designNo ?? d?.design_no ?? d?.designN
 function setStatus(x) { const el = $("designStatus"); if(el) el.textContent = x; }
 function escapeColourText(value) { return String(value||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
-/* ================= COMPREHENSIVE 60 TONE ADVANCED COLOUR MASTER ================= */
+/* ================= 60 TONE ADVANCED COLOUR MASTER ================= */
 const MASTER_COLOR_SPECS = [
     { name: "Green", h: 125, sMin: 65, sMax: 96, lMin: 18, lMax: 82 },
     { name: "P. Green", h: 95, sMin: 70, sMax: 98, lMin: 25, lMax: 84 },
@@ -1040,6 +1026,7 @@ const texforeverColourMaster = MASTER_COLOR_SPECS.map((spec, cIdx) => {
     return { name: spec.name, shades: shades };
 });
 
+// Accurate colorName matching with proper prioritized fallbacks
 function colorName(n) {
     if(!n) return "#ffffff";
     let s = String(n).toLowerCase().trim();
@@ -1048,29 +1035,40 @@ function colorName(n) {
 
     if (s.includes('t-04') || s.includes('t-60') || s.includes('white') || s.includes('salavai')) return "#ffffff";
     
+    // Look up in color master first
     if (typeof texforeverColourMaster !== 'undefined') {
         for (let group of texforeverColourMaster) {
             for (let shade of group.shades) {
                 let sName = shade.name.toLowerCase();
                 let sTag = (shade.shadeTag || "").toLowerCase();
-                if ((sTag && s.includes(sTag)) || sName.includes(s) || s.includes(sName)) {
+                if ((sTag && s === sTag) || sName === s) {
                     return shade.hex;
                 }
             }
         }
     }
 
-    if (s.includes('pink')) return "#ec4899";
-    if (s.includes('maroon')) return "#7f1d1d";
-    if (s.includes('red')) return "#ef4444";
-    if (s.includes('green')) return "#22c55e";
-    if (s.includes('yellow')) return "#eab308";
-    if (s.includes('orange')) return "#f97316";
-    if (s.includes('purple')) return "#a855f7";
-    if (s.includes('navy')) return "#1e3a8a";
-    if (s.includes('t-51') || s.includes('t-52')) return "#1688d8";
-    if (s.includes('t-32') || s.includes('t-01') || s.includes('r. blue')) return "#1e3a8a";
-    if (s.includes('blue')) return "#1688d8";
+    // Precise dictionary fallbacks
+    if (s.includes('d. pink') || s.includes('dark pink')) return "#be185d";
+    if (s.includes('l. pink') || s.includes('light pink')) return "#f472b6";
+    if (s.includes('pink') || s.includes('பிங்க்')) return "#db2777";
+    if (s.includes('d. grey') || s.includes('dark grey') || s.includes('d. gray')) return "#4b5563";
+    if (s.includes('l. grey') || s.includes('light grey') || s.includes('l. gray')) return "#9ca3af";
+    if (s.includes('grey') || s.includes('gray') || s.includes('கிரே')) return "#6b7280";
+    if (s.includes('maroon') || s.includes('மெரூன்')) return "#581c1c";
+    if (s.includes('purple') || s.includes('பர்புள்')) return "#581c87";
+    if (s.includes('d. navy') || s.includes('navy') || s.includes('நேவி')) return "#0f172a";
+    if (s.includes('r. blue') || s.includes('royal blue')) return "#1d4ed8";
+    if (s.includes('sky blue')) return "#38bdf8";
+    if (s.includes('l. blue')) return "#60a5fa";
+    if (s.includes('blue') || s.includes('ப்ளூ')) return "#2563eb";
+    if (s.includes('bottle green') || s.includes('d. green')) return "#14532d";
+    if (s.includes('p. green')) return "#84cc16";
+    if (s.includes('green') || s.includes('பச்சை')) return "#16a34a";
+    if (s.includes('yellow') || s.includes('மஞ்சள்')) return "#eab308";
+    if (s.includes('orange') || s.includes('ஆரஞ்சு')) return "#ea580c";
+    if (s.includes('red') || s.includes('ரெட்')) return "#dc2626";
+    if (s.includes('black') || s.includes('கருப்பு')) return "#111827";
 
     return "#3b82f6"; 
 }
@@ -1181,18 +1179,6 @@ function sanitizeDesignObj(d) {
         }
         if(tempWeft.length > 0) d.weftLines = tempWeft;
     }
-    if (!Array.isArray(d.warpLines) || d.warpLines.length === 0) {
-        d.warpLines = [
-            { color: "#1e3a8a", ends: 27, colourName: "Navy", count: "21 ccc" },
-            { color: "#64748b", ends: 1, colourName: "D. Grey", count: "21 ccc" }
-        ];
-    }
-    if (!Array.isArray(d.weftLines) || d.weftLines.length === 0) {
-        d.weftLines = [
-            { color: "#1e3a8a", picks: 27, colourName: "Navy", count: "21 ccc" },
-            { color: "#64748b", picks: 1, colourName: "D. Grey", count: "21 ccc" }
-        ];
-    }
     return d;
 }
 
@@ -1237,8 +1223,6 @@ function deepFindPickLines(o, depth) {
 }
 
 function scanStorageForWeft(cleanName) {
-    let stores = [];
-    try { stores.push(localStorage); } catch(e) {}
     let keys = [];
     try {
         let db = window.StorageDB;
@@ -1253,7 +1237,7 @@ function scanStorageForWeft(cleanName) {
         let raw = null;
         try { raw = window.StorageDB.getItem(key); } catch(e) {}
         if (!raw) { try { raw = localStorage.getItem(key); } catch(e) {} }
-        if (!raw || raw.charAt(0) !== "[" && raw.charAt(0) !== "{") continue;
+        if (!raw || (raw.charAt(0) !== "[" && raw.charAt(0) !== "{")) continue;
         let parsed; try { parsed = JSON.parse(raw); } catch(e) { continue; }
         let rec = findEntryByDesign(parsed, cleanName);
         if (rec) { let r = deepFindPickLines(rec); if (r) return r; }
@@ -1399,40 +1383,7 @@ function getWarpTotalEnds() {
         let e = $("wE" + i);
         if(e) dynamicTotal += Math.max(0, parseInt(e.value) || 0);
     }
-    if(dynamicTotal > 0) return dynamicTotal;
-
-    if (activeDesignObj && Array.isArray(activeDesignObj.warpLines) && activeDesignObj.warpLines.length > 0) {
-        let total = 0;
-        let wRanges = activeDesignObj.warpRanges || [];
-        let i = 0;
-        while(i < activeDesignObj.warpLines.length) {
-            let lineNum = i + 1;
-            let range = wRanges.find(r => r.start == lineNum);
-            let lineObj = activeDesignObj.warpLines[i] || {};
-            let lowerLine = {};
-            for(let k in lineObj) lowerLine[k.toLowerCase()] = lineObj[k];
-            
-            if (range && range.end >= range.start && range.set > 1) {
-                let setSum = 0;
-                for(let j = range.start - 1; j < range.end && j < activeDesignObj.warpLines.length; j++) {
-                    let rLine = activeDesignObj.warpLines[j] || {};
-                    let lowerRLine = {};
-                    for(let k in rLine) lowerRLine[k.toLowerCase()] = rLine[k];
-                    setSum += parseInt(lowerRLine.ends || lowerRLine.amount || lowerRLine.end || lowerRLine.qty || 0) || 0;
-                }
-                total += (setSum * range.set);
-                i = range.end;
-            } else {
-                let l = activeDesignObj.warpLines[i] || {};
-                let lowerL = {};
-                for(let k in l) lowerL[k.toLowerCase()] = l[k];
-                total += parseInt(lowerL.ends || lowerL.amount || lowerL.end || lowerL.qty || 0) || 0;
-                i++;
-            }
-        }
-        if (total > 0) return total;
-    }
-    return 0;
+    return dynamicTotal;
 }
 
 function updateYarnSummary(type) {
@@ -1531,8 +1482,8 @@ async function importFromFirebase(manual = false) {
                 let cloudData = [];
                 const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
                 const [resM, resW] = await Promise.all([
-                    withTimeout(Promise.resolve(supabaseClient.from("design_masters_data").select("*")), 8000),
-                    withTimeout(Promise.resolve(supabaseClient.from("weave_designs").select("*")), 8000)
+                    withTimeout(Promise.resolve(supabaseClient.from("design_masters_data").select("*")), 4000),
+                    withTimeout(Promise.resolve(supabaseClient.from("weave_designs").select("*")), 4000)
                 ]);
                 if (resM && !resM.error && Array.isArray(resM.data)) cloudData.push(...resM.data);
                 if (resW && !resW.error && Array.isArray(resW.data)) cloudData.push(...resW.data);
@@ -1816,7 +1767,6 @@ async function saveCurrentDesign() {
         data.designNo = name; 
         data.name = name; 
         data.timestamp = new Date().toISOString();
-        let cleanName = cleanDesignName(name);
 
         try {
             let edits = JSON.parse(window.StorageDB.getItem("weave_3d_local_edits") || "{}");
@@ -2040,8 +1990,8 @@ function draw3DWeave(){
         
         let rect = host.getBoundingClientRect();
         let cssW = Math.floor(rect.width) || window.innerWidth || 320; 
-        let cssH = Math.floor(rect.height) || (window.innerHeight - 120) || 240;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        let cssH = Math.floor(rect.height) || (window.innerHeight - 82) || 240;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
 
         const vk = cssW < 980 ? 980 / cssW : 1;
         window.__weaveVk = vk;
@@ -2070,7 +2020,7 @@ function draw3DWeave(){
             
             const n = Math.max(0, parseInt(e.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase(); 
-            let hexVal = (co.value || "").toLowerCase();
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
             if(!hexVal || hexVal === "#000000" || hexVal === "null") {
                 hexVal = colorName(origStr);
             }
@@ -2086,7 +2036,7 @@ function draw3DWeave(){
                     const rCo = $("wC"+currIdx); const rE = $("wE"+currIdx);
                     if(rCo && rE){
                         const rN = Math.max(0, parseInt(rE.value) || 0); 
-                        let rHex = (rCo.value || "").toLowerCase();
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
                         const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
                         if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
                         const rColor = hexToRgb(rHex);
@@ -2122,7 +2072,7 @@ function draw3DWeave(){
             const n = Math.max(0, parseInt(p.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
             const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase();
-            let hexVal = (co.value || "").toLowerCase();
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
             if(!hexVal || hexVal === "#000000") hexVal = colorName(origStr);
             const yInfo = parseYarnInfo(cntStr, "", hexVal);
             const rgbColor = hexToRgb(hexVal);
@@ -2134,7 +2084,7 @@ function draw3DWeave(){
                     const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
                     if(rCo && rP){
                         const rN = Math.max(0, parseInt(rP.value) || 0);
-                        let rHex = (rCo.value || "").toLowerCase();
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
                         const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
                         if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
                         const rColor = hexToRgb(rHex);
@@ -2226,7 +2176,7 @@ function draw3DWeave(){
         const cellH = drawH / Math.max(1, realWeftLength);
         
         const isSeerActive = $("fsSeerCheck")?.checked ?? false;
-        const rawSeer = parseInt($("seerIntensity")?.value || 75, 10);
+        const rawSeer = parseInt($("seerIntensity")?.value || 50, 10);
         if($("seerValDisplay")) $("seerValDisplay").textContent = rawSeer + "%";
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
@@ -2361,65 +2311,6 @@ function draw3DWeave(){
         
         ctx.restore();
 
-        if(isBrushActive && rawBrush > 0){
-            try {
-                let snap = document.createElement('canvas');
-                snap.width = c.width; snap.height = c.height;
-                let sCtx = snap.getContext('2d');
-                sCtx.drawImage(c, 0, 0);
-                let imgData = sCtx.getImageData(0, 0, snap.width, snap.height);
-
-                const scrX1 = (viewCenterX + pointX + left * scale) * dprDraw;
-                const scrY1 = (viewCenterY + pointY + top * scale) * dprDraw;
-                const scrW = drawW * scale * dprDraw;
-                const scrH = drawH * scale * dprDraw;
-
-                ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.beginPath();
-                ctx.rect(scrX1, scrY1, scrW, scrH);
-                ctx.clip();
-
-                let intensity = rawBrush / 100;
-                let fogAlpha = Math.min(0.28, intensity * 0.12);
-                ctx.globalAlpha = fogAlpha;
-                ctx.filter = `blur(${intensity * 1.2}px)`; 
-                ctx.drawImage(snap, 0, 0);
-                ctx.filter = 'none';
-                ctx.globalAlpha = 1.0;
-
-                let count = Math.floor(45000 * intensity); 
-                for(let i = 0; i < count; i++){
-                    let px = scrX1 + Math.random() * scrW;
-                    let py = scrY1 + Math.random() * scrH;
-                    let ix = Math.floor(px); let iy = Math.floor(py);
-                    if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
-                    
-                    let idx = (iy * snap.width + ix) * 4;
-                    if(imgData.data[idx + 3] < 10) continue; 
-                    
-                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
-                    let brightness = (Math.random() - 0.2) * 35; 
-                    let fR = Math.min(255, Math.max(0, r + brightness));
-                    let fG = Math.min(255, Math.max(0, g + brightness));
-                    let fB = Math.min(255, Math.max(0, b + brightness));
-
-                    ctx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
-                    ctx.lineWidth = (Math.random() * 0.7 + 0.3) * dpr;
-
-                    let angle = Math.random() * Math.PI * 2;
-                    let len = (Math.random() * 3.5 * intensity + 2) * dpr;
-                    let curve = (Math.random() - 0.5) * 1.2 * dpr;
-
-                    ctx.beginPath();
-                    ctx.moveTo(px, py);
-                    ctx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
-                    ctx.stroke();
-                }
-                ctx.restore();
-            } catch(e) {}
-        }
-
         const rulerBgColor = "#ffffff";
         const rulerBorderColor = "#475569";
 
@@ -2521,7 +2412,7 @@ function draw3DWeave(){
     }); 
 }
 
-/* ================= ALL-OVER FULL SCREEN SCROLLING & PINCH ENGINE ================= */
+/* ================= FULLSCREEN INTERACTIONS ================= */
 function openFullscreen() { 
     const modal = $("fsModal"); if(!modal) return; 
     modal.style.display="flex"; 
@@ -2629,7 +2520,7 @@ window.addEventListener("focus", () => {
     }
 });
 
-/* ================= SMART COLOR STUDIO LOGIC (60 TONES) ================= */
+/* ================= SMART COLOR STUDIO LOGIC ================= */
 function setToneFilter(tone, btn) {
     currentToneFilter = tone;
     document.querySelectorAll('.tone-chip').forEach(el => el.classList.remove('active'));
@@ -2749,17 +2640,7 @@ function closeColourPopup() {
 }
 
 function pantoneOptionsHTML() {
-    if (window._pantoneOptionsCache) return window._pantoneOptionsCache;
-    let h = '<option value="">— Pantone தேர்வு —</option>';
-    texforeverColourMaster.forEach(cat => {
-        h += `<optgroup label="${escapeColourText(cat.name)}">`;
-        cat.shades.forEach(s => {
-            h += `<option value="${String(s.hex).toLowerCase()}">${escapeColourText(s.name)}${s.shadeTag ? " " + escapeColourText(s.shadeTag) : ""}</option>`;
-        });
-        h += `</optgroup>`;
-    });
-    window._pantoneOptionsCache = h;
-    return h;
+    return "";
 }
 
 function pantoneRowHTML(type, n) {
@@ -2777,10 +2658,6 @@ function setPantoneFor(type, idx, hex, shade) {
     if (shade && shade.shadeTag) {
         inp.setAttribute("data-tag", shade.shadeTag);
     }
-    const sw = $(pre + "PanSw" + idx);
-    if (sw) sw.style.background = chosen || "transparent";
-    const sel = $(pre + "Pan" + idx);
-    if (sel && sel.value !== chosen) sel.value = chosen;
     const cardBtn = $((type === "warp" ? "wBtn" : "weftBtn") + idx);
     if (cardBtn) cardBtn.style.background = chosen || orig;
     const disp = $((type === "warp" ? "wNameDisp" : "weftNameDisp") + idx);
@@ -2934,7 +2811,7 @@ async function executeRealA4Print(isPdfMode = false) {
             if(!co || !e){ w_idx++; continue; }
             const n = Math.max(0, parseInt(e.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase(); 
-            let hexVal = (co.value || "").toLowerCase();
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
             if(!hexVal || hexVal === "#000000" || hexVal === "null") {
                 hexVal = colorName(origStr);
             }
@@ -2949,7 +2826,7 @@ async function executeRealA4Print(isPdfMode = false) {
                     const rCo = $("wC"+currIdx); const rE = $("wE"+currIdx);
                     if(rCo && rE){
                         const rN = Math.max(0, parseInt(rE.value) || 0); 
-                        let rHex = (rCo.value || "").toLowerCase();
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
                         const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
                         if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
                         const rColor = hexToRgb(rHex);
@@ -2985,7 +2862,7 @@ async function executeRealA4Print(isPdfMode = false) {
             const n = Math.max(0, parseInt(p.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
             const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase();
-            let hexVal = (co.value || "").toLowerCase();
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
             if(!hexVal || hexVal === "#000000") hexVal = colorName(origStr);
             const yInfo = parseYarnInfo(cntStr, "", hexVal);
             const rgbColor = hexToRgb(hexVal);
@@ -2997,7 +2874,7 @@ async function executeRealA4Print(isPdfMode = false) {
                     const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
                     if(rCo && rP){
                         const rN = Math.max(0, parseInt(rP.value) || 0);
-                        let rHex = (rCo.value || "").toLowerCase();
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
                         const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
                         if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
                         const rColor = hexToRgb(rHex);
@@ -3098,7 +2975,7 @@ async function executeRealA4Print(isPdfMode = false) {
         const pickSeq = getSimulationPicks(mRows, storedFormula);
 
         const isSeerActive = $("fsSeerCheck")?.checked ?? false;
-        const rawSeer = parseInt($("seerIntensity")?.value || 75, 10);
+        const rawSeer = parseInt($("seerIntensity")?.value || 50, 10);
         const puff = rawSeer / 100;
 
         const printCanvas = document.createElement("canvas");
@@ -3179,52 +3056,6 @@ async function executeRealA4Print(isPdfMode = false) {
                     }
                 }
             }
-        }
-
-        const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = parseInt($("brushIntensity")?.value || 60, 10);
-        if(isBrushActive && rawBrush > 0){
-            try {
-                let snap = document.createElement('canvas');
-                snap.width = printCanvas.width; snap.height = printCanvas.height;
-                let sCtx = snap.getContext('2d');
-                sCtx.drawImage(printCanvas, 0, 0);
-                let imgData = sCtx.getImageData(0, 0, printCanvas.width, printCanvas.height);
-
-                pCtx.save();
-                pCtx.beginPath();
-                pCtx.rect(RULER_px, 0, printW, printH);
-                pCtx.clip();
-
-                let intensity = rawBrush / 100;
-                let count = Math.floor(45000 * intensity);
-                for(let i = 0; i < count; i++){
-                    let px = RULER_px + Math.random() * printW;
-                    let py = Math.random() * printH;
-                    let ix = Math.floor(px); let iy = Math.floor(py);
-                    if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
-                    let idx = (iy * snap.width + ix) * 4;
-                    if(imgData.data[idx + 3] < 10) continue;
-                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
-                    let brightness = (Math.random() - 0.2) * 35;
-                    let fR = Math.min(255, Math.max(0, r + brightness));
-                    let fG = Math.min(255, Math.max(0, g + brightness));
-                    let fB = Math.min(255, Math.max(0, b + brightness));
-
-                    pCtx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
-                    pCtx.lineWidth = (Math.random() * 0.7 + 0.3) * printDpr;
-
-                    let angle = Math.random() * Math.PI * 2;
-                    let len = (Math.random() * 3.5 * intensity + 2) * printDpr;
-                    let curve = (Math.random() - 0.5) * 1.2 * printDpr;
-
-                    pCtx.beginPath();
-                    pCtx.moveTo(px, py);
-                    pCtx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
-                    pCtx.stroke();
-                }
-                pCtx.restore();
-            } catch(e) {}
         }
 
         const rulerBgColor = "#ffffff";
