@@ -2,7 +2,7 @@
 <html lang="ta">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <!-- Full Screen Web App Meta Tags -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -102,15 +102,21 @@ function $(id) {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-html, body {
+html {
     min-height: 100%;
     background: var(--bg);
     color: var(--text);
-    overscroll-behavior: none;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 body {
+    min-height: 100vh;
     padding: 6px;
+    padding-bottom: 40px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .container {
@@ -246,9 +252,6 @@ input, select {
     grid-template-columns: 1fr 1fr;
     gap: 6px;
     margin-bottom: 6px;
-    position: sticky;
-    top: 0;
-    z-index: 120;
     padding: 4px 0;
     background: var(--card, #14251e);
 }
@@ -283,9 +286,9 @@ input, select {
 .yarn-panel.active { display: block; }
 
 .scroll-box {
-    max-height: auto; 
-    min-height: auto; 
-    overflow: auto;
+    max-height: 480px; 
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background: #0d1813;
     padding: 4px;
     border-radius: 8px;
@@ -356,53 +359,43 @@ input, select {
 .main-actions { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 6px; }
 .main-actions button { width: 100%; }
 
-/* ================= SECURE PERMANENT FULLSCREEN MODAL ================= */
+/* ================= 3D FULLSCREEN MODAL ================= */
 .fs-modal { 
     display: none; 
     position: fixed; 
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important; 
-    height: 100vh !important;
-    height: 100dvh !important; 
+    top: 0;
+    left: 0;
+    width: 100vw; 
+    height: 100vh;
+    height: 100dvh; 
     background: #060c09; 
-    z-index: 9999999; 
-    overflow: hidden !important;
-    touch-action: none;
+    z-index: 999999; 
+    overflow: hidden;
 }
 
-/* எப்போதும் மேலே நிலைத்திருக்கக்கூடிய பார் தொகுப்பு */
 .fs-top-fixed-bar {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 86px;
     background: #14251e;
-    z-index: 10000005;
+    z-index: 1000000;
     box-shadow: 0 4px 15px rgba(0,0,0,0.85);
-    display: flex;
-    flex-direction: column;
 }
 
 .fs-header { 
     height: 44px; 
-    min-height: 44px; 
     padding: 0 8px; 
     display: flex; 
     align-items: center; 
     justify-content: space-between; 
     background: #14251e; 
     border-bottom: 1px solid #233e31; 
-    flex-wrap: nowrap;
-    gap: 4px;
     width: 100%;
 }
 .fs-title { color: #9be4a8; font-size: .75rem; font-weight: 900; white-space: nowrap; }
-.fs-header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
-.fs-header button { border: 0; border-radius: 6px; padding: 4px 8px; color: #fff; font-weight: 800; font-size: .65rem; cursor: pointer; white-space: nowrap; }
+.fs-header-actions { display: flex; gap: 4px; align-items: center; }
+.fs-header button { border: 0; border-radius: 6px; padding: 4px 8px; color: #fff; font-weight: 800; font-size: .65rem; cursor: pointer; }
 
 .effect-bar {
     width: 100%;
@@ -416,17 +409,14 @@ input, select {
     font-size: 0.65rem;
     font-weight: 900;
     color: #edf7ef;
-    height: 42px;
-    min-height: 42px;
-    box-sizing: border-box;
+    height: 38px;
 }
 
 .effect-group {
-    display: flex !important;
+    display: flex;
     align-items: center;
     gap: 4px;
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1;
 }
 
 .effect-group input[type="range"] {
@@ -435,33 +425,29 @@ input, select {
     accent-color: #22c55e;
     cursor: pointer;
     background: #244638;
-    border-radius: 4px;
 }
 .effect-group input[type="checkbox"] {
     width: 16px;
     height: 16px;
     accent-color: #22c55e;
     cursor: pointer;
-    flex-shrink: 0;
 }
 
 .fs-content { 
     position: absolute;
-    top: 86px;
+    top: 82px;
     bottom: 0;
     left: 0;
     right: 0;
-    width: 100%;
-    height: calc(100% - 86px);
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    overflow: hidden !important; 
+    overflow: hidden; 
     background: #060c09; 
-    touch-action: none !important; 
+    touch-action: none; 
 }
 
-.fs-content canvas { width: 100%; height: 100%; display: block; touch-action: none !important; }
+.fs-content canvas { width: 100%; height: 100%; display: block; }
 .fs-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
 
 /* CAD PRINT MODAL */
@@ -470,7 +456,7 @@ input, select {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.85);
-    z-index: 10000010;
+    z-index: 1000001;
     align-items: center;
     justify-content: center;
     padding: 12px;
@@ -487,7 +473,7 @@ input, select {
 }
 
 /* PRINT DESIGN MODAL */
-.print-modal { display: none; position: fixed; inset: 0; background: #e5e7eb; z-index: 10000000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
+.print-modal { display: none; position: fixed; inset: 0; background: #e5e7eb; z-index: 1000000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
 .print-sheet { background: #fff; color: #111827; width: 100%; max-width: 860px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: none; overflow: hidden; margin: auto; }
 .print-sheet-inner { padding: 20px; background: #fff; }
 
@@ -638,7 +624,6 @@ input, select {
 
 <!-- FULLSCREEN 3D SIMULATION -->
 <div id="fsModal" class="fs-modal">
-    <!-- நிலைத்திருக்கும் பார் தொகுப்பு -->
     <div class="fs-top-fixed-bar">
         <div class="fs-header">
             <div class="fs-title">🧊 3D Weave Pro</div>
@@ -681,7 +666,6 @@ input, select {
         </div>
     </div>
 
-    <!-- கேன்வாஸ் பகுதி -->
     <div id="fsContent" class="fs-content">
         <canvas id="weaveCanvas"></canvas>
         <div class="fs-hint">
@@ -765,7 +749,7 @@ input, select {
             </div>
             <button class="colour-popup-close" onclick="closeColourPopup()">✕</button>
         </div>
-        <input type="text" id="colourSearchInput" class="search-box" placeholder="🔍 Search color name (eg: Green, Red, Navy, Turq, Gold, Mint, Pink, Blue)..." oninput="filterColourPopup()">
+        <input type="text" id="colourSearchInput" class="search-box" placeholder="🔍 Search color name..." oninput="filterColourPopup()">
         
         <div class="tone-filters">
             <button class="tone-chip active" onclick="setToneFilter('all', this)">All Tones (60+)</button>
@@ -1039,7 +1023,7 @@ function colorName(n) {
     if(/^#[0-9a-f]{3}$/i.test(s)) return "#" + s[1]+s[1] + s[2]+s[2] + s[3]+s[3];
 
     if (s.includes('t-04') || s.includes('t-60') || s.includes('white') || s.includes('salavai')) return "#ffffff";
-    
+
     if (typeof texforeverColourMaster !== 'undefined') {
         for (let group of texforeverColourMaster) {
             for (let shade of group.shades) {
@@ -1052,6 +1036,7 @@ function colorName(n) {
         }
     }
 
+    if (s.includes('violet') || s.includes('வைலட்')) return "#7c3aed";
     if (s.includes('d. pink') || s.includes('dark pink')) return "#be185d";
     if (s.includes('l. pink') || s.includes('light pink')) return "#f472b6";
     if (s.includes('pink') || s.includes('பிங்க்')) return "#db2777";
@@ -1811,7 +1796,7 @@ function onWeaveChange() {
         if($("gridEditorSection")) $("gridEditorSection").style.display = "block";
         buildGridEditor();
     }
-    if($("fsModal")?.style.display === "flex") {
+    if($("fsModal")?.style.display === "block") {
         draw3DWeave();
     }
 }
@@ -1857,7 +1842,7 @@ function buildGridEditor() {
             cell.onclick = () => {
                 m[r][c] = m[r][c] ? 0 : 1;
                 buildGridEditor();
-                if($("fsModal")?.style.display === "flex") draw3DWeave();
+                if($("fsModal")?.style.display === "block") draw3DWeave();
             };
             rd.appendChild(cell);
         });
@@ -1890,7 +1875,7 @@ function debounce3DRender() {
 }
 
 function autoRefresh3D() { 
-    if($("fsModal")?.style.display === "flex") {
+    if($("fsModal")?.style.display === "block") {
         debounce3DRender();
     }
 }
@@ -2300,7 +2285,7 @@ function draw3DWeave(){
                         ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
                         const edgeH = Math.max(0.3, cellH * 0.12);
                         ctx.fillRect(curX, y, curW, edgeH);
-                        ctx.fillRect(curX, y + cellH - edgeH, curW, edgeH);
+                        ctx.fillRect(curX + curW - edgeH, y, edgeW, cellH);
                     }
                     if(effectiveCellW >= 2.0) {
                         ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
@@ -2341,7 +2326,7 @@ function draw3DWeave(){
                 ctx.filter = 'none';
                 ctx.globalAlpha = 1.0;
 
-                let count = Math.floor(15000 * intensity); // Optimized count for quick rendering
+                let count = Math.floor(10000 * intensity); 
                 for(let i = 0; i < count; i++){
                     let px = scrX1 + Math.random() * scrW;
                     let py = scrY1 + Math.random() * scrH;
@@ -3024,7 +3009,6 @@ async function executeRealA4Print(isPdfMode = false) {
                 const actualEnds = Math.min(requestedEnds, realWarpLength - endIndex);
                 const baseYarnW = dentWidthPx / Math.max(1, actualEnds);
                 for(let e = 0; e < actualEnds; e++) {
-                    let info = warpYarnInfos[endIndex % warpYarnInfos.length] || { thicknessMultiplier: 1.0 };
                     let isThickSeer = Boolean(seerMap[endIndex % seerMap.length]);
                     warpPositions.push({ colIndex: endIndex, x: x + e * baseYarnW, w: baseYarnW, isEmpty: false, isSeer: isThickSeer });
                     endIndex++;
@@ -3140,7 +3124,7 @@ async function executeRealA4Print(isPdfMode = false) {
                 pCtx.clip();
 
                 let intensity = rawBrush / 100;
-                let count = Math.floor(15000 * intensity);
+                let count = Math.floor(10000 * intensity);
                 for(let i = 0; i < count; i++){
                     let px = RULER_px + Math.random() * printW;
                     let py = Math.random() * printH;
