@@ -367,7 +367,8 @@ input, select {
     left: 0;
     width: 100vw; 
     height: 100vh;
-    height: 100dvh; 
+    height: 100dvh;
+    min-height: 0;
     background: #060c09; 
     z-index: 999999; 
     overflow: hidden;
@@ -435,7 +436,7 @@ input, select {
 
 .fs-content { 
     position: absolute;
-    top: 82px;
+    top: calc(82px + env(safe-area-inset-top, 0px));
     bottom: 0;
     left: 0;
     right: 0;
@@ -448,6 +449,21 @@ input, select {
 }
 
 .fs-content canvas { width: 100%; height: 100%; display: block; }
+@media (max-width: 520px) {
+    .fs-header { height: 42px; padding: 0 4px; gap: 3px; }
+    .fs-title { font-size: .62rem; max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
+    .fs-header-actions { gap: 2px; min-width: 0; }
+    .fs-header-actions > div { padding: 2px !important; gap: 1px !important; }
+    .fs-header-actions span { font-size: .5rem !important; }
+    .fs-header-actions select { max-width: 42px; font-size: .6rem !important; }
+    .fs-header-actions button { padding: 4px 5px !important; font-size: .62rem !important; min-width: 26px; }
+    .effect-bar { height: 38px; padding: 3px 5px; gap: 4px; font-size: .58rem; }
+    .effect-group { min-width: 0; gap: 3px; }
+    .effect-group span { white-space: nowrap; }
+    .effect-group input[type="range"] { min-width: 22px; }
+    .effect-group input[type="checkbox"] { width: 14px; height: 14px; flex: 0 0 14px; }
+    .fs-content { top: calc(80px + env(safe-area-inset-top, 0px)); }
+}
 .fs-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
 
 /* CAD PRINT MODAL */
@@ -2528,8 +2544,8 @@ function initWeaveWebGL(canvas) {
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) || "WebGL link failed");
         const vertices = new Float32Array([
-            -1,-1, 0,1,  1,-1, 1,1,  -1,1, 0,0,
-            -1,1, 0,0,   1,-1, 1,1,   1,1, 1,0
+            -1,-1, 0,0,  1,-1, 1,0,  -1,1, 0,1,
+            -1,1, 0,1,   1,-1, 1,0,   1,1, 1,1
         ]);
         const buffer = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buffer); gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
         const texture = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -2537,12 +2553,14 @@ function initWeaveWebGL(canvas) {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        // Keep canvas text/rulers upright: UV coordinates already match the canvas origin.
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        // Flip uploaded canvas rows once, then use standard bottom-left WebGL UVs.
+        // This prevents the fabric and ruler text from appearing vertically mirrored.
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         weaveGLState = { canvas, gl, program, buffer, texture,
             position: gl.getAttribLocation(program, "a_position"),
             uv: gl.getAttribLocation(program, "a_uv"),
-            sampler: gl.getUniformLocation(program, "u_frame") };
+            sampler: gl.getUniformLocation(program, "u_frame"),
+            textureWidth: 0, textureHeight: 0 };
         return weaveGLState;
     } catch (err) {
         console.warn("WebGL presentation unavailable; using 2D canvas fallback.", err);
@@ -2569,7 +2587,14 @@ function presentWeaveFrameWebGL(sourceCanvas, outputCanvas) {
         gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 16, 0);
         gl.enableVertexAttribArray(uv); gl.vertexAttribPointer(uv, 2, gl.FLOAT, false, 16, 8);
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+        if (state.textureWidth !== sourceCanvas.width || state.textureHeight !== sourceCanvas.height) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+            state.textureWidth = sourceCanvas.width;
+            state.textureHeight = sourceCanvas.height;
+        } else {
+            // Reuse GPU texture allocation on every redraw for faster zoom/brush updates.
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+        }
         gl.uniform1i(sampler, 0);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     } catch (err) {
@@ -2681,6 +2706,20 @@ if(fsContent) {
         autoRefresh3D();
     }, {passive:false});
 }
+
+// Keep fullscreen canvas and fixed controls aligned when mobile browser chrome changes size.
+let weaveResizeTimer = 0;
+function scheduleWeaveResize() {
+    if ($("fsModal")?.style.display !== "block") return;
+    clearTimeout(weaveResizeTimer);
+    weaveResizeTimer = setTimeout(() => {
+        drawFramePending = false;
+        draw3DWeave();
+    }, 80);
+}
+window.addEventListener("resize", scheduleWeaveResize, { passive: true });
+window.addEventListener("orientationchange", scheduleWeaveResize, { passive: true });
+if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleWeaveResize, { passive: true });
 
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="block") closeFullscreen(); });
 
