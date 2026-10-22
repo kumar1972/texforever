@@ -367,6 +367,7 @@ input, select {
     background: #060c09; 
     z-index: 999999; 
     flex-direction: column; 
+    padding-top: env(safe-area-inset-top); /* மொபைல் நாட்ச் / ஸ்டேட்டஸ் பாருக்கு கீழே காட்ட */
 }
 
 .fs-header { 
@@ -386,6 +387,7 @@ input, select {
     z-index: 30;
     width: 100%;
 }
+
 .fs-title { color: #9be4a8; font-size: .75rem; font-weight: 900; white-space: nowrap; }
 .fs-header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
 .fs-header button { border: 0; border-radius: 6px; padding: 4px 8px; color: #fff; font-weight: 800; font-size: .65rem; cursor: pointer; white-space: nowrap; }
