@@ -281,8 +281,8 @@ input, select {
 .yarn-panel.active { display: block; }
 
 .scroll-box {
-    max-height: none;
-    min-height: 70vh;
+    max-height: auto; 
+    min-height: auto; 
     overflow: auto;
     background: #0d1813;
     padding: 4px;
@@ -292,6 +292,7 @@ input, select {
     flex-direction: column;
     gap: 4px;
 }
+
 
 .scroll-box > div {
     background: #172b23;
@@ -1488,15 +1489,22 @@ async function importFromFirebase(manual = false) {
         if (navigator.onLine && supabaseClient) {
             try {
                 let cloudData = [];
-                const resM = await supabaseClient.from("design_masters_data").select("*");
-                const resW = await supabaseClient.from("weave_designs").select("*");
+                const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+                const [resM, resW] = await Promise.all([
+                    withTimeout(Promise.resolve(supabaseClient.from("design_masters_data").select("*")), 8000),
+                    withTimeout(Promise.resolve(supabaseClient.from("weave_designs").select("*")), 8000)
+                ]);
                 if (resM && !resM.error && Array.isArray(resM.data)) cloudData.push(...resM.data);
                 if (resW && !resW.error && Array.isArray(resW.data)) cloudData.push(...resW.data);
 
                 if (cloudData.length > 0) {
-                    allCloudDesigns = mergeDesigns(allCloudDesigns.concat(cloudData));
-                    window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
-                    populateDesignSelect(manual);
+                    const mergedCloud = mergeDesigns(allCloudDesigns.concat(cloudData));
+                    const mergedStr = JSON.stringify(mergedCloud);
+                    if (mergedStr !== JSON.stringify(allCloudDesigns)) {
+                        allCloudDesigns = mergedCloud;
+                        window.StorageDB.setItem("weave_designs_cache", mergedStr);
+                        populateDesignSelect(manual);
+                    }
                     setStatus("☁ Local + Cloud designs ready");
                 }
             } catch(cErr) {
@@ -1991,22 +1999,29 @@ function draw3DWeave(){
         if(!c || !host) return;
         
         let rect = host.getBoundingClientRect();
-        let W = Math.floor(rect.width) || window.innerWidth || 320; 
-        let H = Math.floor(rect.height) || (window.innerHeight - 120) || 240;
+        let cssW = Math.floor(rect.width) || window.innerWidth || 320; 
+        let cssH = Math.floor(rect.height) || (window.innerHeight - 120) || 240;
         const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
-        if (c.width !== Math.floor(W * dpr) || c.height !== Math.floor(H * dpr)) {
-            c.width = Math.floor(W * dpr); 
-            c.height = Math.floor(H * dpr);
-            c.style.width = W + "px";
-            c.style.height = H + "px";
+        /* Small screens: draw on a desktop-width virtual canvas (like desktop view) and scale it down to fit */
+        const vk = cssW < 980 ? 980 / cssW : 1;
+        window.__weaveVk = vk;
+        let W = cssW * vk; 
+        let H = cssH * vk;
+        const dprDraw = dpr / vk;
+
+        if (c.width !== Math.floor(cssW * dpr) || c.height !== Math.floor(cssH * dpr)) {
+            c.width = Math.floor(cssW * dpr); 
+            c.height = Math.floor(cssH * dpr);
+            c.style.width = cssW + "px";
+            c.style.height = cssH + "px";
         }
         
         const ctx = c.getContext("2d"); 
         if(!ctx) return;
         
         ctx.imageSmoothingEnabled = false; 
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.setTransform(dprDraw, 0, 0, dprDraw, 0, 0);
         ctx.clearRect(0, 0, W, H); 
         
         let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = [];
@@ -2316,10 +2331,10 @@ function draw3DWeave(){
                 sCtx.drawImage(c, 0, 0);
                 let imgData = sCtx.getImageData(0, 0, snap.width, snap.height);
 
-                const scrX1 = (viewCenterX + pointX + left * scale) * dpr;
-                const scrY1 = (viewCenterY + pointY + top * scale) * dpr;
-                const scrW = drawW * scale * dpr;
-                const scrH = drawH * scale * dpr;
+                const scrX1 = (viewCenterX + pointX + left * scale) * dprDraw;
+                const scrY1 = (viewCenterY + pointY + top * scale) * dprDraw;
+                const scrW = drawW * scale * dprDraw;
+                const scrH = drawH * scale * dprDraw;
 
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2450,8 +2465,10 @@ function draw3DWeave(){
         const boxPadY = 8;
         const boxWidth = Math.min(W - 16, Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2));
         const boxHeight = 44;
-        const boxLeft = Math.max(8, W - boxWidth - 8);
-        const boxTop = 8;
+        const fabricRightScr = viewCenterX + pointX + right * scale;
+        const fabricTopScr = viewCenterY + pointY + top * scale;
+        const boxLeft = Math.max(8, Math.min(fabricRightScr - boxWidth - 8, W - boxWidth - 8));
+        const boxTop = Math.max(8, Math.min(fabricTopScr + 8, H - boxHeight - 8));
 
         ctx.fillStyle = "rgba(10, 24, 18, 0.90)";
         ctx.strokeStyle = "#48bb78";
@@ -2502,8 +2519,8 @@ if(fsContent) {
             touchMoved = false;
             touchStartClientX = e.touches[0].clientX;
             touchStartClientY = e.touches[0].clientY;
-            startX = e.touches[0].clientX - pointX; 
-            startY = e.touches[0].clientY - pointY; 
+            startX = e.touches[0].clientX * (window.__weaveVk || 1) - pointX; 
+            startY = e.touches[0].clientY * (window.__weaveVk || 1) - pointY; 
         } else if(e.touches.length >= 2) { 
             panning = false; 
             wasPinching = true; 
@@ -2522,8 +2539,8 @@ if(fsContent) {
             const dy = Math.abs(e.touches[0].clientY - touchStartClientY);
             if(dx > 4 || dy > 4) touchMoved = true;
 
-            pointX = e.touches[0].clientX - startX; 
-            pointY = e.touches[0].clientY - startY; 
+            pointX = e.touches[0].clientX * (window.__weaveVk || 1) - startX; 
+            pointY = e.touches[0].clientY * (window.__weaveVk || 1) - startY; 
 
             autoRefresh3D(); 
         }
@@ -2551,8 +2568,8 @@ if(fsContent) {
             touchMoved = false;
         } else if (e.touches.length === 1) {
             panning = true;
-            startX = e.touches[0].clientX - pointX;
-            startY = e.touches[0].clientY - pointY;
+            startX = e.touches[0].clientX * (window.__weaveVk || 1) - pointX;
+            startY = e.touches[0].clientY * (window.__weaveVk || 1) - pointY;
             touchStartClientX = e.touches[0].clientX;
             touchStartClientY = e.touches[0].clientY;
         }
@@ -3797,7 +3814,10 @@ function buildPrintGraph(m, pickStr) {
     }
 })();
 
-window.addEventListener("load", async () => {
+let __weaveInitDone = false;
+async function __weaveInit() {
+    if (__weaveInitDone) return;
+    __weaveInitDone = true;
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     try {
         let statusEl = document.getElementById("designStatus");
@@ -3816,7 +3836,10 @@ window.addEventListener("load", async () => {
         let statusEl = document.getElementById("designStatus");
         if(statusEl) statusEl.textContent = "⚡ Ready (Offline Mode)";
     }
-});
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", __weaveInit);
+else __weaveInit();
+window.addEventListener("load", __weaveInit);
 </script>
 </body>
 </html>
