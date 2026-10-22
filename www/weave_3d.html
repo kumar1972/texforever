@@ -631,8 +631,8 @@ input, select {
                 <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
                     <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">🔁 Rep:</span>
                     <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#203b30; color:#fff; border:0; padding:2px; font-size:0.65rem; border-radius:3px; width:auto; min-height:auto; height:22px;">
-                        <option value="1">1x</option>
-                        <option value="2" selected>2x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="2">2x</option>
                         <option value="3">3x</option>
                         <option value="4">4x</option>
                     </select>
@@ -788,10 +788,10 @@ let selectedColourForPopup = null;
 let colourPopupTarget = { type: null, index: null };
 let liveDesignDimensions = { widthCm: 0, heightCm: 0 };
 let selectedCadScalePercent = 100;
-let simulationRepeatFactor = 2;
+let simulationRepeatFactor = 1.25;
 
 function changeSimulationRepeats(val) {
-    simulationRepeatFactor = parseInt(val) || 2;
+    simulationRepeatFactor = parseInt(val) || 1.25;
     debounce3DRender();
 }
 
