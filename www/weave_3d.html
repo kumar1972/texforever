@@ -106,6 +106,7 @@ html, body {
     min-height: 100%;
     background: var(--bg);
     color: var(--text);
+    overscroll-behavior: none;
 }
 
 body {
@@ -355,31 +356,35 @@ input, select {
 .main-actions { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 6px; }
 .main-actions button { width: 100%; }
 
-/* ================= FULLSCREEN 3D SIMULATION FIX ================= */
+/* ================= SECURE PERMANENT FULLSCREEN MODAL ================= */
 .fs-modal { 
     display: none; 
     position: fixed; 
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw; 
-    height: 100vh;
-    height: 100dvh; 
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important; 
+    height: 100vh !important;
+    height: 100dvh !important; 
     background: #060c09; 
-    z-index: 999999; 
-    flex-direction: column; 
-    overflow: hidden;
+    z-index: 9999999; 
+    overflow: hidden !important;
+    touch-action: none;
 }
 
-.fs-top-bars-wrap {
-    width: 100%;
+/* எப்போதும் மேலே நிலைத்திருக்கக்கூடிய பார் தொகுப்பு */
+.fs-top-fixed-bar {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1000000;
+    width: 100%;
+    height: 86px;
     background: #14251e;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    z-index: 10000005;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
 }
 
 .fs-header { 
@@ -399,7 +404,6 @@ input, select {
 .fs-header-actions { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
 .fs-header button { border: 0; border-radius: 6px; padding: 4px 8px; color: #fff; font-weight: 800; font-size: .65rem; cursor: pointer; white-space: nowrap; }
 
-/* EFFECT BAR INTEGRATED */
 .effect-bar {
     width: 100%;
     background: #0f241a;
@@ -412,7 +416,8 @@ input, select {
     font-size: 0.65rem;
     font-weight: 900;
     color: #edf7ef;
-    min-height: 38px;
+    height: 42px;
+    min-height: 42px;
     box-sizing: border-box;
 }
 
@@ -442,20 +447,21 @@ input, select {
 
 .fs-content { 
     position: absolute;
-    top: 82px;
+    top: 86px;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
+    height: calc(100% - 86px);
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    overflow: hidden; 
+    overflow: hidden !important; 
     background: #060c09; 
-    touch-action: none; 
+    touch-action: none !important; 
 }
 
-.fs-content canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.fs-content canvas { width: 100%; height: 100%; display: block; touch-action: none !important; }
 .fs-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
 
 /* CAD PRINT MODAL */
@@ -464,7 +470,7 @@ input, select {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.85);
-    z-index: 1000001;
+    z-index: 10000010;
     align-items: center;
     justify-content: center;
     padding: 12px;
@@ -481,7 +487,7 @@ input, select {
 }
 
 /* PRINT DESIGN MODAL */
-.print-modal { display: none; position: fixed; inset: 0; background: #e5e7eb; z-index: 1000000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
+.print-modal { display: none; position: fixed; inset: 0; background: #e5e7eb; z-index: 10000000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
 .print-sheet { background: #fff; color: #111827; width: 100%; max-width: 860px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: none; overflow: hidden; margin: auto; }
 .print-sheet-inner { padding: 20px; background: #fff; }
 
@@ -502,7 +508,7 @@ input, select {
 .graph-axis { font-size: 10px !important; color: #6b7280 !important; border: none !important; }
 
 /* SMART COLOR STUDIO POPUP */
-.colour-popup { display: none; position: fixed; inset: 0; z-index: 9999999; background: #14251e; flex-direction: column; padding: 10px; overflow: hidden; }
+.colour-popup { display: none; position: fixed; inset: 0; z-index: 99999999; background: #14251e; flex-direction: column; padding: 10px; overflow: hidden; }
 .colour-popup.active { display: flex !important; }
 .colour-popup-box { width: 100vw !important; max-width: none !important; height: 100vh !important; max-height: none !important; background: #14251e !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 .colour-popup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-shrink: 0; padding: 10px; padding-bottom: 0;}
@@ -632,8 +638,8 @@ input, select {
 
 <!-- FULLSCREEN 3D SIMULATION -->
 <div id="fsModal" class="fs-modal">
-    <!-- WRAPPER TO GUARANTEE TOP VISIBILITY ON ALL MOBILE SCREENS -->
-    <div class="fs-top-bars-wrap">
+    <!-- நிலைத்திருக்கும் பார் தொகுப்பு -->
+    <div class="fs-top-fixed-bar">
         <div class="fs-header">
             <div class="fs-title">🧊 3D Weave Pro</div>
             <div class="fs-header-actions">
@@ -659,7 +665,6 @@ input, select {
             </div>
         </div>
 
-        <!-- EFFECT BAR (Puff & Brush Controls) -->
         <div class="effect-bar">
             <div class="effect-group">
                 <input type="checkbox" id="fsSeerCheck" onchange="syncEffects('seer')">
@@ -676,6 +681,7 @@ input, select {
         </div>
     </div>
 
+    <!-- கேன்வாஸ் பகுதி -->
     <div id="fsContent" class="fs-content">
         <canvas id="weaveCanvas"></canvas>
         <div class="fs-hint">
@@ -1026,7 +1032,6 @@ const texforeverColourMaster = MASTER_COLOR_SPECS.map((spec, cIdx) => {
     return { name: spec.name, shades: shades };
 });
 
-// Accurate colorName matching with proper prioritized fallbacks
 function colorName(n) {
     if(!n) return "#ffffff";
     let s = String(n).toLowerCase().trim();
@@ -1035,7 +1040,6 @@ function colorName(n) {
 
     if (s.includes('t-04') || s.includes('t-60') || s.includes('white') || s.includes('salavai')) return "#ffffff";
     
-    // Look up in color master first
     if (typeof texforeverColourMaster !== 'undefined') {
         for (let group of texforeverColourMaster) {
             for (let shade of group.shades) {
@@ -1048,7 +1052,6 @@ function colorName(n) {
         }
     }
 
-    // Precise dictionary fallbacks
     if (s.includes('d. pink') || s.includes('dark pink')) return "#be185d";
     if (s.includes('l. pink') || s.includes('light pink')) return "#f472b6";
     if (s.includes('pink') || s.includes('பிங்க்')) return "#db2777";
@@ -1875,7 +1878,7 @@ function removeRow(i) { if(weavePatterns.custom.length<=2) return; weavePatterns
 function removeLastRow() { removeRow(weavePatterns.custom.length-1); }
 function removeLastCol() { removeCol((weavePatterns.custom[0]?.length||1)-1); }
 
-/* ================= CANVAS 3D RENDER ENGINE ================= */
+/* ================= FAST CANVAS 3D RENDER ENGINE ================= */
 let renderTimer = null;
 let scale = 1, pointX = 0, pointY = 0, panning = false, startX = 0, startY = 0, lastDist = 0;
 
@@ -1990,7 +1993,7 @@ function draw3DWeave(){
         
         let rect = host.getBoundingClientRect();
         let cssW = Math.floor(rect.width) || window.innerWidth || 320; 
-        let cssH = Math.floor(rect.height) || (window.innerHeight - 82) || 240;
+        let cssH = Math.floor(rect.height) || (window.innerHeight - 86) || 240;
         const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
 
         const vk = cssW < 980 ? 980 / cssW : 1;
@@ -2311,6 +2314,65 @@ function draw3DWeave(){
         
         ctx.restore();
 
+        if(isBrushActive && rawBrush > 0){
+            try {
+                let snap = document.createElement('canvas');
+                snap.width = c.width; snap.height = c.height;
+                let sCtx = snap.getContext('2d');
+                sCtx.drawImage(c, 0, 0);
+                let imgData = sCtx.getImageData(0, 0, snap.width, snap.height);
+
+                const scrX1 = (viewCenterX + pointX + left * scale) * dprDraw;
+                const scrY1 = (viewCenterY + pointY + top * scale) * dprDraw;
+                const scrW = drawW * scale * dprDraw;
+                const scrH = drawH * scale * dprDraw;
+
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.beginPath();
+                ctx.rect(scrX1, scrY1, scrW, scrH);
+                ctx.clip();
+
+                let intensity = rawBrush / 100;
+                let fogAlpha = Math.min(0.28, intensity * 0.12);
+                ctx.globalAlpha = fogAlpha;
+                ctx.filter = `blur(${intensity * 1.2}px)`; 
+                ctx.drawImage(snap, 0, 0);
+                ctx.filter = 'none';
+                ctx.globalAlpha = 1.0;
+
+                let count = Math.floor(15000 * intensity); // Optimized count for quick rendering
+                for(let i = 0; i < count; i++){
+                    let px = scrX1 + Math.random() * scrW;
+                    let py = scrY1 + Math.random() * scrH;
+                    let ix = Math.floor(px); let iy = Math.floor(py);
+                    if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
+                    
+                    let idx = (iy * snap.width + ix) * 4;
+                    if(imgData.data[idx + 3] < 10) continue; 
+                    
+                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
+                    let brightness = (Math.random() - 0.2) * 35; 
+                    let fR = Math.min(255, Math.max(0, r + brightness));
+                    let fG = Math.min(255, Math.max(0, g + brightness));
+                    let fB = Math.min(255, Math.max(0, b + brightness));
+
+                    ctx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
+                    ctx.lineWidth = (Math.random() * 0.7 + 0.3) * dpr;
+
+                    let angle = Math.random() * Math.PI * 2;
+                    let len = (Math.random() * 3.5 * intensity + 2) * dpr;
+                    let curve = (Math.random() - 0.5) * 1.2 * dpr;
+
+                    ctx.beginPath();
+                    ctx.moveTo(px, py);
+                    ctx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            } catch(e) {}
+        }
+
         const rulerBgColor = "#ffffff";
         const rulerBorderColor = "#475569";
 
@@ -2415,12 +2477,12 @@ function draw3DWeave(){
 /* ================= FULLSCREEN INTERACTIONS ================= */
 function openFullscreen() { 
     const modal = $("fsModal"); if(!modal) return; 
-    modal.style.display="flex"; 
+    modal.style.display="block"; 
     document.body.style.overflow = "hidden";
     scale = 1; pointX = 0; pointY = 0; panning = false; 
     drawFramePending = false;
     updateRulerCalDisplay();
-    setTimeout(() => { draw3DWeave(); }, 20); 
+    requestAnimationFrame(() => { draw3DWeave(); }); 
 }
 
 function refreshFullscreen3D() { scale = 1; pointX = 0; pointY = 0; drawFramePending = false; draw3DWeave(); }
@@ -2440,6 +2502,7 @@ const fsContent = $("fsContent");
 
 if(fsContent) {
     fsContent.addEventListener("touchstart", e => { 
+        e.stopPropagation();
         if(e.touches.length === 1) { 
             panning = true; 
             wasPinching = false;
@@ -2461,6 +2524,7 @@ if(fsContent) {
 
     fsContent.addEventListener("touchmove", e => { 
         e.preventDefault();
+        e.stopPropagation();
         if(e.touches.length === 1 && panning) { 
             const dx = Math.abs(e.touches[0].clientX - touchStartClientX);
             const dy = Math.abs(e.touches[0].clientY - touchStartClientY);
@@ -2488,6 +2552,7 @@ if(fsContent) {
     }, {passive:false});
 
     fsContent.addEventListener("touchend", (e) => { 
+        e.stopPropagation();
         if (e.touches.length === 0) {
             panning = false; 
             lastDist = 0; 
@@ -2504,13 +2569,14 @@ if(fsContent) {
     
     fsContent.addEventListener("wheel", e => {
         e.preventDefault();
+        e.stopPropagation();
         let zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
         scale = Math.max(0.2, Math.min(15, scale * zoomFactor));
         autoRefresh3D();
     }, {passive:false});
 }
 
-document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="fsModal") closeFullscreen(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="block") closeFullscreen(); });
 
 window.addEventListener("focus", () => {
     let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
@@ -3058,6 +3124,52 @@ async function executeRealA4Print(isPdfMode = false) {
             }
         }
 
+        const isBrushActive = $("fsBrushCheck")?.checked || false;
+        const rawBrush = parseInt($("brushIntensity")?.value || 60, 10);
+        if(isBrushActive && rawBrush > 0){
+            try {
+                let snap = document.createElement('canvas');
+                snap.width = printCanvas.width; snap.height = printCanvas.height;
+                let sCtx = snap.getContext('2d');
+                sCtx.drawImage(printCanvas, 0, 0);
+                let imgData = sCtx.getImageData(0, 0, printCanvas.width, printCanvas.height);
+
+                pCtx.save();
+                pCtx.beginPath();
+                pCtx.rect(RULER_px, 0, printW, printH);
+                pCtx.clip();
+
+                let intensity = rawBrush / 100;
+                let count = Math.floor(15000 * intensity);
+                for(let i = 0; i < count; i++){
+                    let px = RULER_px + Math.random() * printW;
+                    let py = Math.random() * printH;
+                    let ix = Math.floor(px); let iy = Math.floor(py);
+                    if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
+                    let idx = (iy * snap.width + ix) * 4;
+                    if(imgData.data[idx + 3] < 10) continue;
+                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
+                    let brightness = (Math.random() - 0.2) * 35;
+                    let fR = Math.min(255, Math.max(0, r + brightness));
+                    let fG = Math.min(255, Math.max(0, g + brightness));
+                    let fB = Math.min(255, Math.max(0, b + brightness));
+
+                    pCtx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
+                    pCtx.lineWidth = (Math.random() * 0.7 + 0.3) * printDpr;
+
+                    let angle = Math.random() * Math.PI * 2;
+                    let len = (Math.random() * 3.5 * intensity + 2) * printDpr;
+                    let curve = (Math.random() - 0.5) * 1.2 * printDpr;
+
+                    pCtx.beginPath();
+                    pCtx.moveTo(px, py);
+                    pCtx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
+                    pCtx.stroke();
+                }
+                pCtx.restore();
+            } catch(e) {}
+        }
+
         const rulerBgColor = "#ffffff";
         const rulerBorderColor = "#475569";
 
@@ -3511,7 +3623,7 @@ if (typeof window.appPrint !== "function") {
 
 async function triggerRealPrint() {
     let fs = $("fsModal");
-    let wasFsOpen = fs && fs.style.display === "flex";
+    let wasFsOpen = fs && fs.style.display === "block";
     if (wasFsOpen) fs.style.display = "none";
 
     try {
@@ -3532,7 +3644,7 @@ async function triggerRealPrint() {
         document.body.style.overflow = wasFsOpen ? "hidden" : "";
         drawFramePending = false;
         if (wasFsOpen) {
-            fs.style.display = "flex";
+            fs.style.display = "block";
             draw3DWeave();
         }
     }, 300);
