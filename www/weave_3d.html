@@ -1457,6 +1457,7 @@ async function importFromFirebase(manual = false) {
     }
 }
 
+
 /* ================= LOAD SELECTED DESIGN ================= */
 function loadSelectedDesign(){
     try {
@@ -1468,7 +1469,11 @@ function loadSelectedDesign(){
         const selectedClean = cleanDesignName(selectedVal);
         const rawDigits = selectedVal.replace(/\D/g, '');
 
-        let foundDesign = allCloudDesigns.find(d => {
+        let foundDesign = null;
+        let foundEdits = null;
+
+        // 1. Search in allCloudDesigns
+        foundDesign = allCloudDesigns.find(d => {
             let dN = designName(d).trim();
             let cleanDN = cleanDesignName(dN);
             let dDigits = dN.replace(/\D/g, '');
@@ -1477,32 +1482,56 @@ function loadSelectedDesign(){
                    (rawDigits && dDigits === rawDigits);
         });
 
-        if (!foundDesign) {
+        // 2. Search in local_edits_cache
+        try {
+            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let edKey = Object.keys(editsCache).find(k => {
+                let kt = k.trim();
+                return kt === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits;
+            });
+            if (edKey && editsCache[edKey]) {
+                foundEdits = editsCache[edKey];
+                if (!foundDesign) foundDesign = foundEdits;
+            }
+        } catch(e) {}
+
+        // 3. Search across all other local storage data entry tables (warp_entry_data, weft_entry_data, design_masters_data, weave_designs, denting_drawing_data)
+        let storageKeys = ["warp_entry_data", "weft_entry_data", "design_masters_data", "weave_designs", "denting_drawing_data"];
+        for(let sk of storageKeys) {
             try {
-                let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-                let foundKey = Object.keys(editsCache).find(k => {
-                    let kTrim = k.trim();
-                    return kTrim === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits;
-                });
-                if (foundKey && editsCache[foundKey]) {
-                    foundDesign = editsCache[foundKey];
+                let raw = localStorage.getItem(sk);
+                if(raw) {
+                    let parsed = JSON.parse(raw);
+                    if(Array.isArray(parsed)) {
+                        let match = parsed.find(item => {
+                            let iname = designName(item).trim();
+                            let cleanIname = cleanDesignName(iname);
+                            let iDigits = iname.replace(/\D/g, '');
+                            return iname === selectedVal || cleanIname === selectedClean || (rawDigits && iDigits === rawDigits);
+                        });
+                        if(match) {
+                            if(!foundDesign) foundDesign = match;
+                            else foundDesign = { ...match, ...foundDesign };
+                        }
+                    } else if(parsed && typeof parsed === "object") {
+                        Object.keys(parsed).forEach(pk => {
+                            if(pk.trim() === selectedVal || cleanDesignName(pk) === selectedClean || pk.replace(/\D/g, '') === rawDigits) {
+                                if(!foundDesign) foundDesign = parsed[pk];
+                                else foundDesign = { ...parsed[pk], ...foundDesign };
+                            }
+                        });
+                    }
                 }
-            }	catch(e) {}
+            } catch(e) {}
         }
 
-        // Design kandupidikavillaiyendraal, indha number-ai vechu pudhusa create pannikollum (Not found error varave varathu)
+        // 4. If truly not found anywhere, fallback to a clean empty structure instead of hardcoded dummy lines
         if (!foundDesign) {
             foundDesign = {
                 designNo: selectedVal,
                 name: selectedVal,
-                warpLines: [
-                    { color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' },
-                    { color: '#64748b', ends: 1, colourName: 'D. Grey', count: '21 ccc' }
-                ],
-                weftLines: [
-                    { color: '#1e3a8a', picks: 27, colourName: 'Navy', count: '21 ccc' },
-                    { color: '#64748b', picks: 1, colourName: 'D. Grey', count: '21 ccc' }
-                ],
+                warpLines: [],
+                weftLines: [],
                 dentingPatternFormula: "2",
                 drawingPatternFormula: "1,2,3,4"
             };
@@ -1518,13 +1547,6 @@ function loadSelectedDesign(){
             document.getElementById("activeDesignText").textContent = "Active Design: " + dName;
         }
         localStorage.setItem("weave_last_design_name", dName);
-        
-        let foundEdits = null;
-        try {
-            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim() || cleanDesignName(k) === cleanName);
-            if(key) foundEdits = editsCache[key];
-        } catch(e) {}
 
         let rawWarp = [];
         let rawWeft = [];
@@ -1538,15 +1560,6 @@ function loadSelectedDesign(){
 
         if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
         if(!rawWeft.length && activeDesignObj.weftLines) rawWeft = clone(activeDesignObj.weftLines);
-
-        if(!rawWarp.length) rawWarp = [
-            { color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' },
-            { color: '#64748b', ends: 1, colourName: 'D. Grey', count: '21 ccc' }
-        ];
-        if(!rawWeft.length) rawWeft = [
-            { color: '#1e3a8a', picks: 27, colourName: 'Navy', count: '21 ccc' },
-            { color: '#64748b', picks: 1, colourName: 'D. Grey', count: '21 ccc' }
-        ];
 
         currentWarpCount = rawWarp.length;
         currentWeftCount = rawWeft.length;
