@@ -1145,34 +1145,78 @@ function sanitizeDesignObj(d) {
     return d;
 }
 
+/* ===== FIX: robust local data collection (warp_entry_data / weft_entry_data etc.) ===== */
+function _isEmptyVal(v) { return v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0); }
+
+function collectLocalDesigns() {
+    const out = [];
+    const keys = ["design_masters_data", "weave_designs", "weave_designs_cache", "local_edits_cache",
+                  "warp_entry_data", "weft_entry_data", "denting_drawing_data", "graph_editor_data"];
+    const altLineProps = ["lines", "rows", "entries", "items", "yarns", "data", "list"];
+    keys.forEach(key => {
+        const kind = key === "warp_entry_data" ? "warp" : (key === "weft_entry_data" ? "weft" : null);
+        const val = safeJSON(key, null);
+        if (!val || typeof val !== "object") return;
+
+        const fixRecord = (rec, fallbackName) => {
+            if (!rec || typeof rec !== "object" || Array.isArray(rec)) return null;
+            rec = clone(rec);
+            if (_isEmptyVal(rec.designNo) && _isEmptyVal(rec.design_no) && _isEmptyVal(rec.designNumber) &&
+                _isEmptyVal(rec.design_number) && _isEmptyVal(rec.name) && _isEmptyVal(rec.design) && fallbackName) {
+                rec.designNo = fallbackName;
+            }
+            if (kind && _isEmptyVal(rec[kind + "Lines"])) {
+                for (const ap of altLineProps) {
+                    if (Array.isArray(rec[ap]) && rec[ap].length) { rec[kind + "Lines"] = rec[ap]; break; }
+                }
+                if (_isEmptyVal(rec[kind + "Lines"]) && Array.isArray(rec[kind]) && rec[kind].length) rec[kind + "Lines"] = rec[kind];
+            }
+            return rec;
+        };
+
+        if (Array.isArray(val)) {
+            val.forEach(item => { const r = fixRecord(item, ""); if (r) out.push(r); });
+        } else if (val.designNo || val.warpLines || val.weftLines) {
+            const r = fixRecord(val, ""); if (r) out.push(r);
+        } else {
+            Object.keys(val).forEach(k => {
+                const v = val[k];
+                if (Array.isArray(v)) {
+                    // { "B 7788A": [ {color, ends}, ... ] }
+                    if (kind) { const o = { designNo: k }; o[kind + "Lines"] = clone(v); out.push(o); }
+                } else if (v && typeof v === "object") {
+                    const r = fixRecord(v, k); if (r) out.push(r);
+                }
+            });
+        }
+    });
+    return out;
+}
+
 function mergeDesigns(items) {
-    let map = new Map();
+    // FIX: merge by cleaned design name, and let NON-EMPTY values win.
+    // (Old code let an empty warpLines:[] of the first record overwrite real lines of later records.)
+    const map = new Map();
+    const order = [];
+    const addRec = (rawD, priority) => {
+        if (!rawD) return;
+        const d = sanitizeDesignObj(clone(rawD));
+        if (!d) return;
+        const n = String(designName(d)).trim();
+        const ck = cleanDesignName(n);
+        if (!n || n === "Unnamed" || n.toLowerCase() === "unnamed" || !ck) return;
+        if (!map.has(ck)) { map.set(ck, d); order.push(ck); return; }
+        const base = map.get(ck);
+        Object.keys(d).forEach(k => { if (_isEmptyVal(base[k]) && !_isEmptyVal(d[k])) base[k] = d[k]; });
+    };
+
     let rawEdits = {};
     try { rawEdits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}"); } catch(e) {}
-
     Object.keys(rawEdits).forEach(k => {
-        if (rawEdits[k]) {
-            let cleanKey = String(k).trim();
-            map.set(cleanKey, sanitizeDesignObj(clone(rawEdits[k])));
-        }
+        if (rawEdits[k]) { const r = clone(rawEdits[k]); if (_isEmptyVal(r.designNo) && _isEmptyVal(r.name)) r.designNo = String(k).trim(); addRec(r); }
     });
-
-    (items || []).filter(Boolean).forEach(rawD => {
-        let d = sanitizeDesignObj(clone(rawD));
-        let n = String(designName(d)).trim(); 
-        if(!n || n === "unnamed") return;
-        
-        if (!map.has(n)) {
-            map.set(n, d);
-        } else {
-            let existing = map.get(n);
-            if (!rawEdits[n]) {
-                map.set(n, { ...d, ...existing });
-            }
-        }
-    });
-
-    return [...map.values()];
+    (items || []).filter(Boolean).forEach(rawD => addRec(rawD));
+    return order.map(k => map.get(k));
 }
 function extractLinesFromObj(obj, type) {
     if (!obj) return [];
@@ -1421,25 +1465,7 @@ async function importFromFirebase(manual = false) {
     try {
         setStatus(manual ? "🔄 Local + Cloud refresh..." : "⚡ Loading designs...");
 
-        const local = [];
-        const localKeys = ["design_masters_data", "weave_designs", "weave_designs_cache", "local_edits_cache", "warp_entry_data", "weft_entry_data", "denting_drawing_data"];
-        
-        localKeys.forEach(key => {
-            let val = safeJSON(key, null);
-            if (val) {
-                if (Array.isArray(val)) {
-                    val.forEach(item => { if (item && typeof item === "object") local.push(clone(item)); });
-                } else if (typeof val === "object") {
-                    Object.keys(val).forEach(k => {
-                        let item = val[k];
-                        if (item && typeof item === "object" && !Array.isArray(item)) {
-                            item.designNo = item.designNo || k;
-                            local.push(clone(item));
-                        }
-                    });
-                }
-            }
-        });
+        const local = collectLocalDesigns();
 
         allCloudDesigns = mergeDesigns(local);
         
@@ -1520,29 +1546,24 @@ function loadSelectedDesign(){
             }
         }
 
-        // 3. Fallback scan across design masters storage keys if still empty
+        // 3. Fallback: scan ALL local storage keys (incl. warp_entry_data / weft_entry_data)
         if (!warpLinesData.length || !weftLinesData.length) {
-            let storageKeys = ["design_masters_data", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
-            for(let sk of storageKeys) {
-                try {
-                    let raw = localStorage.getItem(sk);
-                    if(!raw) continue;
-                    let parsed = JSON.parse(raw);
-                    if(Array.isArray(parsed)) {
-                        let match = parsed.find(item => {
-                            if(!item) return false;
-                            let iname = designName(item).trim();
-                            let cleanIname = cleanDesignName(iname);
-                            let iDigits = iname.replace(/\D/g, '');
-                            return iname === selectedVal || cleanIname === selectedClean || (rawDigits && iDigits === rawDigits);
-                        });
-                        if(match) {
-                            if(!warpLinesData.length) warpLinesData = extractLinesFromObj(match, "warp");
-                            if(!weftLinesData.length) weftLinesData = extractLinesFromObj(match, "weft");
-                        }
-                    }
-                } catch(e) {}
-            }
+            try {
+                collectLocalDesigns().forEach(item => {
+                    const iname = designName(item).trim();
+                    const iDigits = iname.replace(/\D/g, '');
+                    const ok = iname === selectedVal || cleanDesignName(iname) === selectedClean || (rawDigits && iDigits === rawDigits);
+                    if (!ok) return;
+                    if (!foundMaster) foundMaster = item;
+                    if (!warpLinesData.length) warpLinesData = extractLinesFromObj(item, "warp");
+                    if (!weftLinesData.length) weftLinesData = extractLinesFromObj(item, "weft");
+                });
+            } catch(e) { console.log("Fallback scan error", e); }
+        }
+
+        if (!warpLinesData.length || !weftLinesData.length) {
+            const have = k => { const v = safeJSON(k, null); return v ? (Array.isArray(v) ? v.length : Object.keys(v).length) : 0; };
+            console.warn("Design lines missing for", selectedVal, "warp_entry_data records:", have("warp_entry_data"), "weft_entry_data records:", have("weft_entry_data"));
         }
 
         let baseObj = foundMaster || { designNo: selectedVal, name: selectedVal };
@@ -1568,12 +1589,12 @@ function loadSelectedDesign(){
         try {
             let ddArr = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
-                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName || designName(d).replace(/\D/g,'') === rawDigits);
+                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === selectedClean || designName(d).replace(/\D/g,'') === rawDigits);
             }
         } catch(e) {}
 
         let dMasters = safeJSON("design_masters_data", []);
-        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName || m.designNo?.toString().replace(/\D/g,'') === rawDigits) : null;
+        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === selectedClean || m.designNo?.toString().replace(/\D/g,'') === rawDigits) : null;
 
         let sourceObj = {
             ...activeDesignObj,
@@ -1601,7 +1622,11 @@ function loadSelectedDesign(){
         if($("dentingPatternInput")) $("dentingPatternInput").value = dentVal;
         if($("drawingPatternInput")) $("drawingPatternInput").value = drawVal;
 
-        if($("designStatus")) $("designStatus").textContent = "⚡ Design Ready";
+        if($("designStatus")) {
+            $("designStatus").textContent = (!warpLinesData.length || !weftLinesData.length)
+                ? "⚠️ Warp/Weft data localStorage-ல் கிடைக்கவில்லை (W:" + warpLinesData.length + " / F:" + weftLinesData.length + ")"
+                : "⚡ Design Ready";
+        }
         if(typeof onWeaveChange === "function") onWeaveChange();
         autoRefresh3D();
     } catch(err){
@@ -3724,25 +3749,7 @@ function buildPrintGraph(m, pickStr) {
 
 (function() {
     try {
-        let combinedDesigns = [];
-        let keysToTry = [
-            "design_masters_data", "weave_designs", "weave_designs_cache", 
-            "denting_drawing_data", "graph_editor_data", "warp_entry_data", "weft_entry_data", "local_edits_cache"
-        ];
-
-        keysToTry.forEach(key => {
-            let val = localStorage.getItem(key);
-            if (val) {
-                try {
-                    let parsed = JSON.parse(val);
-                    if (Array.isArray(parsed)) {
-                        combinedDesigns.push(...parsed);
-                    } else if (parsed && typeof parsed === "object") {
-                        Object.values(parsed).forEach(v => { if(v) combinedDesigns.push(v); });
-                    }
-                } catch(e) {}
-            }
-        });
+        let combinedDesigns = collectLocalDesigns();
 
         allCloudDesigns = mergeDesigns(combinedDesigns);
 
