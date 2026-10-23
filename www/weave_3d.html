@@ -1343,11 +1343,12 @@ function populateDesignSelect(auto = true) {
     const select = $("designSelect");
     if (!select) return;
 
-    // Preserve the current selection while local/cloud data refreshes the list.
-    const previousValue = select.value || "";
+    // Keep the actual design name, not the <select> value (which is an internal ID).
+    const previousOption = select.options[select.selectedIndex];
+    const previousName = previousOption?.dataset?.designName || "";
     const lastSaved = localStorage.getItem("weave_last_design_name") || "";
     const activeName = activeDesignObj ? designName(activeDesignObj) : "";
-    const preferredName = previousValue || activeName || lastSaved;
+    const preferredName = previousName || activeName || lastSaved;
 
     const fragment = document.createDocumentFragment();
     const placeholder = document.createElement("option");
@@ -1359,28 +1360,40 @@ function populateDesignSelect(auto = true) {
     allCloudDesigns.forEach((design, index) => {
         const name = designName(design);
         const key = cleanDesignName(name);
-        if (!name || name === "Unnamed" || !key || seen.has(key)) return;
+        if (!name || name.toLowerCase() === "unnamed" || !key || seen.has(key)) return;
         seen.add(key);
+
         const option = document.createElement("option");
-        option.value = name;
+        // Use the array index as the option value. Design names can contain
+        // symbols/spaces and duplicate-normalized names can otherwise fail lookup.
+        option.value = String(index);
         option.textContent = "🎨 " + name;
-        // Stable reference helps load the exact record even if names have punctuation.
         option.dataset.designIndex = String(index);
+        option.dataset.designName = name;
         fragment.appendChild(option);
     });
 
     select.replaceChildren(fragment);
 
-    const wanted = preferredName && allCloudDesigns.find(d =>
-        cleanDesignName(designName(d)) === cleanDesignName(preferredName)
-    );
-    const targetName = wanted ? designName(wanted) :
-        (allCloudDesigns.length ? designName(allCloudDesigns[0]) : "");
+    // Only select a record that actually has an option in the dropdown.
+    let targetIndex = -1;
+    if (preferredName) {
+        targetIndex = allCloudDesigns.findIndex((d, index) =>
+            cleanDesignName(designName(d)) === cleanDesignName(preferredName) &&
+            [...select.options].some(o => o.dataset.designIndex === String(index))
+        );
+    }
+    if (targetIndex < 0) {
+        const firstOption = [...select.options].find(o => o.dataset.designIndex !== undefined);
+        if (firstOption) targetIndex = Number(firstOption.dataset.designIndex);
+    }
 
-    if (targetName) {
-        select.value = targetName;
-        if (auto && (!activeDesignObj || cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
-            loadSelectedDesign();
+    if (targetIndex >= 0 && allCloudDesigns[targetIndex]) {
+        select.value = String(targetIndex);
+        const targetName = designName(allCloudDesigns[targetIndex]);
+        if (auto && (!activeDesignObj ||
+            cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
+            loadSelectedDesign(select);
         }
     } else {
         select.value = "";
@@ -1445,9 +1458,9 @@ async function importFromFirebase(manual = false) {
 }
 
 /* ================= LOAD SELECTED DESIGN ================= */
-function loadSelectedDesign(){
+function loadSelectedDesign(selectElement){
     try {
-        const select = document.getElementById("designSelect");
+        const select = selectElement || document.getElementById("designSelect");
         if (!select || !select.value) return;
 
         setStatus("⏳ Loading selected design...");
@@ -1455,8 +1468,8 @@ function loadSelectedDesign(){
         const indexValue = selectedOption?.dataset?.designIndex;
         let foundDesign = indexValue !== undefined ? allCloudDesigns[Number(indexValue)] : null;
         if (!foundDesign) {
-            const selectedName = cleanDesignName(select.value);
-            foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === selectedName);
+            const selectedName = selectedOption?.dataset?.designName || select.value;
+            foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === cleanDesignName(selectedName));
         }
         // Do not silently load the first design if the selected number cannot be matched.
         if (!foundDesign) {
