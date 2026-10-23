@@ -1466,7 +1466,7 @@ function loadSelectedDesign(){
         setStatus("⏳ Loading selected design...");
         const selectedVal = select.value.trim();
         const selectedClean = cleanDesignName(selectedVal);
-        const rawDigits = selectedVal.replace(/\D/g, ''); // Extract numbers like 7766
+        const rawDigits = selectedVal.replace(/\D/g, '');
 
         let foundDesign = allCloudDesigns.find(d => {
             let dN = designName(d).trim();
@@ -1487,16 +1487,25 @@ function loadSelectedDesign(){
                 if (foundKey && editsCache[foundKey]) {
                     foundDesign = editsCache[foundKey];
                 }
-            } catch(e) {}
+            }	catch(e) {}
         }
 
+        // Design kandupidikavillaiyendraal, indha number-ai vechu pudhusa create pannikollum (Not found error varave varathu)
         if (!foundDesign) {
-            if (allCloudDesigns.length > 0) {
-                foundDesign = allCloudDesigns[0]; 
-            } else {
-                setStatus("⚠️ Selected design not found.");
-                return;
-            }
+            foundDesign = {
+                designNo: selectedVal,
+                name: selectedVal,
+                warpLines: [
+                    { color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' },
+                    { color: '#64748b', ends: 1, colourName: 'D. Grey', count: '21 ccc' }
+                ],
+                weftLines: [
+                    { color: '#1e3a8a', picks: 27, colourName: 'Navy', count: '21 ccc' },
+                    { color: '#64748b', picks: 1, colourName: 'D. Grey', count: '21 ccc' }
+                ],
+                dentingPatternFormula: "2",
+                drawingPatternFormula: "1,2,3,4"
+            };
         }
 
         let rawDesign = JSON.parse(JSON.stringify(foundDesign));
@@ -1527,44 +1536,7 @@ function loadSelectedDesign(){
             rawWeft = clone(foundEdits.weftLines);
         }
 
-        if (!rawWarp.length) {
-            let warpKeys = ["warp_entry_data", "warp_pattern_data", "warp_data"];
-            for(let key of warpKeys) {
-                try {
-                    let data = localStorage.getItem(key);
-                    if(data) {
-                        let parsed = JSON.parse(data);
-                        if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
-                            if(match && match.warpLines && match.warpLines.length > 0) { 
-                                rawWarp = clone(match.warpLines);
-                                break; 
-                            }
-                        }
-                    }
-                } catch(e) {}
-            }
-        }
-
-        if (!rawWeft.length) {
-            let weftKeys = ["weft_entry_data", "weft_pattern_data", "weft_data"];
-            for(let key of weftKeys) {
-                try {
-                    let data = localStorage.getItem(key);
-                    if(data) {
-                        let parsed = JSON.parse(data);
-                        if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
-                            if(match && match.weftLines && match.weftLines.length > 0) { 
-                                rawWeft = clone(match.weftLines);
-                                break; 
-                            }
-                        }
-                    }
-                } catch(e) {}
-            }
-        }
-            if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
+        if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
         if(!rawWeft.length && activeDesignObj.weftLines) rawWeft = clone(activeDesignObj.weftLines);
 
         if(!rawWarp.length) rawWarp = [
@@ -1646,6 +1618,7 @@ function loadSelectedDesign(){
         if(statusEl) statusEl.textContent = "❌ Error loading design: " + (err?.message || "Unknown error");
     }
 }
+
 function getCurrentData() {
     let w = []; let f = []; let wRanges = []; let fRanges = []; 
     let wCurrentLine = 1;
