@@ -19,7 +19,7 @@
 // ============================================================
 // VERSION (Updated to v10 so Chrome detects changes)
 // ============================================================
-const CACHE_VERSION = "v10"; 
+const CACHE_VERSION = "v11"; 
 const CACHE_NAME = "texforever-erp-" + CACHE_VERSION;
 const APP_SHELL_CACHE = "texforever-shell-" + CACHE_VERSION;
 
@@ -31,6 +31,7 @@ const APP_SHELL = [
     "./index.html",
     "./config.js",
     "./translator.js",
+    "./printer.js",
     "./manifest.json",
     "./style.css",
 
@@ -318,6 +319,17 @@ async function handleNavigation(
         return shellCached;
     }
 
+    // Same page, different ?query (e.g. design_list.html?type=kora) -> use the cached page
+    const looseCached =
+        await caches.match(
+            request,
+            { ignoreSearch: true }
+        );
+
+    if (looseCached) {
+        return looseCached;
+    }
+
     // 🔴 Fixed the Syntax Error here (Added closing brace '}' for the function)
     return new Response(
         "TEX FOR EVER: இந்தப் பக்கம் இன்னும் ஆஃப்லைனில் பதிவிறக்கம் செய்யப்படவில்லை. தயவுசெய்து இன்டர்நெட்டை ஆன் செய்து இந்தப் பக்கத்தை ஒருமுறை பார்வையிடவும்.",
@@ -430,6 +442,27 @@ self.addEventListener(
                 request
             )
         ) {
+            const host = new URL(request.url).hostname;
+            const cacheableCdn =
+                host === "cdn.jsdelivr.net" ||
+                host === "cdnjs.cloudflare.com" ||
+                host === "fonts.googleapis.com" ||
+                host === "fonts.gstatic.com" ||
+                host === "www.gstatic.com";
+            if (cacheableCdn) {
+                event.respondWith(
+                    caches.match(request).then(hit =>
+                        hit ||
+                        fetch(request).then(res => {
+                            if (res && (res.ok || res.type === "opaque")) {
+                                const copy = res.clone();
+                                caches.open(CACHE_NAME).then(c => c.put(request, copy));
+                            }
+                            return res;
+                        })
+                    )
+                );
+            }
             return;
         }
 

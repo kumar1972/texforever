@@ -113,6 +113,8 @@
         <div class="action-btns">
             <button class="btn-action btn-print" onclick="window.print()">🖨️ Print</button>
             <button class="btn-action btn-excel" onclick="exportToExcel()">📥 Excel</button>
+            <button class="btn-action" style="background:linear-gradient(135deg,#3B82F6,#2563EB);" onclick="pullFromCloud()">⬇️ Pull</button>
+            <button class="btn-action" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9);" onclick="pushToCloud()">⬆️ Push</button>
         </div>
     </div>
     
@@ -358,9 +360,34 @@ window.renderDesignList = function() {
     }
 };
 
+window.pullFromCloud = async function () {
+    if (!navigator.onLine) { alert('Offline: Internet இல்லை. Online-ல் முயற்சிக்கவும்.'); return; }
+    if (!window.pullCloudToLocal) { alert('config.js புதிய version தேவை.'); return; }
+    const r = await window.pullCloudToLocal();
+    if (r && r.ok) { window.renderDesignList(); alert('✅ Cloud-ல் இருந்து ' + r.count + ' data group இந்த device-ல் save ஆனது.'); }
+    else { alert('❌ ' + ((r && r.msg) || 'Pull failed')); }
+};
+
+window.pushToCloud = async function () {
+    if (!navigator.onLine) { alert('Offline: Internet இல்லை. Online-ல் முயற்சிக்கவும்.'); return; }
+    if (!window.pushLocalToCloud) { alert('config.js புதிய version தேவை.'); return; }
+    if (!confirm('இந்த device-ல் உள்ள data-வை Cloud-க்கு அனுப்பவா?\n(Cloud-ல் உள்ள அதே data மாற்றப்படும். காலி data அனுப்பப்படாது.)')) return;
+    const r = await window.pushLocalToCloud();
+    if (r && r.ok) { alert('✅ ' + r.count + ' data group Cloud-க்கு அனுப்பப்பட்டது.'); }
+    else { alert('❌ ' + ((r && r.msg) || 'Push failed')); }
+};
+
 document.addEventListener('DOMContentLoaded', async function() {
     await dbReady();
-    window.renderDesignList();
+    window.renderDesignList();               // 1) show whatever is on this device (works offline)
+
+    // 2) when cloud -> local sync finishes, redraw with the new data
+    window.addEventListener('erp-cloud-synced', function () { window.renderDesignList(); });
+
+    // 3) make sure a full cloud pull happens on this page (online only)
+    if (navigator.onLine && typeof window.initializeSupabase === 'function') {
+        try { window.initializeSupabase(true).then(function () { window.renderDesignList(); }); } catch (e) {}
+    }
 });
 </script>
 </body>

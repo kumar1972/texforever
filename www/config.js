@@ -99,7 +99,7 @@ window.StorageDB = {
         if (!this.isReady) return localStorage.getItem(key);
         return null;
     },
-    setItem(key, value) {
+    setItem(key, value, skipCloud) {
         this.cache[key] = value;
         if (this.db) {
             try { this.db.transaction("store", "readwrite").objectStore("store").put(value, key); } catch(e){}
@@ -107,7 +107,7 @@ window.StorageDB = {
             try { localStorage.setItem(key, value); } catch(e) {}
         }
         // Same cloud auto-sync that the old localStorage interceptor did
-        if (key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom")) {
+        if (!skipCloud && key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom")) {
             if (window.isCloudSyncActive && window.isCloudSyncActive()) {
                 let parsedData = value;
                 try { parsedData = JSON.parse(value); } catch(e) {}
@@ -581,7 +581,18 @@ window.initializeSupabase = async function (doFullSync) {
     }
 
     if (doFullSync === undefined) { doFullSync = true; }
-    if (window.supabaseInitStarted && window.cloudSyncPromise) { return window.cloudSyncPromise; }
+    if (window.supabaseInitStarted && window.cloudSyncPromise) {
+        // FIX: if the first init was started with doFullSync=false (e.g. from a StorageDB save),
+        // a later request for a full sync must still pull Cloud -> Local once.
+        if (doFullSync && !window.__cloudFullSyncStarted) {
+            window.__cloudFullSyncStarted = true;
+            return window.cloudSyncPromise.then(async function (ok) {
+                if (ok && navigator.onLine) { await syncAllCloudData(); await syncOfflineQueue(); }
+                return ok;
+            });
+        }
+        return window.cloudSyncPromise;
+    }
 
     window.supabaseInitStarted = true;
     window.supabaseInitializing = true;
@@ -618,6 +629,7 @@ window.initializeSupabase = async function (doFullSync) {
             updateNetworkStatus();
 
             if (navigator.onLine && doFullSync) {
+                window.__cloudFullSyncStarted = true;
                 await syncAllCloudData();
                 await syncOfflineQueue();
             }
@@ -887,8 +899,43 @@ async function syncAllCloudData() {
     if (synced > 0 && typeof window.populateDropdowns === "function") {
         window.populateDropdowns();
     }
+    try { window.dispatchEvent(new CustomEvent("erp-cloud-synced", { detail: { synced: synced } })); } catch (e) {}
     return true;
 }
+
+// Manual: Cloud -> This device (replaces local copy of every ERP key that exists in cloud)
+window.pullCloudToLocal = async function () {
+    if (!navigator.onLine) { return { ok: false, msg: "Offline" }; }
+    if (!window.supabaseClient) { await window.initializeSupabase(false); }
+    if (!window.supabaseClient) { return { ok: false, msg: "Supabase connect ஆகவில்லை" }; }
+    let n = 0;
+    for (const key of window.erpCloudKeys) {
+        try {
+            const d = await cloudLoad(key, null);
+            if (d !== null && d !== undefined) { window.localSave(key, d); clearLocalDirty(key); n++; }
+        } catch (e) {}
+    }
+    try { window.dispatchEvent(new CustomEvent("erp-cloud-synced", { detail: { synced: n } })); } catch (e) {}
+    return { ok: true, count: n };
+};
+
+// Manual: This device -> Cloud (only keys that actually have data; empty {} / [] are skipped)
+window.pushLocalToCloud = async function () {
+    if (!navigator.onLine) { return { ok: false, msg: "Offline" }; }
+    if (!window.supabaseClient) { await window.initializeSupabase(false); }
+    if (!window.supabaseClient) { return { ok: false, msg: "Supabase connect ஆகவில்லை" }; }
+    let n = 0;
+    for (const key of window.erpCloudKeys) {
+        try {
+            const d = window.localLoad(key, null);
+            if (d === null || d === undefined || d === "") continue;
+            if (Array.isArray(d) && d.length === 0) continue;
+            if (typeof d === "object" && !Array.isArray(d) && Object.keys(d).length === 0) continue;
+            if (await cloudSave(key, d)) n++;
+        } catch (e) {}
+    }
+    return { ok: true, count: n };
+};
 
 // ============================================================
 // FULL LOCAL → CLOUD SYNC (GUARDED)
@@ -1140,12 +1187,18 @@ window.populateDropdowns = function () {
             }
         });
 
-        if (window.StorageDB) {
-            window.StorageDB.setItem("design_specs", JSON.stringify(designSpecs));
-            window.StorageDB.setItem("pre_design_numbers", JSON.stringify(combined));
-        } else {
-            localStorage.setItem("design_specs", JSON.stringify(designSpecs));
-            localStorage.setItem("pre_design_numbers", JSON.stringify(combined));
+        // FIX: these derived lists are saved on THIS device only (skipCloud = true) and never when empty.
+        // Before, a fresh device pushed empty {} / [] to Supabase and could overwrite real cloud data.
+        if (combined.length > 0) {
+            const specStr = JSON.stringify(designSpecs);
+            const preStr = JSON.stringify(combined);
+            if (window.StorageDB) {
+                if (window.StorageDB.getItem("design_specs") !== specStr) window.StorageDB.setItem("design_specs", specStr, true);
+                if (window.StorageDB.getItem("pre_design_numbers") !== preStr) window.StorageDB.setItem("pre_design_numbers", preStr, true);
+            } else {
+                localStorage.setItem("design_specs", specStr);
+                localStorage.setItem("pre_design_numbers", preStr);
+            }
         }
 
         document.querySelectorAll("select").forEach(function (select) {
@@ -1568,3 +1621,14 @@ window.handleGlobalPrint = function(htmlContent) {
         document.head.appendChild(printStyle);
     }
 });
+
+// ============================================================
+// OFFLINE APP SHELL (Service Worker) - pages + scripts open without internet
+// ============================================================
+if ("serviceWorker" in navigator && /^https?:$/.test(window.location.protocol)) {
+    window.addEventListener("load", function () {
+        navigator.serviceWorker.register("sw.js").catch(function (e) {
+            console.log("Service worker not registered:", e && e.message);
+        });
+    });
+}
