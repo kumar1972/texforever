@@ -853,7 +853,7 @@ input, select {
             <div class="effect-group">
                 <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
                 <span>🪶 Brush:</span>
-                <input type="range" id="brushIntensity" min="10" max="100" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
+                <input type="range" id="brushIntensity" min="40" max="200" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
                 <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">50%</span>
             </div>
         </div>
@@ -984,9 +984,13 @@ let liveDesignDimensions = { widthCm: 0, heightCm: 0 };
 let selectedCadScalePercent = 100;
 let simulationRepeatFactor = 1.25;
 // Keep the current zoom/pan when the mobile browser chrome or orientation changes.
-window.addEventListener("resize", () => {
-    if ($("fsModal")?.style.display === "block") scheduleWeaveResize();
-}, { passive: true });
+window.addEventListener("resize", scheduleWeaveResize, { passive: true });
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleWeaveResize, { passive: true });
+    // Chrome's address bar can change the visual viewport without a reliable
+    // layout-viewport resize; redraw only while the simulation is open.
+    window.visualViewport.addEventListener("scroll", scheduleWeaveResize, { passive: true });
+}
 
 function changeSimulationRepeats(val) {
     simulationRepeatFactor = Math.max(1, Math.min(4, parseFloat(val) || 1.25));
@@ -2431,19 +2435,46 @@ function draw3DWeave(){
         const viewCenterX = W / 2;
         const viewCenterY = H / 2;
 
-        if (scale === 1 && pointX === 0 && pointY === 0) {
-            const fitScale = Math.min(1, (W - 24) / Math.max(1, drawW + RULER), (H - 24) / Math.max(1, drawH + RULER));
-            if (fitScale < 1) scale = Math.max(0.05, fitScale);
+        // Recompute fit from the *current* content box on every draw. The
+        // previous implementation stored fitScale in the pinch-zoom variable;
+        // when Chrome's mobile address bar appeared/disappeared that stale scale
+        // could make the fabric jump or become a tiny strip off-screen.
+        const fitScale = Math.min(
+            1,
+            Math.max(0.05, (W - 24) / Math.max(1, drawW + RULER)),
+            Math.max(0.05, (H - 24) / Math.max(1, drawH + RULER))
+        );
+        const viewScale = Math.max(0.05, Math.min(15, fitScale * scale));
+
+        // Keep the fabric/rulers reachable when a browser-chrome gesture is
+        // accidentally interpreted as a canvas drag.
+        const contentW = (drawW + RULER) * viewScale;
+        const contentH = (drawH + RULER) * viewScale;
+        if (contentW <= W - 48) {
+            pointX = 0;
+        } else {
+            // If zoomed larger than the viewport, keep the fabric's centre
+            // within the visible viewport so it can never disappear as a sliver.
+            const contentCenterX = ((left - RULER) + right) * 0.5 * viewScale;
+            pointX = Math.max(-viewCenterX - contentCenterX,
+                              Math.min(viewCenterX - contentCenterX, pointX));
+        }
+        if (contentH <= H - 48) {
+            pointY = 0;
+        } else {
+            const contentCenterY = (top + bottom + RULER) * 0.5 * viewScale;
+            pointY = Math.max(-viewCenterY - contentCenterY,
+                              Math.min(viewCenterY - contentCenterY, pointY));
         }
 
         ctx.save();
         ctx.translate(viewCenterX + pointX, viewCenterY + pointY);
-        ctx.scale(scale, scale);
+        ctx.scale(viewScale, viewScale);
 
-        const visibleMinX = (-viewCenterX - pointX) / scale - 40;
-        const visibleMaxX = (W - viewCenterX - pointX) / scale + 40;
-        const visibleMinY = (-viewCenterY - pointY) / scale - 40;
-        const visibleMaxY = (H - viewCenterY - pointY) / scale + 40;
+        const visibleMinX = (-viewCenterX - pointX) / viewScale - 40;
+        const visibleMaxX = (W - viewCenterX - pointX) / viewScale + 40;
+        const visibleMinY = (-viewCenterY - pointY) / viewScale - 40;
+        const visibleMaxY = (H - viewCenterY - pointY) / viewScale + 40;
 
         ctx.save();
         ctx.beginPath();
@@ -2451,8 +2482,8 @@ function draw3DWeave(){
         ctx.clip();
 
         const puff = rawSeer / 100;
-        const effectiveCellW = (drawW / realWarpLength) * scale;
-        const effectiveCellH = cellH * scale;
+        const effectiveCellW = (drawW / realWarpLength) * viewScale;
+        const effectiveCellH = cellH * viewScale;
 
         for(let r = realWeftLength - 1; r >= 0; r--){
             const y = bottom - ((r + 1) * cellH);
@@ -2539,10 +2570,10 @@ function draw3DWeave(){
                 sCtx.drawImage(c, 0, 0);
                 let imgData = sCtx.getImageData(0, 0, snap.width, snap.height);
 
-                const scrX1 = (viewCenterX + pointX + left * scale) * dprDraw;
-                const scrY1 = (viewCenterY + pointY + top * scale) * dprDraw;
-                const scrW = drawW * scale * dprDraw;
-                const scrH = drawH * scale * dprDraw;
+                const scrX1 = (viewCenterX + pointX + left * viewScale) * dprDraw;
+                const scrY1 = (viewCenterY + pointY + top * viewScale) * dprDraw;
+                const scrW = drawW * viewScale * dprDraw;
+                const scrH = drawH * viewScale * dprDraw;
 
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2550,8 +2581,8 @@ function draw3DWeave(){
                 ctx.rect(scrX1, scrY1, scrW, scrH);
                 ctx.clip();
 
-                let intensity = rawBrush / 100;
-                let fogAlpha = Math.min(0.28, intensity * 0.12);
+                let intensity = rawBrush / 200;
+                let fogAlpha = Math.min(0.28, intensity * 0.2);
                 ctx.globalAlpha = fogAlpha;
                 ctx.filter = `blur(${intensity * 1.2}px)`; 
                 ctx.drawImage(snap, 0, 0);
@@ -2680,8 +2711,8 @@ function draw3DWeave(){
         const boxPadY = 8;
         const boxWidth = Math.min(W - 16, Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2));
         const boxHeight = 44;
-        const fabricRightScr = viewCenterX + pointX + right * scale;
-        const fabricTopScr = viewCenterY + pointY + top * scale;
+        const fabricRightScr = viewCenterX + pointX + right * viewScale;
+        const fabricTopScr = viewCenterY + pointY + top * viewScale;
         const boxLeft = Math.max(8, Math.min(fabricRightScr - boxWidth - 8, W - boxWidth - 8));
         const boxTop = Math.max(8, Math.min(fabricTopScr + 8, H - boxHeight - 8));
 
@@ -2804,7 +2835,10 @@ function openFullscreen() {
     requestAnimationFrame(() => requestAnimationFrame(() => {
         drawFramePending = false;
         draw3DWeave();
-        setTimeout(() => { drawFramePending = false; draw3DWeave(); }, 140);
+        // Re-measure after mobile browser chrome settles; do not force native
+        // fullscreen, which would hide browser UI under browser control.
+        setTimeout(() => { drawFramePending = false; draw3DWeave(); }, 180);
+        setTimeout(() => { drawFramePending = false; draw3DWeave(); }, 500);
     })); 
 }
 
@@ -2909,9 +2943,11 @@ function scheduleWeaveResize() {
         draw3DWeave();
     }, 80);
 }
-window.addEventListener("resize", scheduleWeaveResize, { passive: true });
-window.addEventListener("orientationchange", scheduleWeaveResize, { passive: true });
-if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleWeaveResize, { passive: true });
+window.addEventListener("orientationchange", () => {
+    // Refit after rotation while retaining the user's zoom level.
+    pointX = 0; pointY = 0;
+    scheduleWeaveResize();
+}, { passive: true });
 
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="block") closeFullscreen(); });
 
@@ -3459,7 +3495,7 @@ async function executeRealA4Print(isPdfMode = false) {
         }
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
+        const rawBrush = Math.max(1, Math.min(200, parseInt($("brushIntensity")?.value || 60, 10) || 60));
         if(isBrushActive && rawBrush > 0){
             try {
                 let snap = document.createElement('canvas');
@@ -3473,8 +3509,8 @@ async function executeRealA4Print(isPdfMode = false) {
                 pCtx.rect(RULER_px, 0, printW, printH);
                 pCtx.clip();
 
-                let intensity = rawBrush / 100;
-                let count = Math.floor(3500 * intensity);
+                let intensity = rawBrush / 200;
+                let count = Math.floor(5500 * intensity);
                 for(let i = 0; i < count; i++){
                     let px = RULER_px + Math.random() * printW;
                     let py = Math.random() * printH;
