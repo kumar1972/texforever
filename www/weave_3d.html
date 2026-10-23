@@ -558,7 +558,158 @@ input, select {
 .swatch-sub { font-size: 0.54rem; color: #9fc5aa; margin-top: 1px; }
 .colour-popup-footer { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-top: 1px solid #2c4b3d; flex-shrink: 0; background: #14251e; }
 .colour-use-btn { background: #10b981; border: 0; border-radius: 8px; padding: 12px; color: #fff; font-weight: 900; font-size: .85rem; cursor: pointer; width: 100%; text-align: center; }
-</style>
+
+/* Mobile/desktop-site robust fullscreen layout: controls occupy their own rows. */
+.fs-modal {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 2147483000;
+  background: #060c09;
+  box-sizing: border-box;
+}
+.fs-top-fixed-bar {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100%;
+  flex: 0 0 auto;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 2 !important;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: #14251e;
+}
+.fs-header { min-height: 44px; height: auto; flex-wrap: nowrap; }
+.effect-bar { min-height: 42px; height: auto; }
+.fs-content {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+  z-index: 1;
+}
+.fs-content canvas { width: 100%; height: 100%; object-fit: contain; touch-action: none; }
+/* max-device-width still applies when Chrome's "Desktop site" changes the layout viewport. */
+@media (max-device-width: 600px), (pointer: coarse) and (max-width: 900px) {
+  .fs-header { padding: 4px 5px; gap: 3px; }
+  .fs-title { flex: 0 1 auto; max-width: 76px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+  .fs-header-actions { flex: 1 1 auto; min-width: 0; justify-content: flex-end; gap: 3px; }
+  .fs-header-actions > div { padding: 2px 3px !important; gap: 2px !important; }
+  .fs-header-actions span { font-size: 9px !important; }
+  .fs-header-actions select { max-width: 58px; min-width: 44px; font-size: 10px !important; }
+  .fs-header-actions button { min-width: 28px; padding: 5px 6px !important; font-size: 10px !important; }
+  .effect-bar { padding: 5px 6px; gap: 7px; font-size: 10px; }
+  .effect-group { flex: 1 1 50%; min-width: 0; gap: 4px; }
+  .effect-group span { white-space: nowrap; font-size: 10px; }
+  .effect-group input[type="range"] { min-width: 20px; width: 100%; }
+  .effect-group input[type="checkbox"] { flex: 0 0 15px; width: 15px; height: 15px; }
+}
+@media (max-device-width: 360px) {
+  .fs-title { max-width: 56px; font-size: 9px; }
+  .fs-header-actions { gap: 2px; }
+  .fs-header-actions button { min-width: 24px; padding: 4px !important; }
+  .fs-header-actions > div { max-width: 86px; }
+  .effect-bar { gap: 4px; }
+  .effect-group { gap: 2px; }
+  .effect-group span { font-size: 9px; }
+}
+
+
+/* FINAL MOBILE FULLSCREEN OVERRIDES: reserve a permanent row for controls,
+   and let the fabric canvas use only the remaining viewport. */
+#fsModal.fs-modal {
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  z-index: 2147483000 !important;
+}
+#fsModal.fs-modal[style*="display: flex"] { display: flex !important; }
+#fsModal .fs-top-fixed-bar {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding-top: env(safe-area-inset-top, 0px) !important;
+  z-index: 5 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+#fsModal .fs-header {
+  display: flex !important;
+  position: relative !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-height: 40px !important;
+}
+#fsModal .effect-bar {
+  display: flex !important;
+  position: relative !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-height: 42px !important;
+}
+#fsModal .fs-content {
+  position: relative !important;
+  inset: auto !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+#fsModal .fs-content > canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  touch-action: none !important;
+}
+#fsModal #weaveCanvas2D { display: none !important; }
+#fsModal .fs-hint { position: absolute !important; bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important; }
+@media (max-device-width: 600px), (pointer: coarse) {
+  #fsModal .fs-title { max-width: 74px; font-size: 10px; }
+  #fsModal .fs-header-actions { min-width: 0; gap: 3px; }
+  #fsModal .fs-header-actions > div { min-width: 0; }
+  #fsModal .effect-bar { gap: 6px; padding: 5px 6px; }
+  #fsModal .effect-group { flex: 1 1 50%; min-width: 0; }
+  #fsModal .effect-group span { white-space: nowrap; font-size: 10px !important; }
+  #fsModal .effect-group input[type="range"] { min-width: 18px; width: 100%; }
+}
+\n</style>
 </head>
 <body>
 
@@ -702,7 +853,7 @@ input, select {
             <div class="effect-group">
                 <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
                 <span>🪶 Brush:</span>
-                <input type="range" id="brushIntensity" min="1" max="200" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
+                <input type="range" id="brushIntensity" min="10" max="100" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
                 <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">50%</span>
             </div>
         </div>
@@ -2247,7 +2398,7 @@ function draw3DWeave(){
         if($("seerValDisplay")) $("seerValDisplay").textContent = rawSeer + "%";
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = Math.max(1, Math.min(200, parseInt($("brushIntensity")?.value || 60, 10) || 60));
+        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
         if($("brushValDisplay")) $("brushValDisplay").textContent = rawBrush + "%";
 
         const warpPositions = []; let endIndex = 0; let dentIndex = 0;
@@ -2399,7 +2550,7 @@ function draw3DWeave(){
                 ctx.rect(scrX1, scrY1, scrW, scrH);
                 ctx.clip();
 
-                let intensity = rawBrush / 200;
+                let intensity = rawBrush / 100;
                 let fogAlpha = Math.min(0.28, intensity * 0.12);
                 ctx.globalAlpha = fogAlpha;
                 ctx.filter = `blur(${intensity * 1.2}px)`; 
@@ -2407,32 +2558,41 @@ function draw3DWeave(){
                 ctx.filter = 'none';
                 ctx.globalAlpha = 1.0;
 
-                let count = Math.floor(2500 * intensity); 
+                // Denser, softer micro-fibres for a visibly brushed textile surface.
+                // Keep the workload bounded on phones so dragging/zooming stays responsive.
+                const areaFactor = Math.min(1, (scrW * scrH) / (420 * 420));
+                const count = Math.floor((1800 + 4200 * intensity) * Math.max(0.45, areaFactor));
                 for(let i = 0; i < count; i++){
-                    let px = scrX1 + Math.random() * scrW;
-                    let py = scrY1 + Math.random() * scrH;
-                    let ix = Math.floor(px); let iy = Math.floor(py);
+                    const px = scrX1 + Math.random() * scrW;
+                    const py = scrY1 + Math.random() * scrH;
+                    const ix = Math.floor(px), iy = Math.floor(py);
                     if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
-                    
-                    let idx = (iy * snap.width + ix) * 4;
-                    if(imgData.data[idx + 3] < 10) continue; 
-                    
-                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
-                    let brightness = (Math.random() - 0.2) * 35; 
-                    let fR = Math.min(255, Math.max(0, r + brightness));
-                    let fG = Math.min(255, Math.max(0, g + brightness));
-                    let fB = Math.min(255, Math.max(0, b + brightness));
 
-                    ctx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
-                    ctx.lineWidth = (Math.random() * 0.7 + 0.3) * dpr;
+                    const idx = (iy * snap.width + ix) * 4;
+                    if(imgData.data[idx + 3] < 10) continue;
 
-                    let angle = Math.random() * Math.PI * 2;
-                    let len = (Math.random() * 3.5 * intensity + 2) * dpr;
-                    let curve = (Math.random() - 0.5) * 1.2 * dpr;
+                    const r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
+                    const brightness = (Math.random() - 0.38) * (22 + 24 * intensity);
+                    const fR = Math.min(255, Math.max(0, r + brightness));
+                    const fG = Math.min(255, Math.max(0, g + brightness));
+                    const fB = Math.min(255, Math.max(0, b + brightness));
 
+                    ctx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${0.22 + Math.random() * (0.32 + 0.28 * intensity)})`;
+                    ctx.lineWidth = (0.25 + Math.random() * 0.65) * dpr;
+
+                    // Short, mostly thread-following fibres look like nap instead of random scratches.
+                    const alongWarp = Math.random() < 0.62;
+                    const angle = (alongWarp ? Math.PI / 2 : 0) + (Math.random() - 0.5) * 0.72;
+                    const len = (1.5 + Math.random() * (4 + 5 * intensity)) * dpr;
+                    const curve = (Math.random() - 0.5) * 0.65 * dpr;
                     ctx.beginPath();
                     ctx.moveTo(px, py);
-                    ctx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
+                    ctx.quadraticCurveTo(
+                        px + Math.cos(angle) * len * 0.52,
+                        py + Math.sin(angle) * len * 0.52,
+                        px + Math.cos(angle + curve) * len,
+                        py + Math.sin(angle + curve) * len
+                    );
                     ctx.stroke();
                 }
                 ctx.restore();
@@ -2635,12 +2795,17 @@ function presentWeaveFrameWebGL(sourceCanvas, outputCanvas) {
 /* ================= FULLSCREEN INTERACTIONS ================= */
 function openFullscreen() { 
     const modal = $("fsModal"); if(!modal) return; 
-    modal.style.display="block"; 
+    modal.style.display="flex";
     document.body.style.overflow = "hidden";
     scale = 1; pointX = 0; pointY = 0; panning = false; 
     drawFramePending = false;
     updateRulerCalDisplay();
-    requestAnimationFrame(() => { draw3DWeave(); }); 
+    // Let mobile browser viewport/flex layout settle before sizing the canvas.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        drawFramePending = false;
+        draw3DWeave();
+        setTimeout(() => { drawFramePending = false; draw3DWeave(); }, 140);
+    })); 
 }
 
 function refreshFullscreen3D() { scale = 1; pointX = 0; pointY = 0; drawFramePending = false; draw3DWeave(); }
@@ -2737,7 +2902,7 @@ if(fsContent) {
 // Keep fullscreen canvas and fixed controls aligned when mobile browser chrome changes size.
 let weaveResizeTimer = 0;
 function scheduleWeaveResize() {
-    if ($("fsModal")?.style.display !== "block") return;
+    if ($("fsModal")?.style.display !== "flex" && $("fsModal")?.style.display !== "block") return;
     clearTimeout(weaveResizeTimer);
     weaveResizeTimer = setTimeout(() => {
         drawFramePending = false;
@@ -3309,7 +3474,7 @@ async function executeRealA4Print(isPdfMode = false) {
                 pCtx.clip();
 
                 let intensity = rawBrush / 100;
-                let count = Math.floor(2500 * intensity);
+                let count = Math.floor(3500 * intensity);
                 for(let i = 0; i < count; i++){
                     let px = RULER_px + Math.random() * printW;
                     let py = Math.random() * printH;
