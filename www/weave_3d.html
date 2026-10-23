@@ -1115,9 +1115,9 @@ function normLine(x, warp) {
         shadeTag: shadeTag 
     };
 }
-
 function sanitizeDesignObj(d) {
     if (!d) return null;
+    
     if (!Array.isArray(d.warpLines) || d.warpLines.length === 0) {
         let tempWarp = [];
         for(let i=1; i<=30; i++) {
@@ -1127,8 +1127,9 @@ function sanitizeDesignObj(d) {
             let cnt = d[`warpCount${i}`] || d[`warpcount${i}`] || "";
             if (col || ends) tempWarp.push({ color: col, ends: ends, count: cnt, colourName: name });
         }
-        if(tempWarp.length > 0) d.warpLines = tempWarp;
+        d.warpLines = tempWarp; 
     }
+    
     if (!Array.isArray(d.weftLines) || d.weftLines.length === 0) {
         let tempWeft = [];
         for(let i=1; i<=30; i++) {
@@ -1138,20 +1139,9 @@ function sanitizeDesignObj(d) {
             let cnt = d[`weftCount${i}`] || d[`weftcount${i}`] || "";
             if (col || picks) tempWeft.push({ color: col, picks: picks, count: cnt, colourName: name });
         }
-        if(tempWeft.length > 0) d.weftLines = tempWeft;
+        d.weftLines = tempWeft; 
     }
-    if (!Array.isArray(d.warpLines) || d.warpLines.length === 0) {
-        d.warpLines = [
-            { color: "#1e3a8a", ends: 27, colourName: "Navy", count: "21 ccc" },
-            { color: "#64748b", ends: 1, colourName: "D. Grey", count: "21 ccc" }
-        ];
-    }
-    if (!Array.isArray(d.weftLines) || d.weftLines.length === 0) {
-        d.weftLines = [
-            { color: "#1e3a8a", picks: 27, colourName: "Navy", count: "21 ccc" },
-            { color: "#64748b", picks: 1, colourName: "D. Grey", count: "21 ccc" }
-        ];
-    }
+    
     return d;
 }
 
@@ -1183,6 +1173,31 @@ function mergeDesigns(items) {
     });
 
     return [...map.values()];
+}
+function extractLinesFromObj(obj, type) {
+    if (!obj) return [];
+    let prefix = type === "warp" ? "warp" : "weft";
+    
+    let arr = obj[prefix + "Lines"] || obj[prefix + "_lines"] || obj[prefix] || obj[prefix + "s"];
+    if (Array.isArray(arr) && arr.length > 0) {
+        return clone(arr);
+    }
+
+    let temp = [];
+    for (let i = 1; i <= 50; i++) {
+        let col = obj[`${prefix}Color${i}`] || obj[`${prefix}Colour${i}`] || obj[`${prefix}color${i}`] || obj[`${prefix}col${i}`];
+        let amount = type === "warp" ? (obj[`${prefix}Ends${i}`] || obj[`${prefix}End${i}`] || obj[`${prefix}ends${i}`] || obj[`${prefix}qty${i}`] || obj[`${prefix}Amount${i}`]) : (obj[`${prefix}Picks${i}`] || obj[`${prefix}pick${i}`] || obj[`${prefix}picks${i}`] || obj[`${prefix}qty${i}`] || obj[`${prefix}Amount${i}`]);
+        let name = obj[`${prefix}Name${i}`] || obj[`${prefix}Shade${i}`] || obj[`${prefix}colourname${i}`] || "";
+        let cnt = obj[`${prefix}Count${i}`] || obj[`${prefix}count${i}`] || obj[`${prefix}yarncount${i}`] || "";
+        
+        if (col || amount) {
+            let item = { color: col, count: cnt, colourName: name };
+            if (type === "warp") item.ends = parseInt(amount) || 0;
+            else item.picks = parseInt(amount) || 0;
+            temp.push(item);
+        }
+    }
+    return temp;
 }
 
 /* ================= YARN SETTINGS & UI ================= */
