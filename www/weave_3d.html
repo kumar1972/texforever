@@ -1343,33 +1343,12 @@ function populateDesignSelect(auto = true) {
     const select = $("designSelect");
     if (!select) return;
 
-    const previousValue = select.value || "";
+    // Keep the actual design name, not the <select> value (which is an internal ID).
+    const previousOption = select.options[select.selectedIndex];
+    const previousName = previousOption?.dataset?.designName || "";
     const lastSaved = localStorage.getItem("weave_last_design_name") || "";
     const activeName = activeDesignObj ? designName(activeDesignObj) : "";
-    const preferredName = previousValue || activeName || lastSaved;
-
-    // Fallback: If allCloudDesigns is empty, pull directly from localStorage keys immediately
-    if (!allCloudDesigns || allCloudDesigns.length === 0) {
-        let manualList = [];
-        let keys = ["design_masters_data", "weave_designs", "weave_designs_cache", "local_edits_cache", "warp_entry_data", "weft_entry_data"];
-        keys.forEach(k => {
-            let data = localStorage.getItem(k);
-            if (data) {
-                try {
-                    let parsed = JSON.parse(data);
-                    if (Array.isArray(parsed)) manualList.push(...parsed);
-                    else if (typeof parsed === "object") {
-                        Object.keys(parsed).forEach(pk => {
-                            if(parsed[pk]) manualList.push(parsed[pk]);
-                        });
-                    }
-                } catch(e) {}
-            }
-        });
-        if (manualList.length > 0) {
-            allCloudDesigns = mergeDesigns(manualList);
-        }
-    }
+    const preferredName = previousName || activeName || lastSaved;
 
     const fragment = document.createDocumentFragment();
     const placeholder = document.createElement("option");
@@ -1378,29 +1357,43 @@ function populateDesignSelect(auto = true) {
     fragment.appendChild(placeholder);
 
     const seen = new Set();
-    allCloudDesigns.forEach((design) => {
+    allCloudDesigns.forEach((design, index) => {
         const name = designName(design);
         const key = cleanDesignName(name);
-        if (!name || name === "Unnamed" || !key || seen.has(key)) return;
+        if (!name || name.toLowerCase() === "unnamed" || !key || seen.has(key)) return;
         seen.add(key);
+
         const option = document.createElement("option");
-        option.value = name;
+        // Use the array index as the option value. Design names can contain
+        // symbols/spaces and duplicate-normalized names can otherwise fail lookup.
+        option.value = String(index);
         option.textContent = "🎨 " + name;
+        option.dataset.designIndex = String(index);
+        option.dataset.designName = name;
         fragment.appendChild(option);
     });
 
     select.replaceChildren(fragment);
 
-    const wanted = preferredName && allCloudDesigns.find(d =>
-        cleanDesignName(designName(d)) === cleanDesignName(preferredName)
-    );
-    const targetName = wanted ? designName(wanted) :
-        (allCloudDesigns.length ? designName(allCloudDesigns[0]) : "");
+    // Only select a record that actually has an option in the dropdown.
+    let targetIndex = -1;
+    if (preferredName) {
+        targetIndex = allCloudDesigns.findIndex((d, index) =>
+            cleanDesignName(designName(d)) === cleanDesignName(preferredName) &&
+            [...select.options].some(o => o.dataset.designIndex === String(index))
+        );
+    }
+    if (targetIndex < 0) {
+        const firstOption = [...select.options].find(o => o.dataset.designIndex !== undefined);
+        if (firstOption) targetIndex = Number(firstOption.dataset.designIndex);
+    }
 
-    if (targetName) {
-        select.value = targetName;
-        if (auto) {
-            loadSelectedDesign();
+    if (targetIndex >= 0 && allCloudDesigns[targetIndex]) {
+        select.value = String(targetIndex);
+        const targetName = designName(allCloudDesigns[targetIndex]);
+        if (auto && (!activeDesignObj ||
+            cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
+            loadSelectedDesign(select);
         }
     } else {
         select.value = "";
@@ -1409,10 +1402,9 @@ function populateDesignSelect(auto = true) {
     }
 }
 
-/* ================= IMPORT FROM LOCAL & FIREBASE ================= */
 async function importFromFirebase(manual = false) {
     try {
-        setStatus(manual ? "🔄 Refreshing designs..." : "⚡ Loading designs...");
+        setStatus(manual ? "🔄 Local + Cloud refresh..." : "⚡ Loading designs...");
 
         const local = [];
         const localKeys = ["design_masters_data", "weave_designs", "weave_designs_cache", "local_edits_cache", "warp_entry_data", "weft_entry_data", "denting_drawing_data"];
@@ -1439,7 +1431,7 @@ async function importFromFirebase(manual = false) {
         if (allCloudDesigns.length > 0) {
             populateDesignSelect(true);
             localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
-            setStatus("💾 Ready (" + allCloudDesigns.length + " designs)");
+            setStatus("💾 Local designs ready");
         }
 
         if (navigator.onLine && supabaseClient) {
@@ -1454,10 +1446,10 @@ async function importFromFirebase(manual = false) {
                     allCloudDesigns = mergeDesigns(allCloudDesigns.concat(cloudData));
                     localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
                     populateDesignSelect(manual);
-                    setStatus("☁ Cloud & Local synced");
+                    setStatus("☁ Local + Cloud designs ready");
                 }
             } catch(cErr) {
-                console.log("Supabase sync skipped", cErr);
+                console.log("Supabase load skipped/failed", cErr);
             }
         }
     } catch(e) {
@@ -1474,13 +1466,9 @@ function loadSelectedDesign(){
         setStatus("⏳ Loading selected design...");
         const selectedVal = select.value.trim();
         const selectedClean = cleanDesignName(selectedVal);
-        const rawDigits = selectedVal.replace(/\D/g, '');
+        const rawDigits = selectedVal.replace(/\D/g, ''); // Extract numbers like 7766
 
-        let foundDesign = null;
-        let foundEdits = null;
-
-        // 1. Search in allCloudDesigns
-        foundDesign = allCloudDesigns.find(d => {
+        let foundDesign = allCloudDesigns.find(d => {
             let dN = designName(d).trim();
             let cleanDN = cleanDesignName(dN);
             let dDigits = dN.replace(/\D/g, '');
@@ -1489,84 +1477,95 @@ function loadSelectedDesign(){
                    (rawDigits && dDigits === rawDigits);
         });
 
-        // 2. Search in local_edits_cache
-        try {
-            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-            let edKey = Object.keys(editsCache).find(k => {
-                let kt = k.trim();
-                return kt === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits;
-            });
-            if (edKey && editsCache[edKey]) {
-                foundEdits = editsCache[edKey];
-                if (!foundDesign) foundDesign = foundEdits;
-            }
-        } catch(e) {}
-
-        // 3. Search across all local storage tables
-        let storageKeys = ["warp_entry_data", "weft_entry_data", "design_masters_data", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
-        for(let sk of storageKeys) {
+        if (!foundDesign) {
             try {
-                let raw = localStorage.getItem(sk);
-                if(raw) {
-                    let parsed = JSON.parse(raw);
-                    if(Array.isArray(parsed)) {
-                        let match = parsed.find(item => {
-                            if(!item) return false;
-                            let iname = designName(item).trim();
-                            let cleanIname = cleanDesignName(iname);
-                            let iDigits = iname.replace(/\D/g, '');
-                            return iname === selectedVal || cleanIname === selectedClean || (rawDigits && iDigits === rawDigits);
-                        });
-                        if(match) {
-                            if(!foundDesign) foundDesign = match;
-                            else foundDesign = { ...match, ...foundDesign };
-                        }
-                    } else if(parsed && typeof parsed === "object") {
-                        Object.keys(parsed).forEach(pk => {
-                            let cleanPk = cleanDesignName(pk);
-                            let pDigits = pk.replace(/\D/g, '');
-                            if(pk.trim() === selectedVal || cleanPk === selectedClean || (rawDigits && pDigits === rawDigits)) {
-                                if(!foundDesign) foundDesign = parsed[pk];
-                                else foundDesign = { ...parsed[pk], ...foundDesign };
-                            }
-                        });
-                    }
+                let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+                let foundKey = Object.keys(editsCache).find(k => {
+                    let kTrim = k.trim();
+                    return kTrim === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits;
+                });
+                if (foundKey && editsCache[foundKey]) {
+                    foundDesign = editsCache[foundKey];
                 }
             } catch(e) {}
         }
 
-        let mergedObj = { designNo: selectedVal, name: selectedVal, warpLines: [], weftLines: [] };
-        if (foundDesign) Object.assign(mergedObj, foundDesign);
-        if (foundEdits) Object.assign(mergedObj, foundEdits);
+        if (!foundDesign) {
+            if (allCloudDesigns.length > 0) {
+                foundDesign = allCloudDesigns[0]; 
+            } else {
+                setStatus("⚠️ Selected design not found.");
+                return;
+            }
+        }
 
-        activeDesignObj = sanitizeDesignObj(mergedObj);
+        let rawDesign = JSON.parse(JSON.stringify(foundDesign));
+        activeDesignObj = typeof sanitizeDesignObj === "function" ? sanitizeDesignObj(rawDesign) : rawDesign;
+        
         let dName = designName(activeDesignObj);
         let cleanName = cleanDesignName(dName);
-
-        if($("activeDesignText")) {
-            $("activeDesignText").textContent = "Active Design: " + dName;
+        
+        if(document.getElementById("activeDesignText")) {
+            document.getElementById("activeDesignText").textContent = "Active Design: " + dName;
         }
         localStorage.setItem("weave_last_design_name", dName);
+        
+        let foundEdits = null;
+        try {
+            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim() || cleanDesignName(k) === cleanName);
+            if(key) foundEdits = editsCache[key];
+        } catch(e) {}
 
-        let rawWarp = extractLinesFromObj(activeDesignObj, "warp");
-        let rawWeft = extractLinesFromObj(activeDesignObj, "weft");
+        let rawWarp = [];
+        let rawWeft = [];
 
-        if (!rawWarp.length || !rawWeft.length) {
-            try {
-                let wData = JSON.parse(localStorage.getItem("warp_entry_data") || "[]");
-                let wMatch = Array.isArray(wData) ? wData.find(x => cleanDesignName(designName(x)) === cleanName || designName(x).replace(/\D/g,'') === rawDigits) : null;
-                if(wMatch) {
-                    let extractedW = extractLinesFromObj(wMatch, "warp");
-                    if(extractedW.length) rawWarp = extractedW;
-                }
-                let fData = JSON.parse(localStorage.getItem("weft_entry_data") || "[]");
-                let fMatch = Array.isArray(fData) ? fData.find(x => cleanDesignName(designName(x)) === cleanName || designName(x).replace(/\D/g,'') === rawDigits) : null;
-                if(fMatch) {
-                    let extractedF = extractLinesFromObj(fMatch, "weft");
-                    if(extractedF.length) rawWeft = extractedF;
-                }
-            } catch(e) {}
+        if (foundEdits && foundEdits.warpLines && foundEdits.warpLines.length > 0) {
+            rawWarp = clone(foundEdits.warpLines);
         }
+        if (foundEdits && foundEdits.weftLines && foundEdits.weftLines.length > 0) {
+            rawWeft = clone(foundEdits.weftLines);
+        }
+
+        if (!rawWarp.length) {
+            let warpKeys = ["warp_entry_data", "warp_pattern_data", "warp_data"];
+            for(let key of warpKeys) {
+                try {
+                    let data = localStorage.getItem(key);
+                    if(data) {
+                        let parsed = JSON.parse(data);
+                        if(Array.isArray(parsed)) {
+                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
+                            if(match && match.warpLines && match.warpLines.length > 0) { 
+                                rawWarp = clone(match.warpLines);
+                                break; 
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        if (!rawWeft.length) {
+            let weftKeys = ["weft_entry_data", "weft_pattern_data", "weft_data"];
+            for(let key of weftKeys) {
+                try {
+                    let data = localStorage.getItem(key);
+                    if(data) {
+                        let parsed = JSON.parse(data);
+                        if(Array.isArray(parsed)) {
+                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
+                            if(match && match.weftLines && match.weftLines.length > 0) { 
+                                rawWeft = clone(match.weftLines);
+                                break; 
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+            if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
+        if(!rawWeft.length && activeDesignObj.weftLines) rawWeft = clone(activeDesignObj.weftLines);
 
         if(!rawWarp.length) rawWarp = [
             { color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' },
@@ -1579,7 +1578,7 @@ function loadSelectedDesign(){
 
         currentWarpCount = rawWarp.length;
         currentWeftCount = rawWeft.length;
-
+      
         if(typeof renderUIWithData === "function") {
             renderUIWithData(rawWarp, rawWeft);
         }
@@ -1588,49 +1587,65 @@ function loadSelectedDesign(){
         try {
             let ddArr = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
-                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName || designName(d).replace(/\D/g,'') === rawDigits);
+                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName || designName(d).trim() === dName.trim());
             }
         } catch(e) {}
 
         let dMasters = safeJSON("design_masters_data", []);
-        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName || m.designNo?.toString().replace(/\D/g,'') === rawDigits) : null;
+        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName || designName(m).trim() === dName.trim()) : null;
 
         let sourceObj = {
             ...activeDesignObj,
             ...(masterMatch || {}),
-            ...(dentDrawMatch || {})
+            ...(dentDrawMatch || {}),
+            ...(foundEdits || {})
         };
 
-        let matrixToUse = dentDrawMatch?.customMatrix || masterMatch?.customMatrix || sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph || sourceObj.graphGrid || sourceObj.graphMatrix;
+        let matrixToUse = foundEdits?.customMatrix || dentDrawMatch?.customMatrix || masterMatch?.customMatrix || sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph || sourceObj.graphGrid || sourceObj.graphMatrix;
         if(matrixToUse && Array.isArray(matrixToUse) && matrixToUse.length > 0) {
             weavePatterns.custom = JSON.parse(JSON.stringify(matrixToUse));
             activeDesignObj.customMatrix = weavePatterns.custom;
             activeDesignObj.type = "custom";
-            if($("weaveType")) $("weaveType").value = "custom";
+            if(document.getElementById("weaveType")) document.getElementById("weaveType").value = "custom";
         }
 
         let mCols = (weavePatterns.custom && weavePatterns.custom[0]) ? weavePatterns.custom[0].length : 4;
-        let drawVal = dentDrawMatch?.drawingPatternFormula || dentDrawMatch?.drawingPattern || sourceObj.drawingPatternFormula || sourceObj.drawingPattern || "";
-        if (!drawVal) {
+
+        let drawVal = (dentDrawMatch && (dentDrawMatch.drawingPatternFormula || dentDrawMatch.drawingPattern || dentDrawMatch.drawingOrder || dentDrawMatch.draft)) || 
+                      sourceObj.drawingPatternFormula || sourceObj.drawingPattern || sourceObj.drawingOrder || sourceObj.drawing_order || sourceObj.draft || "";
+        
+        if (!drawVal || (drawVal === "1,2,3,4" && mCols > 4)) {
             let autoArr = [];
             for(let f=1; f<=mCols; f++) autoArr.push(f);
             drawVal = autoArr.join(",");
         }
-        let dentVal = dentDrawMatch?.dentingPatternFormula || dentDrawMatch?.dentingPattern || sourceObj.dentingPatternFormula || sourceObj.dentingPattern || "2";
 
-        if($("dentingPatternInput")) $("dentingPatternInput").value = dentVal;
-        if($("drawingPatternInput")) $("drawingPatternInput").value = drawVal;
+        let dentVal = (dentDrawMatch && (dentDrawMatch.dentingPatternFormula || dentDrawMatch.dentingPattern || dentDrawMatch.dentingOrder)) || 
+                      sourceObj.dentingPatternFormula || sourceObj.dentingPattern || sourceObj.dentingOrder || sourceObj.denting_order || "2";
 
-        if($("designStatus")) $("designStatus").textContent = "⚡ Design Ready";
+        activeDesignObj.drawingPatternFormula = drawVal;
+        activeDesignObj.drawingPattern = drawVal;
+        activeDesignObj.dentingPatternFormula = dentVal;
+        activeDesignObj.dentingPattern = dentVal;
+        activeDesignObj.pickPattern = sourceObj.pickPattern || `(1-${weavePatterns.custom.length})`;
+
+        if(document.getElementById("dentingPatternInput")) document.getElementById("dentingPatternInput").value = dentVal;
+        if(document.getElementById("drawingPatternInput")) document.getElementById("drawingPatternInput").value = drawVal;
+
+        let type = (matrixToUse && matrixToUse.length > 0) ? "custom" : (sourceObj.type || "custom");
+        if(document.getElementById("weaveType")) document.getElementById("weaveType").value = type;
+
+        let statusEl = document.getElementById("designStatus");
+        if(statusEl) statusEl.textContent = "⚡ Design Ready";
+        
         if(typeof onWeaveChange === "function") onWeaveChange();
         autoRefresh3D();
     } catch(err){
         console.error("LoadDesignError: ", err);
-        if($("designStatus")) $("designStatus").textContent = "❌ Error: " + err.message;
+        let statusEl = document.getElementById("designStatus");
+        if(statusEl) statusEl.textContent = "❌ Error loading design: " + (err?.message || "Unknown error");
     }
 }
-
-
 function getCurrentData() {
     let w = []; let f = []; let wRanges = []; let fRanges = []; 
     let wCurrentLine = 1;
