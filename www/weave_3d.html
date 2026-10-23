@@ -650,7 +650,8 @@ input, select {
   margin: 0 !important;
   z-index: 2147483000 !important;
 }
-#fsModal.fs-modal[style*="display: flex"] { display: flex !important; }
+#fsModal.fs-modal[style*="display: flex"],
+#fsModal.fs-modal[style*="display: block"] { display: flex !important; }
 #fsModal .fs-top-fixed-bar {
   position: relative !important;
   inset: auto !important;
@@ -698,7 +699,7 @@ input, select {
   max-height: 100% !important;
   touch-action: none !important;
 }
-#fsModal #weaveCanvas2D { display: none !important; }
+#fsModal #weaveCanvas2D { display: none; } /* JS may set display:block for the 2D fallback. */
 #fsModal .fs-hint { position: absolute !important; bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important; }
 @media (max-device-width: 600px), (pointer: coarse) {
   #fsModal .fs-title { max-width: 74px; font-size: 10px; }
@@ -709,7 +710,7 @@ input, select {
   #fsModal .effect-group span { white-space: nowrap; font-size: 10px !important; }
   #fsModal .effect-group input[type="range"] { min-width: 18px; width: 100%; }
 }
-\n</style>
+</style>
 </head>
 <body>
 
@@ -853,7 +854,7 @@ input, select {
             <div class="effect-group">
                 <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
                 <span>🪶 Brush:</span>
-                <input type="range" id="brushIntensity" min="40" max="200" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
+                <input type="range" id="brushIntensity" min="10" max="100" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 100%)">
                 <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">50%</span>
             </div>
         </div>
@@ -2010,7 +2011,7 @@ function onWeaveChange() {
         if($("gridEditorSection")) $("gridEditorSection").style.display = "block";
         buildGridEditor();
     }
-    if($("fsModal")?.style.display === "block") {
+    if(isWeaveFullscreenOpen()) {
         draw3DWeave();
     }
 }
@@ -2056,7 +2057,7 @@ function buildGridEditor() {
             cell.onclick = () => {
                 m[r][c] = m[r][c] ? 0 : 1;
                 buildGridEditor();
-                if($("fsModal")?.style.display === "block") draw3DWeave();
+                if(isWeaveFullscreenOpen()) draw3DWeave();
             };
             rd.appendChild(cell);
         });
@@ -2082,6 +2083,11 @@ function removeLastCol() { removeCol((weavePatterns.custom[0]?.length||1)-1); }
 let renderTimer = null;
 let scale = 1, pointX = 0, pointY = 0, panning = false, startX = 0, startY = 0, lastDist = 0;
 
+function isWeaveFullscreenOpen() {
+    const modal = $("fsModal");
+    return !!modal && (modal.style.display === "flex" || modal.style.display === "block");
+}
+
 function debounce3DRender() {
     clearTimeout(renderTimer);
     renderTimer = setTimeout(() => {
@@ -2090,7 +2096,7 @@ function debounce3DRender() {
 }
 
 function autoRefresh3D() { 
-    if($("fsModal")?.style.display === "block") {
+    if(isWeaveFullscreenOpen()) {
         debounce3DRender();
     }
 }
@@ -2450,21 +2456,28 @@ function draw3DWeave(){
         // accidentally interpreted as a canvas drag.
         const contentW = (drawW + RULER) * viewScale;
         const contentH = (drawH + RULER) * viewScale;
-        if (contentW <= W - 48) {
+        // When the fabric fits (including its ruler margin), always center it.
+        // The old W-48/H-48 thresholds treated a normal W-24 fit as oversized,
+        // allowing pan offsets to push almost the whole fabric off-screen.
+        if (contentW <= W) {
             pointX = 0;
         } else {
-            // If zoomed larger than the viewport, keep the fabric's centre
-            // within the visible viewport so it can never disappear as a sliver.
-            const contentCenterX = ((left - RULER) + right) * 0.5 * viewScale;
-            pointX = Math.max(-viewCenterX - contentCenterX,
-                              Math.min(viewCenterX - contentCenterX, pointX));
+            // Clamp the actual content edges, not its centre: keep at least 48px
+            // of the fabric/ruler visible while panning a zoomed-in design.
+            const minContentX = (left - RULER) * viewScale;
+            const maxContentX = right * viewScale;
+            const minPanX = 48 - viewCenterX - maxContentX;
+            const maxPanX = W - 48 - viewCenterX - minContentX;
+            pointX = Math.max(minPanX, Math.min(maxPanX, pointX));
         }
-        if (contentH <= H - 48) {
+        if (contentH <= H) {
             pointY = 0;
         } else {
-            const contentCenterY = (top + bottom + RULER) * 0.5 * viewScale;
-            pointY = Math.max(-viewCenterY - contentCenterY,
-                              Math.min(viewCenterY - contentCenterY, pointY));
+            const minContentY = top * viewScale;
+            const maxContentY = (bottom + RULER) * viewScale;
+            const minPanY = 48 - viewCenterY - maxContentY;
+            const maxPanY = H - 48 - viewCenterY - minContentY;
+            pointY = Math.max(minPanY, Math.min(maxPanY, pointY));
         }
 
         ctx.save();
@@ -2581,8 +2594,8 @@ function draw3DWeave(){
                 ctx.rect(scrX1, scrY1, scrW, scrH);
                 ctx.clip();
 
-                let intensity = rawBrush / 200;
-                let fogAlpha = Math.min(0.28, intensity * 0.2);
+                let intensity = rawBrush / 100;
+                let fogAlpha = Math.min(0.28, intensity * 0.12);
                 ctx.globalAlpha = fogAlpha;
                 ctx.filter = `blur(${intensity * 1.2}px)`; 
                 ctx.drawImage(snap, 0, 0);
@@ -2949,7 +2962,7 @@ window.addEventListener("orientationchange", () => {
     scheduleWeaveResize();
 }, { passive: true });
 
-document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="block") closeFullscreen(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && isWeaveFullscreenOpen()) closeFullscreen(); });
 
 window.addEventListener("focus", () => {
     let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
@@ -3495,7 +3508,7 @@ async function executeRealA4Print(isPdfMode = false) {
         }
 
         const isBrushActive = $("fsBrushCheck")?.checked || false;
-        const rawBrush = Math.max(1, Math.min(200, parseInt($("brushIntensity")?.value || 60, 10) || 60));
+        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
         if(isBrushActive && rawBrush > 0){
             try {
                 let snap = document.createElement('canvas');
@@ -3509,8 +3522,8 @@ async function executeRealA4Print(isPdfMode = false) {
                 pCtx.rect(RULER_px, 0, printW, printH);
                 pCtx.clip();
 
-                let intensity = rawBrush / 200;
-                let count = Math.floor(5500 * intensity);
+                let intensity = rawBrush / 100;
+                let count = Math.floor(3500 * intensity);
                 for(let i = 0; i < count; i++){
                     let px = RULER_px + Math.random() * printW;
                     let py = Math.random() * printH;
@@ -3646,7 +3659,7 @@ async function executeRealA4Print(isPdfMode = false) {
             closeCadPrintModal();
             return;
         }
-
+    
         const docHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>3D Weave A4 Print</title>
             <style>
                 @page { size: A4 ${isPortrait ? "portrait" : "landscape"}; margin: 8mm; }
@@ -3993,7 +4006,7 @@ if (typeof window.appPrint !== "function") {
 
 async function triggerRealPrint() {
     let fs = $("fsModal");
-    let wasFsOpen = fs && fs.style.display === "block";
+    let wasFsOpen = !!fs && (fs.style.display === "block" || fs.style.display === "flex");
     if (wasFsOpen) fs.style.display = "none";
 
     try {
@@ -4014,7 +4027,7 @@ async function triggerRealPrint() {
         document.body.style.overflow = wasFsOpen ? "hidden" : "";
         drawFramePending = false;
         if (wasFsOpen) {
-            fs.style.display = "block";
+            fs.style.display = "flex";
             draw3DWeave();
         }
     }, 300);
