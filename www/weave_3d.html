@@ -923,7 +923,15 @@ function expandPattern(str) {
 }
 
 window.$ = id => document.getElementById(id);
-function safeJSON(key, fallback=null) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; } }
+function dbGet(key) {
+    // Entry pages (warp_entry / weft_entry) save through window.StorageDB (config.js), not plain localStorage.
+    let v = null;
+    try { if (window.StorageDB && typeof window.StorageDB.getItem === "function") v = window.StorageDB.getItem(key); } catch(e) {}
+    if (v === null || v === undefined || v === "") { try { v = localStorage.getItem(key); } catch(e) {} }
+    return v;
+}
+async function dbReady() { try { if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready; } catch(e) {} }
+function safeJSON(key, fallback=null) { try { const raw = dbGet(key); return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; } }
 function clone(x) { 
     try { return typeof structuredClone === "function" ? structuredClone(x) : JSON.parse(JSON.stringify(x)); }
     catch(e) { return JSON.parse(JSON.stringify(x)); }
@@ -1463,6 +1471,7 @@ function populateDesignSelect(auto = true) {
 
 async function importFromFirebase(manual = false) {
     try {
+        await dbReady();
         setStatus(manual ? "🔄 Local + Cloud refresh..." : "⚡ Loading designs...");
 
         const local = collectLocalDesigns();
@@ -1587,7 +1596,7 @@ function loadSelectedDesign(){
 
         let dentDrawMatch = null;
         try {
-            let ddArr = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
+            let ddArr = JSON.parse(dbGet("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
                 dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === selectedClean || designName(d).replace(/\D/g,'') === rawDigits);
             }
@@ -2566,7 +2575,7 @@ if(fsContent) {
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="fsModal") closeFullscreen(); });
 
 window.addEventListener("focus", () => {
-    let lastEdit = localStorage.getItem("last_edit_timestamp");
+    let lastEdit = dbGet("last_edit_timestamp");
     if (window._lastEditStamp !== lastEdit) {
         window._lastEditStamp = lastEdit;
         importFromFirebase(false);
@@ -3776,10 +3785,13 @@ function buildPrintGraph(m, pickStr) {
     }
 })();
 
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
     try {
         let statusEl = document.getElementById("designStatus");
         if(statusEl) statusEl.textContent = "⚡ Loading designs...";
+
+        await dbReady();
+        allCloudDesigns = mergeDesigns(collectLocalDesigns());
 
         if (allCloudDesigns.length > 0) {
             populateDesignSelect(true);
@@ -3795,6 +3807,7 @@ window.addEventListener("load", () => {
         if(statusEl) statusEl.textContent = "⚡ Ready (Offline Mode)";
     }
 });
+
 </script>
 </body>
 </html>
