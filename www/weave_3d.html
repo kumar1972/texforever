@@ -1458,24 +1458,45 @@ async function importFromFirebase(manual = false) {
 }
 
 /* ================= LOAD SELECTED DESIGN ================= */
-function loadSelectedDesign(selectElement){
+function loadSelectedDesign(){
     try {
-        const select = selectElement || document.getElementById("designSelect");
+        const select = document.getElementById("designSelect");
         if (!select || !select.value) return;
 
         setStatus("⏳ Loading selected design...");
-        const selectedOption = select.options[select.selectedIndex];
-        const indexValue = selectedOption?.dataset?.designIndex;
-        let foundDesign = indexValue !== undefined ? allCloudDesigns[Number(indexValue)] : null;
+        const selectedVal = select.value.trim();
+        const selectedClean = cleanDesignName(selectedVal);
+        const rawDigits = selectedVal.replace(/\D/g, ''); // Extract numbers like 7766
+
+        let foundDesign = allCloudDesigns.find(d => {
+            let dN = designName(d).trim();
+            let cleanDN = cleanDesignName(dN);
+            let dDigits = dN.replace(/\D/g, '');
+            return dN === selectedVal || 
+                   cleanDN === selectedClean || 
+                   (rawDigits && dDigits === rawDigits);
+        });
+
         if (!foundDesign) {
-            const selectedName = selectedOption?.dataset?.designName || select.value;
-            foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === cleanDesignName(selectedName));
+            try {
+                let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+                let foundKey = Object.keys(editsCache).find(k => {
+                    let kTrim = k.trim();
+                    return kTrim === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits;
+                });
+                if (foundKey && editsCache[foundKey]) {
+                    foundDesign = editsCache[foundKey];
+                }
+            } catch(e) {}
         }
-        // Do not silently load the first design if the selected number cannot be matched.
+
         if (!foundDesign) {
-            setStatus("⚠️ Selected design not found. Refresh designs and try again.");
-            console.error("Selected design not found:", select.value, allCloudDesigns);
-            return;
+            if (allCloudDesigns.length > 0) {
+                foundDesign = allCloudDesigns[0]; 
+            } else {
+                setStatus("⚠️ Selected design not found.");
+                return;
+            }
         }
 
         let rawDesign = JSON.parse(JSON.stringify(foundDesign));
@@ -1492,8 +1513,7 @@ function loadSelectedDesign(selectElement){
         let foundEdits = null;
         try {
             let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim());
-            if (!key && editsCache[cleanName] && designName(editsCache[cleanName]).trim() === dName.trim()) key = cleanName;
+            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim() || cleanDesignName(k) === cleanName);
             if(key) foundEdits = editsCache[key];
         } catch(e) {}
 
@@ -1515,7 +1535,7 @@ function loadSelectedDesign(selectElement){
                     if(data) {
                         let parsed = JSON.parse(data);
                         if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName);
+                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
                             if(match && match.warpLines && match.warpLines.length > 0) { 
                                 rawWarp = clone(match.warpLines);
                                 break; 
@@ -1534,7 +1554,7 @@ function loadSelectedDesign(selectElement){
                     if(data) {
                         let parsed = JSON.parse(data);
                         if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName);
+                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
                             if(match && match.weftLines && match.weftLines.length > 0) { 
                                 rawWeft = clone(match.weftLines);
                                 break; 
@@ -1544,8 +1564,7 @@ function loadSelectedDesign(selectElement){
                 } catch(e) {}
             }
         }
-
-        if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
+            if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
         if(!rawWeft.length && activeDesignObj.weftLines) rawWeft = clone(activeDesignObj.weftLines);
 
         if(!rawWarp.length) rawWarp = [
@@ -1568,12 +1587,12 @@ function loadSelectedDesign(selectElement){
         try {
             let ddArr = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
-                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName);
+                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName || designName(d).trim() === dName.trim());
             }
         } catch(e) {}
 
         let dMasters = safeJSON("design_masters_data", []);
-        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName) : null;
+        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName || designName(m).trim() === dName.trim()) : null;
 
         let sourceObj = {
             ...activeDesignObj,
@@ -1627,7 +1646,6 @@ function loadSelectedDesign(selectElement){
         if(statusEl) statusEl.textContent = "❌ Error loading design: " + (err?.message || "Unknown error");
     }
 }
-
 function getCurrentData() {
     let w = []; let f = []; let wRanges = []; let fRanges = []; 
     let wCurrentLine = 1;
