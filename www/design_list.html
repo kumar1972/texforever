@@ -133,8 +133,29 @@
 </div>
 
 <script>
+/* ===== Storage helpers: other pages save via window.StorageDB (config.js), so read from it first ===== */
+function dbGet(key) {
+    let v = null;
+    try { if (window.StorageDB && typeof window.StorageDB.getItem === 'function') v = window.StorageDB.getItem(key); } catch (e) {}
+    if (v === null || v === undefined || v === '') { try { v = localStorage.getItem(key); } catch (e) {} }
+    return v;
+}
+function dbSet(key, val) {
+    let done = false;
+    try { if (window.StorageDB && typeof window.StorageDB.setItem === 'function') { window.StorageDB.setItem(key, val); done = true; } } catch (e) {}
+    if (!done) { try { localStorage.setItem(key, val); } catch (e) {} }
+}
+async function dbReady() { try { if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready; } catch (e) {} }
+function parseSafe(key, fallback) {
+    try { const raw = dbGet(key); if (!raw) return fallback; const v = JSON.parse(raw); return (v === null || v === undefined) ? fallback : v; }
+    catch (e) { return fallback; }
+}
+function getArr(key) { const v = parseSafe(key, []); return Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []); }
+function getObj(key) { const v = parseSafe(key, {}); return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
+function escAttr(x) { return String(x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;'); }
+
 function cleanDesignName(str) {
-    return str ? str.toString().replace('#', '').trim().toLowerCase() : '';
+    return str ? str.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '';
 }
 
 function exportToExcel() {
@@ -159,8 +180,8 @@ window.closeFullscreenImage = function() {
 };
 
 window.toggleBaseDesignStatus = async function(dNo, isChecked) {
-    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
-    let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let specs = getObj('design_specs');
+    let orders = getArr('party_orders_data');
     let clean = cleanDesignName(dNo);
     let specKey = Object.keys(specs).find(k => cleanDesignName(k) === clean) || dNo;
     
@@ -168,14 +189,14 @@ window.toggleBaseDesignStatus = async function(dNo, isChecked) {
     
     let newStatus = isChecked ? 'completed' : 'running';
     specs[specKey].status = newStatus;
-    localStorage.setItem('design_specs', JSON.stringify(specs));
+    dbSet('design_specs', JSON.stringify(specs));
 
     orders.forEach(o => {
         if(cleanDesignName(o.designNumber || o.designNo) === clean) {
             o.status = newStatus;
         }
     });
-    localStorage.setItem('party_orders_data', JSON.stringify(orders));
+    dbSet('party_orders_data', JSON.stringify(orders));
 
     try {
         if (window.supabaseSave) {
@@ -211,19 +232,23 @@ window.renderDesignList = function() {
     let totalMetersVal = 0;
     let recordsCount = 0;
 
-    let specs = JSON.parse(localStorage.getItem('design_specs')) || {};
-    let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
-    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let specs = getObj('design_specs');
+    let orders = getArr('party_orders_data');
+    let designMasters = getArr('design_masters_data');
 
     if (type === 'all') {
         theadHtml = `<tr><th>S.No</th><th>Photo</th><th>Design</th><th>Warp / Weft Count</th><th>Reed</th><th>Pick</th><th>Total Order Mtr</th><th>Status</th></tr>`;
         
-        let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+        let preDesigns = getArr('pre_design_numbers');
         let masterNames = Array.isArray(designMasters) ? designMasters.map(d => d.name || d.designNo).filter(Boolean) : [];
         let keysFromSpecs = Object.keys(specs);
         let orderDesigns = Array.isArray(orders) ? orders.map(o => o.designNumber || o.designNo).filter(Boolean) : [];
         
-        let designs = Array.from(new Set([...preDesigns, ...masterNames, ...keysFromSpecs, ...orderDesigns]));
+        let warpNames = getArr('warp_entry_data').map(d => d && (d.name || d.designNo)).filter(Boolean);
+        let weftNames = getArr('weft_entry_data').map(d => d && (d.name || d.designNo)).filter(Boolean);
+        let seenD = new Set();
+        let designs = [...preDesigns, ...masterNames, ...warpNames, ...weftNames, ...keysFromSpecs, ...orderDesigns]
+            .filter(d => { if (!d || typeof d !== 'string' && typeof d !== 'number') return false; const k = cleanDesignName(d); if (!k || k === 'unnamed' || seenD.has(k)) return false; seenD.add(k); return true; });
 
         if(designs.length === 0) {
             listContainer.innerHTML = '<div class="empty-msg">No Saved Designs Found!</div>';
@@ -276,7 +301,7 @@ window.renderDesignList = function() {
                 <td>${mtrSum > 0 ? mtrSum.toFixed(2) : '-'}</td>
                 <td>
                     <label style="cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-weight:700; color:${isCompleted ? '#10B981' : '#F59E0B'};">
-                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleBaseDesignStatus('${dNo}', this.checked)">
+                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleBaseDesignStatus('${escAttr(String(dNo).replace(/\\/g,'\\\\').replace(/'/g,"\\'"))}', this.checked)">
                         ${isCompleted ? 'Completed' : 'Running'}
                     </label>
                 </td>
@@ -294,7 +319,7 @@ window.renderDesignList = function() {
         };
 
         let targetKey = recordKeyMap[type.toLowerCase()] || `${type.toLowerCase()}_records`;
-        let records = JSON.parse(localStorage.getItem(targetKey)) || [];
+        let records = getArr(targetKey);
 
         records.forEach((r) => {
             let dNo = r.designNo || r.designNumber || r.design || '-';
@@ -333,7 +358,8 @@ window.renderDesignList = function() {
     }
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    await dbReady();
     window.renderDesignList();
 });
 </script>
