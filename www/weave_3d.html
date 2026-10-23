@@ -1340,45 +1340,52 @@ function showYarnTab(t) {
 
 /* ================= POPULATE DESIGN DROPDOWN ================= */
 function populateDesignSelect(auto = true) {
-    let s = $("designSelect"); 
-    if(!s) return;
-    
-    let lastSaved = localStorage.getItem("weave_last_design_name") || "";
-    let cur = activeDesignObj ? designName(activeDesignObj) : lastSaved;
+    const select = $("designSelect");
+    if (!select) return;
 
-    let frag = document.createDocumentFragment();
-    let optDefault = document.createElement("option");
-    optDefault.value = "";
-    optDefault.textContent = "-- டிசைனைத் தேர்ந்தெடுக்கவும் --";
-    frag.appendChild(optDefault);
+    // Preserve the current selection while local/cloud data refreshes the list.
+    const previousValue = select.value || "";
+    const lastSaved = localStorage.getItem("weave_last_design_name") || "";
+    const activeName = activeDesignObj ? designName(activeDesignObj) : "";
+    const preferredName = previousValue || activeName || lastSaved;
 
-    allCloudDesigns.forEach((d) => {
-        let name = designName(d);
-        if (name && name !== "Unnamed") {
-            let o = document.createElement("option");
-            o.value = name;
-            o.textContent = "🎨 " + name;
-            frag.appendChild(o);
-        }
+    const fragment = document.createDocumentFragment();
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "-- டிசைனைத் தேர்ந்தெடுக்கவும் --";
+    fragment.appendChild(placeholder);
+
+    const seen = new Set();
+    allCloudDesigns.forEach((design, index) => {
+        const name = designName(design);
+        const key = cleanDesignName(name);
+        if (!name || name === "Unnamed" || !key || seen.has(key)) return;
+        seen.add(key);
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = "🎨 " + name;
+        // Stable reference helps load the exact record even if names have punctuation.
+        option.dataset.designIndex = String(index);
+        fragment.appendChild(option);
     });
 
-    s.innerHTML = "";
-    s.appendChild(frag);
+    select.replaceChildren(fragment);
 
-    if (allCloudDesigns.length > 0) {
-        let targetName = designName(allCloudDesigns[0]);
-        if (cur) {
-            let found = allCloudDesigns.find(d => cleanDesignName(designName(d)) === cleanDesignName(cur));
-            if (found) targetName = designName(found);
-        }
+    const wanted = preferredName && allCloudDesigns.find(d =>
+        cleanDesignName(designName(d)) === cleanDesignName(preferredName)
+    );
+    const targetName = wanted ? designName(wanted) :
+        (allCloudDesigns.length ? designName(allCloudDesigns[0]) : "");
 
-        if (auto) {
-            s.value = targetName;
+    if (targetName) {
+        select.value = targetName;
+        if (auto && (!activeDesignObj || cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
             loadSelectedDesign();
         }
     } else {
+        select.value = "";
         if ($("activeDesignText")) $("activeDesignText").textContent = "No Designs Found";
-        if ($("designStatus")) $("designStatus").textContent = "ℹ️ Design இல்லை";
+        setStatus("ℹ️ Design இல்லை");
     }
 }
 
@@ -1440,16 +1447,24 @@ async function importFromFirebase(manual = false) {
 /* ================= LOAD SELECTED DESIGN ================= */
 function loadSelectedDesign(){
     try {
-        let s = document.getElementById("designSelect");
-        if(!s || !s.value) return;
-        
-        let selVal = cleanDesignName(s.value);
-        let foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === selVal);
-        if(!foundDesign) {
-            foundDesign = allCloudDesigns[0];
+        const select = document.getElementById("designSelect");
+        if (!select || !select.value) return;
+
+        setStatus("⏳ Loading selected design...");
+        const selectedOption = select.options[select.selectedIndex];
+        const indexValue = selectedOption?.dataset?.designIndex;
+        let foundDesign = indexValue !== undefined ? allCloudDesigns[Number(indexValue)] : null;
+        if (!foundDesign) {
+            const selectedName = cleanDesignName(select.value);
+            foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === selectedName);
         }
-        if(!foundDesign) return;
-        
+        // Do not silently load the first design if the selected number cannot be matched.
+        if (!foundDesign) {
+            setStatus("⚠️ Selected design not found. Refresh designs and try again.");
+            console.error("Selected design not found:", select.value, allCloudDesigns);
+            return;
+        }
+
         let rawDesign = JSON.parse(JSON.stringify(foundDesign));
         activeDesignObj = typeof sanitizeDesignObj === "function" ? sanitizeDesignObj(rawDesign) : rawDesign;
         
@@ -1596,7 +1611,7 @@ function loadSelectedDesign(){
     } catch(err){
         console.error("LoadDesignError: ", err);
         let statusEl = document.getElementById("designStatus");
-        if(statusEl) statusEl.textContent = "❌ Error loading design";
+        if(statusEl) statusEl.textContent = "❌ Error loading design: " + (err?.message || "Unknown error");
     }
 }
 
