@@ -1,0 +1,4055 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<!-- Full Screen Web App Meta Tags -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1713">
+<meta name="apple-mobile-web-app-title" content="TexForever">
+<meta name="application-name" content="TexForever">
+<title>3D Warp & Weft Weave Simulator Pro</title>
+
+<!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="translator.js"></script>
+  <script src="printer.js"></script>
+  <script>
+// ============================================
+// CONFIG.JS - INLINE
+// ============================================
+const SUPABASE_URL = (localStorage.getItem("custom_supabase_url") || "").trim();
+const SUPABASE_KEY = (localStorage.getItem("custom_supabase_key") || "").trim();
+
+let supabaseClient = null;
+if (typeof window.supabase !== 'undefined' && SUPABASE_URL && SUPABASE_KEY) {
+    try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch(e) {
+        console.log("Supabase client fallback mode");
+    }
+}
+
+function $(id) {
+    if (!id) return null;
+    return document.getElementById(id);
+}
+</script>
+<style>
+/* Print control bar container */
+.print-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.print-controls-bar select, 
+.print-controls-bar button {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.print-controls-bar button.btn-print-action {
+    background: #10b981;
+    color: #fff;
+    border-color: #059669;
+}
+
+.print-controls-bar button.btn-close-action {
+    background: #ef4444;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+@media print {
+    .print-controls-bar, .print-hide {
+        display: none !important;
+    }
+}
+
+:root {
+    --bg: #0d1713;
+    --card: #14251e;
+    --card2: #192d25;
+    --line: #2c4b3d;
+    --text: #edf7ef;
+    --muted: #9fc5aa;
+    --accent: #78d18a;
+    --blue: #1688d8;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+html {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+body {
+    min-height: 100vh;
+    padding: 6px;
+    padding-bottom: 40px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.container {
+    width: 100%;
+    max-width: 760px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.header {
+    background: linear-gradient(145deg, #183328, #102019);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.step-no {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #2d8b47;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: .7rem;
+    flex-shrink: 0;
+}
+
+.step h3 {
+    font-size: .85rem;
+    color: #e5f6e9;
+}
+
+.step p {
+    font-size: .55rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+label {
+    font-size: .7rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+}
+
+input, select {
+    width: 100%;
+    background: #fff;
+    color: #17231d;
+    border: 1px solid #c8d3cd;
+    padding: 8px 9px;
+    border-radius: 8px;
+    font-size: .8rem;
+    min-height: 34px;
+    outline: none;
+}
+
+.btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 34px;
+    font-size: .7rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-green { background: #2f9147; color: #fff; }
+.btn-blue { background: #1285d2; color: #fff; }
+.btn-dark { background: #244638; color: #aee9ba; border: 1px solid #39614f; }
+.btn-red { background: #ef4444; color: #fff; }
+
+.cloud-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.status {
+    font-size: .6rem;
+    color: var(--muted);
+    margin-top: 5px;
+    min-height: 15px;
+}
+
+.active-design {
+    margin-top: 6px;
+    background: #0f1d17;
+    border: 1px solid #315746;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: .65rem;
+    color: #bde8c6;
+}
+
+.active-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #45c765;
+    margin-right: 5px;
+}
+
+.yarn-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 4px 0;
+    background: var(--card, #14251e);
+}
+
+.yarn-tab {
+    background: #203b30;
+    border: 1px solid #345947;
+    color: #9fc8aa;
+    border-radius: 8px;
+    padding: 6px;
+    font-weight: 900;
+    font-size: .75rem;
+    cursor: pointer;
+}
+
+.yarn-tab.active {
+    background: #2d8d48;
+    color: #fff;
+}
+
+.set-box { display: none !important; }
+.yarn-summary {
+    display: flex;
+    justify-content: flex-end; 
+    background: transparent;
+    padding: 0px 4px;
+    margin-bottom: 4px;
+    font-size: .6rem;
+}
+
+.yarn-panel { display: none; }
+.yarn-panel.active { display: block; }
+
+.scroll-box {
+    max-height: 480px; 
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #0d1813;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid #28483a;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.scroll-box > div {
+    background: #172b23;
+    border: 1px solid #2e5041;
+    border-radius: 6px;
+    padding: 4px 6px;
+    display: grid;
+    grid-template-columns: 28px 36px 1fr 50px; 
+    align-items: center;
+    gap: 6px;
+}
+
+.scroll-box label {
+    font-size: 0.65rem !important;
+    margin: 0;
+    color: #78d18a;
+    font-weight: 900;
+}
+
+.yarn-name-display {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #edf7ef;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    text-align: left;
+    padding-left: 2px;
+}
+
+.yarn-color-btn {
+    width: 36px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.25);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.scroll-box input[type="number"] {
+    width: 100%;
+    height: 34px;
+    min-height: 34px;
+    text-align: center;
+    padding: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+#gridEditorSection {
+    background: #0f1b16;
+    border: 1px solid #2c4b3d;
+    padding: 8px;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.main-actions { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 6px; }
+.main-actions button { width: 100%; }
+
+/* ================= 3D FULLSCREEN MODAL ================= */
+.fs-modal { 
+    display: none; 
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100vw; 
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    background: #060c09; 
+    z-index: 999999; 
+    overflow: hidden;
+}
+
+.fs-top-fixed-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #14251e;
+    z-index: 1000000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.85);
+}
+
+.fs-header { 
+    height: 44px; 
+    padding: 0 8px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    background: #14251e; 
+    border-bottom: 1px solid #233e31; 
+    width: 100%;
+}
+.fs-title { color: #9be4a8; font-size: .75rem; font-weight: 900; white-space: nowrap; }
+.fs-header-actions { display: flex; gap: 4px; align-items: center; }
+.fs-header button { border: 0; border-radius: 6px; padding: 4px 8px; color: #fff; font-weight: 800; font-size: .65rem; cursor: pointer; }
+
+.effect-bar {
+    width: 100%;
+    background: #0f241a;
+    border-bottom: 1px solid #3e6d53;
+    padding: 4px 8px;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #edf7ef;
+    height: 38px;
+}
+
+.effect-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+}
+
+.effect-group input[type="range"] {
+    flex: 1;
+    height: 4px;
+    accent-color: #22c55e;
+    cursor: pointer;
+    background: #244638;
+}
+.effect-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #22c55e;
+    cursor: pointer;
+}
+
+.fs-content { 
+    position: absolute;
+    top: 82px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    overflow: hidden; 
+    background: #060c09; 
+    touch-action: none; 
+}
+
+.fs-content canvas { width: 100%; height: 100%; display: block; max-width: 100%; max-height: 100%; }
+@media (max-width: 520px) {
+    .fs-header { min-height: 44px; height: auto; padding: 4px; gap: 4px; align-items: center; }
+    .fs-title { font-size: .68rem; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+    .fs-header-actions { gap: 3px; min-width: 0; flex: 1; justify-content: flex-end; }
+    .fs-header-actions > div { padding: 2px 3px !important; gap: 2px !important; }
+    .fs-header-actions span { font-size: .55rem !important; }
+    .fs-header-actions select { max-width: 48px; font-size: .62rem !important; }
+    .fs-header-actions button { padding: 5px 6px !important; font-size: .65rem !important; min-width: 28px; }
+    .effect-bar { min-height: 42px; height: auto; padding: 5px; gap: 7px; font-size: .62rem; }
+    .effect-group { min-width: 0; gap: 4px; }
+    .effect-group span { white-space: nowrap; }
+    .effect-group input[type="range"] { min-width: 24px; }
+    .effect-group input[type="checkbox"] { width: 15px; height: 15px; flex: 0 0 15px; }
+    .fs-content { top: 88px; }
+}
+/* Mobile browser-safe fullscreen controls: keep bars above the canvas and visible. */
+.fs-top-fixed-bar {
+    position: fixed !important;
+    top: env(safe-area-inset-top, 0px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1000000 !important;
+}
+.fs-modal { inset: 0; width: 100%; height: 100%; height: 100dvh; }
+.fs-content { z-index: 1; }
+.fs-top-fixed-bar, .fs-header, .effect-bar { box-sizing: border-box; }
+@media (max-width: 380px) {
+    .fs-title { max-width: 56px; font-size: .58rem; }
+    .fs-header-actions { gap: 2px; }
+    .fs-header-actions button { min-width: 24px; padding: 4px !important; }
+    .fs-header-actions > div { max-width: 82px; }
+    .effect-bar { gap: 4px; }
+    .effect-group { gap: 2px; }
+    .effect-group span { font-size: .55rem; }
+}
+.fs-hint { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(20,37,30,.88); color: #b8d8bf; padding: 3px 10px; border-radius: 20px; font-size: .52rem; pointer-events: none; white-space: nowrap; z-index: 10; display:flex; align-items:center; gap:8px; }
+
+/* CAD PRINT MODAL */
+.cad-print-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000001;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+}
+.cad-print-box {
+    background: #14251e;
+    border: 1px solid #39614f;
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    color: #edf7ef;
+}
+
+/* PRINT DESIGN MODAL */
+.print-modal { display: none; position: fixed; inset: 0; background: #e5e7eb; z-index: 1000000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
+.print-sheet { background: #fff; color: #111827; width: 100%; max-width: 860px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: none; overflow: hidden; margin: auto; }
+.print-sheet-inner { padding: 20px; background: #fff; }
+
+.print-section-title { display: flex; justify-content: space-between; align-items: flex-end; font-size: 13px; font-weight: 900; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 12px; margin-top: 24px; }
+.section-code { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+
+.yarn-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: sans-serif; }
+.yarn-table th { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 4px; color: #374151; font-weight: 800; text-align: center; }
+.yarn-table td { border: 1px solid #e5e7eb; border-bottom: 1px solid #94a3b8; padding: 8px 4px; text-align: center; vertical-align: middle; }
+.yarn-table tbody tr { border-bottom: 1px solid #94a3b8; }
+.yarn-table { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.color-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #d1d5db; display: inline-block; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+.denting-box { font-size: 14px; font-weight: 900; text-align: center; line-height: 1.8; padding: 28px 22px; min-height: 120px; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; color: #111827; word-break: break-word; }
+
+.print-graph-table { border-collapse: collapse; margin: 0 auto; }
+.print-graph-table td { width: var(--gcell, 18px); height: var(--gcell, 18px); text-align: center; font-size: var(--gfont, 14px); font-weight: 900; color: #111; border: 1px solid #d1d5db; }
+.graph-axis { font-size: 10px !important; color: #6b7280 !important; border: none !important; }
+
+/* SMART COLOR STUDIO POPUP */
+.colour-popup { display: none; position: fixed; inset: 0; z-index: 99999999; background: #14251e; flex-direction: column; padding: 10px; overflow: hidden; }
+.colour-popup.active { display: flex !important; }
+.colour-popup-box { width: 100vw !important; max-width: none !important; height: 100vh !important; max-height: none !important; background: #14251e !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.colour-popup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-shrink: 0; padding: 10px; padding-bottom: 0;}
+.colour-popup-head b { color: #f59e0b; font-size: .95rem; }
+.colour-popup-close { background: #ef4444; border: 0; color: #fff; border-radius: 50%; width: 28px; height: 28px; font-weight: 900; font-size:0.85rem; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.search-box { width: calc(100% - 20px); padding: 8px; border-radius: 8px; border: 1px solid #395648; background: #0d1813; color: #fff; font-size: .8rem; margin: 10px; margin-top: 0; flex-shrink: 0; }
+.tone-filters { display: flex; gap: 6px; padding: 0 10px 8px; overflow-x: auto; flex-shrink: 0; }
+.tone-chip { background: #172b23; border: 1px solid #335343; color: #a3cca8; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.tone-chip.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
+.search-result-count { padding: 0 10px 6px; font-size: 0.65rem; color: #78d18a; font-weight: 800; }
+.colour-master-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin: 0 10px 8px; flex-shrink: 0; scrollbar-width: none; }
+.colour-master-tabs::-webkit-scrollbar { display: none; }
+.colour-master-tab { flex: 0 0 auto; border: 1px solid #39614f; background: #1b362c; color: #b8d8bf; border-radius: 6px; padding: 8px 14px; font-size: .7rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.colour-master-tab.active { background: #f59e0b; color: #14251e; border-color: #f59e0b; font-weight: 900; }
+.colour-popup-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 10px; align-content: start; }
+.swatch-card { background: #172b23; border: 1px solid #395648; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; }
+.swatch-card.selected { border-color: #f59e0b; box-shadow: 0 0 0 2px #f59e0b; background: #1e382d; }
+.swatch-color { height: 34px; width: 34px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 6px rgba(0,0,0,0.4); flex-shrink: 0; margin-bottom: 4px; }
+.swatch-details { text-align: center; width: 100%; }
+.swatch-name { font-size: 0.68rem; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.swatch-sub { font-size: 0.54rem; color: #9fc5aa; margin-top: 1px; }
+.colour-popup-footer { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-top: 1px solid #2c4b3d; flex-shrink: 0; background: #14251e; }
+.colour-use-btn { background: #10b981; border: 0; border-radius: 8px; padding: 12px; color: #fff; font-weight: 900; font-size: .85rem; cursor: pointer; width: 100%; text-align: center; }
+
+/* Mobile/desktop-site robust fullscreen layout: controls occupy their own rows. */
+.fs-modal {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 2147483000;
+  background: #060c09;
+  box-sizing: border-box;
+}
+.fs-top-fixed-bar {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100%;
+  flex: 0 0 auto;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 2 !important;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: #14251e;
+}
+.fs-header { min-height: 44px; height: auto; flex-wrap: nowrap; }
+.effect-bar { min-height: 42px; height: auto; }
+.fs-content {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+  z-index: 1;
+}
+.fs-content canvas { width: 100%; height: 100%; object-fit: contain; touch-action: none; }
+/* max-device-width still applies when Chrome's "Desktop site" changes the layout viewport. */
+@media (max-device-width: 600px), (pointer: coarse) and (max-width: 900px) {
+  .fs-header { padding: 4px 5px; gap: 3px; }
+  .fs-title { flex: 0 1 auto; max-width: 76px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+  .fs-header-actions { flex: 1 1 auto; min-width: 0; justify-content: flex-end; gap: 3px; }
+  .fs-header-actions > div { padding: 2px 3px !important; gap: 2px !important; }
+  .fs-header-actions span { font-size: 9px !important; }
+  .fs-header-actions select { max-width: 58px; min-width: 44px; font-size: 10px !important; }
+  .fs-header-actions button { min-width: 28px; padding: 5px 6px !important; font-size: 10px !important; }
+  .effect-bar { padding: 5px 6px; gap: 7px; font-size: 10px; }
+  .effect-group { flex: 1 1 50%; min-width: 0; gap: 4px; }
+  .effect-group span { white-space: nowrap; font-size: 10px; }
+  .effect-group input[type="range"] { min-width: 20px; width: 100%; }
+  .effect-group input[type="checkbox"] { flex: 0 0 15px; width: 15px; height: 15px; }
+}
+@media (max-device-width: 360px) {
+  .fs-title { max-width: 56px; font-size: 9px; }
+  .fs-header-actions { gap: 2px; }
+  .fs-header-actions button { min-width: 24px; padding: 4px !important; }
+  .fs-header-actions > div { max-width: 86px; }
+  .effect-bar { gap: 4px; }
+  .effect-group { gap: 2px; }
+  .effect-group span { font-size: 9px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card print-hide" style="padding:8px;margin-bottom:2px;">
+        <button class="btn btn-dark" onclick="window.location.href='dashboard.html'" style="display:inline-flex;align-items:center;padding:6px 12px;min-height:auto;width:auto;">
+            ← Back to Menu
+        </button>
+    </div>
+
+    <div class="header">
+        <h1>🧵 3D Weave Simulation Pro</h1>
+    </div>
+
+    <!-- DESIGN -->
+    <div class="card">
+        <label>🎨 Design</label>
+        <select id="designSelect" onchange="loadSelectedDesign()">
+            <option value="">-- டிசைனைத் தேர்ந்தெடுக்கவும் --</option>
+        </select>
+        <div class="active-design">
+            <span class="active-dot"></span>
+            <span id="activeDesignText">Design loading...</span>
+        </div>
+        <div class="cloud-actions">
+            <button class="btn btn-dark" onclick="importFromFirebase(true)">🔄 Refresh</button>
+            <button class="btn btn-green" onclick="saveCurrentDesign()">☁️ Save / Update</button>
+        </div>
+        <div id="designStatus" class="status">⚡ Loading...</div>
+    </div>
+
+    <!-- YARN -->
+    <div class="card">
+        <div class="step">
+            <div class="step-no">2</div>
+            <div>
+                <h3>நூல் விவரங்கள்</h3>
+                <p>Warp / Weft நிறம் மற்றும் அளவு</p>
+            </div>
+        </div>
+        <div class="yarn-tabs">
+            <button class="yarn-tab active" id="warpTab" onclick="showYarnTab('warp')">
+                🧵 WARP <span id="warpTabCount">0</span>
+            </button>
+            <button class="yarn-tab" id="weftTab" onclick="showYarnTab('weft')">
+                🪢 WEFT <span id="weftCountDisplay">0</span>
+            </button>
+        </div>
+        
+        <div class="yarn-summary">
+            <span style="display:none;">நிறங்கள்: <b id="activeYarnCount">0 / 0</b></span>
+            <span id="activeYarnHint" style="font-weight: 800; color: #a9d6b2;">Total Ends: 0</span>
+        </div>
+
+        <div id="warpPanel" class="yarn-panel active">
+            <div id="warpInputsContainer" class="scroll-box"></div>
+        </div>
+        <div id="weftPanel" class="yarn-panel">
+            <div id="weftInputsContainer" class="scroll-box"></div>
+        </div>
+    </div>
+
+    <!-- WEAVE & DENTING DRAWING PATTERNS -->
+    <div class="card">
+        <div class="step" style="margin-bottom: 10px;">
+            <div class="step-no" style="background:#217eaf;">3</div>
+            <div>
+                <h3>Weave / Draft Logic</h3>
+                <p>Denting & Drawing (Draft) Order</p>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div>
+                <label>⚙ Denting</label>
+                <input type="text" id="dentingPatternInput" value="" oninput="autoRefresh3D()" placeholder="Eg: 2">
+            </div>
+            <div>
+                <label>🔀 Drawing</label>
+                <input type="text" id="drawingPatternInput" value="" oninput="autoRefresh3D()" placeholder="Eg: 1,2,3,4">
+            </div>
+        </div>
+
+        <div style="display: none;">
+            <select id="weaveType" onchange="onWeaveChange()">
+                <option value="plain">Plain Weave (1 / 1)</option>
+                <option value="twill">Twill 2/2</option>
+                <option value="custom" selected>🛠️ Custom Graph Grid</option>
+            </select>
+            <div id="gridEditorSection"></div>
+        </div>
+
+        <div class="main-actions" style="grid-template-columns: 1fr; gap: 6px; margin-top: 6px;">
+            <button class="btn btn-green" style="padding: 14px; font-size: 0.95rem; font-weight: 900; letter-spacing: 1px;" onclick="openFullscreen()">
+                🧊 3D VIEW PREVIEW
+            </button>
+            <button class="btn btn-dark" data-print-bound="true" style="padding: 12px; font-size: 0.8rem;" onclick="printDesign()">
+                🖨 PRINT DESIGN
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- FULLSCREEN 3D SIMULATION -->
+<div id="fsModal" class="fs-modal">
+    <div class="fs-top-fixed-bar">
+        <div class="fs-header">
+            <div class="fs-title">🧊 3D Weave Pro</div>
+            <div class="fs-header-actions">
+                <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
+                    <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">🔁 Rep:</span>
+                    <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#203b30; color:#fff; border:0; padding:2px; font-size:0.65rem; border-radius:3px; width:auto; min-height:auto; height:22px;">
+                        <option value="1">1x</option>
+                        <option value="1.25" selected>1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                        <option value="3">3x</option>
+                        <option value="4">4x</option>
+                    </select>
+                </div>
+
+                <div style="display:inline-flex; align-items:center; gap:2px; background:#0d1c16; border:1px solid #345947; border-radius:6px; padding:2px 4px;">
+                    <span style="font-size:0.55rem; color:#8fe19d; font-weight:bold;">📏:</span>
+                    <button style="background:#203b30; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(-0.05)" title="Scale Down">-</button>
+                    <span id="rulerCalDisplay" style="font-size:0.6rem; color:#f59e0b; min-width:22px; text-align:center;">100%</span>
+                    <button style="background:#203b30; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(0.05)" title="Scale Up">+</button>
+                </div>
+                <button style="background:#244638;border:1px solid #39614f;" onclick="refreshFullscreen3D()">↺</button>
+                <button style="background:#217eaf;font-size:0.7rem;padding:4px 8px;" onclick="openCadPrintModal()">🖨️ CAD</button>
+                <button style="background:#ef4444;font-size:0.7rem;padding:4px 8px;" onclick="closeFullscreen()">✖</button>
+            </div>
+        </div>
+
+        <div class="effect-bar">
+            <div class="effect-group">
+                <input type="checkbox" id="fsSeerCheck" onchange="syncEffects('seer')">
+                <span>🌊 Puff:</span>
+                <input type="range" id="seerIntensity" min="5" max="100" value="50" oninput="debounce3DRender()" title="Seersucker 3D Wave Depth">
+                <span id="seerValDisplay" style="color:#f59e0b; min-width:24px;">50%</span>
+            </div>
+            <div class="effect-group">
+                <input type="checkbox" id="fsBrushCheck" onchange="syncEffects('brush')">
+                <span>🪶 Brush:</span>
+                <input type="range" id="brushIntensity" min="10" max="100" value="50" oninput="debounce3DRender()" title="Micro-Fibre Density (max 200%)">
+                <span id="brushValDisplay" style="color:#78d18a; min-width:24px;">50%</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="fsContent" class="fs-content">
+        <canvas id="weaveCanvas" aria-label="GPU-rendered weave simulation"></canvas>
+        <canvas id="weaveCanvas2D" aria-hidden="true" style="display:none"></canvas>
+        <div class="fs-hint">
+            <span>👆 Drag Scroll</span> • <span>🤏 Pinch Zoom</span> • <span>📏 Ruler Active</span>
+        </div>
+    </div>
+</div>
+
+<!-- CAD A4 PRINT DIALOG & SCALE OPTIONS -->
+<div id="cadPrintModal" class="cad-print-modal">
+    <div class="cad-print-box">
+        <h3>🖨️ A4 CAD Print Options</h3>
+        <div class="cad-info-pill">
+            <div><b>டிசைன் ஒரிஜினல் அளவு (100%):</b> <span id="cadOrigSizeDisp" style="color:#78d18a; font-weight:bold;">0 × 0 cm</span></div>
+            <div style="font-size: 0.65rem; color:#9fc5aa; margin-top:2px;">A4 தாளின் உச்சபட்ச அச்சு எல்லை: 19.5 × 27.5 cm</div>
+        </div>
+
+        <div class="cad-scale-ctrl">
+            <label>
+                <span>A4 தாளுக்கு ஏற்ப Scale அளவு:</span>
+                <b id="cadScaleValDisp" style="color:#78d18a;">100%</b>
+            </label>
+            <input type="range" id="cadScaleRange" min="10" max="100" value="100" step="5" oninput="updateCadPrintScale(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#88a895; margin-top:3px;">
+                <span>10% (சுருக்கப்பட்டது)</span>
+                <span id="cadAutoFitHint" style="color:#f59e0b; cursor:pointer; font-weight:bold;" onclick="autoFitToA4()">[Auto Fit to A4]</span>
+                <span>100% (Original cm)</span>
+            </div>
+        </div>
+
+        <div style="font-size:0.72rem; color:#cfdfd5; margin-bottom:12px;">
+            A4-ல் பிரிண்ட் ஆகும் அளவு: <b id="cadPrintSizeDisp" style="color:#45c765;">0 × 0 cm</b>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
+            <button class="btn btn-green" data-print-bound="true" onclick="executeRealA4Print()">🖨️ Print Now</button>
+            <button class="btn btn-blue" data-print-bound="true" onclick="executePrintPdf()" style="font-size: 0.65rem; padding: 6px;">📥 Print PDF</button>
+            <button class="btn btn-dark" onclick="closeCadPrintModal()">✖ Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- PROFESSIONAL DESIGN SHEET PRINT PREVIEW -->
+<div id="printModalBox" class="print-modal">
+    <div class="print-sheet">
+        <div class="print-sheet-inner">
+            <div class="print-controls-bar">
+                <div style="font-size:11px; font-weight:900; color:#1e293b;">🖨️ Professional Design Sheet</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:10px; font-weight:800; color:#64748b;">📄 Page:</span>
+                        <select id="printOrientation" onchange="updatePrintOrientation()">
+                            <option value="portrait">A4 Portrait</option>
+                            <option value="landscape">A4 Landscape</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:10px; font-weight:800; color:#64748b;">📊 Graph:</span>
+                        <select id="printGraphScale" onchange="applyPrintGraphScale()">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <button class="btn-print-action" onclick="triggerRealPrint()">🖨️ PRINT</button>
+                    <button class="btn-close-action" onclick="closeGraphPrintPreview()">✕ CLOSE</button>
+                </div>
+            </div>
+            <div id="printDesignContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- SMART COLOR STUDIO POPUP -->
+<div id="colourPopup" class="colour-popup">
+    <div class="colour-popup-box">
+        <div class="colour-popup-head">
+            <div>
+                <b id="colourPopupTitle">🎨 Advanced Smart Color Studio (60 Tones)</b>
+                <div id="editingTargetInfo" style="font-size:0.55rem; color:#9fc5aa; margin-top:1px;">Editing Line</div>
+            </div>
+            <button class="colour-popup-close" onclick="closeColourPopup()">✕</button>
+        </div>
+        <input type="text" id="colourSearchInput" class="search-box" placeholder="🔍 Search color name..." oninput="filterColourPopup()">
+        
+        <div class="tone-filters">
+            <button class="tone-chip active" onclick="setToneFilter('all', this)">All Tones (60+)</button>
+            <button class="tone-chip" onclick="setToneFilter('deep', this)">Deep / Dark</button>
+            <button class="tone-chip" onclick="setToneFilter('medium', this)">Medium Tone</button>
+            <button class="tone-chip" onclick="setToneFilter('light', this)">Light / Pastel</button>
+        </div>
+
+        <div id="searchCountDisp" class="search-result-count">Showing All Colors</div>
+
+        <div class="colour-master-tabs" id="popupMasterTabs"></div>
+        <div id="colourPopupGrid" class="colour-popup-grid"></div>
+        
+        <div class="colour-popup-footer">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="syncColorCheck" checked style="width: 16px !important; min-width: 16px !important; height: 16px !important; min-height: 16px !important; margin: 0; accent-color: #10b981;">
+                <label for="syncColorCheck" style="margin:0; font-size: 0.65rem; color: #a9d6b2; cursor:pointer;">Sync (எல்லா இடத்திலும் மாற்று)</label>
+            </div>
+            
+            <button class="colour-use-btn" onclick="applySelectedColour()">✅ Apply Shade</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =========================================================
+   GLOBAL DATA & TRANSLATIONS
+========================================================= */
+let currentWarpCount = 0;
+let currentWeftCount = 0;
+let activeDesignObj = null;
+let allCloudDesigns = [];
+let currentToneFilter = 'all';
+let activeColourMasterIndex = 0;
+let selectedColourForPopup = null;
+let colourPopupTarget = { type: null, index: null };
+let liveDesignDimensions = { widthCm: 0, heightCm: 0 };
+let selectedCadScalePercent = 100;
+let simulationRepeatFactor = 1.25;
+// Keep the current zoom/pan when the mobile browser chrome or orientation changes.
+window.addEventListener("resize", () => {
+    if ($("fsModal")?.style.display === "block") scheduleWeaveResize();
+}, { passive: true });
+
+function changeSimulationRepeats(val) {
+    simulationRepeatFactor = Math.max(1, Math.min(4, parseFloat(val) || 1.25));
+    debounce3DRender();
+}
+
+let rulerCalibrationMultiplier = 1.0;
+let singleW_cm = 0;
+let singleH_cm = 0;
+let singleW_mm = 0;
+let singleH_mm = 0;
+try {
+    rulerCalibrationMultiplier = parseFloat(window.StorageDB.getItem("weave_ruler_cal") || "1.0");
+} catch(e) {}
+if (!isFinite(rulerCalibrationMultiplier)) rulerCalibrationMultiplier = 1.0;
+
+function adjustRulerDpi(delta) {
+    rulerCalibrationMultiplier = Math.max(0.7, Math.min(1.5, rulerCalibrationMultiplier + delta));
+    window.StorageDB.setItem("weave_ruler_cal", rulerCalibrationMultiplier.toFixed(2));
+    updateRulerCalDisplay();
+    debounce3DRender();
+}
+
+function updateRulerCalDisplay() {
+    let el = $("rulerCalDisplay");
+    if(el) el.textContent = Math.round(rulerCalibrationMultiplier * 100) + "%";
+}
+
+let weavePatterns = {
+    plain: [
+        [0, 1, 0, 1],
+        [1, 0, 1, 0],
+        [0, 1, 0, 1],
+        [1, 0, 1, 0]
+    ],
+    twill: [
+        [1,1,0,0],
+        [0,1,1,0],
+        [0,0,1,1],
+        [1,0,0,1]
+    ],
+    custom: [
+        [0, 1, 0, 1], 
+        [1, 0, 1, 0], 
+        [0, 1, 0, 1], 
+        [1, 0, 1, 0]  
+    ]
+};
+
+const COLOR_TRANSLATIONS = {
+    'green': 'பச்சை', 'p. green': 'கிளி பச்சை', 'bottle green': 'பாட்டில் கிரீன்', 'd. green': 'டார்க் கிரீன்', 'l. green': 'லைட் கிரீன்',
+    'gold': 'கோல்டு', 'l. olive': 'L. ஆலிவ்', 'd. olive': 'D. ஆலிவ்', 'grey': 'கிரே', 'gray': 'கிரே',
+    'l. grey': 'L. கிரே', 'd. grey': 'D. கிரே', 'l. gray': 'L. கிரே', 'd. gray': 'D. கிரே',
+    't.salavai': 'T. சலவை', 't. salavai': 'T. சலவை', 't. white': 'T. சலவை', '1/2 salavai': '1/2 சலவை',
+    '1/2 white': '1/2 சலவை', 'white': 'வெள்ளை', 'black': 'கருப்பு', 'blue': 'ப்ளூ', 'yellow': 'மஞ்சள்',
+    'red': 'ரெட்', 'brown': 'பிரவுன்', 'khaki': 'காக்கி',
+    'l. khaki': 'L. காக்கி', 'd. khaki': 'D. காக்கி', 'rose': 'ரோஸ்', 'orange': 'ஆரஞ்சு', 'violet': 'வைலட்',
+    'pink': 'பிங்க்', 'l. pink': 'L. பிங்க்', 'd. pink': 'D. பிங்க்', 'navy': 'நேவி', 'l. navy': 'L. நேவி', 'd. navy': 'D. நேவி', 'maroon': 'மெரூன்',
+    'olive': 'ஆலிவ்', 'l. blue': 'L. ப்ளூ', 'r. blue': 'R. ப்ளூ', 'turq': 'டர்க்', 'purple': 'பர்புள்',
+    'cream': 'கிரீம்', 'beige': 'பேஜ்', 'biscuit': 'பிஸ்கட்', 'majenda': 'மெஜந்தா', 'silver': 'சில்வர்',
+    'peach': 'பீச்', 'sky blue': 'வான ப்ளூ', 'onion': 'ஆனியன்', 'mint': 'மின்ட்', 'teal': 'டீல்', 
+    'coral': 'பவளம்', 'lavender': 'லாவெண்டர்', 'charcoal': 'சார்கோல்', 'rust': 'ரஸ்ட்', 'mustard': 'கடுகு'
+};
+
+function cleanBaseColorName(rawName) {
+    if (!rawName) return "";
+    let clean = String(rawName);
+    if (clean.includes("<")) {
+        let tmp = document.createElement("div");
+        tmp.innerHTML = clean;
+        clean = tmp.textContent || tmp.innerText || "";
+    }
+    clean = clean.replace(/T-\d+/gi, '').replace(/NO\.\s*\d+/gi, '');
+    clean = clean.replace(/\([^)]*\)/g, '');
+    clean = clean.replace(/Select Colour/gi, '').trim();
+    clean = clean.replace(/\s+/g, ' ').trim();
+    return clean || "Custom";
+}
+
+function getLocalizedColorName(engName) {
+    if (!engName) return "";
+    let base = cleanBaseColorName(engName);
+    let lower = base.toLowerCase();
+    let tamil = COLOR_TRANSLATIONS[lower] || "";
+    if (!tamil) {
+        for (let k in COLOR_TRANSLATIONS) {
+            if (lower === k || lower.startsWith(k + " ") || lower.endsWith(" " + k)) {
+                tamil = COLOR_TRANSLATIONS[k];
+                break;
+            }
+        }
+    }
+    if (tamil) return `${base} (${tamil})`;
+    return base;
+}
+
+function getShadeName(hex, orig) {
+    if (orig && orig.trim() !== "") {
+        return getLocalizedColorName(orig);
+    }
+    let h = String(hex).toLowerCase();
+    if (typeof texforeverColourMaster !== 'undefined') {
+        for(let m of texforeverColourMaster) {
+            for(let s of m.shades) {
+                if(s.hex.toLowerCase() === h) return getLocalizedColorName(m.name);
+            }
+        }
+    }
+    return orig || "Custom";
+}
+
+function expandPattern(str) {
+    if(!str) return [];
+    let s = String(str).toLowerCase().replace(/\s+/g, '').replace(/[x×X*]/g, '*'); 
+    let bracketRegex = /\(([^)]+)\)\*(\d+)/g;
+    let match;
+    while ((match = bracketRegex.exec(s)) !== null) {
+        let innerContent = match[1]; 
+        let multiplier = parseInt(match[2]) || 1;
+        let expandedStr = Array(multiplier).fill(innerContent).join(',');
+        s = s.replace(match[0], expandedStr);
+        bracketRegex.lastIndex = 0; 
+    }
+    let parts = s.split(',');
+    let res = [];
+    for(let p of parts) {
+        if(!p) continue;
+        if(p.includes('*')) {
+            let [val, count] = p.split('*');
+            let v = parseInt(val.replace(/[^0-9]/g, ''));
+            let c = parseInt(count.replace(/[^0-9]/g, ''));
+            if(!isNaN(v) && !isNaN(c) && c > 0) { for(let i=0; i<c; i++) res.push(v); }
+        } else {
+            let v = parseInt(p.replace(/[^0-9]/g, ''));
+            if(!isNaN(v)) res.push(v);
+        }
+    }
+    return res;
+}
+
+window.$ = id => document.getElementById(id);
+function safeJSON(key, fallback=null) { try { const raw = window.StorageDB.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; } }
+function clone(x) { 
+    try { return typeof structuredClone === "function" ? structuredClone(x) : JSON.parse(JSON.stringify(x)); }
+    catch(e) { return JSON.parse(JSON.stringify(x)); }
+}
+function cleanDesignName(str) { return str !== undefined && str !== null ? String(str).replace(/[#_]/g, '').replace(/\s+/g, '').trim().toLowerCase() : ''; }
+function designName(d) { return String(d?.designNo ?? d?.design_no ?? d?.designNumber ?? d?.design_number ?? d?.name ?? d?.design ?? d?.id ?? "Unnamed").trim(); }
+function setStatus(x) { const el = $("designStatus"); if(el) el.textContent = x; }
+function escapeColourText(value) { return String(value||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ================= 60 TONE ADVANCED COLOUR MASTER ================= */
+const MASTER_COLOR_SPECS = [
+    { name: "Green", h: 125, sMin: 65, sMax: 96, lMin: 18, lMax: 82 },
+    { name: "P. Green", h: 95, sMin: 70, sMax: 98, lMin: 25, lMax: 84 },
+    { name: "Bottle Green", h: 145, sMin: 70, sMax: 95, lMin: 10, lMax: 40 },
+    { name: "Black", h: 0, sMin: 0, sMax: 0, lMin: 4, lMax: 26, isMono: true },
+    { name: "Blue", h: 215, sMin: 65, sMax: 98, lMin: 20, lMax: 84 },
+    { name: "Navy", h: 228, sMin: 55, sMax: 90, lMin: 10, lMax: 42 },
+    { name: "Turq", h: 178, sMin: 60, sMax: 95, lMin: 20, lMax: 82 },
+    { name: "Rose", h: 342, sMin: 60, sMax: 92, lMin: 26, lMax: 85 },
+    { name: "Red", h: 4, sMin: 68, sMax: 98, lMin: 20, lMax: 80 },
+    { name: "Orange", h: 26, sMin: 75, sMax: 100, lMin: 28, lMax: 84 },
+    { name: "Yellow", h: 50, sMin: 75, sMax: 100, lMin: 28, lMax: 88 },
+    { name: "Gold", h: 43, sMin: 65, sMax: 95, lMin: 24, lMax: 76 },
+    { name: "Majenda", h: 310, sMin: 65, sMax: 98, lMin: 22, lMax: 80 },
+    { name: "Maroon", h: 350, sMin: 65, sMax: 90, lMin: 12, lMax: 38 },
+    { name: "Purple", h: 275, sMin: 60, sMax: 95, lMin: 18, lMax: 78 },
+    { name: "Violet", h: 260, sMin: 60, sMax: 95, lMin: 20, lMax: 78 },
+    { name: "Cream", h: 48, sMin: 25, sMax: 60, lMin: 75, lMax: 96 },
+    { name: "Beige", h: 38, sMin: 20, sMax: 50, lMin: 62, lMax: 88 },
+    { name: "Mint", h: 158, sMin: 40, sMax: 85, lMin: 40, lMax: 90 },
+    { name: "Pink", h: 330, sMin: 60, sMax: 95, lMin: 45, lMax: 92 },
+    { name: "Khaki", h: 42, sMin: 25, sMax: 55, lMin: 28, lMax: 70 },
+    { name: "Olive", h: 74, sMin: 35, sMax: 75, lMin: 18, lMax: 62 },
+    { name: "Grey", h: 210, sMin: 4, sMax: 12, lMin: 15, lMax: 88, isMono: true },
+    { name: "Brown", h: 22, sMin: 45, sMax: 80, lMin: 14, lMax: 55 },
+    { name: "Peach", h: 18, sMin: 60, sMax: 95, lMin: 55, lMax: 90 },
+    { name: "Sky Blue", h: 198, sMin: 70, sMax: 95, lMin: 45, lMax: 90 },
+    { name: "Teal", h: 182, sMin: 65, sMax: 95, lMin: 16, lMax: 48 },
+    { name: "Lavender", h: 250, sMin: 45, sMax: 85, lMin: 60, lMax: 92 },
+    { name: "Mustard", h: 46, sMin: 75, sMax: 98, lMin: 32, lMax: 65 },
+    { name: "Rust", h: 14, sMin: 70, sMax: 92, lMin: 22, lMax: 55 },
+    { name: "White", h: 0, sMin: 0, sMax: 5, lMin: 88, lMax: 99, isMono: true }
+];
+
+function hslToHex(h, s, l) {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+const texforeverColourMaster = MASTER_COLOR_SPECS.map((spec, cIdx) => {
+    let shades = [];
+    for (let i = 0; i < 60; i++) {
+        let t = i / 59; 
+        let light = spec.lMin + (spec.lMax - spec.lMin) * t;
+        let sat = spec.isMono ? spec.sMin : (spec.sMin + (spec.sMax - spec.sMin) * (0.6 + 0.4 * Math.sin(t * Math.PI)));
+        let hue = spec.h;
+        if (!spec.isMono) {
+            hue = (spec.h + Math.sin(t * Math.PI * 2) * 6 + 360) % 360;
+        }
+
+        let toneCategory = "Medium";
+        if (light < 36) toneCategory = "Deep";
+        else if (light > 64) toneCategory = "Light";
+
+        let hex = hslToHex(Math.round(hue), Math.round(sat), Math.round(light));
+        let shadeCode = `T-${(i + 1).toString().padStart(2, '0')}`;
+        shades.push({
+            name: `${spec.name} ${shadeCode}`,
+            shadeTag: shadeCode,
+            baseName: spec.name,
+            pantone: `${1000 + (cIdx * 100) + (i + 1)}`,
+            hex: hex,
+            lightness: light,
+            tone: toneCategory
+        });
+    }
+    return { name: spec.name, shades: shades };
+});
+
+function colorName(n) {
+    if(!n) return "#ffffff";
+    let s = String(n).toLowerCase().trim();
+    if(/^#[0-9a-f]{6}$/i.test(s)) return s;
+    if(/^#[0-9a-f]{3}$/i.test(s)) return "#" + s[1]+s[1] + s[2]+s[2] + s[3]+s[3];
+
+    if (s.includes('t-04') || s.includes('t-60') || s.includes('white') || s.includes('salavai')) return "#ffffff";
+
+    if (typeof texforeverColourMaster !== 'undefined') {
+        for (let group of texforeverColourMaster) {
+            for (let shade of group.shades) {
+                let sName = shade.name.toLowerCase();
+                let sTag = (shade.shadeTag || "").toLowerCase();
+                if ((sTag && s === sTag) || sName === s) {
+                    return shade.hex;
+                }
+            }
+        }
+    }
+
+    if (s.includes('violet') || s.includes('வைலட்')) return "#7c3aed";
+    if (s.includes('d. pink') || s.includes('dark pink')) return "#be185d";
+    if (s.includes('l. pink') || s.includes('light pink')) return "#f472b6";
+    if (s.includes('pink') || s.includes('பிங்க்')) return "#db2777";
+    if (s.includes('d. grey') || s.includes('dark grey') || s.includes('d. gray')) return "#4b5563";
+    if (s.includes('l. grey') || s.includes('light grey') || s.includes('l. gray')) return "#9ca3af";
+    if (s.includes('grey') || s.includes('gray') || s.includes('கிரே')) return "#6b7280";
+    if (s.includes('maroon') || s.includes('மெரூன்')) return "#581c1c";
+    if (s.includes('purple') || s.includes('பர்புள்')) return "#581c87";
+    if (s.includes('d. navy') || s.includes('navy') || s.includes('நேவி')) return "#0f172a";
+    if (s.includes('r. blue') || s.includes('royal blue')) return "#1d4ed8";
+    if (s.includes('sky blue')) return "#38bdf8";
+    if (s.includes('l. blue')) return "#60a5fa";
+    if (s.includes('blue') || s.includes('ப்ளூ')) return "#2563eb";
+    if (s.includes('bottle green') || s.includes('d. green')) return "#14532d";
+    if (s.includes('p. green')) return "#84cc16";
+    if (s.includes('green') || s.includes('பச்சை')) return "#16a34a";
+    if (s.includes('yellow') || s.includes('மஞ்சள்')) return "#eab308";
+    if (s.includes('orange') || s.includes('ஆரஞ்சு')) return "#ea580c";
+    if (s.includes('red') || s.includes('ரெட்')) return "#dc2626";
+    if (s.includes('black') || s.includes('கருப்பு')) return "#111827";
+
+    return "#3b82f6"; 
+}
+
+/* ================= 2/40 & SEERSUCKER THICKNESS ENGINE ================= */
+function parseYarnInfo(countStr, nameStr, colStr) {
+    let s = String(countStr || "").trim().toLowerCase();
+    let n = String(nameStr || "").trim().toLowerCase();
+    let c = String(colStr || "").trim().toLowerCase();
+    let ply = 1, ne = 40;
+    
+    let matchPly = s.match(/^(\d+)\s*[\/s]\s*(\d+)/i) || s.match(/(\d+)\s*[\/]\s*(\d+)/i);
+    if(matchPly) {
+        let p = parseInt(matchPly[1]);
+        let cnt = parseInt(matchPly[2]);
+        if(p > 0 && cnt > 0) {
+            ply = p;
+            ne = cnt / p;
+        }
+    } else {
+        let matchSingle = s.match(/(\d+)/);
+        if(matchSingle) {
+            ne = parseInt(matchSingle[1]) || 40;
+        }
+    }
+
+    let isSpecialSeer = s.includes("2/40") || s.includes("seer") || s.includes("sskr") ||
+                        n.includes("seer") || n.includes("sskr") || c.includes("seer");
+
+    let baseMultiplier = Math.max(0.65, Math.min(2.0, Math.sqrt(40 / Math.max(6, ne))));
+    let thicknessMultiplier = isSpecialSeer ? baseMultiplier * 1.55 : baseMultiplier;
+    let diameter_mm = (25.4 / (28 * Math.sqrt(Math.max(6, ne)))) * (ply > 1 ? Math.sqrt(ply) : 1) * (isSpecialSeer ? 1.45 : 1.0);
+
+    return { ply, ne, isSpecialSeer, thicknessMultiplier, diameter_mm };
+}
+
+function normLine(x, warp) {
+    x = x || {}; 
+    let lowerX = {}; 
+    for (let k in x) lowerX[k.toLowerCase()] = x[k];
+    
+    let color = lowerX.color ?? lowerX.colour ?? lowerX.col ?? "";
+    let name = lowerX.colourname ?? lowerX.colourName ?? lowerX.name ?? lowerX.shade ?? "";
+    let hexCode = lowerX.hex ?? ""; 
+    let amount = warp ? (lowerX.ends ?? lowerX.end ?? lowerX.amount ?? lowerX.count ?? lowerX.qty ?? lowerX.orderends) : (lowerX.picks ?? lowerX.pick ?? lowerX.amount ?? lowerX.count ?? lowerX.qty ?? lowerX.orderpicks);
+    let rowSpan = lowerX.span ?? lowerX.setrows ?? lowerX.set_rows ?? lowerX.group ?? lowerX.row_span ?? 1;
+    let repCount = lowerX.repeat ?? lowerX.setrep ?? lowerX.set_repeat ?? lowerX.multiplier ?? lowerX.rep_count ?? 1;
+    let countVal = lowerX.count || lowerX.yarncount || lowerX.warpcount || lowerX.weftcount || "";
+    let yarnInfo = parseYarnInfo(countVal, name, color);
+    let shadeTag = lowerX.shadetag || lowerX.tag || "";
+
+    let matchTag = String(name).match(/T-\d+/i);
+    if (matchTag && !shadeTag) shadeTag = matchTag[0].toUpperCase();
+
+    let finalColor = "#ffffff";
+    let originalDisplayString = name || color || "";
+    let cTrim = String(color || "").trim();
+    let hTrim = String(hexCode || "").trim();
+    
+    if (/^#[0-9a-f]{3,6}$/i.test(hTrim)) {
+        finalColor = hTrim.toLowerCase();
+    } else if (/^#[0-9a-f]{3,6}$/i.test(cTrim)) {
+        finalColor = cTrim.toLowerCase();
+    } else if (name) {
+        finalColor = colorName(name).toLowerCase();
+    } else if (cTrim) {
+        finalColor = colorName(cTrim).toLowerCase();
+    }
+
+    return { 
+        origName: cleanBaseColorName(originalDisplayString), 
+        rawColorInput: originalDisplayString,
+        color: originalDisplayString, 
+        hex: finalColor,
+        amount: parseInt(amount)||0, 
+        span: parseInt(rowSpan)>1 ? parseInt(rowSpan) : "", 
+        repeat: parseInt(repCount)>1 ? parseInt(repCount) : "", 
+        count: countVal, 
+        isSeer: yarnInfo.isSpecialSeer, 
+        ply: yarnInfo.ply, 
+        thicknessMultiplier: yarnInfo.thicknessMultiplier, 
+        diameter_mm: yarnInfo.diameter_mm, 
+        shadeTag: shadeTag 
+    };
+}
+
+function sanitizeDesignObj(d) {
+    if (!d) return null;
+    if (!Array.isArray(d.warpLines) || d.warpLines.length === 0) {
+        let tempWarp = [];
+        for(let i=1; i<=30; i++) {
+            let col = d[`warpColor${i}`] || d[`warpColour${i}`] || d[`warpcolor${i}`];
+            let ends = d[`warpEnds${i}`] || d[`warpEnd${i}`] || d[`warpends${i}`];
+            let name = d[`warpName${i}`] || d[`warpShade${i}`] || "";
+            let cnt = d[`warpCount${i}`] || d[`warpcount${i}`] || "";
+            if (col || ends) tempWarp.push({ color: col, ends: ends, count: cnt, colourName: name });
+        }
+        if(tempWarp.length > 0) d.warpLines = tempWarp;
+    }
+    if (!Array.isArray(d.weftLines) || d.weftLines.length === 0) {
+        let tempWeft = [];
+        for(let i=1; i<=30; i++) {
+            let col = d[`weftColor${i}`] || d[`weftColour${i}`] || d[`weftcolor${i}`];
+            let picks = d[`weftPicks${i}`] || d[`weftpicks${i}`];
+            let name = d[`weftName${i}`] || d[`weftShade${i}`] || "";
+            let cnt = d[`weftCount${i}`] || d[`weftcount${i}`] || "";
+            if (col || picks) tempWeft.push({ color: col, picks: picks, count: cnt, colourName: name });
+        }
+        if(tempWeft.length > 0) d.weftLines = tempWeft;
+    }
+    return d;
+}
+
+function isDefaultYarnLines(lines) {
+    if (!Array.isArray(lines) || lines.length !== 2) return false;
+    let a = lines[0] || {}, b = lines[1] || {};
+    return String(a.colourName) === "Navy" && String(b.colourName) === "D. Grey" &&
+           (parseInt(a.ends ?? a.picks) === 27) && (parseInt(b.ends ?? b.picks) === 1);
+}
+
+function findEntryByDesign(parsed, cleanName) {
+    if (!parsed || typeof parsed !== "object") return null;
+    if (Array.isArray(parsed)) return parsed.find(w => w && cleanDesignName(designName(w)) === cleanName) || null;
+    let k = Object.keys(parsed).find(key => cleanDesignName(key) === cleanName);
+    if (k && parsed[k] && typeof parsed[k] === "object") return parsed[k];
+    return Object.values(parsed).find(w => w && typeof w === "object" && cleanDesignName(designName(w)) === cleanName) || null;
+}
+
+function extractWeftLines(m) {
+    if (!m || typeof m !== "object") return null;
+    const names = ["weftLines","weftPattern","weftRows","weftThreads","weftData","weftEntries","weft","pattern","lines","rows","threads","entries"];
+    for (let k of names) {
+        if (Array.isArray(m[k]) && m[k].length > 0 && typeof m[k][0] === "object") return m[k];
+    }
+    for (let k in m) {
+        if (/weft/i.test(k) && Array.isArray(m[k]) && m[k].length > 0 && typeof m[k][0] === "object") return m[k];
+    }
+    return null;
+}
+
+function deepFindPickLines(o, depth) {
+    depth = depth || 0;
+    if (!o || typeof o !== "object" || depth > 4) return null;
+    if (Array.isArray(o)) {
+        if (o.length > 0 && o.every(x => x && typeof x === "object" && !Array.isArray(x)) &&
+            o.some(x => x.picks !== undefined || x.pick !== undefined || x.Picks !== undefined)) return o;
+        for (let x of o) { let r = deepFindPickLines(x, depth + 1); if (r) return r; }
+        return null;
+    }
+    for (let k in o) { let r = deepFindPickLines(o[k], depth + 1); if (r) return r; }
+    return null;
+}
+
+function scanStorageForWeft(cleanName) {
+    let keys = [];
+    try {
+        let db = window.StorageDB;
+        if (db && typeof db.keys === "function") keys = keys.concat(db.keys());
+    } catch(e) {}
+    try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); } catch(e) {}
+    keys = Array.from(new Set(keys));
+    const skip = /^(weave_3d_local_edits|weave_designs_cache|weave_designs|weave_last_design_name)$/;
+    keys.sort((a, b) => (/weft/i.test(b) ? 1 : 0) - (/weft/i.test(a) ? 1 : 0));
+    for (let key of keys) {
+        if (!key || skip.test(key)) continue;
+        let raw = null;
+        try { raw = window.StorageDB.getItem(key); } catch(e) {}
+        if (!raw) { try { raw = localStorage.getItem(key); } catch(e) {} }
+        if (!raw || (raw.charAt(0) !== "[" && raw.charAt(0) !== "{")) continue;
+        let parsed; try { parsed = JSON.parse(raw); } catch(e) { continue; }
+        let rec = findEntryByDesign(parsed, cleanName);
+        if (rec) { let r = deepFindPickLines(rec); if (r) return r; }
+    }
+    return null;
+}
+
+function mergeDesigns(items) {
+    let map = new Map();
+    let rawEdits = {};
+    try { rawEdits = JSON.parse(window.StorageDB.getItem("weave_3d_local_edits") || "{}"); } catch(e) {}
+
+    Object.keys(rawEdits).forEach(k => {
+        if (rawEdits[k]) {
+            let cleanKey = String(k).trim();
+            map.set(cleanKey, sanitizeDesignObj(clone(rawEdits[k])));
+        }
+    });
+
+    (items || []).filter(Boolean).forEach(rawD => {
+        let d = sanitizeDesignObj(clone(rawD));
+        let n = String(designName(d)).trim(); 
+        if(!n || n === "unnamed") return;
+        
+        if (!map.has(n)) {
+            map.set(n, d);
+        } else {
+            let existing = map.get(n);
+            if (!rawEdits[n]) {
+                let merged = { ...d, ...existing };
+                ["warpLines", "weftLines"].forEach(k => {
+                    let eOk = Array.isArray(existing[k]) && existing[k].length > 0 && !isDefaultYarnLines(existing[k]);
+                    let dOk = Array.isArray(d[k]) && d[k].length > 0;
+                    if (!eOk && dOk) merged[k] = d[k];
+                });
+                map.set(n, merged);
+            }
+        }
+    });
+
+    return [...map.values()];
+}
+
+/* ================= YARN SETTINGS & UI ================= */
+function renderUIWithData(w=[], f=[]) {
+    try {
+        if (!Array.isArray(w)) w = []; if (!Array.isArray(f)) f = [];
+        
+        let wc = w.length;
+        let fc = f.length;
+
+        currentWarpCount = wc; currentWeftCount = fc;
+        if($("warpCountDisplay")) $("warpCountDisplay").textContent = wc; 
+        if($("weftCountDisplay")) $("weftCountDisplay").textContent = fc;
+        if($("warpTabCount")) $("warpTabCount").textContent = wc; 
+        if($("weftTabCount")) $("weftTabCount").textContent = fc;
+
+        let wRanges = activeDesignObj?.warpRanges || []; let fRanges = activeDesignObj?.weftRanges || [];
+        let wh = ""; let fh = "";
+
+        for(let i=0; i<wc; i++) {
+            let x = w[i] ? normLine(w[i], true) : { origName: "", color: "#ffffff", hex: "#ffffff", amount: 0, span: "", repeat: "", count: "", isSeer: false, shadeTag: "" };
+            let lineNum = i + 1; let match = wRanges.find(r => r.start == lineNum);
+            let spanVal = match ? (match.end - match.start + 1) : (x.span > 1 ? x.span : ""); let repVal = match ? match.set : (x.repeat > 1 ? x.repeat : "");
+            let safeOrig = escapeColourText(x.origName);
+            let rawOrigName = getLocalizedColorName(x.origName) || x.origName || "Custom";
+            
+            let countVal = x.count || "";
+            let countPrefix = countVal ? `<span style="color:#f59e0b; font-size:0.72rem; font-weight:bold; margin-right:5px;">[${escapeColourText(countVal)}]</span>` : "";
+            let shadeTagBadge = x.shadeTag ? `<span class="shade-tag-badge" style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;">${escapeColourText(x.shadeTag)}</span>` : "";
+
+            wh += `<div>
+                <label>W${i+1}</label>
+                <button type="button" class="yarn-color-btn" id="wBtn${i+1}" style="background:${x.hex};" onclick="openColourPickerForEntry('warp', ${i+1})"></button>
+                <div class="yarn-name-display" id="wNameDisp${i+1}" onclick="openColourPickerForEntry('warp', ${i+1})" title="${rawOrigName}">
+                    ${countPrefix}<span class="col-name-label">${rawOrigName}</span>${shadeTagBadge}
+                </div>
+                ${pantoneRowHTML('warp', i+1)}
+                <input type="color" id="wC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" data-seer="${x.isSeer?'1':'0'}" style="display:none;">
+                <input type="number" id="wE${i+1}" value="${x.amount||''}" min="0" inputmode="numeric" oninput="updateYarnSummary('warp'); autoRefresh3D();">
+                <div class="set-box" style="display:none;">
+                    <input type="number" id="wSpan${i+1}" value="${spanVal}">
+                    <input type="number" id="wRep${i+1}" value="${repVal}">
+                </div>
+            </div>`;
+        }
+        for(let i=0; i<fc; i++) {
+            let x = f[i] ? normLine(f[i], false) : { origName: "", color: "#ffffff", hex: "#ffffff", amount: 0, span: "", repeat: "", count: "", shadeTag: "" };
+            let lineNum = i + 1; let match = fRanges.find(r => r.start == lineNum);
+            let spanVal = match ? (match.end - match.start + 1) : (x.span > 1 ? x.span : ""); let repVal = match ? match.set : (x.repeat > 1 ? x.repeat : "");
+            let safeOrig = escapeColourText(x.origName);
+            let rawOrigName = getLocalizedColorName(x.origName) || x.origName || "Custom";
+            
+            let countVal = x.count || "";
+            let countPrefix = countVal ? `<span style="color:#f59e0b; font-size:0.72rem; font-weight:bold; margin-right:5px;">[${escapeColourText(countVal)}]</span>` : "";
+            let shadeTagBadge = x.shadeTag ? `<span class="shade-tag-badge" style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;">${escapeColourText(x.shadeTag)}</span>` : "";
+
+            fh += `<div>
+                <label>Wft${i+1}</label>
+                <button type="button" class="yarn-color-btn" id="weftBtn${i+1}" style="background:${x.hex};" onclick="openColourPickerForEntry('weft', ${i+1})"></button>
+                <div class="yarn-name-display" id="weftNameDisp${i+1}" onclick="openColourPickerForEntry('weft', ${i+1})" title="${rawOrigName}">
+                    ${countPrefix}<span class="col-name-label">${rawOrigName}</span>${shadeTagBadge}
+                </div>
+                ${pantoneRowHTML('weft', i+1)}
+                <input type="color" id="weftC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" style="display:none;">
+                <input type="number" id="weftP${i+1}" value="${x.amount||''}" min="0" inputmode="numeric" oninput="updateYarnSummary('weft'); autoRefresh3D();">
+                <div class="set-box" style="display:none;">
+                    <input type="number" id="weftSpan${i+1}" value="${spanVal}">
+                    <input type="number" id="weftRep${i+1}" value="${repVal}">
+                </div>
+            </div>`;
+        }
+        
+        if($("warpInputsContainer")) $("warpInputsContainer").innerHTML = wh; 
+        if($("weftInputsContainer")) $("weftInputsContainer").innerHTML = fh;
+        updateYarnSummary("warp");
+    } catch(err) { console.error("UI Render Error:", err); }
+}
+
+function calculateYarnDetails(type) {
+    let count = type === "warp" ? currentWarpCount : currentWeftCount;
+    let pId = type === "warp" ? "wE" : "weftP"; let spanId = type === "warp" ? "wSpan" : "weftSpan"; let repId = type === "warp" ? "wRep" : "weftRep";
+    let totalYarns = 0; let activeRows = 0; let i = 1;
+    while(i <= count) {
+        let e = $(pId + i); let sInp = $(spanId + i); let rInp = $(repId + i);
+        if(!e) { i++; continue; }
+        let n = Math.max(0, parseInt(e.value)||0); if(n > 0) activeRows++; 
+        let span = Math.max(1, parseInt(sInp?.value)||1); let repeat = Math.max(1, parseInt(rInp?.value)||1);
+        if (span > 1 && repeat > 1) {
+            let setTotal = 0; for(let s=0; s<span; s++) { let rIdx = i + s; let rE = $(pId + rIdx); if(rE) setTotal += Math.max(0, parseInt(rE.value)||0); }
+            totalYarns += (setTotal * repeat); i += span; 
+        } else { totalYarns += n; i++; }
+    }
+    return { totalYarns, activeRows, count };
+}
+
+function getWarpTotalEnds() {
+    let details = calculateYarnDetails("warp");
+    if (details.totalYarns > 0) return details.totalYarns; 
+    
+    let dynamicTotal = 0;
+    for(let i=1; i<=currentWarpCount; i++) {
+        let e = $("wE" + i);
+        if(e) dynamicTotal += Math.max(0, parseInt(e.value) || 0);
+    }
+    return dynamicTotal;
+}
+
+function updateYarnSummary(type) {
+    let details = calculateYarnDetails(type);
+    if($("activeYarnCount")) $("activeYarnCount").textContent = details.activeRows + " / " + details.count;
+    let hint = type === "warp" ? "Total Ends" : "Total Picks";
+    if($("activeYarnHint")) $("activeYarnHint").textContent = `${hint}: ${details.totalYarns}`;
+}
+
+function showYarnTab(t) {
+    if($("warpPanel")) $("warpPanel").classList.toggle("active", t === "warp"); 
+    if($("weftPanel")) $("weftPanel").classList.toggle("active", t === "weft");
+    if($("warpTab")) $("warpTab").classList.toggle("active", t === "warp"); 
+    if($("weftTab")) $("weftTab").classList.toggle("active", t === "weft");
+    updateYarnSummary(t);
+}
+
+/* ================= POPULATE DESIGN DROPDOWN ================= */
+function populateDesignSelect(auto = true) {
+    let s = $("designSelect"); 
+    if(!s) return;
+    
+    let lastSaved = window.StorageDB.getItem("weave_last_design_name") || "";
+    let cur = activeDesignObj ? designName(activeDesignObj) : lastSaved;
+
+    let frag = document.createDocumentFragment();
+    let optDefault = document.createElement("option");
+    optDefault.value = "";
+    optDefault.textContent = "-- டிசைனைத் தேர்ந்தெடுக்கவும் --";
+    frag.appendChild(optDefault);
+
+    allCloudDesigns.forEach((d) => {
+        let name = designName(d);
+        if (name && name !== "Unnamed") {
+            let o = document.createElement("option");
+            o.value = name;
+            o.textContent = "🎨 " + name;
+            frag.appendChild(o);
+        }
+    });
+
+    s.innerHTML = "";
+    s.appendChild(frag);
+
+    if (allCloudDesigns.length > 0) {
+        let targetName = designName(allCloudDesigns[0]);
+        if (cur) {
+            let found = allCloudDesigns.find(d => cleanDesignName(designName(d)) === cleanDesignName(cur));
+            if (found) targetName = designName(found);
+        }
+
+        if (auto) {
+            s.value = targetName;
+            loadSelectedDesign();
+        }
+    } else {
+        if ($("activeDesignText")) $("activeDesignText").textContent = "No Designs Found";
+        if ($("designStatus")) $("designStatus").textContent = "ℹ️ Design இல்லை";
+    }
+}
+
+async function importFromFirebase(manual = false) {
+    try {
+        setStatus(manual ? "🔄 Local + Cloud refresh..." : "⚡ Loading designs...");
+
+        const local = [];
+        const localKeys = ["design_masters_data", "weave_designs", "weave_designs_cache", "weave_3d_local_edits", "warp_entry_data", "weft_entry_data", "denting_drawing_data"];
+        
+        localKeys.forEach(key => {
+            let val = safeJSON(key, null);
+            if (val) {
+                if (Array.isArray(val)) {
+                    val.forEach(item => { if (item && typeof item === "object") local.push(clone(item)); });
+                } else if (typeof val === "object") {
+                    Object.keys(val).forEach(k => {
+                        let item = val[k];
+                        if (item && typeof item === "object" && !Array.isArray(item)) {
+                            item.designNo = item.designNo || k;
+                            local.push(clone(item));
+                        }
+                    });
+                }
+            }
+        });
+
+        allCloudDesigns = mergeDesigns(local);
+        
+        if (allCloudDesigns.length > 0) {
+            populateDesignSelect(true);
+            window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+            setStatus("💾 Local designs ready");
+        }
+
+        if (navigator.onLine && supabaseClient) {
+            try {
+                let cloudData = [];
+                const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+                const [resM, resW] = await Promise.all([
+                    withTimeout(Promise.resolve(supabaseClient.from("design_masters_data").select("*")), 4000),
+                    withTimeout(Promise.resolve(supabaseClient.from("weave_designs").select("*")), 4000)
+                ]);
+                if (resM && !resM.error && Array.isArray(resM.data)) cloudData.push(...resM.data);
+                if (resW && !resW.error && Array.isArray(resW.data)) cloudData.push(...resW.data);
+
+                if (cloudData.length > 0) {
+                    const mergedCloud = mergeDesigns(allCloudDesigns.concat(cloudData));
+                    const mergedStr = JSON.stringify(mergedCloud);
+                    if (mergedStr !== JSON.stringify(allCloudDesigns)) {
+                        allCloudDesigns = mergedCloud;
+                        window.StorageDB.setItem("weave_designs_cache", mergedStr);
+                        populateDesignSelect(manual);
+                    }
+                    setStatus("☁ Local + Cloud designs ready");
+                }
+            } catch(cErr) {
+                console.log("Supabase load skipped/failed", cErr);
+            }
+        }
+    } catch(e) {
+        setStatus("⚠️ Error: " + e.message);
+    }
+}
+
+/* ================= LOAD SELECTED DESIGN ================= */
+function loadSelectedDesign(){
+    try {
+        let s = document.getElementById("designSelect");
+        if(!s || !s.value) return;
+        
+        let selVal = cleanDesignName(s.value);
+        let foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === selVal);
+        if(!foundDesign) {
+            foundDesign = allCloudDesigns[0];
+        }
+        if(!foundDesign) return;
+        
+        let rawDesign = JSON.parse(JSON.stringify(foundDesign));
+        activeDesignObj = typeof sanitizeDesignObj === "function" ? sanitizeDesignObj(rawDesign) : rawDesign;
+        
+        let dName = designName(activeDesignObj);
+        let cleanName = cleanDesignName(dName);
+        
+        if(document.getElementById("activeDesignText")) {
+            document.getElementById("activeDesignText").textContent = "Active Design: " + dName;
+        }
+        window.StorageDB.setItem("weave_last_design_name", dName);
+        
+        let foundEdits = null;
+        try {
+            let editsCache = JSON.parse(window.StorageDB.getItem("weave_3d_local_edits") || "{}");
+            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim());
+            if (!key && editsCache[cleanName] && designName(editsCache[cleanName]).trim() === dName.trim()) key = cleanName;
+            if(key) foundEdits = editsCache[key];
+        } catch(e) {}
+
+        let rawWarp = [];
+        let rawWeft = [];
+
+        if (foundEdits && foundEdits.warpLines && foundEdits.warpLines.length > 0) {
+            rawWarp = clone(foundEdits.warpLines);
+        }
+        if (foundEdits && foundEdits.weftLines && foundEdits.weftLines.length > 0 && !isDefaultYarnLines(foundEdits.weftLines)) {
+            rawWeft = clone(foundEdits.weftLines);
+        }
+
+        if (!rawWarp.length) {
+            let warpKeys = ["warp_entry_data", "warp_pattern_data", "warp_data"];
+            for(let key of warpKeys) {
+                try {
+                    let data = window.StorageDB.getItem(key);
+                    if(data) {
+                        let parsed = JSON.parse(data);
+                        let match = findEntryByDesign(parsed, cleanName);
+                        if(match && match.warpLines && match.warpLines.length > 0) { 
+                            rawWarp = clone(match.warpLines);
+                            break; 
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        if (!rawWeft.length) {
+            let weftKeys = ["weft_entry_data", "weft_pattern_data", "weft_data"];
+            for(let key of weftKeys) {
+                try {
+                    let data = window.StorageDB.getItem(key);
+                    if(data) {
+                        let parsed = JSON.parse(data);
+                        let match = findEntryByDesign(parsed, cleanName);
+                        let wl = extractWeftLines(match);
+                        if(wl) { 
+                            rawWeft = clone(wl);
+                            break; 
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        if (!rawWeft.length) {
+            try { let sw = scanStorageForWeft(cleanName); if (sw) rawWeft = clone(sw); } catch(e) {}
+        }
+
+        if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
+        if(!rawWeft.length) { let aw = extractWeftLines(activeDesignObj); if(aw) rawWeft = clone(aw); }
+
+        if(!rawWarp.length) rawWarp = [
+            { color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' },
+            { color: '#64748b', ends: 1, colourName: 'D. Grey', count: '21 ccc' }
+        ];
+        if(!rawWeft.length) rawWeft = [
+            { color: '#1e3a8a', picks: 27, colourName: 'Navy', count: '21 ccc' },
+            { color: '#64748b', picks: 1, colourName: 'D. Grey', count: '21 ccc' }
+        ];
+
+        currentWarpCount = rawWarp.length;
+        currentWeftCount = rawWeft.length;
+      
+        if(typeof renderUIWithData === "function") {
+            renderUIWithData(rawWarp, rawWeft);
+        }
+
+        let dentDrawMatch = null;
+        try {
+            let ddArr = JSON.parse(window.StorageDB.getItem("denting_drawing_data") || "[]");
+            if(Array.isArray(ddArr)) {
+                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName);
+            }
+        } catch(e) {}
+
+        let dMasters = safeJSON("design_masters_data", []);
+        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName) : null;
+
+        let sourceObj = {
+            ...activeDesignObj,
+            ...(masterMatch || {}),
+            ...(dentDrawMatch || {}),
+            ...(foundEdits || {})
+        };
+
+        let matrixToUse = foundEdits?.customMatrix || dentDrawMatch?.customMatrix || masterMatch?.customMatrix || sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph || sourceObj.graphGrid || sourceObj.graphMatrix;
+        if(matrixToUse && Array.isArray(matrixToUse) && matrixToUse.length > 0) {
+            weavePatterns.custom = JSON.parse(JSON.stringify(matrixToUse));
+            activeDesignObj.customMatrix = weavePatterns.custom;
+            activeDesignObj.type = "custom";
+            if(document.getElementById("weaveType")) document.getElementById("weaveType").value = "custom";
+        }
+
+        let mCols = (weavePatterns.custom && weavePatterns.custom[0]) ? weavePatterns.custom[0].length : 4;
+
+        let drawVal = (dentDrawMatch && (dentDrawMatch.drawingPatternFormula || dentDrawMatch.drawingPattern || dentDrawMatch.drawingOrder || dentDrawMatch.draft)) || 
+                      sourceObj.drawingPatternFormula || sourceObj.drawingPattern || sourceObj.drawingOrder || sourceObj.drawing_order || sourceObj.draft || "";
+        
+        if (!drawVal || (drawVal === "1,2,3,4" && mCols > 4)) {
+            let autoArr = [];
+            for(let f=1; f<=mCols; f++) autoArr.push(f);
+            drawVal = autoArr.join(",");
+        }
+
+        let dentVal = (dentDrawMatch && (dentDrawMatch.dentingPatternFormula || dentDrawMatch.dentingPattern || dentDrawMatch.dentingOrder)) || 
+                      sourceObj.dentingPatternFormula || sourceObj.dentingPattern || sourceObj.dentingOrder || sourceObj.denting_order || "2";
+
+        activeDesignObj.drawingPatternFormula = drawVal;
+        activeDesignObj.drawingPattern = drawVal;
+        activeDesignObj.dentingPatternFormula = dentVal;
+        activeDesignObj.dentingPattern = dentVal;
+        activeDesignObj.pickPattern = sourceObj.pickPattern || `(1-${weavePatterns.custom.length})`;
+
+        if(document.getElementById("dentingPatternInput")) document.getElementById("dentingPatternInput").value = dentVal;
+        if(document.getElementById("drawingPatternInput")) document.getElementById("drawingPatternInput").value = drawVal;
+
+        let type = (matrixToUse && matrixToUse.length > 0) ? "custom" : (sourceObj.type || "custom");
+        if(document.getElementById("weaveType")) document.getElementById("weaveType").value = type;
+
+        let statusEl = document.getElementById("designStatus");
+        if(statusEl) statusEl.textContent = "⚡ Design Ready";
+        
+        if(typeof onWeaveChange === "function") onWeaveChange();
+        autoRefresh3D();
+    } catch(err){
+        console.error("LoadDesignError: ", err);
+        let statusEl = document.getElementById("designStatus");
+        if(statusEl) statusEl.textContent = "❌ Error loading design";
+    }
+}
+
+function getCurrentData() {
+    let w = []; let f = []; let wRanges = []; let fRanges = []; 
+    let wCurrentLine = 1;
+    for(let i=1; i<=currentWarpCount; i++) {
+        let c = $("wC"+i); let e = $("wE"+i); let s = $("wSpan"+i); let r = $("wRep"+i);
+        if(c && e && (parseInt(e.value)||0)>0) {
+            let span = parseInt(s?.value)||1; let rep = parseInt(r?.value)||1;
+            let origName = c.getAttribute('data-orig') || c.getAttribute('data-name') || "";
+            let shadeTag = c.getAttribute('data-tag') || "";
+            let cnt = c.getAttribute('data-cnt') || "";
+            let hex = (c.getAttribute("data-pantone") || c.getAttribute("data-orig-hex") || c.value || "#ffffff").toLowerCase();
+            
+            w.push({ 
+                colourName: origName || cleanBaseColorName(origName), 
+                origName: origName,
+                colour: hex,
+                color: hex, 
+                hex: hex, 
+                count: cnt, 
+                ends: parseInt(e.value)||0, 
+                span: span, 
+                repeat: rep, 
+                shadeTag: shadeTag 
+            });
+            if(span > 1 && rep > 1) { wRanges.push({ start: wCurrentLine, end: wCurrentLine + span - 1, set: rep }); }
+            wCurrentLine++;
+        }
+    }
+    let fCurrentLine = 1;
+    for(let i=1; i<=currentWeftCount; i++) {
+        let c = $("weftC"+i); let p = $("weftP"+i); let s = $("weftSpan"+i); let r = $("weftRep"+i);
+        if(c && p && (parseInt(p.value)||0)>0) {
+            let span = parseInt(s?.value)||1; let rep = parseInt(r?.value)||1;
+            let origName = c.getAttribute('data-orig') || c.getAttribute('data-name') || "";
+            let shadeTag = c.getAttribute('data-tag') || "";
+            let cnt = c.getAttribute('data-cnt') || "";
+            let hex = (c.getAttribute("data-pantone") || c.getAttribute("data-orig-hex") || c.value || "#ffffff").toLowerCase();
+            
+            f.push({ 
+                colourName: origName || cleanBaseColorName(origName), 
+                origName: origName,
+                colour: hex,
+                color: hex, 
+                hex: hex, 
+                count: cnt, 
+                picks: parseInt(p.value)||0, 
+                span: span, 
+                repeat: rep, 
+                shadeTag: shadeTag 
+            });
+            if(span > 1 && rep > 1) { fRanges.push({ start: fCurrentLine, end: fCurrentLine + span - 1, set: rep }); }
+            fCurrentLine++;
+        }
+    }
+
+    let dentP = $("dentingPatternInput")?.value || activeDesignObj?.dentingPatternFormula || activeDesignObj?.dentingPattern || "2";
+    let drawP = $("drawingPatternInput")?.value || activeDesignObj?.drawingPatternFormula || activeDesignObj?.drawingPattern || "1,2,3,4,5,6";
+    let expandedDent = expandPattern(dentP).join(",");
+    let expandedDraw = expandPattern(drawP).join(",");
+
+    return { 
+        warpLines: w, weftLines: f, warpRanges: wRanges, weftRanges: fRanges, 
+        customMatrix: clone(weavePatterns.custom), type: $("weaveType")?.value || "custom",
+        dentingPattern: expandedDent, drawingPattern: expandedDraw,
+        dentingPatternFormula: dentP, drawingPatternFormula: drawP
+    };
+}
+
+async function saveCurrentDesign() {
+    try {
+        setStatus("⏳ Saving...");
+        let currentInputs = getCurrentData();
+        let data = activeDesignObj ? clone(activeDesignObj) : {}; 
+        
+        Object.assign(data, {
+            warpLines: currentInputs.warpLines,       
+            weftLines: currentInputs.weftLines,       
+            customMatrix: currentInputs.customMatrix,
+            type: currentInputs.type,
+            dentingPattern: currentInputs.dentingPattern,
+            drawingPattern: currentInputs.drawingPattern,
+            dentingPatternFormula: currentInputs.dentingPatternFormula,
+            drawingPatternFormula: currentInputs.drawingPatternFormula
+        });
+        
+        let name = activeDesignObj ? designName(activeDesignObj) : null;
+        if(!name || name === "Unnamed") {
+            name = prompt("Design Number / Name", "Design_01");
+        }
+        if(!name) { setStatus("⚡ Ready"); return; }
+        
+        if(activeDesignObj?.id) data.id = activeDesignObj.id;
+
+        data.designNo = name; 
+        data.name = name; 
+        data.timestamp = new Date().toISOString();
+
+        try {
+            let edits = JSON.parse(window.StorageDB.getItem("weave_3d_local_edits") || "{}");
+            edits[String(name).trim()] = clone(data);
+            window.StorageDB.setItem("weave_3d_local_edits", JSON.stringify(edits));
+        } catch(e) {}
+
+        window.StorageDB.setItem("last_edit_timestamp", Date.now().toString());
+        window._lastEditStamp = window.StorageDB.getItem("last_edit_timestamp");
+
+        // Preserve designs saved by other pages/apps: merge the persisted cache first,
+        // then the current in-memory list, and replace only this design's entry.
+        let persistedCache = [];
+        try {
+            const savedCache = JSON.parse(window.StorageDB.getItem("weave_designs_cache") || "[]");
+            if (Array.isArray(savedCache)) persistedCache = savedCache;
+        } catch(e) {}
+        const existingDesigns = [
+            ...persistedCache,
+            ...(Array.isArray(allCloudDesigns) ? allCloudDesigns : [])
+        ];
+        let cache = existingDesigns.filter(x =>
+            String(designName(x)).trim().toLowerCase() !== String(name).trim().toLowerCase()
+        );
+        cache.push(clone(data));
+        allCloudDesigns = mergeDesigns(cache);
+        window.StorageDB.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+        activeDesignObj = clone(data); 
+        window.StorageDB.setItem("weave_last_design_name", name);
+        
+        if(document.getElementById("activeDesignText")) {
+            document.getElementById("activeDesignText").textContent = "Active Design: " + name; 
+        }
+        
+        draw3DWeave(); 
+
+        setStatus("✅ Saved Locally");
+        alert("✅ 3D Design & Colors வெற்றிகரமாக Save ஆகிவிட்டது!");
+
+    } catch(error) { 
+        alert("Error: " + error.message);
+        setStatus("❌ Error saving");
+    }
+}
+            
+function onWeaveChange() {
+    let t = $("weaveType")?.value || "custom";
+    if(t === "plain" || t === "twill") {
+        if($("gridEditorSection")) $("gridEditorSection").style.display = "none";
+    } else {
+        if($("gridEditorSection")) $("gridEditorSection").style.display = "block";
+        buildGridEditor();
+    }
+    if($("fsModal")?.style.display === "block") {
+        draw3DWeave();
+    }
+}
+
+function buildGridEditor() {
+    let box = $("gridEditorSection");
+    if(!box) return;
+
+    let m = weavePatterns.custom;
+    if(!Array.isArray(m) || !m.length || !Array.isArray(m[0]) || !m[0].length) {
+        weavePatterns.custom = [
+            [0, 1, 0, 1],
+            [1, 0, 1, 0],
+            [0, 1, 0, 1],
+            [1, 0, 1, 0]
+        ];
+        m = weavePatterns.custom;
+    }
+
+    box.innerHTML = "";
+    let top = document.createElement("div");
+    top.className = "col-del-row";
+
+    for(let c=0; c<(m[0]?.length || 0); c++) {
+        let b = document.createElement("button");
+        b.className = "btn-col-del";
+        b.textContent = "✕";
+        b.onclick = () => removeCol(c);
+        top.appendChild(b);
+    }
+    box.appendChild(top);
+
+    m.forEach((row,r) => {
+        let wrap = document.createElement("div");
+        wrap.className = "matrix-row-wrapper";
+        let rd = document.createElement("div");
+        rd.className = "matrix-row";
+
+        row.forEach((v,c) => {
+            let cell = document.createElement("div");
+            cell.className = "matrix-cell" + (v === 1 ? " active" : "");
+            cell.textContent = v;
+            cell.onclick = () => {
+                m[r][c] = m[r][c] ? 0 : 1;
+                buildGridEditor();
+                if($("fsModal")?.style.display === "block") draw3DWeave();
+            };
+            rd.appendChild(cell);
+        });
+
+        wrap.appendChild(rd);
+        let del = document.createElement("button");
+        del.className = "btn-row-del";
+        del.textContent = "✕";
+        del.onclick = () => removeRow(r);
+        wrap.appendChild(del);
+        box.appendChild(wrap);
+    });
+}
+function addCol() { weavePatterns.custom.forEach(r => r.push(0)); buildGridEditor(); draw3DWeave(); }
+function removeCol(c) { if(!weavePatterns.custom.length || weavePatterns.custom[0].length<=2) return; weavePatterns.custom.forEach(r => r.splice(c,1)); buildGridEditor(); draw3DWeave(); }
+function addRowTop() { let cols = weavePatterns.custom[0]?.length || 4; weavePatterns.custom.unshift(new Array(cols).fill(0)); buildGridEditor(); draw3DWeave(); }
+function removeRow(i) { if(weavePatterns.custom.length<=2) return; weavePatterns.custom.splice(i,1); buildGridEditor(); draw3DWeave(); }
+function removeLastRow() { removeRow(weavePatterns.custom.length-1); }
+function removeLastCol() { removeCol((weavePatterns.custom[0]?.length||1)-1); }
+
+/* ================= OPTIMIZED CANVAS 3D RENDER ENGINE ================= */
+/* Canvas 2D is browser/GPU accelerated where supported; no external GPU library required. */
+let renderTimer = null;
+let scale = 1, pointX = 0, pointY = 0, panning = false, startX = 0, startY = 0, lastDist = 0;
+
+function debounce3DRender() {
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(() => {
+        draw3DWeave();
+    }, 15);
+}
+
+function autoRefresh3D() { 
+    if($("fsModal")?.style.display === "block") {
+        debounce3DRender();
+    }
+}
+function syncEffects(kind){ debounce3DRender(); }
+
+function isSeersuckerThread(colHex, origName, countVal){
+    let lowerO = (origName || "").toLowerCase();
+    let lowerH = (colHex || "").toLowerCase();
+    let lowerC = (countVal || "").toLowerCase();
+    let isCountPuff = lowerC.includes("2/40") || lowerC.includes("40/2") || lowerC.includes("2x40") || lowerC.includes("2/40s");
+    let isNamePuff = lowerO.includes("seer") || lowerO.includes("sskr") || lowerO.includes("pucker") || lowerO.includes("slack") || lowerO.includes("puff") || lowerO.includes("loose");
+    return isCountPuff || isNamePuff;
+}
+
+function getSimulationPicks(mRows, str){
+    let seq = [];
+    if (Array.isArray(str)) str = str.join(",");
+    if (str == null) str = "";
+    let rowB = getPrintBracketMap(str, false);
+    let hasBrackets = Object.keys(rowB.map).length > 0;
+    if(!hasBrackets){
+        for(let i = 0; i < mRows; i++) seq.push(i);
+        return seq;
+    }
+    for(let r = 1; r <= mRows; r++){
+        if(rowB.isBot[r]){
+            let top = r;
+            for(let b = r; b <= mRows; b++){
+                if(rowB.isTop[b]){ top = b; break; }
+            }
+            let txt = rowB.map[top] ? rowB.map[top].text : "";
+            let repeats = parseInt(txt.replace(/[^0-9]/g, '')) || 1;
+            for(let i = 0; i < repeats; i++){
+                for(let j = r; j <= top; j++){
+                    seq.push(j - 1);
+                }
+            }
+            r = top;
+        } else if(!rowB.skip[r]){
+            seq.push(r - 1);
+        }
+    }
+    return seq;
+}
+
+function isWarpUp(pickRow, warpIndex, type, draftArr, pickSeq){
+    let m = (type === "custom" || !weavePatterns[type])
+        ? weavePatterns.custom
+        : (weavePatterns[type] || weavePatterns.custom);
+
+    if(!m || !m.length || !m[0]?.length)
+        m = weavePatterns.custom;
+
+    const mRows = m.length;
+    const mCols = m[0].length;
+    let pickIndex; 
+    if(pickSeq && pickSeq.length > 0){
+        pickIndex = pickSeq[pickRow % pickSeq.length];
+    } else {
+        pickIndex = pickRow % mRows;
+    }
+
+    const matrixRow = (mRows - 1) - (pickIndex % mRows);
+
+    let frame = 1;
+    if(draftArr && draftArr.length > 0){
+        let dVal = draftArr[warpIndex % draftArr.length];
+        frame = (dVal !== undefined && !isNaN(dVal)) ? dVal : 1;
+    } else {
+        frame = (warpIndex % mCols) + 1;
+    }
+
+    let matrixCol = (frame - 1) % mCols;
+    if(isNaN(matrixCol) || matrixCol < 0) matrixCol = 0;
+
+    return Number(m[matrixRow][matrixCol]) === 1;
+}
+
+function hexToRgb(hex) {
+    if(!hex) return {r:255,g:255,b:255};
+    let c = hex.charAt(0) === '#' ? hex.substring(1) : hex;
+    if(c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    let num = parseInt(c, 16);
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function shadeFast(r, g, b, factor) {
+    return `rgb(${Math.min(255, Math.max(0, Math.round(r * factor)))}, ${Math.min(255, Math.max(0, Math.round(g * factor)))}, ${Math.min(255, Math.max(0, Math.round(b * factor)))})`;
+}
+
+// Repeat an array by a fractional amount without rounding 1.25x up to 2x.
+function appendFractionalRepeats(target, source, factor) {
+    if (!Array.isArray(source) || source.length === 0) return target;
+    const whole = Math.floor(factor);
+    const fraction = factor - whole;
+    for (let i = 0; i < whole; i++) target.push(...source);
+    if (fraction > 0) target.push(...source.slice(0, Math.max(1, Math.ceil(source.length * fraction))));
+    return target;
+}
+
+let drawFramePending = false;
+function draw3DWeave(){
+    if(drawFramePending) return;
+    drawFramePending = true;
+    requestAnimationFrame(()=>{
+        drawFramePending = false;
+        const c = $("weaveCanvas2D");
+        const gpuCanvas = $("weaveCanvas");
+        const host = $("fsContent");
+        if(!c || !host) return;
+        
+        let rect = host.getBoundingClientRect();
+        let cssW = Math.floor(rect.width) || window.innerWidth || 320; 
+        let cssH = Math.floor(rect.height) || (window.innerHeight - 86) || 240;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+        // Draw in CSS-pixel coordinates; DPR only scales the backing bitmap.
+        // This keeps the fabric centered and correctly sized on mobile screens.
+        const vk = 1;
+        window.__weaveVk = 1;
+        let W = cssW;
+        let H = cssH;
+        const dprDraw = dpr;
+
+        if (c.width !== Math.floor(cssW * dpr) || c.height !== Math.floor(cssH * dpr)) {
+            c.width = Math.floor(cssW * dpr);
+            c.height = Math.floor(cssH * dpr);
+        }
+        c.style.width = cssW + "px";
+        c.style.height = cssH + "px";
+        if (gpuCanvas) {
+            if (gpuCanvas.width !== c.width || gpuCanvas.height !== c.height) {
+                gpuCanvas.width = c.width;
+                gpuCanvas.height = c.height;
+            }
+            gpuCanvas.style.width = cssW + "px";
+            gpuCanvas.style.height = cssH + "px";
+        }
+
+        const ctx = c.getContext("2d", { alpha: false, desynchronized: true }); 
+        if(!ctx) return;
+        
+        ctx.imageSmoothingEnabled = false; 
+        ctx.setTransform(dprDraw, 0, 0, dprDraw, 0, 0);
+        ctx.clearRect(0, 0, W, H); 
+        
+        let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = [];
+        while(w_idx <= currentWarpCount){
+            const co = $("wC"+w_idx); const e = $("wE"+w_idx); const sInp = $("wSpan"+w_idx); const rInp = $("wRep"+w_idx);
+            if(!co || !e){ w_idx++; continue; }
+            
+            const n = Math.max(0, parseInt(e.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const origStr = (co.getAttribute("data-orig") || "").toLowerCase(); 
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
+            if(!hexVal || hexVal === "#000000" || hexVal === "null") {
+                hexVal = colorName(origStr);
+            }
+            const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
+            const yInfo = parseYarnInfo(cntStr, origStr, hexVal);
+            const isSeer = yInfo.isSpecialSeer || isSeersuckerThread(hexVal, origStr, cntStr);
+            const rgbColor = hexToRgb(hexVal);
+            
+            if(span > 1 && repeat > 1){
+                const setSequence = []; const setSeerSeq = []; const setInfoSeq = [];
+                for(let s = 0; s < span; s++){
+                    const currIdx = w_idx + s; if(currIdx > currentWarpCount) break;
+                    const rCo = $("wC"+currIdx); const rE = $("wE"+currIdx);
+                    if(rCo && rE){
+                        const rN = Math.max(0, parseInt(rE.value) || 0); 
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
+                        const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
+                        if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
+                        const rColor = hexToRgb(rHex);
+                        const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
+                        const rInfo = parseYarnInfo(rCnt, rOrig, rHex);
+                        const rIsSeer = rInfo.isSpecialSeer || isSeersuckerThread(rHex, rOrig, rCnt);
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setSeerSeq.push(rIsSeer); setInfoSeq.push(rInfo); }
+                    }
+                }
+                for(let rep = 0; rep < repeat; rep++){ 
+                    baseWarp.push(...setSequence); 
+                    warpSeerMap.push(...setSeerSeq); 
+                    baseWarpYarnInfo.push(...setInfoSeq);
+                }
+                w_idx += span;
+            } else {
+                if(n > 0){ 
+                    for(let j = 0; j < n; j++){ 
+                        baseWarp.push(rgbColor); 
+                        warpSeerMap.push(isSeer); 
+                        baseWarpYarnInfo.push(yInfo);
+                    } 
+                }
+                w_idx++;
+            }
+        }
+        
+        let baseWeft = []; let f_idx = 1; let baseWeftYarnInfo = [];
+        while(f_idx <= currentWeftCount){
+            const co = $("weftC"+f_idx); const p = $("weftP"+f_idx); const sInp = $("weftSpan"+f_idx); const rInp = $("weftRep"+f_idx);
+            if(!co || !p){ f_idx++; continue; }
+            
+            const n = Math.max(0, parseInt(p.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
+            const origStr = (co.getAttribute("data-orig") || "").toLowerCase();
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
+            if(!hexVal || hexVal === "#000000") hexVal = colorName(origStr);
+            const yInfo = parseYarnInfo(cntStr, "", hexVal);
+            const rgbColor = hexToRgb(hexVal);
+            
+            if(span > 1 && repeat > 1){
+                const setSequence = []; const setInfoSeq = [];
+                for(let s = 0; s < span; s++){
+                    const currIdx = f_idx + s; if(currIdx > currentWeftCount) break;
+                    const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
+                    if(rCo && rP){
+                        const rN = Math.max(0, parseInt(rP.value) || 0);
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
+                        const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
+                        if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
+                        const rColor = hexToRgb(rHex);
+                        const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
+                        const rInfo = parseYarnInfo(rCnt, "", rHex);
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); }
+                    }
+                }
+                for(let rep = 0; rep < repeat; rep++){ 
+                    baseWeft.push(...setSequence); 
+                    baseWeftYarnInfo.push(...setInfoSeq);
+                }
+                f_idx += span;
+            } else {
+                if(n > 0){ 
+                    for(let j = 0; j < n; j++){ 
+                        baseWeft.push(rgbColor); 
+                        baseWeftYarnInfo.push(yInfo);
+                    } 
+                }
+                f_idx++;
+            }
+        }
+        
+        if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
+        if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
+        
+        let warp = []; let seerMap = []; let warpYarnInfos = [];
+        let weft = []; let weftYarnInfos = [];
+
+        appendFractionalRepeats(warp, baseWarp, simulationRepeatFactor);
+        appendFractionalRepeats(seerMap, warpSeerMap, simulationRepeatFactor);
+        appendFractionalRepeats(warpYarnInfos, baseWarpYarnInfo, simulationRepeatFactor);
+        appendFractionalRepeats(weft, baseWeft, simulationRepeatFactor);
+        appendFractionalRepeats(weftYarnInfos, baseWeftYarnInfo, simulationRepeatFactor);
+
+        const realWarpLength = warp.length; 
+        const realWeftLength = weft.length;
+        
+        let reed = parseFloat(activeDesignObj?.finishedReed || activeDesignObj?.reed || activeDesignObj?.reedCount);
+        let pick = parseFloat(activeDesignObj?.pick || activeDesignObj?.onloomPick || activeDesignObj?.finishedPick || activeDesignObj?.finishPick || activeDesignObj?.weftPick || activeDesignObj?.pickCount);
+        if(!isFinite(reed) || reed <= 0) reed = 80; if(!isFinite(pick) || pick <= 0) pick = 74;
+        
+        const physW_mm = (realWarpLength / reed) * 25.4; 
+        const physH_mm = (realWeftLength / pick) * 25.4;
+        
+        const singleWarpVal = baseWarp.length;
+        const singleWeftVal = baseWeft.length;
+        singleW_mm = (singleWarpVal / reed) * 25.4;
+        singleH_mm = (singleWeftVal / pick) * 25.4;
+        singleW_cm = singleW_mm / 10;
+        singleH_cm = singleH_mm / 10;
+        const physW_cm = physW_mm / 10;
+        const physH_cm = physH_mm / 10;
+        liveDesignDimensions = { widthCm: physW_cm, heightCm: physH_cm, singleW_cm: singleW_cm, singleH_cm: singleH_cm, singleW_mm: singleW_mm, singleH_mm: singleH_mm };
+        
+        let rawDent = $("dentingPatternInput")?.value || activeDesignObj?.dentingPatternFormula || activeDesignObj?.dentingPattern || "2";
+        let rawDraw = $("drawingPatternInput")?.value || activeDesignObj?.drawingPatternFormula || activeDesignObj?.drawingPattern || "1,2,3,4";
+        let dentArr = expandPattern(rawDent); if(!dentArr.length) dentArr = [2];
+        let drawArr = expandPattern(rawDraw); if(!drawArr.length) drawArr = [1,2,3,4];
+        
+        let dentsRequired = 0; let endsRemaining = realWarpLength; let dIdx = 0;
+        while(endsRemaining > 0) {
+            const patternValue = Math.max(0, parseInt(dentArr[dIdx % dentArr.length]) || 0);
+            dentsRequired++;
+            if(patternValue > 0) { endsRemaining -= Math.min(patternValue, endsRemaining); }
+            dIdx++; if(dIdx > 50000) break;
+        }
+        if(dentsRequired <= 0) dentsRequired = realWarpLength;
+        
+        const RULER = 32; 
+
+        const base_steel_ruler_px_per_mm = 6.29; 
+        let px_per_mm = base_steel_ruler_px_per_mm * rulerCalibrationMultiplier;
+
+        window.__weaveScale = { pxPerMm: px_per_mm, dpr: dpr, physW_cm, physH_cm, physW_mm, physH_mm };
+        
+        const drawW = Math.round(physW_mm * px_per_mm); 
+        const drawH = Math.round(physH_mm * px_per_mm);
+        
+        const left = -drawW / 2;
+        const top = -drawH / 2;
+        const bottom = top + drawH;
+        const right = left + drawW;
+        
+        const dentWidthPx = drawW / Math.max(1, dentsRequired); 
+        const cellH = drawH / Math.max(1, realWeftLength);
+        
+        const isSeerActive = $("fsSeerCheck")?.checked ?? false;
+        const rawSeer = parseInt($("seerIntensity")?.value || 50, 10);
+        if($("seerValDisplay")) $("seerValDisplay").textContent = rawSeer + "%";
+
+        const isBrushActive = $("fsBrushCheck")?.checked || false;
+        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
+        if($("brushValDisplay")) $("brushValDisplay").textContent = rawBrush + "%";
+
+        const warpPositions = []; let endIndex = 0; let dentIndex = 0;
+        while(endIndex < realWarpLength && dentIndex < dentsRequired){
+            const requestedEnds = Math.max(0, parseInt(dentArr[dentIndex % dentArr.length]) || 0);
+            const x = left + dentIndex * dentWidthPx;
+            if(requestedEnds === 0) {
+                warpPositions.push({ colIndex: -1, x, w: dentWidthPx, isEmpty: true });
+            } else {
+                const actualEnds = Math.min(requestedEnds, realWarpLength - endIndex);
+                const baseYarnW = dentWidthPx / Math.max(1, actualEnds);
+                for(let e = 0; e < actualEnds; e++) {
+                    let info = warpYarnInfos[endIndex % warpYarnInfos.length] || { thicknessMultiplier: 1.0 };
+                    let isThickSeer = Boolean(seerMap[endIndex % seerMap.length]);
+                    warpPositions.push({ colIndex: endIndex, x: x + e * baseYarnW, w: baseYarnW, baseW: baseYarnW, isEmpty: false, isSeer: isThickSeer, thicknessMultiplier: info.thicknessMultiplier });
+                    endIndex++;
+                }
+            }
+            dentIndex++;
+        }
+
+        let type = $("weaveType")?.value || "custom";
+        let mRows = 4;
+        if(weavePatterns.custom && weavePatterns.custom.length) mRows = weavePatterns.custom.length;
+        else if(weavePatterns[type]) mRows = weavePatterns[type].length;
+        
+        let storedFormula = activeDesignObj?.pickPattern || "";
+        const pickSeq = getSimulationPicks(mRows, storedFormula);
+
+        const viewCenterX = W / 2;
+        const viewCenterY = H / 2;
+
+        if (scale === 1 && pointX === 0 && pointY === 0) {
+            const fitScale = Math.min(1, (W - 24) / Math.max(1, drawW + RULER), (H - 24) / Math.max(1, drawH + RULER));
+            if (fitScale < 1) scale = Math.max(0.05, fitScale);
+        }
+
+        ctx.save();
+        ctx.translate(viewCenterX + pointX, viewCenterY + pointY);
+        ctx.scale(scale, scale);
+
+        const visibleMinX = (-viewCenterX - pointX) / scale - 40;
+        const visibleMaxX = (W - viewCenterX - pointX) / scale + 40;
+        const visibleMinY = (-viewCenterY - pointY) / scale - 40;
+        const visibleMaxY = (H - viewCenterY - pointY) / scale + 40;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(left, top, drawW, drawH);
+        ctx.clip();
+
+        const puff = rawSeer / 100;
+        const effectiveCellW = (drawW / realWarpLength) * scale;
+        const effectiveCellH = cellH * scale;
+
+        for(let r = realWeftLength - 1; r >= 0; r--){
+            const y = bottom - ((r + 1) * cellH);
+            if(y + cellH < visibleMinY || y > visibleMaxY) continue;
+
+            const weftColor = weft[r % weft.length];
+            const flowIndex = realWeftLength - r;
+
+            for(let wpIdx = 0; wpIdx < warpPositions.length; wpIdx++){
+                const wp = warpPositions[wpIdx];
+                if(wp.isEmpty || wp.x + wp.w < visibleMinX || wp.x > visibleMaxX) continue;
+
+                const up = isWarpUp(r, wp.colIndex, type, drawArr, pickSeq);
+                const warpColor = warp[wp.colIndex % warp.length];
+                const isThreadSeer = Boolean(wp.isSeer);
+
+                let curW = wp.w;
+                let curX = wp.x;
+                let puckerShade = 1.0;
+
+                if(isSeerActive && isThreadSeer) {
+                    const pucker = Math.sin(flowIndex * 0.45);
+                    const bulge = 1 + Math.max(0, pucker) * 0.35 * puff;
+                    curW = wp.w * bulge;
+                    curX = wp.x - (curW - wp.w) / 2;
+                    puckerShade = 1.0 + (pucker * 0.35 * puff);
+                }
+
+                if(up) {
+                    ctx.fillStyle = shadeFast(warpColor.r, warpColor.g, warpColor.b, 0.93 * puckerShade);
+                    ctx.fillRect(curX, y, curW, cellH);
+
+                    const hlW = Math.max(0.4, curW * 0.40);
+                    const hlX = curX + (curW - hlW) / 2;
+                    ctx.fillStyle = shadeFast(warpColor.r, warpColor.g, warpColor.b, 1.25 * puckerShade);
+                    ctx.fillRect(hlX, y, hlW, cellH);
+
+                    if(effectiveCellW >= 2.0) {
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+                        const edgeW = Math.max(0.3, curW * 0.12);
+                        ctx.fillRect(curX, y, edgeW, cellH);
+                        ctx.fillRect(curX + curW - edgeW, y, edgeW, cellH);
+                    }
+                    if(effectiveCellH >= 2.0) {
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                        const edgeH = Math.max(0.3, cellH * 0.12);
+                        ctx.fillRect(curX, y, curW, edgeH);
+                        ctx.fillRect(curX, y + cellH - edgeH, curW, edgeH);
+                    }
+                } else {
+                    ctx.fillStyle = shadeFast(weftColor.r, weftColor.g, weftColor.b, 0.93);
+                    ctx.fillRect(curX, y, curW, cellH);
+
+                    const hlH = Math.max(0.4, cellH * 0.40);
+                    const hlY = y + (cellH - hlH) / 2;
+                    ctx.fillStyle = shadeFast(weftColor.r, weftColor.g, weftColor.b, 1.25);
+                    ctx.fillRect(curX, hlY, curW, hlH);
+
+                    // Correct edge shading. The previous edgeW reference here was
+                    // undefined, throwing a ReferenceError and aborting canvas drawing.
+                    if(effectiveCellH >= 2.0) {
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+                        const edgeH = Math.max(0.3, cellH * 0.12);
+                        ctx.fillRect(curX, y, curW, edgeH);
+                        ctx.fillRect(curX, y + cellH - edgeH, curW, edgeH);
+                    }
+                    if(effectiveCellW >= 2.0) {
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                        const edgeW = Math.max(0.3, curW * 0.12);
+                        ctx.fillRect(curX, y, edgeW, cellH);
+                        ctx.fillRect(curX + curW - edgeW, y, edgeW, cellH);
+                    }
+                }
+            }
+        }
+        
+        ctx.restore();
+
+        if(isBrushActive && rawBrush > 0){
+            try {
+                let snap = document.createElement('canvas');
+                snap.width = c.width; snap.height = c.height;
+                let sCtx = snap.getContext('2d');
+                sCtx.drawImage(c, 0, 0);
+                let imgData = sCtx.getImageData(0, 0, snap.width, snap.height);
+
+                const scrX1 = (viewCenterX + pointX + left * scale) * dprDraw;
+                const scrY1 = (viewCenterY + pointY + top * scale) * dprDraw;
+                const scrW = drawW * scale * dprDraw;
+                const scrH = drawH * scale * dprDraw;
+
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.beginPath();
+                ctx.rect(scrX1, scrY1, scrW, scrH);
+                ctx.clip();
+
+                let intensity = rawBrush / 100;
+                let fogAlpha = Math.min(0.28, intensity * 0.12);
+                ctx.globalAlpha = fogAlpha;
+                ctx.filter = `blur(${intensity * 1.2}px)`; 
+                ctx.drawImage(snap, 0, 0);
+                ctx.filter = 'none';
+                ctx.globalAlpha = 1.0;
+
+                let count = Math.floor(2500 * intensity); 
+                for(let i = 0; i < count; i++){
+                    let px = scrX1 + Math.random() * scrW;
+                    let py = scrY1 + Math.random() * scrH;
+                    let ix = Math.floor(px); let iy = Math.floor(py);
+                    if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
+                    
+                    let idx = (iy * snap.width + ix) * 4;
+                    if(imgData.data[idx + 3] < 10) continue; 
+                    
+                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
+                    let brightness = (Math.random() - 0.2) * 35; 
+                    let fR = Math.min(255, Math.max(0, r + brightness));
+                    let fG = Math.min(255, Math.max(0, g + brightness));
+                    let fB = Math.min(255, Math.max(0, b + brightness));
+
+                    ctx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
+                    ctx.lineWidth = (Math.random() * 0.7 + 0.3) * dpr;
+
+                    let angle = Math.random() * Math.PI * 2;
+                    let len = (Math.random() * 3.5 * intensity + 2) * dpr;
+                    let curve = (Math.random() - 0.5) * 1.2 * dpr;
+
+                    ctx.beginPath();
+                    ctx.moveTo(px, py);
+                    ctx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            } catch(e) {}
+        }
+
+        const rulerBgColor = "#ffffff";
+        const rulerBorderColor = "#475569";
+
+        ctx.fillStyle = rulerBgColor; 
+        ctx.fillRect(left, bottom, drawW, RULER); 
+        ctx.strokeStyle = rulerBorderColor; 
+        ctx.lineWidth = 1;
+        ctx.strokeRect(left, bottom, drawW, RULER);
+
+        ctx.fillStyle = rulerBgColor; 
+        ctx.fillRect(left - RULER, top, RULER, drawH);  
+        ctx.strokeRect(left - RULER, top, RULER, drawH);
+
+        ctx.fillStyle = "#f1f5f9";
+        ctx.fillRect(left - RULER, bottom, RULER, RULER);         
+        ctx.strokeRect(left - RULER, bottom, RULER, RULER);
+
+        ctx.fillStyle = "#0f172a"; 
+        ctx.font = "bold 9px Arial, sans-serif"; 
+
+        const total_mm_x = Math.round(physW_mm);
+        ctx.textAlign = "center"; 
+        ctx.textBaseline = "top";
+        for(let mm = 0; mm <= total_mm_x; mm++){
+            const x = left + mm * px_per_mm;
+            if(x > right + 0.5) break;
+            const drawX = Math.floor(x) + 0.5;
+            const isCm = (mm % 10 === 0);
+            const isHalf = (mm % 5 === 0 && !isCm);
+            const tickLen = isCm ? 11 : (isHalf ? 7 : 4);
+            
+            ctx.beginPath();
+            ctx.moveTo(drawX, bottom);
+            ctx.lineTo(drawX, bottom + tickLen);
+            ctx.strokeStyle = isCm ? "#0f172a" : "#94a3b8";
+            ctx.stroke();
+
+            if(isCm && mm > 0){
+                ctx.fillText(mm / 10, drawX, bottom + 13);
+            }
+        }
+
+        const total_mm_y = Math.round(physH_mm);
+        ctx.textAlign = "right"; 
+        ctx.textBaseline = "middle";
+        for(let mm = 0; mm <= total_mm_y; mm++){
+            const y = bottom - mm * px_per_mm;
+            if(y < top - 0.5) break;
+            const drawY = Math.floor(y) + 0.5;
+            const isCm = (mm % 10 === 0);
+            const isHalf = (mm % 5 === 0 && !isCm);
+            const tickLen = isCm ? 11 : (isHalf ? 7 : 4);
+
+            ctx.beginPath();
+            ctx.moveTo(left, drawY);
+            ctx.lineTo(left - tickLen, drawY);
+            ctx.strokeStyle = isCm ? "#0f172a" : "#94a3b8";
+            ctx.stroke();
+
+            if(isCm && mm > 0){
+                ctx.fillText(mm / 10, left - 13, drawY);
+            }
+        }
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#334155";
+        ctx.font = "bold 10px Arial, sans-serif";
+        ctx.fillText("cm", left - RULER / 2, bottom + RULER / 2);
+
+        ctx.restore();
+
+        const line1 = `1 Repeat: ${singleWarpVal} Ends | ${singleW_cm.toFixed(2)} cm`;
+        const line2 = `1 Repeat: ${singleWeftVal} Picks | ${singleH_cm.toFixed(2)} cm`;
+
+        ctx.save();
+        ctx.font = "bold 11px Arial, sans-serif";
+        const boxPadX = 10;
+        const boxPadY = 8;
+        const boxWidth = Math.min(W - 16, Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2));
+        const boxHeight = 44;
+        const fabricRightScr = viewCenterX + pointX + right * scale;
+        const fabricTopScr = viewCenterY + pointY + top * scale;
+        const boxLeft = Math.max(8, Math.min(fabricRightScr - boxWidth - 8, W - boxWidth - 8));
+        const boxTop = Math.max(8, Math.min(fabricTopScr + 8, H - boxHeight - 8));
+
+        ctx.fillStyle = "rgba(10, 24, 18, 0.90)";
+        ctx.strokeStyle = "#48bb78";
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
+        ctx.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
+
+        ctx.fillStyle = "#78d18a";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(line1, boxLeft + boxPadX, boxTop + boxPadY, Math.max(0, boxWidth - boxPadX * 2));
+        ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 18, Math.max(0, boxWidth - boxPadX * 2));
+        ctx.restore();
+
+        // WebGL GPU presentation layer. The established 2D yarn, ruler and brush
+        // rendering is preserved exactly, then uploaded as a texture for GPU display.
+        presentWeaveFrameWebGL(c, gpuCanvas);
+    });
+}
+
+/* ================= HYBRID WEBGL PRESENTATION ENGINE =================
+   Uses WebGL for GPU texture presentation, while retaining the existing 2D
+   weave/brush renderer for compatibility. Falls back to the 2D canvas if WebGL
+   is unavailable or its context cannot be created. */
+let weaveGLState = null;
+let weaveGLFailed = false;
+function initWeaveWebGL(canvas) {
+    if (!canvas || weaveGLFailed) return null;
+    if (weaveGLState && weaveGLState.canvas === canvas) return weaveGLState;
+    try {
+        const gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: "high-performance" }) ||
+                   canvas.getContext("experimental-webgl", { alpha: false, antialias: false, depth: false, stencil: false });
+        if (!gl) throw new Error("WebGL unavailable");
+        const vertexSource = "attribute vec2 a_position; attribute vec2 a_uv; varying vec2 v_uv; void main(){ gl_Position=vec4(a_position,0.0,1.0); v_uv=a_uv; }";
+        const fragmentSource = "precision mediump float; varying vec2 v_uv; uniform sampler2D u_frame; void main(){ gl_FragColor=texture2D(u_frame,v_uv); }";
+        function compile(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source); gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader) || "Shader compile failed");
+            return shader;
+        }
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) || "WebGL link failed");
+        const vertices = new Float32Array([
+            -1,-1, 0,0,  1,-1, 1,0,  -1,1, 0,1,
+            -1,1, 0,1,   1,-1, 1,0,   1,1, 1,1
+        ]);
+        const buffer = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buffer); gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+        const texture = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // Flip uploaded canvas rows once, then use standard bottom-left WebGL UVs.
+        // This prevents the fabric and ruler text from appearing vertically mirrored.
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        weaveGLState = { canvas, gl, program, buffer, texture,
+            position: gl.getAttribLocation(program, "a_position"),
+            uv: gl.getAttribLocation(program, "a_uv"),
+            sampler: gl.getUniformLocation(program, "u_frame"),
+            textureWidth: 0, textureHeight: 0 };
+        return weaveGLState;
+    } catch (err) {
+        console.warn("WebGL presentation unavailable; using 2D canvas fallback.", err);
+        weaveGLFailed = true;
+        return null;
+    }
+}
+function presentWeaveFrameWebGL(sourceCanvas, outputCanvas) {
+    if (!sourceCanvas || !outputCanvas) return;
+    const state = initWeaveWebGL(outputCanvas);
+    if (!state) {
+        outputCanvas.style.display = "none";
+        sourceCanvas.style.display = "block";
+        return;
+    }
+    try {
+        const { gl, program, buffer, texture, position, uv, sampler } = state;
+        outputCanvas.style.display = "block";
+        sourceCanvas.style.display = "none";
+        gl.viewport(0, 0, outputCanvas.width, outputCanvas.height);
+        gl.clearColor(6/255, 12/255, 9/255, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 16, 0);
+        gl.enableVertexAttribArray(uv); gl.vertexAttribPointer(uv, 2, gl.FLOAT, false, 16, 8);
+        gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texture);
+        if (state.textureWidth !== sourceCanvas.width || state.textureHeight !== sourceCanvas.height) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+            state.textureWidth = sourceCanvas.width;
+            state.textureHeight = sourceCanvas.height;
+        } else {
+            // Reuse GPU texture allocation on every redraw for faster zoom/brush updates.
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+        }
+        gl.uniform1i(sampler, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    } catch (err) {
+        console.warn("WebGL frame presentation failed; switching to 2D fallback.", err);
+        weaveGLFailed = true;
+        outputCanvas.style.display = "none";
+        sourceCanvas.style.display = "block";
+    }
+}
+
+/* ================= FULLSCREEN INTERACTIONS ================= */
+function openFullscreen() { 
+    const modal = $("fsModal"); if(!modal) return; 
+    modal.style.display="flex";
+    document.body.style.overflow = "hidden";
+    scale = 1; pointX = 0; pointY = 0; panning = false; 
+    drawFramePending = false;
+    updateRulerCalDisplay();
+    requestAnimationFrame(() => { draw3DWeave(); }); 
+}
+
+function refreshFullscreen3D() { scale = 1; pointX = 0; pointY = 0; drawFramePending = false; draw3DWeave(); }
+
+function closeFullscreen() { 
+    const modal = $("fsModal"); if(!modal) return; 
+    modal.style.display="none"; 
+    document.body.style.overflow = "";
+    scale = 1; pointX = 0; pointY = 0; panning = false; lastDist = 0; 
+    drawFramePending = false;
+}
+
+let wasPinching = false;
+let touchMoved = false;
+let touchStartClientX = 0, touchStartClientY = 0;
+const fsContent = $("fsContent");
+
+if(fsContent) {
+    fsContent.addEventListener("touchstart", e => { 
+        e.stopPropagation();
+        if(e.touches.length === 1) { 
+            panning = true; 
+            wasPinching = false;
+            touchMoved = false;
+            touchStartClientX = e.touches[0].clientX;
+            touchStartClientY = e.touches[0].clientY;
+            startX = e.touches[0].clientX * (window.__weaveVk || 1) - pointX; 
+            startY = e.touches[0].clientY * (window.__weaveVk || 1) - pointY; 
+        } else if(e.touches.length >= 2) { 
+            panning = false; 
+            wasPinching = true; 
+            touchMoved = true;
+            lastDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX, 
+                e.touches[0].clientY - e.touches[1].clientY
+            ); 
+        } 
+    }, {passive:false});
+
+    fsContent.addEventListener("touchmove", e => { 
+        e.preventDefault();
+        e.stopPropagation();
+        if(e.touches.length === 1 && panning) { 
+            const dx = Math.abs(e.touches[0].clientX - touchStartClientX);
+            const dy = Math.abs(e.touches[0].clientY - touchStartClientY);
+            if(dx > 4 || dy > 4) touchMoved = true;
+
+            pointX = e.touches[0].clientX * (window.__weaveVk || 1) - startX; 
+            pointY = e.touches[0].clientY * (window.__weaveVk || 1) - startY; 
+
+            autoRefresh3D(); 
+        }
+        else if(e.touches.length >= 2) { 
+            touchMoved = true;
+            wasPinching = true;
+            let d = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX, 
+                e.touches[0].clientY - e.touches[1].clientY
+            ); 
+            if(lastDist && lastDist > 0) {
+                let factor = d / lastDist;
+                scale = Math.max(0.2, Math.min(15, scale * factor)); 
+            }
+            lastDist = d; 
+            autoRefresh3D(); 
+        }
+    }, {passive:false});
+
+    fsContent.addEventListener("touchend", (e) => { 
+        e.stopPropagation();
+        if (e.touches.length === 0) {
+            panning = false; 
+            lastDist = 0; 
+            wasPinching = false;
+            touchMoved = false;
+        } else if (e.touches.length === 1) {
+            panning = true;
+            startX = e.touches[0].clientX * (window.__weaveVk || 1) - pointX;
+            startY = e.touches[0].clientY * (window.__weaveVk || 1) - pointY;
+            touchStartClientX = e.touches[0].clientX;
+            touchStartClientY = e.touches[0].clientY;
+        }
+    });
+    
+    fsContent.addEventListener("wheel", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        let zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+        scale = Math.max(0.2, Math.min(15, scale * zoomFactor));
+        autoRefresh3D();
+    }, {passive:false});
+}
+
+// Keep fullscreen canvas and fixed controls aligned when mobile browser chrome changes size.
+let weaveResizeTimer = 0;
+function scheduleWeaveResize() {
+    if ($("fsModal")?.style.display !== "flex" && $("fsModal")?.style.display !== "block") return;
+    clearTimeout(weaveResizeTimer);
+    weaveResizeTimer = setTimeout(() => {
+        drawFramePending = false;
+        draw3DWeave();
+    }, 80);
+}
+window.addEventListener("resize", scheduleWeaveResize, { passive: true });
+window.addEventListener("orientationchange", scheduleWeaveResize, { passive: true });
+if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleWeaveResize, { passive: true });
+
+document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="block") closeFullscreen(); });
+
+window.addEventListener("focus", () => {
+    let lastEdit = window.StorageDB.getItem("last_edit_timestamp");
+    if (window._lastEditStamp !== lastEdit) {
+        window._lastEditStamp = lastEdit;
+        importFromFirebase(false);
+    }
+});
+
+/* ================= SMART COLOR STUDIO LOGIC ================= */
+function setToneFilter(tone, btn) {
+    currentToneFilter = tone;
+    document.querySelectorAll('.tone-chip').forEach(el => el.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    filterColourPopup();
+}
+
+function filterColourPopup() {
+    const text = ($("colourSearchInput")?.value || "").trim().toLowerCase();
+    const grid = $("colourPopupGrid");
+    const countDisp = $("searchCountDisp");
+    if(!grid) return;
+
+    let matchedShades = [];
+
+    texforeverColourMaster.forEach((cat, catIdx) => {
+        const catNameLower = cat.name.toLowerCase();
+        cat.shades.forEach(shade => {
+            const sName = shade.name.toLowerCase();
+            const sTag = (shade.shadeTag || "").toLowerCase();
+            const sPantone = (shade.pantone || "").toLowerCase();
+            const sHex = (shade.hex || "").toLowerCase();
+
+            let matchesText = false;
+            if(!text) {
+                matchesText = (catIdx === activeColourMasterIndex);
+            } else {
+                matchesText = sName.includes(text) || sTag.includes(text) || sPantone.includes(text) || sHex.includes(text) || catNameLower.includes(text);
+            }
+
+            let matchesTone = true;
+            if (matchesText && currentToneFilter !== 'all') {
+                if (currentToneFilter === 'deep' && shade.lightness > 36) matchesTone = false;
+                if (currentToneFilter === 'medium' && (shade.lightness <= 36 || shade.lightness >= 64)) matchesTone = false;
+                if (currentToneFilter === 'light' && shade.lightness < 64) matchesTone = false;
+            }
+
+            if(matchesText && matchesTone) {
+                matchedShades.push({ ...shade, category: cat.name });
+            }
+        });
+    });
+
+    if(countDisp) {
+        countDisp.textContent = `Showing ${matchedShades.length} Tones (60 Tones Per Color)`;
+    }
+
+    grid.innerHTML = "";
+    if (matchedShades.length === 0) {
+        grid.innerHTML = `<div style="color:#9fc5aa; font-size:0.75rem; padding:20px; grid-column:1/-1; text-align:center;">No matching tones found. Try another keyword!</div>`;
+        return;
+    }
+
+    matchedShades.forEach(shade => {
+        const card = document.createElement("div");
+        card.className = "swatch-card" + (selectedColourForPopup?.hex === shade.hex ? " selected" : "");
+        
+        card.innerHTML = `
+            <div class="swatch-color" style="background:${shade.hex}"></div>
+            <div class="swatch-details">
+                <div class="swatch-name" title="${escapeColourText(shade.name)}">${escapeColourText(shade.name)}</div>
+                <div class="swatch-sub">${shade.tone} • ${shade.hex}</div>
+            </div>
+        `;
+        card.onclick = () => {
+            selectedColourForPopup = shade;
+            filterColourPopup();
+        };
+        grid.appendChild(card);
+    });
+}
+
+function renderPopupTabs() {
+    const box = $("popupMasterTabs"); if(!box) return; box.innerHTML = "";
+    texforeverColourMaster.forEach((colour,i) => {
+        const btn = document.createElement("button"); btn.className = "colour-master-tab" + (i===activeColourMasterIndex ? " active" : "");
+        btn.textContent = colour.name; 
+        btn.onclick = () => { 
+            activeColourMasterIndex = i; 
+            renderPopupTabs(); 
+            $("colourSearchInput").value = ""; 
+            filterColourPopup();
+        }; 
+        box.appendChild(btn);
+    });
+}
+
+function openColourPopup(masterName, shadeIndex, targetType=null, targetIndex=null) {
+    const masterIndex = texforeverColourMaster.findIndex(x=>x.name.toLowerCase()===masterName.toLowerCase()); 
+    if(masterIndex >= 0) activeColourMasterIndex = masterIndex;
+    const master = texforeverColourMaster[activeColourMasterIndex] || texforeverColourMaster[0];
+    selectedColourForPopup = master?.shades?.[shadeIndex || 0] || master?.shades?.[0] || null;
+    colourPopupTarget = { type:targetType, index:targetIndex };
+    
+    if($("editingTargetInfo")) {
+        let lineNo = targetType === "warp" ? "Warp Line " + targetIndex : "Weft Line " + targetIndex;
+        $("editingTargetInfo").textContent = "Editing: " + lineNo;
+    }
+
+    const popupObj = $("colourPopup");
+    popupObj.classList.add("active"); 
+    popupObj.style.display = "flex";
+    $("colourSearchInput").value = ""; 
+    let syncCheck = $("syncColorCheck");
+    if(syncCheck) syncCheck.checked = true;
+
+    renderPopupTabs(); 
+    filterColourPopup();
+}
+
+function closeColourPopup() { 
+    const popup = $("colourPopup");
+    if(popup) {
+        popup.classList.remove("active");
+        popup.style.display = "none";
+    }
+}
+
+function pantoneOptionsHTML() {
+    return "";
+}
+
+function pantoneRowHTML(type, n) {
+    return "";
+}
+
+function setPantoneFor(type, idx, hex, shade) {
+    const pre = type === "warp" ? "w" : "weft";
+    const inp = $(pre + "C" + idx);
+    if (!inp) return;
+    const orig = inp.getAttribute("data-orig-hex") || inp.value;
+    const chosen = (hex || "").toLowerCase();
+    inp.setAttribute("data-pantone", chosen);
+    inp.value = chosen || orig;
+    if (shade && shade.shadeTag) {
+        inp.setAttribute("data-tag", shade.shadeTag);
+    }
+    const cardBtn = $((type === "warp" ? "wBtn" : "weftBtn") + idx);
+    if (cardBtn) cardBtn.style.background = chosen || orig;
+    const disp = $((type === "warp" ? "wNameDisp" : "weftNameDisp") + idx);
+    if (disp && shade && shade.shadeTag) {
+        let badge = disp.querySelector(".shade-tag-badge");
+        if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "shade-tag-badge";
+            badge.setAttribute("style", "background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.58rem;margin-left:4px;");
+            disp.appendChild(badge);
+        }
+        badge.textContent = shade.shadeTag;
+    }
+    autoRefresh3D();
+}
+
+function applySelectedColour() {
+    if (!selectedColourForPopup) { closeColourPopup(); return; }
+    const target = colourPopupTarget;
+    const hex = String(selectedColourForPopup.hex || "").toLowerCase();
+    const shade = selectedColourForPopup;
+    const isWarp = target.type === "warp";
+    const targetInp = $((isWarp ? "wC" : "weftC") + target.index);
+    if (!targetInp) { closeColourPopup(); return; }
+
+    const isSync = $("syncColorCheck")?.checked ?? true;
+    const nameKey = (n) => cleanBaseColorName(n || "").toLowerCase().trim();
+    const key = nameKey(targetInp.getAttribute("data-orig") || targetInp.getAttribute("data-name") || "");
+
+    const groups = [
+        { type: "warp", pre: "w", count: currentWarpCount },
+        { type: "weft", pre: "weft", count: currentWeftCount }
+    ];
+    for (const g of groups) {
+        for (let i = 1; i <= g.count; i++) {
+            const inp = $(g.pre + "C" + i);
+            if (!inp) continue;
+            const isTarget = (g.type === target.type && i === target.index);
+            const rk = nameKey(inp.getAttribute("data-orig") || inp.getAttribute("data-name") || "");
+            if (isTarget || (isSync && key && rk === key)) {
+                setPantoneFor(g.type, i, hex, shade);
+            }
+        }
+    }
+    closeColourPopup();
+}
+
+function openColourPickerForEntry(type, index) {
+    const input = $(type==="warp" ? "wC"+index : "weftC"+index); 
+    const hex = (input?.getAttribute("data-pantone") || input?.value || "#22c55e").toLowerCase();
+    let foundMaster = 0, foundShade = 0;
+    
+    texforeverColourMaster.forEach((cat, cIdx) => {
+        cat.shades.forEach((s, sIdx) => {
+            if(s.hex.toLowerCase() === hex) {
+                foundMaster = cIdx;
+                foundShade = sIdx;
+            }
+        });
+    });
+
+    activeColourMasterIndex = foundMaster; 
+    const master = texforeverColourMaster[activeColourMasterIndex];
+    selectedColourForPopup = master.shades[foundShade] || master.shades[0];
+    openColourPopup(master.name, foundShade, type, index);
+}
+
+/* ================= PRINT MODULE & CAD PRINT SCALE ENGINE ================= */
+function openCadPrintModal() {
+    let modal = $("cadPrintModal");
+    if(!modal) return;
+    const { widthCm, heightCm } = liveDesignDimensions;
+    if($("cadOrigSizeDisp")) $("cadOrigSizeDisp").textContent = `${widthCm.toFixed(2)} × ${heightCm.toFixed(2)} cm`;
+    selectedCadScalePercent = 100;
+    if($("cadScaleRange")) $("cadScaleRange").value = 100;
+    updateCadPrintScale(100);
+    modal.style.display = "flex";
+}
+
+function closeCadPrintModal() { 
+    let modal = $("cadPrintModal");
+    if(modal) modal.style.display = "none"; 
+    document.body.style.overflow = "";
+    drawFramePending = false;
+}
+
+function updateCadPrintScale(val) {
+    selectedCadScalePercent = parseInt(val) || 100;
+    if($("cadScaleValDisp")) $("cadScaleValDisp").textContent = selectedCadScalePercent + "%";
+    const { widthCm, heightCm } = liveDesignDimensions;
+    const factor = selectedCadScalePercent / 100;
+    const printW = (widthCm * factor).toFixed(2);
+    const printH = (heightCm * factor).toFixed(2);
+    if($("cadPrintSizeDisp")) $("cadPrintSizeDisp").textContent = `${printW} × ${printH} cm`;
+}
+
+function autoFitToA4() {
+    const { widthCm, heightCm } = liveDesignDimensions;
+    const maxW = 19.5, maxH = 27.5;
+    let ratioW = (maxW / Math.max(0.1, widthCm)) * 100;
+    let ratioH = (maxH / Math.max(0.1, heightCm)) * 100;
+    let fitVal = Math.min(100, Math.floor(Math.min(ratioW, ratioH)));
+    fitVal = Math.max(10, fitVal);
+    if($("cadScaleRange")) $("cadScaleRange").value = fitVal;
+    updateCadPrintScale(fitVal);
+}
+
+function printHtmlSmart(html, jobName) {
+    const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PrintPlugin;
+
+    if (plugin) {
+        return plugin.printHtml({ html: html, jobName: jobName || "TexForever Print" });
+    }
+
+    return new Promise(function (resolve) {
+        const iframe = document.createElement("iframe");
+        iframe.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;";
+        document.body.appendChild(iframe);
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        const go = function () {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (e) {}
+            setTimeout(function () { iframe.remove(); resolve(); }, 2000);
+        };
+
+        const img = doc.querySelector("img");
+        if (img && !img.complete) {
+            img.onload = function () { setTimeout(go, 200); };
+            img.onerror = go;
+        } else {
+            setTimeout(go, 400);
+        }
+    });
+}
+
+async function executePrintPdf() {
+    executeRealA4Print(true);
+}
+
+async function executeRealA4Print(isPdfMode = false) {
+    try {
+        let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = [];
+        while(w_idx <= currentWarpCount){
+            const co = $("wC"+w_idx); const e = $("wE"+w_idx); const sInp = $("wSpan"+w_idx); const rInp = $("wRep"+w_idx);
+            if(!co || !e){ w_idx++; continue; }
+            const n = Math.max(0, parseInt(e.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const origStr = (co.getAttribute("data-orig") || "").toLowerCase(); 
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
+            if(!hexVal || hexVal === "#000000" || hexVal === "null") {
+                hexVal = colorName(origStr);
+            }
+            const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
+            const yInfo = parseYarnInfo(cntStr, origStr, hexVal);
+            const isSeer = yInfo.isSpecialSeer || isSeersuckerThread(hexVal, origStr, cntStr);
+            const rgbColor = hexToRgb(hexVal);
+            if(span > 1 && repeat > 1){
+                const setSequence = []; const setSeerSeq = []; const setInfoSeq = [];
+                for(let s = 0; s < span; s++){
+                    const currIdx = w_idx + s; if(currIdx > currentWarpCount) break;
+                    const rCo = $("wC"+currIdx); const rE = $("wE"+currIdx);
+                    if(rCo && rE){
+                        const rN = Math.max(0, parseInt(rE.value) || 0); 
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
+                        const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
+                        if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
+                        const rColor = hexToRgb(rHex);
+                        const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
+                        const rInfo = parseYarnInfo(rCnt, rOrig, rHex);
+                        const rIsSeer = rInfo.isSpecialSeer || isSeersuckerThread(rHex, rOrig, rCnt);
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setSeerSeq.push(rIsSeer); setInfoSeq.push(rInfo); }
+                    }
+                }
+                for(let rep = 0; rep < repeat; rep++){ 
+                    baseWarp.push(...setSequence); 
+                    warpSeerMap.push(...setSeerSeq); 
+                    baseWarpYarnInfo.push(...setInfoSeq);
+                }
+                w_idx += span;
+            } else {
+                if(n > 0){ 
+                    for(let j = 0; j < n; j++){ 
+                        baseWarp.push(rgbColor); 
+                        warpSeerMap.push(isSeer); 
+                        baseWarpYarnInfo.push(yInfo);
+                    } 
+                }
+                w_idx++;
+            }
+        }
+        
+        let baseWeft = []; let f_idx = 1; let baseWeftYarnInfo = [];
+        while(f_idx <= currentWeftCount){
+            const co = $("weftC"+f_idx); const p = $("weftP"+f_idx); const sInp = $("weftSpan"+f_idx); const rInp = $("weftRep"+f_idx);
+            if(!co || !p){ f_idx++; continue; }
+            
+            const n = Math.max(0, parseInt(p.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
+            const origStr = (co.getAttribute("data-orig") || "").toLowerCase();
+            let hexVal = (co.getAttribute("data-pantone") || co.getAttribute("data-orig-hex") || co.value || "").toLowerCase();
+            if(!hexVal || hexVal === "#000000") hexVal = colorName(origStr);
+            const yInfo = parseYarnInfo(cntStr, "", hexVal);
+            const rgbColor = hexToRgb(hexVal);
+            
+            if(span > 1 && repeat > 1){
+                const setSequence = []; const setInfoSeq = [];
+                for(let s = 0; s < span; s++){
+                    const currIdx = f_idx + s; if(currIdx > currentWeftCount) break;
+                    const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
+                    if(rCo && rP){
+                        const rN = Math.max(0, parseInt(rP.value) || 0);
+                        let rHex = (rCo.getAttribute("data-pantone") || rCo.getAttribute("data-orig-hex") || rCo.value || "").toLowerCase();
+                        const rOrig = (rCo.getAttribute("data-orig") || "").toLowerCase();
+                        if(!rHex || rHex === "#000000") rHex = colorName(rOrig);
+                        const rColor = hexToRgb(rHex);
+                        const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
+                        const rInfo = parseYarnInfo(rCnt, "", rHex);
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); }
+                    }
+                }
+                for(let rep = 0; rep < repeat; rep++){ 
+                    baseWeft.push(...setSequence); 
+                    baseWeftYarnInfo.push(...setInfoSeq);
+                }
+                f_idx += span;
+            } else {
+                if(n > 0){ 
+                    for(let j = 0; j < n; j++){ 
+                        baseWeft.push(rgbColor); 
+                        baseWeftYarnInfo.push(yInfo);
+                    } 
+                }
+                f_idx++;
+            }
+        }
+
+        if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
+        if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
+
+        const warp = []; const seerMap = []; const warpYarnInfos = [];
+        const weft = []; const weftYarnInfos = [];
+
+        appendFractionalRepeats(warp, baseWarp, simulationRepeatFactor);
+        appendFractionalRepeats(seerMap, warpSeerMap, simulationRepeatFactor);
+        appendFractionalRepeats(warpYarnInfos, baseWarpYarnInfo, simulationRepeatFactor);
+        appendFractionalRepeats(weft, baseWeft, simulationRepeatFactor);
+        appendFractionalRepeats(weftYarnInfos, baseWeftYarnInfo, simulationRepeatFactor);
+
+        const realWarpLength = warp.length;
+        const realWeftLength = weft.length;
+
+        let reed = parseFloat(activeDesignObj?.finishedReed || activeDesignObj?.reed || activeDesignObj?.reedCount);
+        let pick = parseFloat(activeDesignObj?.pick || activeDesignObj?.onloomPick || activeDesignObj?.finishedPick || activeDesignObj?.finishPick || activeDesignObj?.weftPick || activeDesignObj?.pickCount);
+        if(!isFinite(reed) || reed <= 0) reed = 80; if(!isFinite(pick) || pick <= 0) pick = 74;
+
+        const physW_mm = (realWarpLength / reed) * 25.4;
+        const physH_mm = (realWeftLength / pick) * 25.4;
+
+        const base_steel_ruler_px_per_mm = 6.29;
+        const printDpr = 2.0;
+        const px_per_mm = base_steel_ruler_px_per_mm * rulerCalibrationMultiplier * printDpr;
+
+        const printW = Math.round(physW_mm * px_per_mm);
+        const printH = Math.round(physH_mm * px_per_mm);
+        const RULER_px = Math.round(32 * printDpr);
+
+        let rawDent = $("dentingPatternInput")?.value || activeDesignObj?.dentingPatternFormula || activeDesignObj?.dentingPattern || "2";
+        let rawDraw = $("drawingPatternInput")?.value || activeDesignObj?.drawingPatternFormula || activeDesignObj?.drawingPattern || "1,2,3,4";
+        let dentArr = expandPattern(rawDent); if(!dentArr.length) dentArr = [2];
+        let drawArr = expandPattern(rawDraw); if(!drawArr.length) drawArr = [1,2,3,4];
+
+        let dentsRequired = 0; let endsRemaining = realWarpLength; let dIdx = 0;
+        while(endsRemaining > 0) {
+            const patternValue = Math.max(0, parseInt(dentArr[dIdx % dentArr.length]) || 0);
+            dentsRequired++;
+            if(patternValue > 0) { endsRemaining -= Math.min(patternValue, endsRemaining); }
+            dIdx++; if(dIdx > 50000) break;
+        }
+        if(dentsRequired <= 0) dentsRequired = realWarpLength;
+
+        const dentWidthPx = printW / Math.max(1, dentsRequired);
+        const cellH = printH / Math.max(1, realWeftLength);
+
+        const warpPositions = []; let endIndex = 0; let dentIndex = 0;
+        while(endIndex < realWarpLength && dentIndex < dentsRequired){
+            const requestedEnds = Math.max(0, parseInt(dentArr[dentIndex % dentArr.length]) || 0);
+            const x = RULER_px + (dentIndex * dentWidthPx);
+            if(requestedEnds === 0) {
+                warpPositions.push({ colIndex: -1, x, w: dentWidthPx, isEmpty: true });
+            } else {
+                const actualEnds = Math.min(requestedEnds, realWarpLength - endIndex);
+                const baseYarnW = dentWidthPx / Math.max(1, actualEnds);
+                for(let e = 0; e < actualEnds; e++) {
+                    let isThickSeer = Boolean(seerMap[endIndex % seerMap.length]);
+                    warpPositions.push({ colIndex: endIndex, x: x + e * baseYarnW, w: baseYarnW, isEmpty: false, isSeer: isThickSeer });
+                    endIndex++;
+                }
+            }
+            dentIndex++;
+        }
+
+        let type = $("weaveType")?.value || "custom";
+        let mRows = 4;
+        if(weavePatterns.custom && weavePatterns.custom.length) mRows = weavePatterns.custom.length;
+        else if(weavePatterns[type]) mRows = weavePatterns[type].length;
+        let storedFormula = activeDesignObj?.pickPattern || "";
+        const pickSeq = getSimulationPicks(mRows, storedFormula);
+
+        const isSeerActive = $("fsSeerCheck")?.checked ?? false;
+        const rawSeer = parseInt($("seerIntensity")?.value || 50, 10);
+        const puff = rawSeer / 100;
+
+        const printCanvas = document.createElement("canvas");
+        printCanvas.width = printW + RULER_px;
+        printCanvas.height = printH + RULER_px;
+        const pCtx = printCanvas.getContext("2d");
+        pCtx.imageSmoothingEnabled = false;
+
+        pCtx.fillStyle = "#ffffff";
+        pCtx.fillRect(0, 0, printCanvas.width, printCanvas.height);
+
+        for(let r = realWeftLength - 1; r >= 0; r--){
+            const y = printH - ((r + 1) * cellH);
+            const weftColor = weft[r % weft.length];
+            const flowIndex = realWeftLength - r;
+
+            for(let wpIdx = 0; wpIdx < warpPositions.length; wpIdx++){
+                const wp = warpPositions[wpIdx];
+                if(wp.isEmpty) continue;
+
+                const up = isWarpUp(r, wp.colIndex, type, drawArr, pickSeq);
+                const warpColor = warp[wp.colIndex % warp.length];
+                const isThreadSeer = Boolean(wp.isSeer);
+
+                let curW = wp.w;
+                let curX = wp.x;
+                let puckerShade = 1.0;
+
+                if(isSeerActive && isThreadSeer) {
+                    const pucker = Math.sin(flowIndex * 0.45);
+                    const bulge = 1 + Math.max(0, pucker) * 0.35 * puff;
+                    curW = wp.w * bulge;
+                    curX = wp.x - (curW - wp.w) / 2;
+                    puckerShade = 1.0 + (pucker * 0.35 * puff);
+                }
+
+                if(up) {
+                    pCtx.fillStyle = shadeFast(warpColor.r, warpColor.g, warpColor.b, 0.93 * puckerShade);
+                    pCtx.fillRect(curX, y, curW, cellH);
+
+                    const hlW = Math.max(0.4, curW * 0.40);
+                    const hlX = curX + (curW - hlW) / 2;
+                    pCtx.fillStyle = shadeFast(warpColor.r, warpColor.g, warpColor.b, 1.25 * puckerShade);
+                    pCtx.fillRect(hlX, y, hlW, cellH);
+
+                    if(curW >= 2.0) {
+                        pCtx.fillStyle = "rgba(0, 0, 0, 0.28)";
+                        const edgeW = Math.max(0.3, curW * 0.12);
+                        pCtx.fillRect(curX, y, edgeW, cellH);
+                        pCtx.fillRect(curX + curW - edgeW, y, edgeW, cellH);
+                    }
+                    if(cellH >= 2.0) {
+                        pCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                        const edgeH = Math.max(0.3, cellH * 0.12);
+                        pCtx.fillRect(curX, y, curW, edgeH);
+                        pCtx.fillRect(curX, y + cellH - edgeH, curW, edgeH);
+                    }
+                } else {
+                    pCtx.fillStyle = shadeFast(weftColor.r, weftColor.g, weftColor.b, 0.93);
+                    pCtx.fillRect(curX, y, curW, cellH);
+
+                    const hlH = Math.max(0.4, cellH * 0.40);
+                    const hlY = y + (cellH - hlH) / 2;
+                    pCtx.fillStyle = shadeFast(weftColor.r, weftColor.g, weftColor.b, 1.25);
+                    pCtx.fillRect(curX, hlY, curW, hlH);
+
+                    if(cellH >= 2.0) {
+                        pCtx.fillStyle = "rgba(0, 0, 0, 0.28)";
+                        const edgeH = Math.max(0.3, cellH * 0.12);
+                        pCtx.fillRect(curX, y, curW, edgeH);
+                        pCtx.fillRect(curX, y + cellH - edgeH, curW, edgeH);
+                    }
+                    if(curW >= 2.0) {
+                        pCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                        const edgeW = Math.max(0.3, curW * 0.12);
+                        pCtx.fillRect(curX, y, curW, edgeW);
+                        pCtx.fillRect(curX + curW - edgeW, y, edgeW, cellH);
+                    }
+                }
+            }
+        }
+
+        const isBrushActive = $("fsBrushCheck")?.checked || false;
+        const rawBrush = Math.max(1, Math.min(100, parseInt($("brushIntensity")?.value || 60, 10) || 60));
+        if(isBrushActive && rawBrush > 0){
+            try {
+                let snap = document.createElement('canvas');
+                snap.width = printCanvas.width; snap.height = printCanvas.height;
+                let sCtx = snap.getContext('2d');
+                sCtx.drawImage(printCanvas, 0, 0);
+                let imgData = sCtx.getImageData(0, 0, printCanvas.width, printCanvas.height);
+
+                pCtx.save();
+                pCtx.beginPath();
+                pCtx.rect(RULER_px, 0, printW, printH);
+                pCtx.clip();
+
+                let intensity = rawBrush / 100;
+                let count = Math.floor(3500 * intensity);
+                for(let i = 0; i < count; i++){
+                    let px = RULER_px + Math.random() * printW;
+                    let py = Math.random() * printH;
+                    let ix = Math.floor(px); let iy = Math.floor(py);
+                    if(ix < 0 || iy < 0 || ix >= snap.width || iy >= snap.height) continue;
+                    let idx = (iy * snap.width + ix) * 4;
+                    if(imgData.data[idx + 3] < 10) continue;
+                    let r = imgData.data[idx], g = imgData.data[idx + 1], b = imgData.data[idx + 2];
+                    let brightness = (Math.random() - 0.2) * 35;
+                    let fR = Math.min(255, Math.max(0, r + brightness));
+                    let fG = Math.min(255, Math.max(0, g + brightness));
+                    let fB = Math.min(255, Math.max(0, b + brightness));
+
+                    pCtx.strokeStyle = `rgba(${fR}, ${fG}, ${fB}, ${Math.random() * 0.45 + 0.35})`;
+                    pCtx.lineWidth = (Math.random() * 0.7 + 0.3) * printDpr;
+
+                    let angle = Math.random() * Math.PI * 2;
+                    let len = (Math.random() * 3.5 * intensity + 2) * printDpr;
+                    let curve = (Math.random() - 0.5) * 1.2 * printDpr;
+
+                    pCtx.beginPath();
+                    pCtx.moveTo(px, py);
+                    pCtx.quadraticCurveTo(px + Math.cos(angle)*(len/2), py + Math.sin(angle)*(len/2), px + Math.cos(angle+curve)*len, py + Math.sin(angle+curve)*len);
+                    pCtx.stroke();
+                }
+                pCtx.restore();
+            } catch(e) {}
+        }
+
+        const rulerBgColor = "#ffffff";
+        const rulerBorderColor = "#475569";
+
+        pCtx.fillStyle = rulerBgColor;
+        pCtx.fillRect(RULER_px, printH, printW, RULER_px);
+        pCtx.strokeStyle = rulerBorderColor;
+        pCtx.lineWidth = 1 * printDpr;
+        pCtx.strokeRect(RULER_px, printH, printW, RULER_px);
+
+        pCtx.fillStyle = rulerBgColor;
+        pCtx.fillRect(0, 0, RULER_px, printH);
+        pCtx.strokeStyle = rulerBorderColor;
+        pCtx.lineWidth = 1 * printDpr;
+        pCtx.strokeRect(0, 0, RULER_px, printH);
+
+        pCtx.fillStyle = "#f1f5f9";
+        pCtx.fillRect(0, printH, RULER_px, RULER_px);
+        pCtx.strokeStyle = rulerBorderColor;
+        pCtx.lineWidth = 1 * printDpr;
+        pCtx.strokeRect(0, printH, RULER_px, RULER_px);
+
+        pCtx.fillStyle = "#334155";
+        pCtx.font = "bold " + Math.round(10 * printDpr) + "px Arial, sans-serif";
+        pCtx.textAlign = "center";
+        pCtx.textBaseline = "middle";
+        pCtx.fillText("cm", RULER_px / 2, printH + RULER_px / 2);
+
+        const total_mm_x = Math.round(physW_mm);
+        pCtx.textAlign = "center";
+        pCtx.textBaseline = "top";
+        for(let mm = 0; mm <= total_mm_x; mm++){
+            const x = RULER_px + (mm * px_per_mm);
+            if(x > RULER_px + printW + 0.5) break;
+            const drawX = Math.floor(x) + 0.5;
+            const isCm = (mm % 10 === 0);
+            const isHalf = (mm % 5 === 0 && !isCm);
+            const tickLen = (isCm ? 11 : (isHalf ? 7 : 4)) * printDpr;
+
+            pCtx.beginPath();
+            pCtx.moveTo(drawX, printH);
+            pCtx.lineTo(drawX, printH + tickLen);
+            pCtx.strokeStyle = isCm ? "#0f172a" : "#94a3b8";
+            pCtx.lineWidth = (isCm ? 1.2 : 0.8) * printDpr;
+            pCtx.stroke();
+
+            if(isCm && mm > 0){
+                pCtx.fillStyle = "#0f172a";
+                pCtx.font = "bold " + Math.round(9 * printDpr) + "px Arial, sans-serif";
+                pCtx.fillText(mm / 10, drawX, printH + 13 * printDpr);
+            }
+        }
+
+        const total_mm_y = Math.round(physH_mm);
+        pCtx.textAlign = "right";
+        pCtx.textBaseline = "middle";
+        for(let mm = 0; mm <= total_mm_y; mm++){
+            const y = printH - (mm * px_per_mm);
+            if(y < -0.5) break;
+            const drawY = Math.floor(y) + 0.5;
+            const isCm = (mm % 10 === 0);
+            const isHalf = (mm % 5 === 0 && !isCm);
+            const tickLen = (isCm ? 11 : (isHalf ? 7 : 4)) * printDpr;
+
+            pCtx.beginPath();
+            pCtx.moveTo(RULER_px, drawY);
+            pCtx.lineTo(RULER_px - tickLen, drawY);
+            pCtx.strokeStyle = isCm ? "#0f172a" : "#94a3b8";
+            pCtx.lineWidth = (isCm ? 1.2 : 0.8) * printDpr;
+            pCtx.stroke();
+
+            if(isCm && mm > 0){
+                pCtx.fillStyle = "#0f172a";
+                pCtx.font = "bold " + Math.round(9 * printDpr) + "px Arial, sans-serif";
+                pCtx.fillText(mm / 10, RULER_px - 13 * printDpr, drawY);
+            }
+        }
+
+        const dataURL = printCanvas.toDataURL("image/png", 1.0);
+        const ruler_mm = RULER_px / px_per_mm;
+        const scaleFactor = selectedCadScalePercent / 100;
+
+        const totalPrintW_cm = (((physW_mm + ruler_mm) / 10) * scaleFactor).toFixed(2);
+        const totalPrintH_cm = (((physH_mm + ruler_mm) / 10) * scaleFactor).toFixed(2);
+
+        const isPortrait = parseFloat(totalPrintH_cm) >= parseFloat(totalPrintW_cm);
+
+        if (isPdfMode && !(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PrintPlugin)) {
+            const byteString = atob(dataURL.split(',')[1]);
+            const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], {type: mimeString});
+            const blobUrl = URL.createObjectURL(blob);
+            let dName = activeDesignObj ? designName(activeDesignObj) : "3D_Weave_CAD";
+            let link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${dName}_CAD_Print.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            closeCadPrintModal();
+            return;
+        }
+
+        const docHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>3D Weave A4 Print</title>
+            <style>
+                @page { size: A4 ${isPortrait ? "portrait" : "landscape"}; margin: 8mm; }
+                * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                html, body { margin: 0; padding: 0; background: #fff; font-family: sans-serif; }
+                body { display: flex; flex-direction: column; align-items: center; }
+                .cad-header { font-size: 11px; font-weight: bold; margin-bottom: 8mm; color: #111; text-align: center; }
+                img { display: block; width: ${totalPrintW_cm}cm; height: ${totalPrintH_cm}cm; max-width: 100%; max-height: ${isPortrait ? 275 : 185}mm; object-fit: contain; }
+            </style></head><body>
+            <div class="cad-header">TEXFOREVER (Scale: ${selectedCadScalePercent}% = 1 Repeat: ${singleW_cm.toFixed(2)} × ${singleH_cm.toFixed(2)} cm)</div>
+            <img src="${dataURL}" alt="3D Weave">
+            </body></html>`;
+
+        await printHtmlSmart(docHtml, "3D Weave A4 Print");
+        closeCadPrintModal();
+    } catch(e) {
+        alert("Print Error: " + e.message);
+        closeCadPrintModal();
+    }
+}
+
+function printShadeTag(tag) {
+    if (!tag) return "";
+    return ` <span style="background:#2563eb;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;margin-left:4px;">${escapeColourText(tag)}</span>`;
+}
+
+function buildWarpTable(lines) {
+    if(!lines || !lines.length) return "<div style='font-size:8px;text-align:center;padding:5px;border:1px solid #ccc;'>No Yarns</div>";
+    
+    let expandedGroups = [];
+    let ranges = activeDesignObj?.warpRanges || [];
+    let i = 0;
+    
+    while(i < lines.length) {
+        let lineNum = i + 1;
+        let range = ranges.find(r => Number(r.start) === lineNum);
+        if(range && Number(range.end) >= Number(range.start) && Number(range.set) > 1) {
+            let setRows = [];
+            let span = Number(range.end) - Number(range.start) + 1;
+            for(let j = 0; j < span && (i+j) < lines.length; j++) {
+                setRows.push(lines[i+j]);
+            }
+            expandedGroups.push({
+                isSet: true,
+                setStart: range.start,
+                setEnd: range.end,
+                totalRepeats: range.set,
+                rows: setRows
+            });
+            i += span;
+        } else {
+            expandedGroups.push({
+                isSet: false,
+                row: lines[i]
+            });
+            i++;
+        }
+    }
+
+    let h = `<table class="yarn-table">
+        <thead>
+            <tr>
+                <th width="6%">#</th>
+                <th width="8%">Col</th>
+                <th style="text-align:left; padding-left:6px;">Colour Name</th>
+                <th width="12%">Ends</th>
+                <th width="10%">Set</th>
+                <th>Drawing</th>
+            </tr>
+        </thead>
+        <tbody>`;
+    
+    let visualRowIdx = 1;
+
+    let rawDraw = document.getElementById("drawingPatternInput")?.value || activeDesignObj?.drawingPatternFormula || activeDesignObj?.drawingPattern || "1,2,3,4";
+    let drawArr = expandPattern(rawDraw);
+    if (!drawArr || drawArr.length === 0) drawArr = [1,2,3,4];
+    let L = drawArr.length;
+    let globalThreadIndex = 0;
+
+    expandedGroups.forEach((item, idx) => {
+        if(item.isSet) {
+            let totalRep = item.totalRepeats;
+            let spanLen = item.rows.length;
+            let setTotalEnds = 0;
+
+            item.rows.forEach((l, sIdx) => {
+                let rawCol = l.colourName || l.origName || "";
+                let pureColorName = cleanBaseColorName(rawCol);
+                let cleanName = getLocalizedColorName(pureColorName) || pureColorName || "Custom";
+                
+                let amt = parseInt(l.ends) || 0;
+                setTotalEnds += amt;
+                let assignedDraw = "-";
+                
+                if (amt > 0) {
+                    let shiftedBase = [];
+                    for(let k=0; k<L; k++) shiftedBase.push(drawArr[(globalThreadIndex + k) % L]);
+                    let repeats = Math.floor(amt / L);
+                    let remainder = amt % L;
+                    let remArr = [];
+                    for(let k=0; k<remainder; k++) remArr.push(drawArr[(globalThreadIndex + repeats * L + k) % L]);
+                    
+                    if (repeats >= 2) {
+                        assignedDraw = `(${shiftedBase.join(",")})×${repeats}`;
+                        if (remainder > 0) assignedDraw += "," + remArr.join(",");
+                    } else {
+                        let seq = [];
+                        for(let k=0; k<amt; k++) seq.push(drawArr[(globalThreadIndex + k) % L]);
+                        assignedDraw = seq.join(",");
+                    }
+                    globalThreadIndex = (globalThreadIndex + amt) % L;
+                }
+                
+                let setTd = "";
+                if (sIdx === 0) {
+                    setTd = `<td rowspan="${spanLen}" style="font-size:10px; font-weight:900; color:#b91c1c; background:#fff5f5; vertical-align:middle; text-align:center; padding:2px;">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+                            <div style="font-size:22px; font-weight:300;">}</div>
+                            <div style="font-size:10px;">× ${totalRep}</div>
+                        </div>
+                    </td>`;
+                }
+
+                let drawTd = `<td style="color:#1e3a8a; font-weight:900; font-size:9px; vertical-align:middle; text-align:center; letter-spacing:0.5px; word-break: break-all;">${assignedDraw}</td>`;
+
+                h += `<tr>
+                    <td>${visualRowIdx++}</td>
+                    <td><div class="color-swatch" style="background:${l.hex || l.color};"></div></td>
+                    <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
+                    <td style="font-weight:950; font-size:10px;">${amt}</td>
+                    ${setTd}
+                    ${drawTd}
+                </tr>`;
+            });
+            
+            if (totalRep > 1 && setTotalEnds > 0) {
+                let remainingEnds = (totalRep - 1) * setTotalEnds;
+                globalThreadIndex = (globalThreadIndex + remainingEnds) % L;
+            }
+
+        } else {
+            let l = item.row;
+            let rawCol = l.colourName || l.origName || "";
+            let pureColorName = cleanBaseColorName(rawCol);
+            let cleanName = getLocalizedColorName(pureColorName) || pureColorName || "Custom";
+            
+            let amt = parseInt(l.ends) || 0;
+            let assignedDraw = "-";
+            
+            if (amt > 0) {
+                let shiftedBase = [];
+                for(let k=0; k<L; k++) shiftedBase.push(drawArr[(globalThreadIndex + k) % L]);
+                let repeats = Math.floor(amt / L);
+                let remainder = amt % L;
+                let remArr = [];
+                for(let k=0; k<remainder; k++) remArr.push(drawArr[(globalThreadIndex + repeats * L + k) % L]);
+                
+                if (repeats >= 2) {
+                    assignedDraw = `(${shiftedBase.join(",")})×${repeats}`;
+                    if (remainder > 0) assignedDraw += "," + remArr.join(",");
+                } else {
+                    let seq = [];
+                    for(let k=0; k<amt; k++) seq.push(drawArr[(globalThreadIndex + k) % L]);
+                    assignedDraw = seq.join(",");
+                }
+                globalThreadIndex = (globalThreadIndex + amt) % L;
+            }
+            
+            h += `<tr>
+                <td>${visualRowIdx++}</td>
+                <td><div class="color-swatch" style="background:${l.hex || l.color || colorName(l.colourName || l.origName)};"></div></td>
+                <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
+                <td style="font-weight:950; font-size:10px;">${amt}</td>
+                <td style="font-size:10px; color:#9caea4; vertical-align:middle;">-</td>
+                <td style="color:#1e3a8a; font-weight:900; font-size:9px; vertical-align:middle; text-align:center; letter-spacing:0.5px; word-break: break-all;">${assignedDraw}</td>
+            </tr>`;
+        }
+    });
+
+    h += `</tbody></table>`;
+    return h;
+}
+
+function buildDesignPrintContent() {
+    const m = getPrintMatrix();
+    const data = getCurrentData();
+    const dName = activeDesignObj ? designName(activeDesignObj) : ($("activeDesignText")?.textContent || "Design");
+    
+    let rawDent = $("dentingPatternInput")?.value || activeDesignObj?.dentingPatternFormula || activeDesignObj?.dentingPattern || "2";
+    
+    let dentArr = expandPattern(rawDent);
+    let pickStr = activeDesignObj?.pickPattern || "";
+
+    let warpTotal = 0, weftTotal = 0;
+    try { warpTotal = getWarpTotalEnds(); } catch(e) {}
+    try { weftTotal = calculateYarnDetails("weft").totalYarns; } catch(e) {}
+
+    let now = new Date();
+    let stamp = now.toLocaleDateString('en-GB') + " - " + now.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); 
+
+    let warpTableHTML = buildWarpTable(data.warpLines);
+
+    return `
+        <style>
+        .print-graph-table { width: auto !important; border-collapse: collapse !important; }
+        .print-graph-table td { width: var(--gcell, 18px) !important; height: var(--gcell, 18px) !important; padding: 0 !important; font-size: var(--gfont, 14px) !important; text-align: center !important; }
+        .print-graph-table td[rowspan] { width: auto !important; height: auto !important; }
+        .print-graph-table td.graph-axis { border: none !important; width: auto !important; height: auto !important; padding: 0 6px !important; font-size: 10px !important; }
+    </style>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px;">
+            <div>
+                <div style="font-size:18px; font-weight:900; color:#111827; margin-bottom:4px; text-transform: uppercase;">TEXFOREVER <span style="font-size:12px; font-weight:600; color:#6b7280; text-transform:none;">| DESIGN SHEET — ${escapeColourText(dName)}</span></div>
+                <div style="font-size:8px; font-weight:800; color:#6b7280; letter-spacing:0.5px; text-transform: uppercase;">WARPING PLAN • DRAWING ORDER • WEAVE GRAPH</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; text-align:right; font-size:10px; font-weight:900; color:#153c2c;">
+                <div style="border:1px solid #a3e6cd; background:#e6fcf5; padding:4px 8px; border-radius:4px; letter-spacing:0.5px;">WARP ENDS: <span style="color:#047857;">${warpTotal || 0}</span></div>
+                <div style="border:1px solid #a3e6cd; background:#e6fcf5; padding:4px 8px; border-radius:4px; letter-spacing:0.5px;">WEFT PICKS: <span style="color:#047857;">${weftTotal || 0}</span></div>
+            </div>
+        </div>
+
+        <div class="print-page-grid" style="display:flex; flex-direction:column; gap:0;">
+            <div class="print-col">
+                <div class="print-section-title" style="margin-top:0;">
+                    <span>🧵 WARPING & DRAWING PLAN</span>
+                    <span class="section-code">WARP SEQUENCE</span>
+                </div>
+                ${warpTableHTML}
+            </div>
+            
+            <div class="print-col">
+                <div class="print-section-title">
+                    <span>📊 WEAVE GRAPH</span>
+                    <span class="section-code">${m.length} × ${m[0].length} REPEAT</span>
+                </div>
+                <div class="print-graph-wrap" style="margin-bottom:15px; display:flex; justify-content:center;">${buildPrintGraph(m, pickStr)}</div>
+                
+                <div class="print-section-title" style="margin-top:28px;">
+                    <span>📐 DENTING PATTERN</span>
+                </div>
+                <div class="denting-box">
+                    ${escapeColourText(dentArr.join(", "))} Ends / Dent
+                </div>
+            </div>
+        </div>
+
+        <div class="print-footer" style="display:flex; justify-content:space-between; margin-top:20px; padding-top:10px; border-top:1px solid #e2e8f0; font-size:8px; color:#9ca3af; font-weight:600;">
+            <span>TEXFOREVER • Technical Reference Copy</span>
+            <span>Generated: ${stamp}</span>
+        </div>
+    `;
+}
+
+function printDesign() {
+    try {
+        let modal = $("printModalBox");
+        let container = $("printDesignContent");
+        if (!modal || !container) {
+            alert("Print template container கிடைக்கவில்லை.");
+            return;
+        }
+        container.innerHTML = buildDesignPrintContent();
+        applyPrintGraphScale();
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+    } catch(err) {
+        console.error("Print Design Error:", err);
+        alert("Print error: " + err.message);
+    }
+}
+
+function applyPrintGraphScale() {
+    let box = $("printDesignContent");
+    if (!box) return;
+    let sizes = { small: ["5mm","9px"], medium: ["8mm","13px"], large: ["11mm","18px"] };
+    let v = sizes[$("printGraphScale")?.value] || sizes.medium;
+    box.style.setProperty("--gcell", v[0]);
+    box.style.setProperty("--gfont", v[1]);
+}
+
+function closeGraphPrintPreview() {
+    let modal = $("printModalBox");
+    if (modal) {
+        modal.style.display = "none";
+    }
+    document.body.style.overflow = "";
+    drawFramePending = false;
+}
+
+window.addEventListener("afterprint", () => {
+    document.body.style.overflow = "";
+    drawFramePending = false;
+    let pm = $("printModalBox");
+    if (pm && pm.style.display === "flex") {
+        pm.style.display = "none";
+    }
+});
+
+window.addEventListener("focus", () => {
+    setTimeout(() => {
+        document.body.style.overflow = "";
+        drawFramePending = false;
+        let cModal = $("cadPrintModal");
+        if(cModal) cModal.style.display = "none";
+    }, 250);
+});
+
+if (typeof window.appPrint !== "function") {
+    window.appPrint = function (boxHTML) {
+        return new Promise(function (resolve, reject) {
+            try {
+                let old = document.getElementById("appPrintFrame");
+                if (old) old.remove();
+                let styles = Array.prototype.map.call(document.querySelectorAll("style"), function (s) {
+                    return s.outerHTML;
+                }).join("\n");
+                let frame = document.createElement("iframe");
+                frame.id = "appPrintFrame";
+                frame.setAttribute("aria-hidden", "true");
+                frame.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;";
+                document.body.appendChild(frame);
+                let doc = frame.contentDocument || frame.contentWindow.document;
+                doc.open();
+                doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+                    '<meta name="viewport" content="width=device-width, initial-scale=1">' + styles +
+                    '<style>html,body{background:#fff!important;color:#111!important;margin:0!important;padding:0!important;min-height:auto!important;}</style>' +
+                    '</head><body>' + boxHTML + '</body></html>');
+                doc.close();
+                setTimeout(function () {
+                    try {
+                        frame.contentWindow.focus();
+                        frame.contentWindow.print();
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                }, 400);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    };
+}
+
+async function triggerRealPrint() {
+    let fs = $("fsModal");
+    let wasFsOpen = fs && fs.style.display === "block";
+    if (wasFsOpen) fs.style.display = "none";
+
+    try {
+        let box = $("printDesignContent");
+        if (!box) throw new Error("Print content கிடைக்கல");
+
+        if (window.appPrint) {
+            await window.appPrint(box.outerHTML);
+        } else {
+            alert("Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.");
+        }
+    } catch (err) {
+        console.error("Print error:", err);
+        alert("Print error: " + err.message);
+    }
+
+    setTimeout(() => {
+        document.body.style.overflow = wasFsOpen ? "hidden" : "";
+        drawFramePending = false;
+        if (wasFsOpen) {
+            fs.style.display = "block";
+            draw3DWeave();
+        }
+    }, 300);
+}
+
+function updatePrintOrientation() {
+    let orientation = $("printOrientation")?.value || "portrait";
+    let styleEl = $("dynamicPrintPageStyle");
+    if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = "dynamicPrintPageStyle";
+        document.head.appendChild(styleEl);
+    }
+    styleEl.innerHTML = `@page { size: A4 ${orientation}; margin: 6mm; }`;
+}
+
+function getPrintBracketMap(str, isCol=false) {
+    let map = {}; let skip = {}; let isTop = {}; let isBot = {};
+    if(!str) return {map, skip, isTop, isBot};
+    let s = str.toLowerCase().replace(/\s+/g, '').replace(/[x×X*]/g, '*');
+    let parts = s.split(',');
+    
+    for(let p of parts) {
+        let match = /(?:\()?(\d+)-(\d+)(?:\))?\*(\d+)/.exec(p);
+        if(match) {
+            let top = Math.max(parseInt(match[1]), parseInt(match[2]));
+            let bot = Math.min(parseInt(match[1]), parseInt(match[2]));
+            let span = top - bot + 1;
+            let text = `× ${parseInt(match[3])} Set`;
+            
+            if(isCol) {
+                map[bot] = {span, text}; 
+                isBot[bot] = true; isTop[top] = true;
+                for(let i=bot+1; i<=top; i++) skip[i] = true;
+            } else {
+                map[top] = {span, text}; 
+                isTop[top] = true; isBot[bot] = true;
+                for(let i=top-1; i>=bot; i--) skip[i] = true;
+            }
+        }
+    }
+    return {map, skip, isTop, isBot};
+}
+
+function getPrintMatrix() {
+    let type = $("weaveType")?.value || activeDesignObj?.type || "custom";
+    let m = type === "custom" ? weavePatterns.custom : weavePatterns[type];
+    if(!Array.isArray(m) || !m.length || !Array.isArray(m[0]) || !m[0].length) m = weavePatterns.custom;
+    return m;
+}
+
+function buildPrintGraph(m, pickStr) {
+    let rowB = getPrintBracketMap(pickStr, false);
+    let html = '<table class="print-graph-table">';
+    
+    for(let r=0; r<m.length; r++) {
+        let rowNum = m.length - r;
+        html += `<tr><td class="graph-axis">${rowNum}</td>`;
+        
+        for(let c=0; c<m[r].length; c++) {
+            let bTop = rowB.isTop[rowNum] ? "2.5px solid #000" : "1px solid #d1d5db";
+            let bBot = rowB.isBot[rowNum] ? "2.5px solid #000" : "1px solid #d1d5db";
+            let borderStyle = `border-top:${bTop} !important; border-bottom:${bBot} !important; border-left:1px solid #d1d5db !important; border-right:1px solid #d1d5db !important;`;
+            
+            html += `<td style="${borderStyle}">${m[r][c] ? "×" : ""}</td>`;
+        }
+        
+        if(rowB.map[rowNum]) {
+            let span = rowB.map[rowNum].span;
+            let text = rowB.map[rowNum].text;
+            html += `<td rowspan="${span}" style="padding-left:4px; border:none; vertical-align:middle; text-align:left; white-space:nowrap; background:#fff !important;">
+                        <div style="display:inline-flex; align-items:center; height:100%;">
+                            <span style="font-size: calc(${span} * 16px); line-height: 1; font-weight: 200; color: #d32f2f; margin-right: 4px;">}</span>
+                            <span style="color:#d32f2f; font-weight:900; font-size:10px;">${text}</span>
+                        </div>
+                     </td>`;
+        } else if(!rowB.skip[rowNum]) {
+            html += `<td style="border:none; background:#fff !important;"></td>`;
+        }
+        
+        html += "</tr>";
+    }
+    
+    html += '<tr><td class="graph-axis"></td>';
+    for(let c=1; c<=m[0].length; c++) html += `<td class="graph-axis">${c}</td>`;
+    html += "</tr></table>";
+    
+    return html;
+}
+
+(function() {
+    try {
+        let combinedDesigns = [];
+        let keysToTry = [
+            "design_masters_data", "weave_designs", "weave_designs_cache", 
+            "denting_drawing_data", "graph_editor_data", "warp_entry_data", "weft_entry_data", "weave_3d_local_edits"
+        ];
+
+        keysToTry.forEach(key => {
+            let val = window.StorageDB.getItem(key);
+            if (val) {
+                try {
+                    let parsed = JSON.parse(val);
+                    if (Array.isArray(parsed)) {
+                        combinedDesigns.push(...parsed);
+                    } else if (parsed && typeof parsed === "object") {
+                        Object.values(parsed).forEach(v => { if(v) combinedDesigns.push(v); });
+                    }
+                } catch(e) {}
+            }
+        });
+
+        allCloudDesigns = mergeDesigns(combinedDesigns);
+
+        if (allCloudDesigns.length === 0) {
+            allCloudDesigns = [{
+                designNo: "Mid summer madras 1",
+                name: "Mid summer madras 1",
+                warpLines: [
+                    { color: "#ffffff", ends: 13, colourName: "T. White", shadeTag: "T-60" },
+                    { color: "#1688d8", ends: 6, colourName: "Blue", shadeTag: "T-52" },
+                    { color: "#1e3a8a", ends: 13, colourName: "R. Blue", shadeTag: "T-28" }
+                ],
+                weftLines: [
+                    { color: "#ffffff", picks: 12, colourName: "T. White", shadeTag: "T-60" },
+                    { color: "#1688d8", picks: 6, colourName: "Blue", shadeTag: "T-52" },
+                    { color: "#1e3a8a", picks: 12, colourName: "R. Blue", shadeTag: "T-28" }
+                ],
+                dentingPatternFormula: "2",
+                drawingPatternFormula: "1,2,3,4"
+            }];
+        }
+    } catch (err) {
+        console.error("PreloadError:", err);
+    }
+})();
+
+let __weaveInitDone = false;
+async function __weaveInit() {
+    if (__weaveInitDone) return;
+    __weaveInitDone = true;
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+    try {
+        let statusEl = document.getElementById("designStatus");
+        if(statusEl) statusEl.textContent = "⚡ Loading designs...";
+
+        if (allCloudDesigns.length > 0) {
+            populateDesignSelect(true);
+            if(statusEl) statusEl.textContent = "⚡ Ready (" + allCloudDesigns.length + " designs)";
+        }
+
+        if (typeof importFromFirebase === "function") {
+            importFromFirebase(false).catch(err => console.log("Cloud sync skipped"));
+        }
+    } catch (err) {
+        console.error("Init Error:", err);
+        let statusEl = document.getElementById("designStatus");
+        if(statusEl) statusEl.textContent = "⚡ Ready (Offline Mode)";
+    }
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", __weaveInit);
+else __weaveInit();
+window.addEventListener("load", __weaveInit);
+</script>
+</body>
+</html>
