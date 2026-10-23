@@ -1472,31 +1472,6 @@ async function importFromFirebase(manual = false) {
     }
 }
 
-function extractLinesFromObj(obj, type) {
-    if (!obj) return [];
-    let prefix = type === "warp" ? "warp" : "weft";
-    
-    let arr = obj[prefix + "Lines"] || obj[prefix + "_lines"] || obj[prefix] || obj[prefix + "s"];
-    if (Array.isArray(arr) && arr.length > 0) {
-        return clone(arr);
-    }
-
-    let temp = [];
-    for (let i = 1; i <= 50; i++) {
-        let col = obj[`${prefix}Color${i}`] || obj[`${prefix}Colour${i}`] || obj[`${prefix}color${i}`] || obj[`${prefix}col${i}`];
-        let amount = type === "warp" ? (obj[`${prefix}Ends${i}`] || obj[`${prefix}End${i}`] || obj[`${prefix}ends${i}`] || obj[`${prefix}qty${i}`] || obj[`${prefix}Amount${i}`]) : (obj[`${prefix}Picks${i}`] || obj[`${prefix}pick${i}`] || obj[`${prefix}picks${i}`] || obj[`${prefix}qty${i}`] || obj[`${prefix}Amount${i}`]);
-        let name = obj[`${prefix}Name${i}`] || obj[`${prefix}Shade${i}`] || obj[`${prefix}colourname${i}`] || "";
-        let cnt = obj[`${prefix}Count${i}`] || obj[`${prefix}count${i}`] || obj[`${prefix}yarncount${i}`] || "";
-        
-        if (col || amount) {
-            let item = { color: col, count: cnt, colourName: name };
-            if (type === "warp") item.ends = parseInt(amount) || 0;
-            else item.picks = parseInt(amount) || 0;
-            temp.push(item);
-        }
-    }
-    return temp;
-}
 
 /* ================= LOAD SELECTED DESIGN ================= */
 function loadSelectedDesign(){
@@ -1514,88 +1489,79 @@ function loadSelectedDesign(){
         const selectedClean = cleanDesignName(selectedVal);
         const rawDigits = selectedVal.replace(/\D/g, '');
 
-        let foundDesign = null;
+        let foundMaster = null;
+        let warpLinesData = [];
+        let weftLinesData = [];
 
-        // 1. Check allCloudDesigns
-        foundDesign = allCloudDesigns.find(d => {
-            let dN = designName(d).trim();
-            let cleanDN = cleanDesignName(dN);
-            let dDigits = dN.replace(/\D/g, '');
-            return dN === selectedVal || cleanDN === selectedClean || (rawDigits && dDigits === rawDigits);
-        });
+        // 1. Check 3D specific local edits cache first (highest priority for 3D view simulations)
+        try {
+            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let edKey = Object.keys(editsCache).find(k => k.trim() === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits);
+            if(edKey && editsCache[edKey]) {
+                let ed = editsCache[edKey];
+                if(ed.warpLines && ed.warpLines.length) warpLinesData = clone(ed.warpLines);
+                if(ed.weftLines && ed.weftLines.length) weftLinesData = clone(ed.weftLines);
+                if(ed.customMatrix) weavePatterns.custom = clone(ed.customMatrix);
+                foundMaster = ed;
+            }
+        } catch(e) {}
 
-        // 2. Deep scan all localStorage keys for warp/weft entries matching this design number
-        let storageKeys = ["warp_entry_data", "weft_entry_data", "design_masters_data", "weave_designs", "weave_designs_cache", "denting_drawing_data", "local_edits_cache"];
-        for(let sk of storageKeys) {
-            try {
-                let raw = localStorage.getItem(sk);
-                if(!raw) continue;
-                let parsed = JSON.parse(raw);
-                if(Array.isArray(parsed)) {
-                    let match = parsed.find(item => {
-                        if(!item) return false;
-                        let iname = designName(item).trim();
-                        let cleanIname = cleanDesignName(iname);
-                        let iDigits = iname.replace(/\D/g, '');
-                        return iname === selectedVal || cleanIname === selectedClean || (rawDigits && iDigits === rawDigits);
-                    });
-                    if(match) {
-                        if(!foundDesign) foundDesign = match;
-                        else foundDesign = { ...match, ...foundDesign };
-                    }
-                } else if(parsed && typeof parsed === "object") {
-                    Object.keys(parsed).forEach(pk => {
-                        if(pk.trim() === selectedVal || cleanDesignName(pk) === selectedClean || pk.replace(/\D/g, '') === rawDigits) {
-                            if(!foundDesign) foundDesign = parsed[pk];
-                            else foundDesign = { ...parsed[pk], ...foundDesign };
+        // 2. If not in edits cache, find master design from allCloudDesigns
+        if (!foundMaster || !warpLinesData.length || !weftLinesData.length) {
+            foundMaster = allCloudDesigns.find(d => {
+                let dN = designName(d).trim();
+                let cleanDN = cleanDesignName(dN);
+                let dDigits = dN.replace(/\D/g, '');
+                return dN === selectedVal || cleanDN === selectedClean || (rawDigits && dDigits === rawDigits);
+            });
+            if(foundMaster) {
+                if(!warpLinesData.length) warpLinesData = extractLinesFromObj(foundMaster, "warp");
+                if(!weftLinesData.length) weftLinesData = extractLinesFromObj(foundMaster, "weft");
+            }
+        }
+
+        // 3. Fallback scan across design masters storage keys if still empty
+        if (!warpLinesData.length || !weftLinesData.length) {
+            let storageKeys = ["design_masters_data", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
+            for(let sk of storageKeys) {
+                try {
+                    let raw = localStorage.getItem(sk);
+                    if(!raw) continue;
+                    let parsed = JSON.parse(raw);
+                    if(Array.isArray(parsed)) {
+                        let match = parsed.find(item => {
+                            if(!item) return false;
+                            let iname = designName(item).trim();
+                            let cleanIname = cleanDesignName(iname);
+                            let iDigits = iname.replace(/\D/g, '');
+                            return iname === selectedVal || cleanIname === selectedClean || (rawDigits && iDigits === rawDigits);
+                        });
+                        if(match) {
+                            if(!warpLinesData.length) warpLinesData = extractLinesFromObj(match, "warp");
+                            if(!weftLinesData.length) weftLinesData = extractLinesFromObj(match, "weft");
                         }
-                    });
-                }
-            } catch(e) {}
+                    }
+                } catch(e) {}
+            }
         }
 
-        if (!foundDesign) {
-            foundDesign = { designNo: selectedVal, name: selectedVal, warpLines: [], weftLines: [] };
-        }
-
-        activeDesignObj = sanitizeDesignObj(clone(foundDesign));
-        let dName = designName(activeDesignObj);
+        let baseObj = foundMaster || { designNo: selectedVal, name: selectedVal };
+        activeDesignObj = sanitizeDesignObj(clone(baseObj));
         
+        activeDesignObj.warpLines = warpLinesData;
+        activeDesignObj.weftLines = weftLinesData;
+
+        let dName = designName(activeDesignObj);
         if($("activeDesignText")) {
             $("activeDesignText").textContent = "Active Design: " + dName;
         }
         localStorage.setItem("weave_last_design_name", dName);
 
-        let rawWarp = extractLinesFromObj(activeDesignObj, "warp");
-        let rawWeft = extractLinesFromObj(activeDesignObj, "weft");
-
-        // Specific fallback to warp_entry_data / weft_entry_data tables if lines are empty
-        if (!rawWarp.length || !rawWeft.length) {
-            try {
-                let wData = JSON.parse(localStorage.getItem("warp_entry_data") || "[]");
-                let wMatch = Array.isArray(wData) ? wData.find(x => designName(x).replace(/\D/g,'') === rawDigits || cleanDesignName(designName(x)) === cleanName) : null;
-                if(wMatch) {
-                    let ew = extractLinesFromObj(wMatch, "warp");
-                    if(ew.length) rawWarp = ew;
-                }
-                let fData = JSON.parse(localStorage.getItem("weft_entry_data") || "[]");
-                let fMatch = Array.isArray(fData) ? fData.find(x => designName(x).replace(/\D/g,'') === rawDigits || cleanDesignName(designName(x)) === cleanName) : null;
-                if(fMatch) {
-                    let ef = extractLinesFromObj(fMatch, "weft");
-                    if(ef.length) rawWeft = ef;
-                }
-            } catch(e) {}
-        }
-
-        // If still empty, use safe defaults instead of overwriting with wrong design
-        if(!rawWarp.length) rawWarp = [{ color: '#1e3a8a', ends: 27, colourName: 'Navy', count: '21 ccc' }];
-        if(!rawWeft.length) rawWeft = [{ color: '#1e3a8a', picks: 27, colourName: 'Navy', count: '21 ccc' }];
-
-        currentWarpCount = rawWarp.length;
-        currentWeftCount = rawWeft.length;
+        currentWarpCount = warpLinesData.length;
+        currentWeftCount = weftLinesData.length;
 
         if(typeof renderUIWithData === "function") {
-            renderUIWithData(rawWarp, rawWeft);
+            renderUIWithData(warpLinesData, weftLinesData);
         }
 
         let dentDrawMatch = null;
@@ -1639,8 +1605,49 @@ function loadSelectedDesign(){
         if(typeof onWeaveChange === "function") onWeaveChange();
         autoRefresh3D();
     } catch(err){
-        console.error("LoadDesignError: ", err);
+        console.log("LoadDesignError: ", err);
         if($("designStatus")) $("designStatus").textContent = "❌ Error: " + err.message;
+    }
+}
+
+async function saveCurrentDesign() {
+    try {
+        setStatus("⏳ Saving 3D Weave edits...");
+        let currentInputs = getCurrentData();
+        let name = activeDesignObj ? designName(activeDesignObj) : null;
+        if(!name || name === "Unnamed") {
+            name = prompt("Design Number / Name", "Design_01");
+        }
+        if(!name) { setStatus("⚡ Ready"); return; }
+
+        let editData = {
+            designNo: name,
+            name: name,
+            warpLines: currentInputs.warpLines,
+            weftLines: currentInputs.weftLines,
+            customMatrix: currentInputs.customMatrix,
+            type: currentInputs.type,
+            dentingPattern: currentInputs.dentingPattern,
+            drawingPattern: currentInputs.drawingPattern,
+            dentingPatternFormula: currentInputs.dentingPatternFormula,
+            drawingPatternFormula: currentInputs.drawingPatternFormula,
+            timestamp: new Date().toISOString()
+        };
+
+        // Save strictly to local_edits_cache (IndexDB / LocalStorage simulation cache) without altering warp_entry.html or weft_entry.html master tables.
+        let edits = {};
+        try { edits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}"); } catch(e) {}
+        edits[String(name).trim()] = editData;
+        localStorage.setItem("local_edits_cache", JSON.stringify(edits));
+
+        localStorage.setItem("last_edit_timestamp", Date.now().toString());
+        window._lastEditStamp = localStorage.getItem("last_edit_timestamp");
+
+        setStatus("✅ Saved Locally (Independent 3D Cache)");
+        alert("✅ 3D Weave தனியாக Successful-ஆக Save ஆகிவிட்டது! மற்ற பக்கங்கள் மாறாது.");
+    } catch(error) {
+        alert("Error: " + error.message);
+        setStatus("❌ Error saving");
     }
 }
 
