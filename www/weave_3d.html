@@ -1343,12 +1343,10 @@ function populateDesignSelect(auto = true) {
     const select = $("designSelect");
     if (!select) return;
 
-    // Keep the actual design name, not the <select> value (which is an internal ID).
-    const previousOption = select.options[select.selectedIndex];
-    const previousName = previousOption?.dataset?.designName || "";
+    const previousValue = select.value || "";
     const lastSaved = localStorage.getItem("weave_last_design_name") || "";
     const activeName = activeDesignObj ? designName(activeDesignObj) : "";
-    const preferredName = previousName || activeName || lastSaved;
+    const preferredName = previousValue || activeName || lastSaved;
 
     const fragment = document.createDocumentFragment();
     const placeholder = document.createElement("option");
@@ -1360,40 +1358,27 @@ function populateDesignSelect(auto = true) {
     allCloudDesigns.forEach((design, index) => {
         const name = designName(design);
         const key = cleanDesignName(name);
-        if (!name || name.toLowerCase() === "unnamed" || !key || seen.has(key)) return;
+        if (!name || name === "Unnamed" || !key || seen.has(key)) return;
         seen.add(key);
-
         const option = document.createElement("option");
-        // Use the array index as the option value. Design names can contain
-        // symbols/spaces and duplicate-normalized names can otherwise fail lookup.
-        option.value = String(index);
+        option.value = name;
         option.textContent = "🎨 " + name;
         option.dataset.designIndex = String(index);
-        option.dataset.designName = name;
         fragment.appendChild(option);
     });
 
     select.replaceChildren(fragment);
 
-    // Only select a record that actually has an option in the dropdown.
-    let targetIndex = -1;
-    if (preferredName) {
-        targetIndex = allCloudDesigns.findIndex((d, index) =>
-            cleanDesignName(designName(d)) === cleanDesignName(preferredName) &&
-            [...select.options].some(o => o.dataset.designIndex === String(index))
-        );
-    }
-    if (targetIndex < 0) {
-        const firstOption = [...select.options].find(o => o.dataset.designIndex !== undefined);
-        if (firstOption) targetIndex = Number(firstOption.dataset.designIndex);
-    }
+    const wanted = preferredName && allCloudDesigns.find(d =>
+        cleanDesignName(designName(d)) === cleanDesignName(preferredName)
+    );
+    const targetName = wanted ? designName(wanted) :
+        (allCloudDesigns.length ? designName(allCloudDesigns[0]) : "");
 
-    if (targetIndex >= 0 && allCloudDesigns[targetIndex]) {
-        select.value = String(targetIndex);
-        const targetName = designName(allCloudDesigns[targetIndex]);
-        if (auto && (!activeDesignObj ||
-            cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
-            loadSelectedDesign(select);
+    if (targetName) {
+        select.value = targetName;
+        if (auto) {
+            loadSelectedDesign();
         }
     } else {
         select.value = "";
@@ -1401,80 +1386,30 @@ function populateDesignSelect(auto = true) {
         setStatus("ℹ️ Design இல்லை");
     }
 }
-
-async function importFromFirebase(manual = false) {
-    try {
-        setStatus(manual ? "🔄 Local + Cloud refresh..." : "⚡ Loading designs...");
-
-        const local = [];
-        const localKeys = ["design_masters_data", "weave_designs", "weave_designs_cache", "local_edits_cache", "warp_entry_data", "weft_entry_data", "denting_drawing_data"];
-        
-        localKeys.forEach(key => {
-            let val = safeJSON(key, null);
-            if (val) {
-                if (Array.isArray(val)) {
-                    val.forEach(item => { if (item && typeof item === "object") local.push(clone(item)); });
-                } else if (typeof val === "object") {
-                    Object.keys(val).forEach(k => {
-                        let item = val[k];
-                        if (item && typeof item === "object" && !Array.isArray(item)) {
-                            item.designNo = item.designNo || k;
-                            local.push(clone(item));
-                        }
-                    });
-                }
-            }
-        });
-
-        allCloudDesigns = mergeDesigns(local);
-        
-        if (allCloudDesigns.length > 0) {
-            populateDesignSelect(true);
-            localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
-            setStatus("💾 Local designs ready");
-        }
-
-        if (navigator.onLine && supabaseClient) {
-            try {
-                let cloudData = [];
-                const resM = await supabaseClient.from("design_masters_data").select("*");
-                const resW = await supabaseClient.from("weave_designs").select("*");
-                if (resM && !resM.error && Array.isArray(resM.data)) cloudData.push(...resM.data);
-                if (resW && !resW.error && Array.isArray(resW.data)) cloudData.push(...resW.data);
-
-                if (cloudData.length > 0) {
-                    allCloudDesigns = mergeDesigns(allCloudDesigns.concat(cloudData));
-                    localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
-                    populateDesignSelect(manual);
-                    setStatus("☁ Local + Cloud designs ready");
-                }
-            } catch(cErr) {
-                console.log("Supabase load skipped/failed", cErr);
-            }
-        }
-    } catch(e) {
-        setStatus("⚠️ Error: " + e.message);
-    }
-}
-
 /* ================= LOAD SELECTED DESIGN ================= */
-function loadSelectedDesign(selectElement){
+function loadSelectedDesign(){
     try {
-        const select = selectElement || document.getElementById("designSelect");
+        const select = document.getElementById("designSelect");
         if (!select || !select.value) return;
 
         setStatus("⏳ Loading selected design...");
         const selectedOption = select.options[select.selectedIndex];
         const indexValue = selectedOption?.dataset?.designIndex;
-        let foundDesign = indexValue !== undefined ? allCloudDesigns[Number(indexValue)] : null;
+        let foundDesign = (indexValue !== undefined && allCloudDesigns[Number(indexValue)]) 
+            ? allCloudDesigns[Number(indexValue)] 
+            : null;
+
         if (!foundDesign) {
-            const selectedName = selectedOption?.dataset?.designName || select.value;
-            foundDesign = allCloudDesigns.find(d => cleanDesignName(designName(d)) === cleanDesignName(selectedName));
+            const selectedRaw = select.value.trim();
+            const selectedClean = cleanDesignName(selectedRaw);
+            foundDesign = allCloudDesigns.find(d => {
+                let dN = designName(d).trim();
+                return dN === selectedRaw || cleanDesignName(dN) === selectedClean;
+            });
         }
-        // Do not silently load the first design if the selected number cannot be matched.
+
         if (!foundDesign) {
-            setStatus("⚠️ Selected design not found. Refresh designs and try again.");
-            console.error("Selected design not found:", select.value, allCloudDesigns);
+            setStatus("⚠️ Selected design not found.");
             return;
         }
 
@@ -1492,8 +1427,7 @@ function loadSelectedDesign(selectElement){
         let foundEdits = null;
         try {
             let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
-            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim());
-            if (!key && editsCache[cleanName] && designName(editsCache[cleanName]).trim() === dName.trim()) key = cleanName;
+            let key = Object.keys(editsCache).find(k => k.trim() === dName.trim() || cleanDesignName(k) === cleanName);
             if(key) foundEdits = editsCache[key];
         } catch(e) {}
 
@@ -1515,7 +1449,7 @@ function loadSelectedDesign(selectElement){
                     if(data) {
                         let parsed = JSON.parse(data);
                         if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName);
+                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
                             if(match && match.warpLines && match.warpLines.length > 0) { 
                                 rawWarp = clone(match.warpLines);
                                 break; 
@@ -1525,8 +1459,7 @@ function loadSelectedDesign(selectElement){
                 } catch(e) {}
             }
         }
-
-        if (!rawWeft.length) {
+ if (!rawWeft.length) {
             let weftKeys = ["weft_entry_data", "weft_pattern_data", "weft_data"];
             for(let key of weftKeys) {
                 try {
@@ -1534,7 +1467,7 @@ function loadSelectedDesign(selectElement){
                     if(data) {
                         let parsed = JSON.parse(data);
                         if(Array.isArray(parsed)) {
-                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName);
+                            let match = parsed.find(w => cleanDesignName(designName(w)) === cleanName || designName(w).trim() === dName.trim());
                             if(match && match.weftLines && match.weftLines.length > 0) { 
                                 rawWeft = clone(match.weftLines);
                                 break; 
@@ -1543,9 +1476,8 @@ function loadSelectedDesign(selectElement){
                     }
                 } catch(e) {}
             }
-        }
-
-        if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
+ }
+            if(!rawWarp.length && activeDesignObj.warpLines) rawWarp = clone(activeDesignObj.warpLines);
         if(!rawWeft.length && activeDesignObj.weftLines) rawWeft = clone(activeDesignObj.weftLines);
 
         if(!rawWarp.length) rawWarp = [
@@ -1568,12 +1500,12 @@ function loadSelectedDesign(selectElement){
         try {
             let ddArr = JSON.parse(localStorage.getItem("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
-                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName);
+                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === cleanName || designName(d).trim() === dName.trim());
             }
         } catch(e) {}
 
         let dMasters = safeJSON("design_masters_data", []);
-        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName) : null;
+        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === cleanName || designName(m).trim() === dName.trim()) : null;
 
         let sourceObj = {
             ...activeDesignObj,
@@ -1627,7 +1559,6 @@ function loadSelectedDesign(selectElement){
         if(statusEl) statusEl.textContent = "❌ Error loading design: " + (err?.message || "Unknown error");
     }
 }
-
 function getCurrentData() {
     let w = []; let f = []; let wRanges = []; let fRanges = []; 
     let wCurrentLine = 1;
@@ -3246,10 +3177,10 @@ if (isPdfMode && !(window.Capacitor && window.Capacitor.Plugins && window.Capaci
                 body { display: flex; flex-direction: column; align-items: center; }
                 .cad-header { font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #111; text-align: center; }
                 img { display: block; width: ${totalPrintW_cm}cm; height: ${totalPrintH_cm}cm; max-width: 100%; max-height: ${isPortrait ? 275 : 185}mm; object-fit: contain; }
-            </style></head><body>
+            <\/style><\/head><body>
             <div class="cad-header">TEXFOREVER (Scale: ${selectedCadScalePercent}% = 1 Repeat: ${singleW_cm.toFixed(2)} × ${singleH_cm.toFixed(2)} cm)</div>
             <img src="${dataURL}" alt="3D Weave">
-            </body></html>`;
+            <\/body><\/html>`;
 
         await printHtmlSmart(docHtml, "3D Weave A4 Print");
         closeCadPrintModal();
