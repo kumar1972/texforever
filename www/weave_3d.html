@@ -520,7 +520,7 @@ input, select {
 </head>
 <body>
 
-<div class="container">
+< class="container">
     <div class="card print-hide" style="padding:8px;margin-bottom:2px;">
         <button class="btn btn-dark" onclick="window.location.href='dashboard.html'" style="display:inline-flex;align-items:center;padding:6px 12px;min-height:auto;width:auto;">
             ← Back to Menu
@@ -533,19 +533,27 @@ input, select {
 
     <!-- DESIGN -->
     <div class="card">
-        <label>🎨 Design</label>
-        <select id="designSelect" onchange="loadSelectedDesign()">
-            <option value="">-- டிசைனைத் தேர்ந்தெடுக்கவும் --</option>
-        </select>
-        <div class="active-design">
-            <span class="active-dot"></span>
-            <span id="activeDesignText">Design loading...</span>
-        </div>
-        <div class="cloud-actions">
+    <label>🎨 Design</label>
+    <select id="designSelect" onchange="loadSelectedDesign()">
+        <option value="">-- டிசைனைத் தேர்ந்தெடுக்கவும் --</option>
+    </select>
+    <div class="active-design">
+        <span class="active-dot"></span>
+        <span id="activeDesignText">Design loading...</span>
+    </div>
+    <div class="cloud-actions" style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
             <button class="btn btn-dark" onclick="importFromFirebase(true)">🔄 Refresh</button>
             <button class="btn btn-green" onclick="saveCurrentDesign()">☁️ Save / Update</button>
         </div>
-        <div id="designStatus" class="status">⚡ Loading...</div>
+        <button class="btn btn-green" style="padding: 12px; font-size: 0.85rem; font-weight: 900; letter-spacing: 0.5px;" onclick="openFullscreen()">
+            🧊 3D VIEW PREVIEW
+        </button>
+        <button class="btn btn-dark" data-print-bound="true" style="padding: 10px; font-size: 0.8rem;" onclick="printDesign()">
+            🖨 PRINT DESIGN
+        </button>
+    </div>
+    <div id="designStatus" class="status">⚡ Loading...</div>
     </div>
 
     <!-- YARN -->
@@ -580,45 +588,15 @@ input, select {
     </div>
 
     <!-- WEAVE & DENTING DRAWING PATTERNS -->
-    <div class="card">
-        <div class="step" style="margin-bottom: 10px;">
-            <div class="step-no" style="background:#217eaf;">3</div>
-            <div>
-                <h3>Weave / Draft Logic</h3>
-                <p>Denting & Drawing (Draft) Order</p>
-            </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-            <div>
-                <label>⚙ Denting</label>
-                <input type="text" id="dentingPatternInput" value="" oninput="autoRefresh3D()" placeholder="Eg: 2">
-            </div>
-            <div>
-                <label>🔀 Drawing</label>
-                <input type="text" id="drawingPatternInput" value="" oninput="autoRefresh3D()" placeholder="Eg: 1,2,3,4">
-            </div>
-        </div>
-
-        <div style="display: none;">
-            <select id="weaveType" onchange="onWeaveChange()">
-                <option value="plain">Plain Weave (1 / 1)</option>
-                <option value="twill">Twill 2/2</option>
-                <option value="custom" selected>🛠️ Custom Graph Grid</option>
-            </select>
-            <div id="gridEditorSection"></div>
-        </div>
-
-        <div class="main-actions" style="grid-template-columns: 1fr; gap: 6px; margin-top: 6px;">
-            <button class="btn btn-green" style="padding: 14px; font-size: 0.95rem; font-weight: 900; letter-spacing: 1px;" onclick="openFullscreen()">
-                🧊 3D VIEW PREVIEW
-            </button>
-            <button class="btn btn-dark" data-print-bound="true" style="padding: 12px; font-size: 0.8rem;" onclick="printDesign()">
-                🖨 PRINT DESIGN
-            </button>
-        </div>
-    </div>
+<!-- HIDDEN LOGIC INPUTS (JS error varamal irukka) -->
+<div style="display:none;">
+    <input type="text" id="dentingPatternInput" value="2">
+    <input type="text" id="drawingPatternInput" value="1,2,3,4">
+    <select id="weaveType">
+        <option value="custom" selected>Custom</option>
+    </select>
 </div>
+
 
 <!-- FULLSCREEN 3D SIMULATION -->
 <div id="fsModal" class="fs-modal">
@@ -1858,7 +1836,7 @@ async function saveCurrentDesign() {
         
         draw3DWeave(); 
 
-        setStatus("✅ Saved (Weave 3D only)");
+        setStatus("✅ Saved ( only)");
         alert("✅ 3D Design & Colors வெற்றிகரமாக Save ஆகிவிட்டது!");
 
     } catch(error) { 
