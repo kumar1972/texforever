@@ -19,7 +19,7 @@
 // ============================================================
 // VERSION (Updated to v10 so Chrome detects changes)
 // ============================================================
-const CACHE_VERSION = "v12"; 
+const CACHE_VERSION = "v13"; 
 const CACHE_NAME = "texforever-erp-" + CACHE_VERSION;
 const APP_SHELL_CACHE = "texforever-shell-" + CACHE_VERSION;
 
