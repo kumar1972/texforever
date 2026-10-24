@@ -1207,7 +1207,7 @@ function _isEmptyVal(v) { return v === undefined || v === null || v === '' || (A
 
 function collectLocalDesigns() {
     const out = [];
-    const keys = ["design_masters_data", "weave_designs", "weave_designs_cache", "local_edits_cache",
+    const keys = ["design_masters_data", "weave_designs", "w3d_designs_cache", "w3d_local_edits", "weave_designs_cache", "local_edits_cache",
                   "warp_entry_data", "weft_entry_data", "denting_drawing_data", "graph_editor_data"];
     const altLineProps = ["lines", "rows", "entries", "items", "yarns", "data", "list"];
     keys.forEach(key => {
@@ -1268,7 +1268,7 @@ function mergeDesigns(items) {
     };
 
     let rawEdits = {};
-    try { rawEdits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}"); } catch(e) {}
+    try { rawEdits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}"); } catch(e) {}
     Object.keys(rawEdits).forEach(k => {
         if (rawEdits[k]) { const r = clone(rawEdits[k]); if (_isEmptyVal(r.designNo) && _isEmptyVal(r.name)) r.designNo = String(k).trim(); addRec(r); }
     });
@@ -1462,7 +1462,7 @@ function populateDesignSelect(auto = true) {
     // Keep the actual design name, not the <select> value (which is an internal ID).
     const previousOption = select.options[select.selectedIndex];
     const previousName = previousOption?.dataset?.designName || "";
-    const lastSaved = localStorage.getItem("weave_last_design_name") || "";
+    const lastSaved = localStorage.getItem("w3d_last_design_name") || "";
     const activeName = activeDesignObj ? designName(activeDesignObj) : "";
     const preferredName = previousName || activeName || lastSaved;
 
@@ -1529,7 +1529,7 @@ async function importFromFirebase(manual = false) {
         
         if (allCloudDesigns.length > 0) {
             populateDesignSelect(true);
-            localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+            localStorage.setItem("w3d_designs_cache", JSON.stringify(allCloudDesigns));
             setStatus("💾 Local designs ready");
         }
 
@@ -1543,7 +1543,7 @@ async function importFromFirebase(manual = false) {
 
                 if (cloudData.length > 0) {
                     allCloudDesigns = mergeDesigns(allCloudDesigns.concat(cloudData));
-                    localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+                    localStorage.setItem("w3d_designs_cache", JSON.stringify(allCloudDesigns));
                     populateDesignSelect(manual);
                     setStatus("☁ Local + Cloud designs ready");
                 }
@@ -1579,7 +1579,7 @@ function loadSelectedDesign(){
 
         // 1. Check 3D specific local edits cache first (highest priority for 3D view simulations)
         try {
-            let editsCache = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let editsCache = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}");
             let edKey = Object.keys(editsCache).find(k => k.trim() === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits);
             if(edKey && editsCache[edKey]) {
                 let ed = editsCache[edKey];
@@ -1634,7 +1634,7 @@ function loadSelectedDesign(){
         if($("activeDesignText")) {
             $("activeDesignText").textContent = "Active Design: " + dName;
         }
-        localStorage.setItem("weave_last_design_name", dName);
+        localStorage.setItem("w3d_last_design_name", dName);
 
         currentWarpCount = warpLinesData.length;
         currentWeftCount = weftLinesData.length;
@@ -1719,12 +1719,12 @@ async function saveCurrentDesign() {
 
         // Save strictly to local_edits_cache (IndexDB / LocalStorage simulation cache) without altering warp_entry.html or weft_entry.html master tables.
         let edits = {};
-        try { edits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}"); } catch(e) {}
+        try { edits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}"); } catch(e) {}
         edits[String(name).trim()] = editData;
-        localStorage.setItem("local_edits_cache", JSON.stringify(edits));
+        localStorage.setItem("w3d_local_edits", JSON.stringify(edits));
 
-        localStorage.setItem("last_edit_timestamp", Date.now().toString());
-        window._lastEditStamp = localStorage.getItem("last_edit_timestamp");
+        localStorage.setItem("w3d_last_edit_ts", Date.now().toString());
+        window._lastEditStamp = localStorage.getItem("w3d_last_edit_ts");
 
         setStatus("✅ Saved Locally (Independent 3D Cache)");
         alert("✅ 3D Weave தனியாக Successful-ஆக Save ஆகிவிட்டது! மற்ற பக்கங்கள் மாறாது.");
@@ -1833,21 +1833,21 @@ async function saveCurrentDesign() {
         let cleanName = cleanDesignName(name);
 
         try {
-            let edits = JSON.parse(localStorage.getItem("local_edits_cache") || "{}");
+            let edits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}");
             edits[String(name).trim()] = clone(data);
-            localStorage.setItem("local_edits_cache", JSON.stringify(edits));
+            localStorage.setItem("w3d_local_edits", JSON.stringify(edits));
         } catch(e) {}
 
-        localStorage.setItem("last_edit_timestamp", Date.now().toString());
-        window._lastEditStamp = localStorage.getItem("last_edit_timestamp");
+        localStorage.setItem("w3d_last_edit_ts", Date.now().toString());
+        window._lastEditStamp = localStorage.getItem("w3d_last_edit_ts");
 
         let cache = Array.isArray(allCloudDesigns) ? allCloudDesigns.filter(x => String(designName(x)).trim() !== String(name).trim()) : []; 
         cache.push(clone(data));
         allCloudDesigns = mergeDesigns(cache); 
         
-        localStorage.setItem("weave_designs_cache", JSON.stringify(allCloudDesigns));
+        localStorage.setItem("w3d_designs_cache", JSON.stringify(allCloudDesigns));
         activeDesignObj = clone(data); 
-        localStorage.setItem("weave_last_design_name", name);
+        localStorage.setItem("w3d_last_design_name", name);
         
         if(document.getElementById("activeDesignText")) {
             document.getElementById("activeDesignText").textContent = "Active Design: " + name; 
@@ -1855,20 +1855,7 @@ async function saveCurrentDesign() {
         
         draw3DWeave(); 
 
-        // FIX: also push to cloud under "weave_designs" (a synced ERP key) so other devices/pages get it
-        let cloudOk = false;
-        try {
-            let wd = [];
-            try { wd = JSON.parse((window.StorageDB && window.StorageDB.getItem("weave_designs")) || localStorage.getItem("weave_designs") || "[]"); } catch(e) {}
-            if (!Array.isArray(wd)) wd = [];
-            wd = wd.filter(x => String(designName(x)).trim() !== String(name).trim());
-            wd.push(clone(data));
-            if (typeof window.firebaseSave === "function") {
-                cloudOk = await window.firebaseSave("weave_designs", wd);
-            }
-        } catch(e) { console.warn("weave_designs cloud save failed", e); }
-
-        setStatus(cloudOk && navigator.onLine ? "☁️ Saved (Local + Cloud)" : "✅ Saved Locally (Cloud Pending)");
+        setStatus("✅ Saved (Weave 3D only)");
         alert("✅ 3D Design & Colors வெற்றிகரமாக Save ஆகிவிட்டது!");
 
     } catch(error) { 
@@ -2637,7 +2624,7 @@ if(fsContent) {
 document.addEventListener("keydown", e => { if(e.key==="Escape" && $("fsModal")?.style.display==="fsModal") closeFullscreen(); });
 
 window.addEventListener("focus", () => {
-    let lastEdit = dbGet("last_edit_timestamp");
+    let lastEdit = dbGet("w3d_last_edit_ts");
     if (window._lastEditStamp !== lastEdit) {
         window._lastEditStamp = lastEdit;
         importFromFirebase(false);
