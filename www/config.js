@@ -875,6 +875,43 @@ window.syncOfflineQueue = async function () {
 };
 
 // ============================================================
+// MERGE HELPERS (design lists: warp / weft / masters / weave)
+// ============================================================
+window.ERP_MERGE_KEYS = ["warp_entry_data", "weft_entry_data", "design_masters_data", "weave_designs"];
+
+function _mdName(r) {
+    return String((r && (r.name || r.designNo || r.designNumber || r.design)) || "").replace("#", "").trim().toLowerCase();
+}
+function _mdTime(r) {
+    const t = Date.parse((r && (r.updated_at || r.timestamp)) || "");
+    return isNaN(t) ? 0 : t;
+}
+function _mdLines(r) {
+    if (!r) return 0;
+    return Math.max((r.warpLines && r.warpLines.length) || 0, (r.weftLines && r.weftLines.length) || 0);
+}
+// Keep every design from both sides; if both have it, the newer (then the one with more lines, then local) wins.
+function mergeDesignArrays(local, cloud) {
+    const map = new Map();
+    const extras = [];
+    cloud.forEach(function (c) {
+        const n = _mdName(c);
+        if (!n) { extras.push(c); return; }
+        map.set(n, c);
+    });
+    local.forEach(function (l) {
+        const n = _mdName(l);
+        if (!n) { extras.push(l); return; }
+        const c = map.get(n);
+        if (!c) { map.set(n, l); return; }
+        const tl = _mdTime(l), tc = _mdTime(c);
+        if (tl > tc) map.set(n, l);
+        else if (tl === tc && _mdLines(l) > _mdLines(c)) map.set(n, l);
+    });
+    return Array.from(map.values()).concat(extras);
+}
+
+// ============================================================
 // INITIAL CLOUD → LOCAL SYNC (GUARDED)
 // ============================================================
 
@@ -885,6 +922,22 @@ async function syncAllCloudData() {
     let synced = 0;
     for (const key of window.erpCloudKeys) {
         try {
+            // FIX: design lists are MERGED (local-only records are kept), never blindly overwritten by an older cloud copy
+            if (window.ERP_MERGE_KEYS.indexOf(key) !== -1) {
+                const cd = await cloudLoad(key, null);
+                const ld = window.localLoad(key, null);
+                if (Array.isArray(cd) && Array.isArray(ld)) {
+                    window.localSave(key, mergeDesignArrays(ld, cd));
+                    synced++;
+                    continue;
+                }
+                if (cd !== null && cd !== undefined && !isLocalDirty(key)) {
+                    window.localSave(key, cd);
+                    synced++;
+                }
+                continue;
+            }
+
             if (isLocalDirty(key)) { continue; }
 
             const cloudData = await cloudLoad(key, null);
