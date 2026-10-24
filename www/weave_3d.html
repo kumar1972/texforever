@@ -110,18 +110,16 @@ function $(id) {
 
 html {
     color-scheme: dark;
-    min-height: 100%;
-    background: var(--bg);
-    height: auto;
-    overflow-y: auto;
     -webkit-text-size-adjust: 100%;
 }
 
-body {
+html, body {
+    width: 100%;
     min-height: 100vh;
-    min-height: 100dvh;
-    height: auto;
     background: var(--bg);
+}
+
+body {
     color: var(--text);
     padding: 6px 6px calc(24px + env(safe-area-inset-bottom, 0px));
 }
