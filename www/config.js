@@ -1209,6 +1209,15 @@ window.populateDropdowns = function () {
                 select.id === "designSelect" || 
                 select.classList.contains("item-design")
             ) {
+                // FIX: unchanged list -> don't touch the DOM (rebuilding an open dropdown makes it break/blink)
+                const sig = combined.join("\u0001");
+                if (select.dataset.designSig === sig) return;
+                // FIX: user is interacting with this dropdown right now -> try again later
+                if (document.activeElement === select) {
+                    clearTimeout(select._designRetry);
+                    select._designRetry = setTimeout(function () { window.populateDropdowns(); }, 1500);
+                    return;
+                }
                 const current = select.value;
                 select.innerHTML = '<option value="">Select Design No</option>';
                 combined.forEach(function (name) {
@@ -1218,15 +1227,7 @@ window.populateDropdowns = function () {
                     select.appendChild(opt);
                 });
                 if (current) { select.value = current; }
-
-                if (!select.dataset.designRefreshBound) {
-                    select.dataset.designRefreshBound = "1";
-                    ["focus", "mousedown", "click"].forEach(function (evt) {
-                        select.addEventListener(evt, function () {
-                            window.populateDropdowns();
-                        });
-                    });
-                }
+                select.dataset.designSig = sig;
             }
         });
     } catch (error) {
