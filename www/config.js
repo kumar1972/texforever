@@ -486,55 +486,48 @@ window.showNotification = function (message, type = "success") {
 function updateNetworkStatus() {
     if (!document.body) { return; }
 
-    if (window._networkStatusTimer) {
-        clearTimeout(window._networkStatusTimer);
-        window._networkStatusTimer = null;
-    }
-
-    try {
-        const old = document.getElementById("texforever-network-status");
-        if (old && old.parentNode) { old.parentNode.removeChild(old); }
-    } catch (e) {}
-
-    const bar = document.createElement("div");
-    bar.id = "texforever-network-status";
-
+    let text, bg, fg = "#FFFFFF";
     if (!window.isCloudSyncActive()) {
-        bar.innerHTML = "📴 OFFLINE MODE — Cloud Sync Disabled in Settings";
-        bar.style.background = "#64748B";
-        bar.style.color = "#FFFFFF";
+        text = "📴 OFFLINE MODE — Cloud Sync Disabled in Settings"; bg = "#64748B";
     } else if (window.supabaseConnected === true) {
-        bar.innerHTML = "🟢 ONLINE — Supabase Cloud Connected";
-        bar.style.background = "#10B981";
-        bar.style.color = "#FFFFFF";
+        text = "🟢 ONLINE — Supabase Cloud Connected"; bg = "#10B981";
     } else if (navigator.onLine === true) {
-        bar.innerHTML = "🌐 ONLINE — Supabase Connecting...";
-        bar.style.background = "#3B82F6";
-        bar.style.color = "#FFFFFF";
+        // "Connecting..." state is skipped: it only flashed blue for a moment
+        if (!document.getElementById("texforever-network-status")) { return; }
+        text = "🌐 ONLINE — Supabase Connecting..."; bg = "#3B82F6";
     } else {
-        bar.innerHTML = "📴 OFFLINE — Local Data Saved";
-        bar.style.background = "#F59E0B";
-        bar.style.color = "#111827";
+        text = "📴 OFFLINE — Local Data Saved"; bg = "#F59E0B"; fg = "#111827";
     }
 
-    bar.style.position = "fixed";
-    bar.style.left = "0";
-    bar.style.right = "0";
-    bar.style.top = "0";
-    bar.style.padding = "6px";
-    bar.style.textAlign = "center";
-    bar.style.fontFamily = "sans-serif";
-    bar.style.fontSize = "11px";
-    bar.style.fontWeight = "700";
-    bar.style.zIndex = "999998";
+    let bar = document.getElementById("texforever-network-status");
+    if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "texforever-network-status";
+        bar.style.position = "fixed";
+        bar.style.left = "0";
+        bar.style.right = "0";
+        bar.style.top = "0";
+        bar.style.padding = "6px";
+        bar.style.textAlign = "center";
+        bar.style.fontFamily = "sans-serif";
+        bar.style.fontSize = "11px";
+        bar.style.fontWeight = "700";
+        bar.style.zIndex = "999998";
+        bar.style.transition = "opacity 0.4s ease";
+        document.body.appendChild(bar);
+    }
+    if (bar.innerHTML !== text) { bar.innerHTML = text; }
+    bar.style.background = bg;
+    bar.style.color = fg;
+    bar.style.opacity = "1";
 
-    document.body.appendChild(bar);
-
+    if (window._networkStatusTimer) { clearTimeout(window._networkStatusTimer); }
     window._networkStatusTimer = setTimeout(function () {
-        try {
-            const el = document.getElementById("texforever-network-status");
-            if (el && el.parentNode) { el.parentNode.removeChild(el); }
-        } catch(e) {}
+        const el = document.getElementById("texforever-network-status");
+        if (el) {
+            el.style.opacity = "0";
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+        }
         window._networkStatusTimer = null;
     }, 3000);
 }
@@ -1449,6 +1442,7 @@ window.addEventListener("DOMContentLoaded", function () {
         document.head.appendChild(style);
     }
 
+    if (document.head) { applyGlobalTheme(); }
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", applyGlobalTheme);
     } else {
