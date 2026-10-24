@@ -1855,7 +1855,20 @@ async function saveCurrentDesign() {
         
         draw3DWeave(); 
 
-        setStatus("✅ Saved Locally");
+        // FIX: also push to cloud under "weave_designs" (a synced ERP key) so other devices/pages get it
+        let cloudOk = false;
+        try {
+            let wd = [];
+            try { wd = JSON.parse((window.StorageDB && window.StorageDB.getItem("weave_designs")) || localStorage.getItem("weave_designs") || "[]"); } catch(e) {}
+            if (!Array.isArray(wd)) wd = [];
+            wd = wd.filter(x => String(designName(x)).trim() !== String(name).trim());
+            wd.push(clone(data));
+            if (typeof window.firebaseSave === "function") {
+                cloudOk = await window.firebaseSave("weave_designs", wd);
+            }
+        } catch(e) { console.warn("weave_designs cloud save failed", e); }
+
+        setStatus(cloudOk && navigator.onLine ? "☁️ Saved (Local + Cloud)" : "✅ Saved Locally (Cloud Pending)");
         alert("✅ 3D Design & Colors வெற்றிகரமாக Save ஆகிவிட்டது!");
 
     } catch(error) { 
@@ -3849,6 +3862,11 @@ window.addEventListener("load", async () => {
 
         if (typeof importFromFirebase === "function") {
             importFromFirebase(false).catch(err => console.log("Cloud sync skipped"));
+        }
+        // After Cloud -> Local sync (config.js) finishes, reload the design list
+        window.addEventListener("erp-cloud-synced", () => { importFromFirebase(false).catch(() => {}); });
+        if (navigator.onLine && typeof window.initializeSupabase === "function") {
+            try { window.initializeSupabase(true); } catch (e) {}
         }
     } catch (err) {
         console.error("Init Error:", err);
