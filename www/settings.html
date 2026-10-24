@@ -1154,13 +1154,15 @@ async function saveCompanyLogoSafely() {
 }
 
 /* CLOUD TOGGLE */
-function saveCloudToggleState() {
+function saveCloudToggleState(silent) {
     const toggle = $("cloudSyncToggle");
     if (!toggle) return;
 
     const isChecked = toggle.checked;
 
     localStorage.setItem("erp_cloud_sync_enabled", isChecked ? "true" : "false");
+
+    if (silent === true) return;
 
     if (isChecked) {
         toast("☁️ Cloud Auto-Sync: ENABLED (Online Mode)");
@@ -1216,7 +1218,7 @@ async function executeSaveAll() {
         saveProgress("Saving ERP settings...");
         status("Saving settings...");
 
-        saveCloudToggleState();
+        saveCloudToggleState(true);
 
         const heading = cleanInputText($("set_heading") ? $("set_heading").value : "");
         const addr = $("set_comp_addr") ? $("set_comp_addr").value.trim() : "";
@@ -1281,8 +1283,11 @@ async function executeSaveAll() {
         }
 
         saveProgress("✅ Saved. Opening Dashboard...");
+        status("✅ Settings Saved Successfully!");
 
-        window.location.replace("dashboard.html");
+        toast("Settings Saved Successfully!", true, function () {
+            window.location.replace("dashboard.html");
+        });
 
     } catch (e) {
 
