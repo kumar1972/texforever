@@ -798,20 +798,34 @@ td.col-color{
 
     <div class="top-form-row-single no-print">
 
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
 
             <label>
                 டிசைன் எண்ணைத் தேர்ந்தெடுக்கவும்
             </label>
 
+            <!-- Searchable Text Input -->
+            <input
+                type="text"
+                id="designSearchInput"
+                placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                oninput="filterDesignDropdown()"
+                onfocus="openDesignDropdownList()"
+                style="width:100%; padding:12px 14px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+            />
+
+                        <!-- Custom Dropdown List Box -->
+            <div
+                id="designDropdownList"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #38BDF8; border: 1px solid #ffffff; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+            </div>
+
+            <!-- Hidden select to support background logic -->
             <select
                 id="designNumber"
+                style="display:none;"
                 onchange="loadDesignDetails()">
-
-                <option value="">
-                    டிசைனைத் தேர்ந்தெடுக்கவும்
-                </option>
-
+                <option value="">டிசைனைத் தேர்ந்தெடுக்கவும்</option>
             </select>
 
         </div>
@@ -1115,6 +1129,8 @@ function cleanDesignName(str){
 
 }
 
+let allCombinedDesigns = [];
+
 function initDropdown(){
 
     let preDesignList =
@@ -1139,27 +1155,27 @@ function initDropdown(){
             .filter(Boolean)
         : [];
 
-    let combined =
+    allCombinedDesigns =
         Array.from(
             new Set([
                 ...preDesignList,
                 ...masterNames,
                 ...Object.keys(specs)
             ])
-        );
+        ).filter(Boolean);
 
-    let select =
+    let hiddenSelect =
         document.getElementById("designNumber");
 
-    if(!select)
+    if(!hiddenSelect)
         return;
 
-    select.innerHTML =
+    hiddenSelect.innerHTML =
         `<option value="">
             டிசைனைத் தேர்ந்தெடுக்கவும்
          </option>`;
 
-    combined.forEach(function(d){
+    allCombinedDesigns.forEach(function(d){
 
         if(d){
 
@@ -1169,7 +1185,7 @@ function initDropdown(){
             option.value = d;
             option.textContent = d;
 
-            select.appendChild(option);
+            hiddenSelect.appendChild(option);
 
         }
 
@@ -1182,14 +1198,77 @@ function initDropdown(){
 
     if(
         activeDesign &&
-        combined.includes(activeDesign)
+        allCombinedDesigns.includes(activeDesign)
     ){
 
-        select.value = activeDesign;
+        hiddenSelect.value = activeDesign;
+        let searchInput = document.getElementById("designSearchInput");
+        if(searchInput) searchInput.value = activeDesign;
         loadDesignDetails();
 
     }
 
+    document.addEventListener("click", function(e){
+        let container = document.getElementById("designSearchInput");
+        let list = document.getElementById("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+    });
+
+}
+
+function openDesignDropdownList(){
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #B2B8; font-size: 11px;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        html += `<div onclick="selectDesignItem('${d.replace(/'/g, "\\'")}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("designNumber");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        loadDesignDetails();
+    }
+    if(list) list.style.display = "none";
 }
 
 function loadDesignDetails(){
