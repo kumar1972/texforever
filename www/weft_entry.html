@@ -6,9 +6,9 @@
     <title>Weft Entry - TEX FOR EVER</title>
     <script src="config.js"></script>
     <script src="translator.js"></script>
-  <script src="printer.js"></script>
+    <script src="printer.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
       * {
             box-sizing: border-box;
             margin: 0;
@@ -38,7 +38,7 @@
             box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
         .top-nav {
             display: flex;
@@ -54,7 +54,7 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 11px;
-            background: #1A1;
+            background: #1A2421;
             padding: 8px 16px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -68,50 +68,42 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            background: #D8DFD6;
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(82, 110, 81, 0.4);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #F8FAF8;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #E2E8E2;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
         }
         .completed-checkbox input[type="checkbox"] {
             width: 16px;
             height: 16px;
             cursor: pointer;
-            accent-color: #526E51;
+            accent-color: #4A7C59;
             margin: 0;
         }
         .completed-checkbox label {
            margin: 0;
-            color: #3F5A3E;
+            color: #2F4F38;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
         }
         .page-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #DAA520;
-            text-align: left;
-            position: relative;
-            padding-left: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            color: #EAF0EA;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 2px solid #EAF0EA;
+            padding-bottom: 12px;
             margin-bottom: 5px;
-        }
-        .page-title::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 10%;
-            height: 80%;
-            width: 4px;
-            background: #4A7C59;
-            border-radius: 4px;
         }
         .form-section {
             background: #F8FAF8;
             border: 1px solid #E2E8E2;
             border-radius: 14px;
-            padding: 20px 15px 15px 15px;
+            padding: 22px 15px 15px 15px;
             margin-bottom: 5px;
             position: relative;
         }
@@ -125,36 +117,36 @@
             font-weight: 700;
             padding: 4px 12px;
             border-radius: 12px;
-            letter-spacing: 0.5px;
+            letter-spacing: .5px;
             text-transform: uppercase;
             box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
         }
         .section-badge.blue {
-            background: linear-gradient(135deg, #3BF6, #1D4ED8);
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
             box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
         }
         .section-badge.amber {
-            background: linear-gradient(135deg, #F50B, #D97706);
+            background: linear-gradient(135deg, #F59E0B, #D97706);
             box-shadow: 0 4px 8px rgba(217, 119, 6, 0.25);
         }
         .compact-top-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
             background: #FFFFFF;
-            padding: 12px;
+            padding: 15px;
             border-radius: 10px;
-            border: 1px dashed #D1DED1;
+            border: 1px solid #D1DED1;
             margin-top: 5px;
         }
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
        .form-group label {
-            font-size: 10px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             color: #4A554A;
             white-space: nowrap;
         }
@@ -162,14 +154,15 @@
         input,
         select {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 14px;
             border-radius: 8px;
             border: 1px solid #D1DED1;
             background: #FFFFFF;
             color: #1E2B23;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             transition: all 0.3s ease;
+            outline: none;
         }
 
         input:focus,
@@ -196,26 +189,26 @@
             background: linear-gradient(135deg, #8B5CF6, #6D28D9);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 11px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.25);
+            box-shadow: 0 4px 10px rgba(30,43,35,.1);
             white-space: nowrap;
             transition: all 0.2s;
+            text-transform: uppercase;
         }
 
         .btn-copy-design:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(139, 92, 246, 0.35);
+            transform: translateY(-1px);
         }
 
         .bulk-color-box {
             background: #EAF0EA;
-            border: 1px dashed #4A7C59;
+            border: 1px solid #D1DED1;
             border-radius: 10px;
-            padding: 10px 15px;
+            padding: 12px 15px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -234,37 +227,37 @@
         .bulk-color-box input {
             flex: 1;
             min-width: 100px;
-            padding: 8px 10px;
-            font-size: 11px;
+            padding: 10px 12px;
+            font-size: 12px;
         }
 
         .btn-bulk-change {
             background: linear-gradient(135deg, #3B82F6, #1D4ED8);
             color: white;
             border: none;
-            padding: 8px 14px;
+            padding: 10px 16px;
             border-radius: 8px;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 11px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 4px 10px rgba(30,43,35,.1);
             white-space: nowrap;
             transition: all 0.2s;
+            text-transform: uppercase;
         }
 
         .btn-bulk-change:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.35);
+            transform: translateY(-1px);
         }
 
         .header-grid {
             display: grid;
             grid-template-columns: 30px 1fr 1.2fr 1fr 65px;
             gap: 6px;
-            padding: 5px 0;
+            padding: 8px 0;
             font-size: 10px;
             font-weight: 700;
-            color: #EF4444;
+            color: #2F4F38;
             text-align: center;
             text-transform: uppercase;
         }
@@ -273,15 +266,15 @@
             display: grid;
             grid-template-columns: 30px 1fr 1.2fr 1fr 65px;
             gap: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             align-items: center;
         }
 
         .header-grid-range {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 35px;
-            gap: 6px;
-            padding: 5px 0;
+            gap: 8px;
+            padding: 8px 0;
             font-size: 10px;
             font-weight: 700;
             color: #2F4F38;
@@ -292,8 +285,8 @@
         .row-grid-range {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 35px;
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 8px;
+            margin-bottom: 10px;
             align-items: center;
         }
 
@@ -301,18 +294,18 @@
         .row-grid select,
         .row-grid-range input {
             text-align: center;
-            padding: 8px 4px;
+            padding: 10px 6px;
             font-size: 11px;
         }
 
         .line-no {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
-            color: #4A7C59;
+            color: #2F4F38;
             text-align: center;
             background: #EAF0EA;
-            padding: 8px 0;
-            border-radius: 6px;
+            padding: 10px 0;
+            border-radius: 8px;
             border: 1px solid #D1DED1;
         }
 
@@ -320,11 +313,13 @@
             background: linear-gradient(135deg, #10B981, #059669);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: bold;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
             cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(30,43,35,.1);
         }
 
         .action-cell-row {
@@ -334,11 +329,11 @@
         }
 
         .btn-insert-small {
-            background: #D1FAE5;
+            background: #EAF0EA;
             color: #059669;
             border: none;
             width: 100%;
-            height: 32px;
+            height: 38px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
@@ -347,11 +342,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #D1DED1;
         }
 
         .btn-insert-small:hover {
-            background: #A7F3D0;
-            transform: scale(1.05);
+            background: #D1FAE5;
         }
 
         .btn-del-small {
@@ -359,7 +354,7 @@
             color: #DC2626;
             border: none;
             width: 100%;
-            height: 32px;
+            height: 38px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
@@ -368,16 +363,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #FCA5A5;
         }
 
         .btn-del-small:hover {
             background: #FECACA;
-            transform: scale(1.05);
         }
 
         .calc-box {
-            background: #F4F7F4;
-            padding: 12px 15px;
+            background: #F8FAF8;
+            padding: 15px;
             border-radius: 10px;
             font-size: 11px;
             font-weight: 700;
@@ -400,7 +395,7 @@
             width: 100%;
             padding: 14px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
             font-weight: 700;
             font-size: 12px;
@@ -411,25 +406,24 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
+            box-shadow: 0 4px 10px rgba(30,43,35,.1);
+            letter-spacing: .5px;
         }
 
         .btn-main:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .btn-preview {
             background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
         }
 
         .btn-save {
-            background: linear-gradient(135deg, #4A7C59, #33593D);
-            box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25);
+            background: linear-gradient(135deg, #4A7C59, #2F4F38);
         }
 
         .btn-list {
             background: linear-gradient(135deg, #F59E0B, #D97706);
-            box-shadow: 0 6px 15px rgba(245, 158, 11, 0.25);
         }
 
         .overlay-modal {
@@ -439,7 +433,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(18, 25, 20, 0.95);
+            background: rgba(3, 7, 18, 0.85);
             backdrop-filter: blur(6px);
             z-index: 99999;
             flex-direction: column;
@@ -465,22 +459,23 @@
         }
 
         .modal-header {
-            padding: 15px 20px;
-            background: #F4F7F4;
+            padding: 18px 20px;
+            background: #F8FAF8;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #E2E8E2;
+            border-bottom: 2px solid #EAF0EA;
             flex-shrink: 0;
         }
 
         .modal-header h3 {
             margin: 0;
             font-size: 16px;
-            color: #1E2B23;
+            color: #2F4F38;
             font-weight: 800;
             border: none;
             padding: 0;
+            text-transform: uppercase;
         }
 
         .modal-actions {
@@ -489,14 +484,15 @@
         }
 
         .close-btn {
-            background: #FEE2E2;
-            color: #DC2626;
+            background: #EF4444;
+            color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 8px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
         }
 
         .print-btn {
@@ -505,16 +501,17 @@
             border: none;
             padding: 8px 16px;
             border-radius: 8px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
         }
 
         .modal-body {
             padding: 20px;
             overflow-y: auto;
             flex: 1;
-            background: #FAFCFA;
+            background: #FFFFFF;
             width: 100%;
             max-width: 1000px;
             margin: 0 auto;
@@ -525,7 +522,7 @@
             border-radius: 10px;
             overflow-x: auto;
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            border: 1px solid #E2E8E2;
+            border: 1px solid #D1DED1;
             background: #FFFFFF;
         }
 
@@ -542,54 +539,69 @@
             padding: 10px 12px;
             text-align: center;
             color: #1E2B23;
+            border-bottom: 1px solid #E2E8E2;
+        }
+
+        th {
+            background: #EAF0EA;
+            color: #2F4F38;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
         }
 
         .action-cell {
             display: flex;
-            gap: 4px;
+            gap: 6px;
             justify-content: center;
         }
 
         .edit-action-btn {
-            background: #64748B;
+            background: linear-gradient(135deg, #64748B, #475569);
             color: white;
             border: none;
             padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .del-action-btn {
-            background: #EF4444;
+            background: linear-gradient(135deg, #EF4444, #DC2626);
             color: white;
             border: none;
             padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .action-complete {
-            background: #526E51;
+            background: linear-gradient(135deg, #10B981, #059669);
             color: white;
             border: none;
-            padding: 4px 6px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 9px;
-            font-weight: bold;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .action-running {
-            background: #D97706;
+            background: linear-gradient(135deg, #F59E0B, #D97706);
             color: white;
             border: none;
-            padding: 4px 6px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 9px;
-            font-weight: bold;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         #bitmapDisplayContainer {
@@ -600,12 +612,12 @@
         }
 
         #bitmapDisplayContainer img {
-            max-height: 45px;
+            max-height: 40px;
             border-radius: 6px;
-            border: 1px solid rgba(82, 110, 81, 0.2);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            border: 1px solid #4A7C59;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: zoom-in;
-            transition: transform 0.3s;
+            transition: transform 0.2s;
         }
 
         #bitmapDisplayContainer img:hover {
@@ -947,7 +959,7 @@
 
         </div>
 
-        <div style="font-size:9px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">
+        <div style="font-size:10px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">
             (Press Enter in Picks to add new line below)
         </div>
 
@@ -1002,7 +1014,7 @@
         <button
             type="button"
             class="btn-main"
-            style="background:linear-gradient(135deg,#F59E0B,#D97706);box-shadow:0 6px 15px rgba(217,119,6,0.25);"
+            style="background:linear-gradient(135deg,#F59E0B,#D97706);box-shadow:0 4px 10px rgba(30,43,35,.1);"
             onclick="reverseWeftEntries()">
             🔄 Weft Reverse
         </button>
@@ -1065,13 +1077,12 @@
 
             <div class="modal-actions">
 
-                <
-                    <button
+                <button
                     class="print-btn"
                     data-print-bound="true"
                     onclick="printPreview()">
                     🖨️ Print
-                    </button>
+                </button>
 
                 <button
                     class="close-btn"
@@ -1703,7 +1714,6 @@ function loadWeftDesignData() {
             ) || {}
             : {};
 
-    // PRIORITY 1: Check weft_entry_data directly
     let weftEntryList = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
     let foundWeftEntry = Array.isArray(weftEntryList) 
         ? weftEntryList.find(w => cleanDesignName(w.name || w.designNo) === cleanDNo) 
@@ -2617,7 +2627,6 @@ function reverseWeftEntries() {
 
     rows.reverse().forEach(row => container.appendChild(row));
 
-    // Mirror set ranges so they stay on the same lines
     document.querySelectorAll('.range-item').forEach(r => {
 
         let sEl = r.querySelector('.inp-start');
@@ -2636,7 +2645,6 @@ function reverseWeftEntries() {
         }
     });
 
-    // Reverse the order of the set rows too (bottom to top)
     let rangeBox =
         document.getElementById('weftRangesContainer');
 
@@ -3218,7 +3226,6 @@ async function saveWeftDesign() {
         timestamp: nowISO
     };
 
-    // 1. UPDATE DESIGN MASTERS
     let masters = safeParseJSON(window.StorageDB.getItem('design_masters_data'), []);
     if (!Array.isArray(masters)) masters = [];
     let idx = masters.findIndex(m => cleanDesignName(m.name || m.designNo) === cleanDNo);
@@ -3229,16 +3236,12 @@ async function saveWeftDesign() {
     }
     window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
 
-    // 2. 🟢 CRUCIAL FIX: SAVE INTO weft_entry_data WITH EXACT DESIGN NO 🟢
     let weftEntryList = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
     if (!Array.isArray(weftEntryList)) weftEntryList = [];
     weftEntryList = weftEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo);
     weftEntryList.push(masterData);
     window.StorageDB.setItem('weft_entry_data', JSON.stringify(weftEntryList));
 
-    // Weave 3D data (colour hex, span, repeat) belongs to weave_3d.html only; Weft Entry does not touch it.
-
-    // 4. DESIGN SPECS
     let designSpecs = safeParseJSON(window.StorageDB.getItem('design_specs'), {});
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
     if (!designSpecs[specKey]) designSpecs[specKey] = {};
@@ -3254,7 +3257,6 @@ async function saveWeftDesign() {
 
     window.StorageDB.setItem('last_edit_timestamp', Date.now().toString());
 
-    // 5. CLOUD / SUPABASE OVERWRITE (GUARANTEED SYNC)
     let cloudSuccess = true;
     try {
         if (window.supabaseSave) {
@@ -3475,7 +3477,7 @@ function renderSavedList() {
             let statusColor =
                 m.status === 'running'
                     ? '#D97706'
-                    : '#526E51';
+                    : '#10B981';
 
             let safeDesign = String(m.name || m.designNo || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             
@@ -3679,40 +3681,40 @@ function previewWeftPattern() {
                 display:flex;
                 justify-content:space-between;
                 flex-wrap:wrap;
-                background:#F4F7F4;
-                border:1px solid #4A7C59;
-                padding:12px;
-                border-radius:10px;
+                background:#F8FAF8;
+                border:1px solid #D1DED1;
+                padding:12px 14px;
+                border-radius:8px;
                 margin-bottom:15px;
-                font-size:12px;
+                font-size:11px;
                 font-weight:700;
                 color:#1E2B23;
             ">
 
-            <span>
+            <span style="margin-right:8px;">
                 Design:
-                <span style="color:#4A7C59;">
+                <span style="color:#2F4F38;">
                     ${escapeHTML(dNo || '-')}
                 </span>
             </span>
 
-            <span>
+            <span style="margin-right:8px;">
                 Counts:
                 ${escapeHTML(wCount1)},
                 ${escapeHTML(wCount2)}
             </span>
 
-            <span>
+            <span style="margin-right:8px;">
                 Weft Width:
                 ${escapeHTML(wWidth)}"
             </span>
 
-            <span>
+            <span style="margin-right:8px;">
                 Pick:
                 ${escapeHTML(pick)}
             </span>
 
-            <span>
+            <span style="margin-right:8px;">
                 Weft Mtrs:
                 ${escapeHTML(wMtrs)}
             </span>
@@ -3737,13 +3739,13 @@ function previewWeftPattern() {
     let i = 0;
 
     let tdStyle =
-        "padding:4px 6px;border-bottom:1px dashed #A0AFA0;text-align:center;color:#1E2B23;font-size:11px;";
+        "padding:6px 8px;border-bottom:1px solid #E2E8E2;text-align:center;color:#1E2B23;font-size:11px;";
 
     let tdStyleColor =
-        "padding:4px 6px;border-bottom:1px dashed #A0AFA0;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;";
+        "padding:6px 8px;border-bottom:1px solid #E2E8E2;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;";
 
     let tdStyleLast =
-        "padding:4px 6px;border-bottom:1px dashed #A0AFA0;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:16px;";
+        "padding:6px 8px;border-bottom:1px solid #E2E8E2;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:16px;";
 
     while (
         i < weftLines.length
@@ -4010,7 +4012,7 @@ function previewWeftPattern() {
 
             <th
                 style="
-                    padding:6px;
+                    padding:8px;
                     text-align:center;
                     color:#2F4F38;
                     text-transform:uppercase;
@@ -4023,7 +4025,7 @@ function previewWeftPattern() {
 
             <th
                 style="
-                    padding:6px;
+                    padding:8px;
                     text-align:center;
                     color:#2F4F38;
                     text-transform:uppercase;
@@ -4036,7 +4038,7 @@ function previewWeftPattern() {
 
             <th
                 style="
-                    padding:6px;
+                    padding:8px;
                     text-align:left;
                     color:#2F4F38;
                     text-transform:uppercase;
@@ -4049,7 +4051,7 @@ function previewWeftPattern() {
 
             <th
                 style="
-                    padding:6px;
+                    padding:8px;
                     text-align:center;
                     color:#2F4F38;
                     text-transform:uppercase;
@@ -4062,7 +4064,7 @@ function previewWeftPattern() {
 
             <th
                 style="
-                    padding:6px;
+                    padding:8px;
                     text-align:left;
                     padding-left:10px;
                     color:#2F4F38;
@@ -4102,6 +4104,9 @@ function previewWeftPattern() {
                         width:100%;
                         border-collapse:collapse;
                         font-size:11px;
+                        border:1px solid #D1DED1;
+                        border-radius:8px;
+                        overflow:hidden;
                     ">
 
                     ${tableHeader}
@@ -4128,6 +4133,9 @@ function previewWeftPattern() {
                                     width:100%;
                                     border-collapse:collapse;
                                     font-size:11px;
+                                    border:1px solid #D1DED1;
+                                    border-radius:8px;
+                                    overflow:hidden;
                                 ">
 
                                 ${tableHeader}
@@ -4150,7 +4158,7 @@ function previewWeftPattern() {
             style="
                 margin-top:15px;
                 border-top:2px solid #4A7C59;
-                padding-top:5px;
+                padding-top:10px;
                 page-break-inside:avoid;
             ">
 
@@ -4160,19 +4168,22 @@ function previewWeftPattern() {
                     border-collapse:collapse;
                     font-size:11px;
                     background:#FFF;
+                    border:1px solid #D1DED1;
+                    border-radius:8px;
+                    overflow:hidden;
                 ">
 
                 <tr
                     style="
-                        font-weight:bold;
+                        font-weight:700;
                         font-size:12px;
                         background:#F8FAF8;
-                        border-bottom:1px dashed #A0AFA0;
+                        border-bottom:1px solid #E2E8E2;
                     ">
 
                     <td
                         style="
-                            padding:8px;
+                            padding:10px;
                             text-align:right;
                             color:#2F4F38;
                             width:60%;
@@ -4182,8 +4193,8 @@ function previewWeftPattern() {
 
                     <td
                         style="
-                            padding:8px;
-                            font-weight:bold;
+                            padding:10px;
+                            font-weight:700;
                             text-align:left;
                             padding-left:15px;
                             color:#10B981;
@@ -4237,7 +4248,7 @@ function previewWeftPattern() {
 
                     <span
                         style="
-                            font-size:13px;
+                            font-size:12px;
                             color:#1E2B23;
                         ">
 
