@@ -1170,9 +1170,9 @@ function saveCloudToggleState(silent) {
         toast("📴 Cloud Auto-Sync: DISABLED (Full Offline Mode)");
     }
 }
-
-/* DATABASE CONFIG */
-function saveSupabaseConfig() {
+  
+/* DATABASE CONFIG - FIXED (NO BLINK) */
+async function saveSupabaseConfig() {
     const provider = $("databaseProviderInput").value;
     const url = $("supabaseUrlInput").value.trim();
     const key = $("supabaseKeyInput").value.trim();
@@ -1182,20 +1182,35 @@ function saveSupabaseConfig() {
         return;
     }
 
+    // 1. LocalStorage மற்றும் IndexedDB-ல் பாதுகாப்பாக சேமித்தல்
     safeSave("database_provider", provider);
     safeSave("database_server_url", url);
     safeSave("database_api_key", key);
 
+    await idbSet("database_provider", provider);
+    await idbSet("database_server_url", url);
+    await idbSet("database_api_key", key);
+
     if (provider === "supabase") {
         safeSave("custom_supabase_url", url);
         safeSave("custom_supabase_key", key);
+        await idbSet("custom_supabase_url", url);
+        await idbSet("custom_supabase_key", key);
     }
 
-    saveCloudToggleState();
+    // 2. 'true' கொடுப்பதால் முதல் டோஸ்ட் மெசேஜ் (Double Toast) தடுக்கப்படும்
+    saveCloudToggleState(true);
 
-    toast("Database Connection & Sync Updated!", true, function () {
-        window.location.reload();
-    });
+    // 3. பேஜை Reload செய்யாமல் config.js-ல் உள்ள Supabase கிளையண்டை அப்டேட் செய்ய (இருந்தால்)
+    if (typeof window.initSupabase === "function") {
+        window.initSupabase();
+    } else if (typeof window.reinitCloudConnection === "function") {
+        window.reinitCloudConnection();
+    }
+
+    // 4. Status மற்றும் ஒரே ஒரு Toast மட்டும் காட்டுதல் (No Page Reload = No Blink!)
+    status("✅ Database Connection & Sync Updated!");
+    toast("Database Connection & Sync Updated!", true);
 }
 
 /* SAVE ALL SETTINGS */
