@@ -137,24 +137,23 @@
         background: #F8FAF8;
         border: 1px solid #E2E8E2;
         border-radius: 14px;
-        padding: 22px 15px 15px 15px;
-        margin-top: 24px;
+        padding: 15px;
+        margin-top: 15px;
         margin-bottom: 5px;
         position: relative;
     }
     
     .section-badge {
-        position: absolute;
-        top: -12px;
-        left: 15px;
+        display: inline-block;
         background: #4A7C59;
         color: #FFF;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 12px;
+        padding: 6px 14px;
+        border-radius: 8px;
         letter-spacing: 0.5px;
         text-transform: uppercase;
+        margin-bottom: 12px;
         box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
     }
     .section-badge.blue { background: linear-gradient(135deg, #3BF6, #1D4ED8); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25); }
@@ -443,7 +442,7 @@
 
     <!-- 2. BOTTOM SECTION (RECEIVED DETAILS) -->
     <div class="form-section" id="sectionBottom">
-        <div class="section-badge #08085f">2. Washing Received ( வரவு ) & Shrinkage / Re-processing</div>
+        <div class="section-badge #157921">2. Washing Received (வரவு ) & Shrinkage / Re-processing</div>
         
         <div class="form-row" style="grid-template-columns: 1fr 1.5fr;">
             <div class="form-group">
@@ -1417,7 +1416,7 @@ function printReport() {
     if (window.appPrint) {
         window.appPrint(body.innerHTML);
     } else {
-        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        alert('Print module load ஆகல. printer.js script இருக்கاன்னு பாருங்க.');
     }
   }
 </script>
