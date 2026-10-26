@@ -162,7 +162,7 @@ function cleanDesignName(str) {
 }
 
 function getProcessStatus(recordKey, designNo) {
-    let records = JSON.parse(localStorage.getItem(recordKey)) || [];
+    let records = JSON.parse(window.StorageDB.getItem(recordKey)) || [];
     let cleanTarget = cleanDesignName(designNo);
     
     let matched = records.filter(r => {
@@ -184,11 +184,13 @@ function getProcessStatus(recordKey, designNo) {
     }
 }
 
-function renderMatrix() {
-    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
-    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
-    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+async function renderMatrix() {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+
+    let preDesigns = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
+    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
+    let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
+    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
     let tbody = document.getElementById('matrixTableBody');
 
     let allDesignsSet = new Set([...preDesigns]);
@@ -245,6 +247,7 @@ function renderMatrix() {
 document.addEventListener('DOMContentLoaded', function() {
     renderMatrix();
 });
+
 </script>
 </body>
 </html>
