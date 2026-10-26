@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+      maximum-scale=1.0, user-scalable=no">
+
+<title> Design Sheet Print - TEX FOR EVER</title>
+
+<script src="config.js"></script>
+<script src="translator.js"></script>
+<script src="printer.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:'Poppins',sans-serif;
+}
+
+html,
+body{
+    width:100%;
+    min-height:100vh;
+    background:#030712;
+    color:#1E2B23;
+}
+
+body{
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+/* =========================================================
+   MAIN CARD
+========================================================= */
+
+.main-card{
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
+    background:#FFFFFF;
+    border:1px solid rgba(82,110,81,.15);
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 10px 35px rgba(30,43,35,.06);
+}
+
+/* =========================================================
+   TOP NAV
+========================================================= */
+
+.top-nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:5px;
+}
+
+.back-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    color:#FFFFFF;
+    text-decoration:none;
+    font-weight:600;
+    font-size:11px;
+    background:#1A2421;
+    padding:8px 16px;
+    border-radius:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2px solid #EAF0EA;
+    padding-bottom:12px;
+    margin-bottom:12px;
+}
+
+.header-bar h3{
+    font-size:18px;
+    color:#F8FAF8;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.preview-btn,
+.print-btn{
+    border:0;
+    color:white;
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    text-transform:uppercase;
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
+}
+
+.preview-btn{
+    background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+}
+
+.print-btn{
+    background:linear-gradient(135deg,#10B981,#059669);
+}
+
+.close-btn{
+    background:#FEE2E2;
+    color:#DC2626;
+    border:0;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:700;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.top-form-row-single{
+    background:#F8FAF8;
+    border:1px solid #E2E8E2;
+    border-radius:14px;
+    padding:15px;
+    margin-bottom:12px;
+}
+
+.form-group label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    color:#4A554A;
+    margin-bottom:6px;
+}
+
+select{
+    width:100%;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1px solid #D1DED1;
+    background:#FFFFFF;
+    color:#1E2B23;
+    font-size:12px;
+    font-weight:600;
+    outline:none;
+}
+
+select:focus{
+    border-color:#4A7C59;
+    box-shadow:0 0 0 3px rgba(74,124,89,.15);
+}
+
+/* =========================================================
+   COMPANY HEADER
+========================================================= */
+
+.company-header{
+    text-align:center;
+    border-bottom:2px solid #F8FAF8;
+    padding-bottom:10px;
+    margin-bottom:12px;
+}
+
+.company-header h1{
+    font-size:18px;
+    color:#F8FAF8;
+    font-weight:800;
+    text-transform:uppercase;
+}
+
+.company-header p{
+    font-size:10px;
+    color:#F8FAF8;
+    white-space:pre-line;
+    font-weight:600;
+}
+
+/* =========================================================
+   DESIGN INFO
+========================================================= */
+
+.design-info-box,
+.weft-info-box{
+    background:#F8FAF8;
+    border:1px solid #D1DED1;
+    border-radius:10px;
+    padding:12px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    font-size:11px;
+    font-weight:600;
+    color:#1E2B23;
+    margin-bottom:12px;
+}
+
+.design-info-box div span,
+.weft-info-box div span{
+    color:#4A7C59;
+    font-weight:700;
+}
+
+/* BOLD & LARGE DESIGN NUMBER IN HEADER */
+#hdrDesign, #weftHdrDesign {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #1E2B23 !important;
+}
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.section-title{
+    font-size:11px;
+    color:#FFFFFF;
+    background:#4A7C59;
+    padding:6px 12px;
+    border-radius:8px;
+    display:inline-block;
+    margin-top:6px;
+    margin-bottom:8px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+/* =========================================================
+   TABLE (NO ROW GRID LINES)
+========================================================= */
+
+.dual-table-wrapper{
+    display:flex;
+    gap:2%;
+    width:100%;
+    flex-wrap:wrap;
+    margin-bottom: 12px;
+}
+
+.single-table-col{
+    flex:0 0 49%;
+    max-width:49%;
+}
+
+.table-container{
+    width:100%;
+    overflow:hidden;
+    background:#FFFFFF;
+    margin-bottom:6px;
+    border-radius:10px;
+    border:1px solid #D1DED1;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:11px;
+    text-align:center;
+    background:#FFFFFF;
+}
+
+th,
+td{
+    padding:10px 8px;
+    color:#1E2B23;
+    border:none; 
+    background:#FFFFFF;
+}
+
+th{
+    background:#EAF0EA;
+    color:#2F4F38;
+    font-weight:700;
+    font-size:11px;
+    border-top:2px solid #4A7C59;
+    border-bottom:2px solid #4A7C59; 
+    text-transform:uppercase;
+}
+
+.col-no{
+    width:10%;
+    text-align:center;
+}
+
+.col-count{
+    width:17%;
+    text-align:center;
+}
+
+.col-color{
+    width:35%;
+    text-align:left;
+    padding-left:6px;
+    padding-right:0px !important;
+}
+
+/* COUNT & COLOUR NEXT FONT SIZE */
+td.col-count,
+td.col-color{
+    font-size:12px;
+    font-weight:600;
+}
+
+.col-val{
+    width:18%;
+    text-align:center;
+    font-weight:700;
+    padding-left:0px !important;
+    padding-right:4px !important;
+}
+
+.col-set{
+    width:20%;
+    text-align:center;
+    font-weight:700;
+    white-space:nowrap;
+    border-left:1px dashed #D1DED1;
+}
+
+.dash-sep{
+    color:#889988;
+    font-size:7px;
+    letter-spacing:1px;
+}
+
+/* DOTTED LEADER CSS */
+.color-flex {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+}
+.color-text {
+    flex-shrink: 0;
+}
+.dot-leader {
+    flex-grow: 1;
+    border-bottom: 2px dotted #888;
+    margin-left: 6px;
+    margin-bottom: 4px;
+}
+
+/* BOTTOM BEAM & TOP BEAM (SSKR) ALIGNMENT + DOTS */
+.val-flex-bottom {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    padding-left: 10px;
+}
+
+.val-flex-top {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    padding-left: 2px;
+}
+
+.val-text {
+    flex-shrink: 0;
+}
+
+.dot-leader-left {
+    flex-grow: 1;
+    border-bottom: 2px dotted #888;
+    margin-right: 6px;
+    margin-bottom: 4px;
+}
+
+.dot-leader-end-short {
+    width: 12px;
+    flex-shrink: 0;
+    border-bottom: 2px dotted #888;
+    margin-left: 4px;
+    margin-bottom: 4px;
+}
+
+.no-dot-end-space {
+    width: 16px;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.summary-box{
+    background:#F8FAF8;
+    border:1px dashed #D1DED1;
+    border-radius:10px;
+    padding:12px;
+    text-align:left;
+    font-size:11px;
+    font-weight:600;
+    color:#2F4F38;
+    margin-bottom:12px;
+    margin-top:8px;
+    line-height:1.6;
+}
+
+.summary-box .line-1{
+    border-bottom:1px dashed #D1DED1;
+    padding-bottom:4px;
+    margin-bottom:4px;
+}
+
+.summary-box b{
+    color:#1E2B23;
+}
+
+#warpSummaryBox{
+    width:fit-content;
+    min-width:49%;
+    max-width:100%;
+    margin-left:0;
+    margin-right:auto;
+    text-align:left;
+}
+
+/* =========================================================
+   PREVIEW MODAL
+========================================================= */
+
+.overlay-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.75);
+    z-index:99999;
+    flex-direction:column;
+}
+
+.overlay-modal.show{
+    display:flex;
+}
+
+.modal-content{
+    background:#FFFFFF;
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+.modal-header{
+    padding:12px 16px;
+    background:#F8FAF8;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid #E2E8E2;
+    flex-shrink:0;
+}
+
+.modal-header h3{
+    font-size:14px;
+    color:#F8FAF8;
+    font-weight:800;
+}
+
+.modal-actions{
+    display:flex;
+    gap:8px;
+}
+
+.modal-body{
+    padding:15px;
+    overflow-y:auto;
+    flex:1;
+    background:#FFFFFF;
+    width:100%;
+    max-width:1000px;
+    margin:0 auto;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px){
+
+    body{
+        padding:8px;
+        background:#030712;
+    }
+
+    .main-card{
+        padding:12px;
+        border-radius:14px;
+        box-shadow:none;
+    }
+
+    .header-bar h3{
+        font-size:14px;
+    }
+
+    .preview-btn{
+        font-size:11px;
+        padding:8px 12px;
+    }
+
+    .design-info-box,
+    .weft-info-box{
+        grid-template-columns:repeat(4,1fr);
+        font-size:9px;
+        gap:6px;
+        padding:10px;
+    }
+
+    .section-title{
+        font-size:10px;
+        padding:5px 10px;
+    }
+
+    table{
+        font-size:11px;
+    }
+
+    th{
+        font-size:10px;
+    }
+
+    th,
+    td{
+        padding:8px 6px;
+    }
+
+    td.col-count,
+    td.col-color{
+        font-size:11px;
+    }
+
+    .val-flex-bottom {
+        padding-left: 7px;
+    }
+
+    .dot-leader-end-short {
+        width: 8px;
+    }
+
+    .no-dot-end-space {
+        width: 12px;
+    }
+
+    .dash-sep{
+        font-size:5px;
+        letter-spacing:0;
+    }
+
+    .summary-box{
+        font-size:10px;
+        padding:10px;
+    }
+}
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+@media print{
+
+    @page{
+        size:A4 portrait;
+        margin:6mm;
+    }
+
+    html,
+    body{
+        width:100% !important;
+        min-height:0 !important;
+        height:auto !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:#FFFFFF !important;
+        color:#000000 !important;
+    }
+
+    body{
+        display:block !important;
+    }
+
+    body *{
+        visibility:hidden !important;
+    }
+
+    #previewModal,
+    #previewModal *{
+        visibility:visible !important;
+    }
+
+    #previewModal{
+        display:block !important;
+        position:absolute !important;
+        inset:0 !important;
+        width:100% !important;
+        height:auto !important;
+        background:#FFFFFF !important;
+        z-index:999999 !important;
+    }
+
+    .modal-content{
+        width:100% !important;
+        height:auto !important;
+        display:block !important;
+        background:#FFFFFF !important;
+    }
+
+    .modal-header{
+        display:none !important;
+    }
+
+    .modal-body{
+        width:100% !important;
+        max-width:none !important;
+        height:auto !important;
+        overflow:visible !important;
+        padding:0 !important;
+        margin:0 !important;
+        background:#FFFFFF !important;
+    }
+
+    .no-print{
+        display:none !important;
+    }
+
+    .company-header{
+        display:block !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 2px !important;
+    }
+    
+    .design-info-box, .weft-info-box{
+        margin-bottom: 4px !important;
+        padding: 4px !important;
+    }
+    
+    .section-title{
+        margin-top: 2px !important;
+        margin-bottom: 2px !important;
+    }
+    
+    .dual-table-wrapper{
+        display:block !important; 
+        width:100% !important;
+        clear:both !important;
+        overflow:hidden !important;
+        page-break-inside:avoid !important; 
+        margin-bottom: 10px !important;
+    }
+    
+    .single-table-col{
+        display:block !important;
+        float:left !important;
+        width:49% !important;
+        max-width:49% !important;
+    }
+
+    .single-table-col:nth-child(2) {
+        float:right !important;
+    }
+
+    table{
+        width:100% !important;
+        border-collapse:collapse !important;
+        background:#FFFFFF !important;
+        font-size:11px !important; 
+    }
+
+    th,
+    td{
+        border:none !important;
+        background:#FFFFFF !important;
+        color:#000000 !important;
+        padding:3px 2px !important; 
+        font-size:11px !important; 
+        line-height: 1.2 !important;
+    }
+
+    td.col-count,
+    td.col-color{
+        font-size:12px !important;
+    }
+
+    .col-color{
+        padding-right:0px !important;
+    }
+
+    .col-val{
+        padding-left:0px !important;
+        padding-right:3px !important;
+    }
+
+    .col-set {
+        border-left: 1px dashed #888888 !important;
+    }
+
+    th{
+        background:#EAF0EA !important;
+        color:#000000 !important;
+        font-size:10px !important;
+        border-top:2px solid #4A7C59 !important;
+        border-bottom:2px solid #4A7C59 !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .dot-leader,
+    .dot-leader-left,
+    .dot-leader-end-short {
+        border-bottom: 2px dotted #000000 !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .section-title{
+        background:#4A7C59 !important;
+        color:#FFFFFF !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    .summary-box{
+        background:#F8FAF8 !important;
+        color:#000000 !important;
+        font-size:10px !important;
+        padding:4px 6px !important;
+        border:1px dashed #888 !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    #warpSummaryBox{
+        width:fit-content !important;
+        min-width:49% !important;
+        max-width:100% !important;
+        text-align:left !important;
+    }
+
+    .page-break{
+        page-break-before:always;
+        break-before:page;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="main-card">
+
+    <div class="top-nav no-print">
+        <a href="dashboard.html" class="back-btn">
+            ← மெனுவிற்குச் செல்ல
+        </a>
+    </div>
+
+    <div class="header-bar">
+
+        <h3>📋 டிசைன் ஷீட் பிரிண்ட்</h3>
+
+        <button
+            class="preview-btn no-print"
+            onclick="openPreviewModal()">
+            👁️ Preview
+        </button>
+
+    </div>
+
+    <div class="company-header" id="companyHeaderPrint">
+
+        <h1 id="printCompName">
+            TEX FOR EVER
+        </h1>
+
+        <p id="printCompAddr">
+            -
+        </p>
+
+    </div>
+
+    <div class="top-form-row-single no-print">
+
+        <div class="form-group">
+
+            <label>
+                டிசைன் எண்ணைத் தேர்ந்தெடுக்கவும்
+            </label>
+
+            <select
+                id="designNumber"
+                onchange="loadDesignDetails()">
+
+                <option value="">
+                    டிசைனைத் தேர்ந்தெடுக்கவும்
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    <div
+        id="designHeaderBox"
+        class="design-info-box"
+        style="display:none;">
+
+        <div>
+            டிசைன்:
+            <span id="hdrDesign">-</span>
+        </div>
+
+        <div>
+            கவுண்ட்ஸ்:
+            <span id="hdrCounts">-</span>
+        </div>
+
+        <div>
+            ஆர்டர் மீட்டர்:
+            <span id="hdrMtr">-</span>
+        </div>
+
+        <div>
+            டாப் பீம்:
+            <span id="hdrTopBeam">-</span>
+        </div>
+
+        <div>
+            வகை:
+            <span id="hdrType">-</span>
+        </div>
+
+        <div>
+            Onreed.ரீட்:
+            <span id="hdrReed">-</span>
+        </div>
+
+        <div>
+            Onreed.பிக்:
+            <span id="hdrPick">-</span>
+        </div>
+
+        <div>
+            Onreed.அகலம்:
+            <span id="hdrWidth">-</span>
+        </div>
+
+    </div>
+
+    <div id="warpSection">
+
+        <h3 class="section-title">
+            🧵 வார்ப் பேட்டர்ன் பிரிவ்யூ
+        </h3>
+
+        <div id="warpContainerWrapper">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th class="col-no">NO</th>
+                            <th class="col-count">COUNT</th>
+                            <th class="col-color">COLOUR</th>
+                            <th class="col-val">ENDS <br><span style="font-size: 8px; font-weight: normal;">BOTTOM / SSKR</span></th>
+                            <th class="col-set">SET</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="warpTableBody">
+
+                        <tr>
+                            <td colspan="5">
+                                தரவுகள் இல்லை
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div
+            id="warpSummaryBox"
+            class="summary-box"
+            style="display:none;">
+        </div>
+
+    </div>
+
+    <div id="weftSection">
+
+        <h3 class="section-title">
+            🧶 வெப்ட் பேட்டர்ன் பிரிவ்யூ
+        </h3>
+
+        <div
+            id="weftHeaderBox"
+            class="weft-info-box"
+            style="display:none;">
+
+            <div>
+                Design:
+                <span id="weftHdrDesign">-</span>
+            </div>
+
+            <div>
+                Weft Count:
+                <span id="weftHdrCount">-</span>
+            </div>
+
+            <div>
+                Weft Width:
+                <span id="weftHdrWidth">-</span>
+            </div>
+
+            <div>
+                Pick:
+                <span id="weftHdrPick">-</span>
+            </div>
+
+            <div style="grid-column:span 4;">
+                Weave:
+                <span id="weftHdrWeave">-</span>
+            </div>
+
+        </div>
+
+        <div id="weftContainerWrapper">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th class="col-no">NO</th>
+                            <th class="col-count">COUNT</th>
+                            <th class="col-color">COLOUR</th>
+                            <th class="col-val">PICKS</th>
+                            <th class="col-set">SET</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="weftTableBody">
+
+                        <tr>
+                            <td colspan="5">
+                                தரவுகள் இல்லை
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div
+            id="weftSummaryBox"
+            class="summary-box"
+            style="display:none;">
+        </div>
+
+    </div>
+
+</div>
+
+<div id="previewModal" class="overlay-modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header no-print">
+
+            <h3>
+                👁️ Design Sheet Print Preview
+            </h3>
+
+            <div class="modal-actions">
+
+                <button
+                    class="print-btn"
+                    onclick="printPreview()">
+                    🖨️ Print
+                </button>
+
+                <button
+                    class="close-btn"
+                    onclick="closePreviewModal()">
+                    Close ✕
+                </button>
+
+            </div>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="previewContent">
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    let ready = (window.StorageDB && window.StorageDB.ready)
+        ? window.StorageDB.ready
+        : Promise.resolve();
+
+    ready.then(function(){
+        initDropdown();
+        loadCompanySettings();
+    });
+
+});
+
+function loadCompanySettings(){
+
+    let savedAddr =
+        storeRaw("company_full_address") ||
+        storeRaw("set_comp_addr") ||
+        storeRaw("company_address") ||
+        "";
+
+    let savedCompName =
+        storeRaw("app_heading_name") ||
+        storeRaw("company_name") ||
+        "TEX FOR EVER";
+
+    let nameEl =
+        document.getElementById("printCompName");
+
+    let addrEl =
+        document.getElementById("printCompAddr");
+
+    if(nameEl){
+        nameEl.innerText = savedCompName;
+    }
+
+    if(addrEl){
+
+        if(savedAddr.trim() !== ""){
+
+            addrEl.innerHTML =
+                savedAddr
+                .replace(/\n/g,"<br>");
+
+        }else{
+
+            addrEl.innerText =
+                "முகவரி கிடைக்கவில்லை";
+
+        }
+
+    }
+
+}
+
+function storeRaw(key){
+    if(window.StorageDB && typeof window.StorageDB.getItem === "function"){
+        return window.StorageDB.getItem(key);
+    }
+    return localStorage.getItem(key);
+}
+
+function normalizeKey(s){
+    return String(s || "").replace(/[#\s]/g, "").toLowerCase();
+}
+
+function findByDesignKey(obj, dName){
+    if(!obj || typeof obj !== "object") return undefined;
+    let target = normalizeKey(dName);
+    let k = Object.keys(obj).find(key => normalizeKey(key) === target);
+    return k !== undefined ? obj[k] : undefined;
+}
+
+function cleanDesignName(str){
+
+    if(!str) return "";
+
+    return String(str)
+        .replace("#","")
+        .trim()
+        .toLowerCase();
+
+}
+
+function initDropdown(){
+
+    let preDesignList =
+        JSON.parse(
+            storeRaw("pre_design_numbers")
+        ) || [];
+
+    let designMastersList =
+        JSON.parse(
+            storeRaw("design_masters_data")
+        ) || [];
+
+    let specs =
+        JSON.parse(
+            storeRaw("design_specs")
+        ) || {};
+
+    let masterNames =
+        Array.isArray(designMastersList)
+        ? designMastersList
+            .map(d => d.name || d.designNo)
+            .filter(Boolean)
+        : [];
+
+    let combined =
+        Array.from(
+            new Set([
+                ...preDesignList,
+                ...masterNames,
+                ...Object.keys(specs)
+            ])
+        );
+
+    let select =
+        document.getElementById("designNumber");
+
+    if(!select)
+        return;
+
+    select.innerHTML =
+        `<option value="">
+            டிசைனைத் தேர்ந்தெடுக்கவும்
+         </option>`;
+
+    combined.forEach(function(d){
+
+        if(d){
+
+            let option =
+                document.createElement("option");
+
+            option.value = d;
+            option.textContent = d;
+
+            select.appendChild(option);
+
+        }
+
+    });
+
+    let activeDesign =
+        storeRaw(
+            "selected_design_number"
+        );
+
+    if(
+        activeDesign &&
+        combined.includes(activeDesign)
+    ){
+
+        select.value = activeDesign;
+        loadDesignDetails();
+
+    }
+
+}
+
+function loadDesignDetails(){
+
+    let select =
+        document.getElementById("designNumber");
+
+    let dName =
+        select ? select.value : "";
+
+    if(!dName){
+
+        document.getElementById(
+            "designHeaderBox"
+        ).style.display = "none";
+
+        document.getElementById(
+            "weftHeaderBox"
+        ).style.display = "none";
+
+        document.getElementById(
+            "warpSummaryBox"
+        ).style.display = "none";
+
+        document.getElementById(
+            "weftSummaryBox"
+        ).style.display = "none";
+
+        return;
+
+    }
+
+    localStorage.setItem(
+        "selected_design_number",
+        dName
+    );
+
+    let cleanDNo =
+        cleanDesignName(dName);
+
+    let designMastersList =
+        JSON.parse(
+            storeRaw(
+                "design_masters_data"
+            )
+        ) || [];
+
+    let foundMaster =
+        Array.isArray(designMastersList)
+        ? designMastersList.find(
+            d =>
+            cleanDesignName(
+                d.name || d.designNo
+            ) === cleanDNo
+          ) || {}
+        : {};
+
+    let specs =
+        JSON.parse(
+            storeRaw("design_specs")
+        ) || {};
+
+    let specKey =
+        Object.keys(specs).find(
+            k =>
+            cleanDesignName(k) === cleanDNo
+        );
+
+    let sp =
+        specKey ? specs[specKey] : {};
+
+    let orders =
+        JSON.parse(
+            storeRaw(
+                "party_orders_data"
+            )
+        ) || [];
+
+    let foundOrder =
+        Array.isArray(orders)
+        ? orders.find(
+            o =>
+            cleanDesignName(
+                o.designNumber ||
+                o.designNo
+            ) === cleanDNo
+          ) || {}
+        : {};
+
+    let finishReed =
+        parseFloat(
+            foundMaster.reed ||
+            sp.reed ||
+            foundOrder.reed
+        ) || 0;
+
+    let finishPick =
+        parseFloat(
+            foundMaster.pick ||
+            sp.pick ||
+            foundOrder.pick
+        ) || 0;
+
+    let finishWidth =
+        parseFloat(
+            foundMaster.width ||
+            sp.width ||
+            sp.finishWidth ||
+            foundOrder.width
+        ) || 0;
+
+    let onloomReedVal =
+        foundMaster.onloomReed ||
+        sp.onloomReed ||
+        (
+            finishReed > 0
+            ? finishReed - 8
+            : "-"
+        );
+
+    let onloomPickVal =
+        foundMaster.onloomPick ||
+        sp.onloomPick ||
+        (
+            finishPick > 0
+            ? finishPick - 4
+            : "-"
+        );
+
+    let onloomWidthVal =
+        foundMaster.onloomWidth ||
+        sp.onloomWidth;
+
+    if(
+        !onloomWidthVal &&
+        finishWidth > 0 &&
+        finishReed > 0 &&
+        parseFloat(onloomReedVal) > 0
+    ){
+
+        onloomWidthVal =
+            (
+                finishReed *
+                finishWidth /
+                parseFloat(onloomReedVal)
+            ).toFixed(2);
+
+    }
+    else if(
+        !onloomWidthVal &&
+        finishWidth > 0
+    ){
+
+        onloomWidthVal =
+            finishWidth.toFixed(2);
+
+    }
+
+    let warp1 =
+        foundMaster.warp1 ||
+        sp.baseBeamCount ||
+        sp.warp ||
+        sp.baseCount ||
+        foundMaster.counts ||
+        sp.counts ||
+        foundOrder.baseBeamCount ||
+        "-";
+
+    let warp2 =
+        foundMaster.warp2 ||
+        sp.topBeamCount ||
+        sp.warp2 ||
+        sp.topBeam ||
+        foundOrder.topBeamCount ||
+        "";
+
+    let warpCountsDisplay =
+        warp2 && warp2 !== "-"
+        ? `${warp1},${warp2}`
+        : warp1;
+
+    let weft1 =
+        foundMaster.weftCount ||
+        foundMaster.weft ||
+        sp.weftCount ||
+        sp.weft ||
+        foundOrder.weftCount ||
+        "-";
+
+    let weft2 =
+        foundMaster.weft2 ||
+        sp.weft2 ||
+        foundOrder.weft2 ||
+        "";
+
+    let weftCountsDisplay =
+        weft2 && weft2 !== "-"
+        ? `${weft1},${weft2}`
+        : weft1;
+
+    let orderMeterVal =
+        foundOrder.orderMtr ||
+        foundOrder.productionMeter ||
+        foundOrder.prodMtr ||
+        foundMaster.orderMtr ||
+        sp.yarnOrderMtr ||
+        sp.orderMtr ||
+        foundMaster.meters ||
+        "-";
+
+    document.getElementById(
+        "hdrDesign"
+    ).innerText = dName;
+
+    document.getElementById(
+        "hdrCounts"
+    ).innerText = warpCountsDisplay;
+
+    document.getElementById(
+        "hdrMtr"
+    ).innerText = orderMeterVal;
+
+    document.getElementById(
+        "hdrTopBeam"
+    ).innerText =
+        warp2 && warp2 !== "-"
+        ? warp2
+        : "-";
+
+    document.getElementById(
+        "hdrType"
+    ).innerText =
+        foundMaster.type ||
+        sp.type ||
+        foundOrder.weaveType ||
+        sp.weaveType ||
+        "Plain";
+
+    document.getElementById(
+        "hdrReed"
+    ).innerText =
+        onloomReedVal || "-";
+
+    document.getElementById(
+        "hdrPick"
+    ).innerText =
+        onloomPickVal || "-";
+
+    document.getElementById(
+        "hdrWidth"
+    ).innerText =
+        onloomWidthVal || "-";
+
+    document.getElementById(
+        "designHeaderBox"
+    ).style.display = "grid";
+
+    let weftWidthVal =
+        parseFloat(onloomWidthVal) > 0
+        ? (
+            parseFloat(onloomWidthVal) + 3
+          ).toFixed(2)
+        : "-";
+
+    let storedWeftWidth =
+        foundMaster.weftWidth ||
+        sp.weftWidth;
+
+    let finalWeftWidthDisplay =
+        storedWeftWidth
+        ? storedWeftWidth + '"'
+        : (
+            weftWidthVal !== "-"
+            ? weftWidthVal + '"'
+            : "-"
+          );
+
+    document.getElementById(
+        "weftHdrDesign"
+    ).innerText = dName;
+
+    document.getElementById(
+        "weftHdrCount"
+    ).innerText =
+        weftCountsDisplay;
+
+    document.getElementById(
+        "weftHdrWidth"
+    ).innerText =
+        finalWeftWidthDisplay;
+
+    document.getElementById(
+        "weftHdrPick"
+    ).innerText =
+        onloomPickVal || "-";
+
+    document.getElementById(
+        "weftHdrWeave"
+    ).innerText =
+        foundOrder.weaveType ||
+        foundMaster.weaveType ||
+        foundMaster.type ||
+        sp.weave ||
+        sp.type ||
+        "Plain";
+
+    document.getElementById(
+        "weftHeaderBox"
+    ).style.display = "grid";
+
+    function parseDataSafely(val) {
+        if (!val) return [];
+        if (typeof val === 'string') {
+            try {
+                let parsed = JSON.parse(val);
+                return Array.isArray(parsed) ? parsed : (typeof parsed === 'object' ? Object.values(parsed) : []);
+            } catch(e) { return []; }
+        }
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'object') return Object.values(val);
+        return [];
+    }
+
+    function findInStores(keys, name, fields){
+        let target = normalizeKey(name);
+        for (let key of keys){
+            let data;
+            try { data = JSON.parse(storeRaw(key) || "null"); } catch(e) { continue; }
+            if (!data || typeof data !== "object") continue;
+            let list = Array.isArray(data)
+                ? data
+                : Object.keys(data).map(function(k){
+                    let v = data[k];
+                    return (v && typeof v === "object" && !Array.isArray(v)) ? Object.assign({ designNo: k }, v) : null;
+                  });
+            for (let i = list.length - 1; i >= 0; i--){
+                let it = list[i];
+                if (!it || typeof it !== "object") continue;
+                let nm = it.designNo || it.design_no || it.designNumber || it.design_number || it.name || it.design || it.id;
+                if (normalizeKey(nm) !== target) continue;
+                for (let f of fields){
+                    let v = it[f];
+                    if (v && ((Array.isArray(v) && v.length) || (!Array.isArray(v) && typeof v === "object" && Object.keys(v).length) || (typeof v === "string" && v.trim()))) return v;
+                }
+            }
+        }
+        return undefined;
+    }
+    
+    let warpStores = ["warp_entry_data", "local_edits_cache", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
+    let weftStores = ["weft_entry_data", "local_edits_cache", "weave_designs", "weave_designs_cache", "denting_drawing_data"];
+
+    let globalWarpData = JSON.parse(storeRaw("warp_pattern_data") || "{}");
+    let globalWeftData = JSON.parse(storeRaw("weft_pattern_data") || "{}");
+
+    let rawWarpLines = foundMaster.warpLines || sp.warpLines || foundMaster.warpPattern || sp.warpPattern || findByDesignKey(globalWarpData, dName) || findInStores(warpStores, dName, ["warpLines", "warpPattern"]) || [];
+    let rawWarpRanges = foundMaster.warpRanges || sp.warpRanges || foundMaster.warpRange || sp.warpRange || findInStores(warpStores, dName, ["warpRanges", "warpRange"]) || [];
+    let rawWeftLines = foundMaster.weftLines || sp.weftLines || foundMaster.weftPattern || sp.weftPattern || findByDesignKey(globalWeftData, dName) || findInStores(weftStores, dName, ["weftLines", "weftPattern"]) || [];
+    let rawWeftRanges = foundMaster.weftRanges || sp.weftRanges || foundMaster.weftRange || sp.weftRange || findInStores(weftStores, dName, ["weftRanges", "weftRange"]) || [];
+
+    let warpLines = parseDataSafely(rawWarpLines);
+    let warpRanges = parseDataSafely(rawWarpRanges);
+    let weftLines = parseDataSafely(rawWeftLines);
+    let weftRanges = parseDataSafely(rawWeftRanges);
+
+    renderSplitPreviewTable(
+        "warp",
+        warpLines,
+        warpRanges,
+        "warpContainerWrapper",
+        "warpSummaryBox",
+        "Ends",
+        foundMaster,
+        sp,
+        onloomReedVal,
+        onloomWidthVal,
+        onloomPickVal
+    );
+
+    renderSplitPreviewTable(
+        "weft",
+        weftLines,
+        weftRanges,
+        "weftContainerWrapper",
+        "weftSummaryBox",
+        "Picks",
+        foundMaster,
+        sp,
+        onloomReedVal,
+        onloomWidthVal,
+        onloomPickVal
+    );
+
+}
+
+function renderSplitPreviewTable(
+    type,
+    lines,
+    ranges,
+    wrapperId,
+    summaryId,
+    unitName,
+    foundMaster,
+    sp,
+    onloomReed,
+    onloomWidth,
+    onloomPick
+){
+
+    let wrapper =
+        document.getElementById(wrapperId);
+
+    let summaryBox =
+        document.getElementById(summaryId);
+
+    if(
+        !Array.isArray(lines) ||
+        lines.length === 0
+    ){
+
+        wrapper.innerHTML = `
+            <div class="table-container">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td colspan="5">
+                                தரவுகள் இல்லை
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        summaryBox.style.display = "none";
+
+        return;
+    }
+
+    let rangeMap = {};
+
+    if(
+        Array.isArray(ranges) &&
+        ranges.length > 0
+    ){
+
+        ranges.forEach(function(r){
+
+            let start =
+                parseInt(r.start) || 0;
+
+            let end =
+                parseInt(r.end) || 0;
+
+            let set =
+                parseFloat(r.set) || 1;
+
+            for(
+                let j=start;
+                j<=end;
+                j++
+            ){
+
+                rangeMap[j] = {
+
+                    start:start,
+                    end:end,
+                    set:set,
+                    isStart:j === start,
+                    isEnd:j === end
+
+                };
+
+            }
+
+        });
+
+    }
+
+    let rowsData = [];
+
+    let countTotals = {};
+
+    let totalMultiplierSum = 0;
+
+    let totalSetsSum = 0;
+
+    let remainderSum = 0;
+
+    let pureSum = 0;
+
+    let rangeCoveredSum = 0;
+
+    let rangeLineIndices =
+        new Set();
+
+    let patternGroundEnds = 0;
+    
+    let patternTopEnds = 0;
+
+    if(
+        Array.isArray(ranges) &&
+        ranges.length > 0
+    ){
+
+        ranges.forEach(function(r){
+
+            let start =
+                parseInt(r.start) || 0;
+
+            let end =
+                parseInt(r.end) || 0;
+
+            for(
+                let k=start;
+                k<=end;
+                k++
+            ){
+
+                rangeLineIndices.add(k);
+
+            }
+
+        });
+
+    }
+
+    lines.forEach(function(item,index){
+
+        let rowNum =
+            index + 1;
+
+        let rawVal = type === "warp" 
+            ? (item.ends !== undefined ? item.ends : (item.Ends || item.warp || item.val || item.value || 0))
+            : (item.picks !== undefined ? item.picks : (item.Picks || item.weft || item.val || item.value || 0));
+
+        let val = parseFloat(rawVal) || 0;
+
+        pureSum += val;
+
+        if(
+            rangeLineIndices.has(rowNum)
+        ){
+
+            rangeCoveredSum += val;
+
+        }
+
+    });
+
+    remainderSum =
+        pureSum - rangeCoveredSum;
+
+    lines.forEach(function(item,index){
+
+        let rowNum =
+            index + 1;
+
+        let rawVal = type === "warp" 
+            ? (item.ends !== undefined ? item.ends : (item.Ends || item.warp || item.val || item.value || 0))
+            : (item.picks !== undefined ? item.picks : (item.Picks || item.weft || item.val || item.value || 0));
+
+        let val = parseFloat(rawVal) || 0;
+
+        let rawCount = item.count !== undefined ? item.count : (item.Count || item.yarn || item.yarnCount || "");
+        let cText = rawCount ? String(rawCount).trim() : "-";
+
+        let rawColor = item.color !== undefined ? item.color : (item.Color || item.colour || item.Colour || item.clr || "");
+        if (typeof rawColor === "string" && /^\s*#/.test(rawColor) && (item.colourName || item.colorName)) {
+            rawColor = item.colourName || item.colorName;
+        }
+        
+        let clrText = (typeof translateColorName === 'function') ? translateColorName(rawColor) : rawColor;
+
+        let isTopBeam = false;
+        if(type === "warp") {
+            let checkStr = (cText + " " + clrText + " " + String(item.name || "") + " " + String(item.origName || "")).toLowerCase();
+            if(checkStr.includes("2/40") || checkStr.includes("40/2") || checkStr.includes("seer") || checkStr.includes("sskr") || checkStr.includes("top")) {
+                isTopBeam = true;
+            }
+        }
+
+        let setHtml = "";
+
+        let rInfo =
+            rangeMap[rowNum];
+
+        let effectiveVal = val;
+
+        if(rInfo){
+
+            effectiveVal = val * rInfo.set;
+
+            if(rInfo.isStart){
+
+                let rangeSum = 0;
+
+                for(
+                    let k=rInfo.start;
+                    k<=rInfo.end;
+                    k++
+                ){
+
+                    let subItem =
+                        lines[k-1];
+
+                    let subVal = type === "warp" 
+                        ? (subItem.ends !== undefined ? subItem.ends : (subItem.Ends || subItem.warp || subItem.val || subItem.value || 0))
+                        : (subItem.picks !== undefined ? subItem.picks : (subItem.Picks || subItem.weft || subItem.val || subItem.value || 0));
+
+                    rangeSum += parseFloat(subVal) || 0;
+
+                }
+
+                let totalProduct =
+                    rangeSum * rInfo.set;
+
+                totalMultiplierSum +=
+                    totalProduct;
+
+                totalSetsSum +=
+                    rInfo.set;
+
+                let spanRows =
+                    (
+                        rInfo.end -
+                        rInfo.start
+                    ) + 1;
+
+                setHtml = `
+                    <td
+                        rowspan="${spanRows}"
+                        class="col-set"
+                        style="vertical-align:middle;">
+                        <div style="display:flex; align-items:center; justify-content:center;">
+                            <span style="font-size:32px; font-weight:300; margin-right:4px; line-height:0.7; padding-bottom:2px;">}</span>
+                            <div style="display:flex; flex-direction:column; text-align:left; line-height:1.1; font-size:inherit;">
+                                <b>X ${rInfo.set}</b>
+                                <b>= ${totalProduct}</b>
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+            }
+            else{
+
+                setHtml = null;
+
+            }
+
+            countTotals[cText] =
+                (
+                    countTotals[cText] || 0
+                ) +
+                (
+                    val * rInfo.set
+                );
+
+        }
+        else{
+
+            setHtml =
+                `<td class="col-set"></td>`;
+
+            countTotals[cText] =
+                (
+                    countTotals[cText] || 0
+                ) + val;
+
+        }
+
+        if(type === "warp") {
+            if(isTopBeam) {
+                patternTopEnds += effectiveVal;
+            } else {
+                patternGroundEnds += effectiveVal;
+            }
+        }
+
+        rowsData.push({
+
+            rowNum:rowNum,
+            count:cText,
+            color:clrText,
+            val:val,
+            setHtml:setHtml,
+            type:type,
+            isTopBeam:isTopBeam,
+            hasSet:Boolean(rInfo)
+
+        });
+
+    });
+
+    let headerHtml = `
+        <tr>
+
+            <th class="col-no">
+                NO
+            </th>
+
+            <th class="col-count">
+                COUNT
+            </th>
+
+            <th class="col-color">
+                COLOUR
+            </th>
+
+            <th class="col-val">
+                ${
+                    unitName === "Ends"
+                    ? 'ENDS <br><span style="font-size: 8px; font-weight: normal;">BOTTOM / SSKR</span>'
+                    : "PICKS"
+                }
+            </th>
+
+            <th class="col-set">
+                SET
+            </th>
+
+        </tr>
+    `;
+
+    let splitLimit = 35; 
+    let finalHtml = "";
+
+    for(let i = 0; i < rowsData.length; i += (splitLimit * 2)) {
+        
+        let col1 = rowsData.slice(i, i + splitLimit);
+        let col2 = rowsData.slice(i + splitLimit, i + splitLimit * 2);
+
+        let t1 = buildTableRowsHtml(col1);
+        let t2 = buildTableRowsHtml(col2);
+
+        let secondTable = "";
+
+        if(t2 !== ""){
+            secondTable = `
+                <div class="single-table-col">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                ${headerHtml}
+                            </thead>
+                            <tbody>
+                                ${t2}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        finalHtml += `
+            <div class="dual-table-wrapper">
+                <div class="single-table-col">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                ${headerHtml}
+                            </thead>
+                            <tbody>
+                                ${t1}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                ${secondTable}
+            </div>
+        `;
+    }
+
+    wrapper.innerHTML = finalHtml;
+
+    let finalGrandTotal = 0;
+
+    if(type === "warp"){
+
+        let reed =
+            parseFloat(onloomReed) ||
+            parseFloat(
+                foundMaster.reed ||
+                sp.reed
+            ) || 0;
+
+        let width =
+            parseFloat(onloomWidth) ||
+            parseFloat(
+                foundMaster.width ||
+                sp.width
+            ) || 0;
+
+        if(
+            reed > 0 &&
+            width > 0
+        ){
+
+            finalGrandTotal =
+                Math.round(
+                    reed * width
+                );
+
+        }
+        else{
+
+            finalGrandTotal =
+                totalMultiplierSum +
+                remainderSum;
+
+            if(finalGrandTotal === 0){
+
+                finalGrandTotal =
+                    pureSum;
+
+            }
+
+        }
+
+    }
+    else{
+
+        let weftWidth =
+            parseFloat(
+                foundMaster.weftWidth ||
+                sp.weftWidth
+            ) ||
+            (
+                parseFloat(onloomWidth) > 0
+                ? parseFloat(onloomWidth) + 3
+                : 67.44
+            );
+
+        let pickNum =
+            parseFloat(onloomPick) ||
+            60;
+
+        finalGrandTotal =
+            weftWidth * pickNum;
+
+    }
+
+    let summaryHtml = "";
+
+    if(type === "weft"){
+
+        let storedWidthVal =
+            parseFloat(
+                foundMaster.weftWidth ||
+                sp.weftWidth
+            ) ||
+            (
+                parseFloat(onloomWidth) > 0
+                ? parseFloat(onloomWidth) + 3
+                : 67.44
+            );
+
+        let pickNum =
+            parseFloat(onloomPick) ||
+            60;
+
+        summaryHtml += `
+            <div class="line-1">
+                Total Pattern Picks:
+                <b>${pureSum}</b>
+            </div>
+            <div>
+                Weft Width ${storedWidthVal} X Pick ${pickNum} = <b>${finalGrandTotal.toFixed(2)} Total Pick</b>
+            </div>
+        `;
+
+    }
+    else{
+
+        let calculatedPatternEnds = totalMultiplierSum + remainderSum;
+        if(calculatedPatternEnds === 0){ calculatedPatternEnds = pureSum; }
+
+        let hasTopBeam = patternTopEnds > 0;
+
+        let endsDetail = hasTopBeam
+            ? ` <span style="color:#64748b; font-weight:600;">(${patternGroundEnds} Bottom + <span style="color:#d97706;">${patternTopEnds} SSKR</span>)</span>`
+            : "";
+
+        summaryHtml += `
+            <div class="line-1">
+                Total Pattern Ends:
+                <b>${calculatedPatternEnds}</b>${endsDetail}
+            </div>
+        `;
+
+        let reed = parseFloat(onloomReed) || parseFloat(foundMaster.reed || sp.reed) || 0;
+        let width = parseFloat(onloomWidth) || parseFloat(foundMaster.width || sp.width) || 0;
+
+        if (reed > 0 && width > 0) {
+            let totalEndsInt = Math.round(reed * width);
+            if (calculatedPatternEnds > 0) {
+                let repeats = Math.floor(totalEndsInt / calculatedPatternEnds);
+                let balance = totalEndsInt % calculatedPatternEnds;
+                summaryHtml += `
+                    <div class="line-1">
+                        ${repeats} repeat + ${balance} ends = <b>${totalEndsInt}</b>
+                    </div>
+                `;
+            }
+
+            summaryHtml += `
+                <div>
+                    Warp Width ${width} X Reed ${reed} = <b>${(reed * width).toFixed(2)} Total Ends</b>
+                </div>
+            `;
+        } else {
+            summaryHtml += `
+                <div>
+                    Total Ends: <b>${finalGrandTotal}</b>
+                </div>
+            `;
+        }
+
+    }
+
+    summaryBox.innerHTML =
+        summaryHtml;
+
+    summaryBox.style.display =
+        "block";
+
+}
+
+function buildTableRowsHtml(rows){
+
+    if(
+        !rows ||
+        rows.length === 0
+    ){
+
+        return "";
+
+    }
+
+    let html = "";
+
+    rows.forEach(function(r){
+
+        let valDisplay = `<b>${r.val}</b>`;
+        if(r.type === "warp"){
+            if(r.isTopBeam){
+                let afterDot = r.hasSet 
+                    ? `<div class="dot-leader-end-short"></div>` 
+                    : `<div class="no-dot-end-space"></div>`;
+                valDisplay = `
+                    <div class="val-flex-top" style="color:#8b5cf6 !important;">
+                        <div class="dot-leader-left"></div>
+                        <span class="val-text"><b>${r.val}</b></span>${afterDot}
+                    </div>
+                `;
+            } else {
+                let afterDot = r.hasSet 
+                    ? `<div class="dot-leader"></div>` 
+                    : ``;
+                valDisplay = `
+                    <div class="val-flex-bottom" style="color:#1E2B23;">
+                        <span class="val-text"><b>${r.val}</b></span>
+                        ${afterDot}
+                    </div>
+                `;
+            }
+        }
+
+        html += `
+
+            <tr>
+
+                <td class="col-no">
+
+                    <b>${r.rowNum}</b>
+
+                </td>
+
+                <td class="col-count">
+
+                    ${r.count}
+
+                </td>
+
+                <td class="col-color">
+
+                    <div class="color-flex">
+                        <span class="color-text">${r.color}</span>
+                        <div class="dot-leader"></div>
+                    </div>
+
+                </td>
+
+                <td class="col-val">
+
+                    ${valDisplay}
+
+                </td>
+
+                ${
+                    r.setHtml !== null
+                    ? r.setHtml
+                    : ""
+                }
+
+            </tr>
+
+        `;
+
+    });
+
+    return html;
+
+}
+
+function openPreviewModal(){
+
+    let dNum =
+        document.getElementById(
+            "designNumber"
+        ).value;
+
+    if(!dNum){
+
+        alert(
+            "முதலில் டிசைன் எண்ணைத் தேர்ந்தெடுக்கவும்!"
+        );
+
+        return;
+
+    }
+
+    let compName =
+        document.getElementById(
+            "printCompName"
+        ).innerText;
+
+    let compAddr =
+        document.getElementById(
+            "printCompAddr"
+        ).innerHTML;
+
+    let headerBox =
+        document.getElementById(
+            "designHeaderBox"
+        ).outerHTML;
+
+    let warpSec =
+        document.getElementById(
+            "warpSection"
+        ).outerHTML;
+
+    let weftSec =
+        document.getElementById(
+            "weftSection"
+        ).outerHTML;
+
+    let html = `
+
+        <div
+            style="
+                background:#FFFFFF;
+                color:#000000;
+                width:100%;
+            "
+        >
+
+            <div
+                style="
+                    text-align:center;
+                    margin-bottom:8px;
+                    border-bottom:2px solid #4A7C59;
+                    padding-bottom:5px;
+                "
+            >
+
+                <h2
+                    style="
+                        margin:0;
+                        font-size:16px;
+                        color:#2F4F38;
+                    "
+                >
+                    ${compName}
+                </h2>
+
+                <p
+                    style="
+                        margin:2px 0 0;
+                        font-size:9px;
+                        color:#4A554A;
+                    "
+                >
+                    ${compAddr}
+                </p>
+
+            </div>
+
+            ${headerBox.replace(
+                'style="display:none;"',
+                'style="display:grid;"'
+            )}
+
+            <div style="font-size:11px; font-weight:700; margin:4px 0;">
+                * WARP DESIGN *
+            </div>
+
+            ${warpSec}
+
+            <div class="page-break"></div>
+
+            <div style="font-size:11px; font-weight:700; margin:4px 0;">
+                * WEFT DESIGN *
+            </div>
+            
+            ${weftSec}
+
+        </div>
+
+    `;
+
+    document.getElementById(
+        "previewContent"
+    ).innerHTML = html;
+
+    let modal =
+        document.getElementById(
+            "previewModal"
+        );
+
+    modal.style.display = "flex";
+
+    setTimeout(function(){
+
+        modal.classList.add("show");
+
+    },20);
+
+}
+
+function closePreviewModal(){
+
+    let modal =
+        document.getElementById(
+            "previewModal"
+        );
+
+    modal.classList.remove("show");
+
+    setTimeout(function(){
+
+        modal.style.display = "none";
+
+    },150);
+
+}
+
+function printPreview(){
+
+    let content =
+        document.getElementById("previewContent");
+
+    let html =
+        content ? content.innerHTML : "";
+
+    if(window.appPrint){
+        window.appPrint(html || undefined);
+    } else {
+        window.print();
+    }
+
+}
+</script>
+
+</body>
+</html>

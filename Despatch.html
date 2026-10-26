@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Despatch Details - TEX FOR EVER </title>
+    <!-- IMPORTANT: config.js must load first -->
+    <script src="config.js"></script>
+    <script src="translator.js"></script>
+    <script src="printer.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        html, body { 
+            width: 100%;
+            min-height: 100vh;
+            background: #030712;
+            color: #1E2B23; 
+        }
+
+        body { 
+            padding: 12px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(30,43,35,0.06);
+            border: 1px solid rgba(82, 110, 81, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 11px;
+            background: #1A2421;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
+
+        .completed-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #F8FAF8;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #E2E8E2;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+        
+        .completed-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #4A7C59;
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+        
+        .completed-checkbox label {
+            margin: 0;
+            color: #2F4F38;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        #bitmapDisplayContainer {
+            text-align: right;
+        }
+        #bitmapDisplayContainer img {
+            max-height: 40px;
+            border-radius: 6px;
+            border: 1px solid #4A7C59;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: zoom-in;
+            transition: transform 0.2s;
+        }
+        #bitmapDisplayContainer img:hover { transform: scale(1.1); }
+
+        .excel-btn {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1);
+            text-transform: uppercase;
+        }
+        .excel-btn:hover { transform: translateY(-1px); }
+
+        .card { 
+            background: #FFFFFF; 
+            padding: 0; 
+            border-radius: 0; 
+            margin-bottom: 0; 
+            box-shadow: none; 
+            border: none; 
+            width: 100%;
+        }
+
+        h3 { 
+            font-size: 18px; 
+            padding-bottom: 12px; 
+            margin-bottom: 16px; 
+            font-weight: 800; 
+            border-bottom: 2px solid #EAF0EA; 
+            color: #E2E8E2; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .section-title {
+            background: #EAF0EA;
+            color: #2F4F38;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            margin: 12px 0 10px 0;
+            border: 1px solid #D1DED1;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .form-grid-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 8px;
+        }
+
+        label { 
+            display: block;
+            font-weight: 700; 
+            color: #E2E8E2; 
+            font-size: 11px; 
+            margin-bottom: 6px; 
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 12px 14px; 
+            border: 1px solid #D1DED1; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            background: #FFFFFF; 
+            color: #1E2B23; 
+            font-weight: 600; 
+            outline: none;
+        }
+
+        input:focus, select:focus { 
+            border-color: #4A7C59; 
+            box-shadow: 0 0 0 3px rgba(74,124,89,.15);
+            background: #FFFFFF; 
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: #F8FAF8;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #E2E8E2;
+        }
+
+        .item-col-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-col-group.full-width {
+            grid-column: span 2;
+        }
+
+        .item-col-group label {
+            font-size: 11px;
+            color: #4A554A;
+            margin-bottom: 6px;
+        }
+
+        .item-col-group input, .item-col-group select {
+            padding: 10px 12px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .add-item-btn, .del-item-btn {
+            grid-column: span 2;
+            color: white;
+            border: none;
+            height: 40px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1);
+        }
+        .add-item-btn { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .add-item-btn:hover { background: #1D4ED8; }
+        .del-item-btn { background: linear-gradient(135deg, #EF4444, #DC2626); }
+        .del-item-btn:hover { background: #DC2626; }
+
+        .btn { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 14px 0 6px 0; 
+            border: none; 
+            border-radius: 8px; 
+            color: white; 
+            font-weight: 700; 
+            font-size: 12px; 
+            cursor: pointer; 
+            background: linear-gradient(135deg, #4A7C59, #2F4F38); 
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1); 
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            transition: transform 0.15s ease; 
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+
+        .popup-trigger-btn {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1);
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .popup-trigger-btn:hover { transform: translateY(-1px); }
+
+        /* Full-Screen Pop-up Modal Styling */
+        .overlay-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 7, 18, 0.85);
+            z-index: 99999;
+            flex-direction: column;
+            padding: 15px;
+        }
+        .modal-content {
+            background: #FFFFFF;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 35px rgba(30,43,35,0.15);
+            border: 1px solid rgba(82, 110, 81, 0.15);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 18px 20px;
+            background: #F8FAF8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #EAF0EA;
+        }
+        .modal-header h3 { margin: 0; font-size: 16px; color: #2F4F38; border: none; padding: 0; }
+        .close-btn {
+            background: #EF4444;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Fullscreen Image Popup Modal */
+        .fullscreen-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;
+            padding: 20px; flex-direction: column;
+        }
+        .fullscreen-modal img {
+            max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+        .close-fullscreen {
+            position: absolute; top: 20px; right: 20px; background: #EF4444; color: white;
+            border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .action-del { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .action-del:hover { opacity: 0.9; }
+        .action-edit { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .action-complete { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .action-running { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+        .excel-table { width: 100%; border-collapse: collapse; text-align: center; background: #FFFFFF; font-size: 11px; color: #1E2B23; border-radius: 10px; overflow: hidden; border: 1px solid #D1DED1; }
+        .excel-table th, .excel-table td { border-bottom: 1px solid #E2E8E2; border-right: 1px solid #E2E8E2; padding: 10px 8px; }
+        .excel-table th { background-color: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; }
+        .excel-table td { font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav">
+        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="completed-checkbox">
+                <input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()">
+                <label for="top_completed_status">Completed</label>
+            </div>
+            <div id="bitmapDisplayContainer"></div>
+        </div>
+    </div>
+
+<div class="card">
+  
+        <h3>🚚 Despatch Details Entry</h3>
+        
+        <div class="section-title">Despatch Order Details</div>
+
+        <div class="form-grid-row">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="despatch_date">
+            </div>
+            <div class="form-group">
+                <label>Invoice Number</label>
+                <input type="text" id="invoice_no" placeholder="Invoice No">
+            </div>
+            <div class="form-group">
+                <label>PO Number</label>
+                <select id="despatch_po" onchange="onPoSelect(this.value)">
+                    <option value="">Select PO</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grid-row">
+            <div class="form-group">
+                <label>Party Name</label>
+                <input type="text" id="despatch_party" placeholder="Party Name" readonly style="background: #FFFFFF; color:#1E2B23;">
+            </div>
+            <div class="form-group">
+                <label>Transport Name</label>
+                <input type="text" id="transport_name" placeholder="Transport Name">
+            </div>
+            <div class="form-group">
+                <label>LR Number</label>
+                <input type="text" id="lr_number" placeholder="LR Number">
+            </div>
+        </div>
+
+        <div class="section-title">Item Details</div>
+
+        <div id="itemsContainer">
+            <div class="item-row">
+                <div class="item-col-group full-width">
+                    <label>Design No</label>
+                    <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+                </div>
+                <div class="item-col-group">
+                    <label>Bale No</label>
+                    <input type="text" class="item-bale" placeholder="Bale No">
+                </div>
+                <div class="item-col-group">
+                    <label>No. of Bales</label>
+                    <input type="number" class="item-no-bales" placeholder="No. of Bales">
+                </div>
+                <div class="item-col-group">
+                    <label>Order Mtr</label>
+                    <input type="number" class="item-ord-mtr" placeholder="Order Mtr" oninput="calculateBalance(this)">
+                </div>
+                <div class="item-col-group">
+                    <label>Despatched Mtr</label>
+                    <input type="number" class="item-des-mtr" placeholder="Despatched" oninput="calculateBalance(this)">
+                </div>
+                <div class="item-col-group">
+                    <label>Balance Mts</label>
+                    <input type="text" class="item-bal-mtr" placeholder="0.00" readonly style="background: #FFFFFF; color:#10B981; font-weight:bold;">
+                </div>
+                <div class="item-col-group">
+                    <label>Excess Mts</label>
+                    <input type="text" class="item-exc-mtr" placeholder="0.00" readonly style="background: #FFFFFF; color:#D32F2F; font-weight:bold;">
+                </div>
+                <button type="button" class="add-item-btn" onclick="addItemRow()">➕ Add More Items</button>
+            </div>
+        </div>
+
+        <button class="btn" id="saveBtn" onclick="saveDespatchEntry()">Save Despatch Entry</button>
+        <button type="button" class="popup-trigger-btn" onclick="openModal('despatchListModal')">📊 View Saved Despatch List</button>
+    </div>
+</div>
+
+<!-- Saved Despatch List Modal -->
+<div id="despatchListModal" class="overlay-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📊 Saved Despatch List</h3>
+            <div style="display: flex; gap: 8px;">
+                <button class="excel-btn" onclick="exportToExcel()">📥 Excel</button>
+                <button class="excel-btn" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);" onclick="printDespatchList()">🖨️ Print</button>
+                <button class="close-btn" onclick="closeModal('despatchListModal')">Close ✕</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div style="overflow-x: auto;">
+                <table id="despatchTable" class="excel-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice No</th>
+                            <th>Party</th>
+                            <th>Design</th>
+                            <th>Bale No</th>
+                            <th>No Bales</th>
+                            <th>Despatched</th>
+                            <th>Balance</th>
+                            <th>Excess</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Image Modal -->
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+    <button class="close-fullscreen">Close ✕</button>
+    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+var preDesignList = [];
+let editingIndex = null;
+
+function checkUserPermission() {
+    let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
+    if (userRole !== 'Administrator' && userRole !== 'Admin') {
+        let permissions = JSON.parse(localStorage.getItem('user_permissions') || '{}');
+        if (permissions['despatch.html'] === false || permissions['despatch'] === false) { return false; }
+    }
+    return true; 
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!checkUserPermission()) {
+        alert("Access Denied! You do not have permission to access this page. ❌");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    var today = new Date().toISOString().split('T')[0];
+    var dateEl = document.getElementById('despatch_date');
+    if(dateEl && !dateEl.value) dateEl.value = today;
+
+    loadPoDropdown();
+    loadDesignList();
+    updateDespatchTable();
+});
+
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+window.openFullscreenImage = function(src) {
+    if(!src || src === '' || src === 'null') return;
+    document.getElementById('fullscreenImg').src = src;
+    document.getElementById('fullscreenModal').style.display = 'flex';
+};
+window.closeFullscreenImage = function() {
+    document.getElementById('fullscreenModal').style.display = 'none';
+};
+
+function loadBitmapImage() {
+    let activeDesign = localStorage.getItem('selected_design_number');
+    let firstDesignSelect = document.querySelector('.item-design');
+    if(firstDesignSelect && firstDesignSelect.value) {
+        activeDesign = firstDesignSelect.value;
+    }
+    
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let bitmapContainer = document.getElementById('bitmapDisplayContainer');
+    
+    let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
+
+    if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
+        let b64 = designSpecs[specKey].bitmap;
+        bitmapContainer.innerHTML = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage('${b64}')" title="Click to view full screen">`;
+    } else {
+        bitmapContainer.innerHTML = '';
+    }
+}
+
+function onDesignSelect(val) {
+    loadBitmapImage();
+    if(!val) return;
+
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+    let clean = val.toString().replace('#', '').trim().toLowerCase();
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || val;
+
+    let specStatus = (designSpecs[specKey] && designSpecs[specKey].status) ? designSpecs[specKey].status.toLowerCase() : '';
+    let despatchData = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    let rec = despatchData.find(d => d.items && d.items.some(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === clean));
+
+    if(specStatus === 'completed' || (rec && rec.status && rec.status.toLowerCase() === 'completed')) {
+        document.getElementById('top_completed_status').checked = true;
+    } else {
+        document.getElementById('top_completed_status').checked = false;
+    }
+}
+
+function loadPoDropdown() {
+    var poSelect = document.getElementById('despatch_po');
+    if(!poSelect) return;
+    var partyOrdersList = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    var html = '<option value="">Select PO</option>';
+    partyOrdersList.forEach(function(po) {
+        let pNum = po.poNo || po.poNumber;
+        if(pNum) {
+            html += `<option value="${pNum}">${pNum} (${po.partyName || 'Party'})</option>`;
+        }
+    });
+    poSelect.innerHTML = html;
+}
+
+function onPoSelect(poNo) {
+    if(!poNo) {
+        document.getElementById('despatch_party').value = '';
+        return;
+    }
+    var partyOrdersList = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    var matchedOrder = partyOrdersList.find(function(p) { return (p.poNo === poNo || p.poNumber === poNo); });
+    
+    if(matchedOrder) {
+        document.getElementById('despatch_party').value = matchedOrder.partyName || '';
+        if(matchedOrder.designNumber || matchedOrder.designNo) {
+            var firstDesignSelect = document.querySelector('.item-design');
+            if(firstDesignSelect) {
+                let dVal = matchedOrder.designNumber || matchedOrder.designNo;
+                firstDesignSelect.value = dVal;
+                onDesignSelect(dVal);
+            }
+        }
+        if(matchedOrder.orderMtr || matchedOrder.productionMeter || matchedOrder.prodMtr || matchedOrder.meters) {
+            var firstOrdMtr = document.querySelector('.item-ord-mtr');
+            if(firstOrdMtr) {
+                firstOrdMtr.value = matchedOrder.orderMtr || matchedOrder.productionMeter || matchedOrder.prodMtr || matchedOrder.meters;
+                calculateBalance(firstOrdMtr);
+            }
+        }
+    }
+}
+
+function loadDesignList() {
+    let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
+    let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+
+    let allDesigns = new Set();
+    preDesigns.forEach(d => allDesigns.add(d));
+    if(Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
+    Object.keys(designSpecs).forEach(d => allDesigns.add(d));
+    if(Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
+
+    preDesignList = Array.from(allDesigns).filter(Boolean);
+    loadDesignDropdowns();
+}
+
+function loadDesignDropdowns() {
+    var designSelects = document.querySelectorAll('.item-design');
+    designSelects.forEach(function(select) {
+        var currentVal = select.value;
+        var html = '<option value="">Select</option>';
+        preDesignList.forEach(function(d) {
+            html += '<option value="' + d + '">' + d + '</option>';
+        });
+        select.innerHTML = html;
+        select.value = currentVal;
+    });
+
+    var activeDesign = localStorage.getItem('selected_design_number');
+    if(activeDesign && designSelects.length > 0 && !designSelects[0].value) {
+        designSelects[0].value = activeDesign;
+        onDesignSelect(activeDesign);
+    } else {
+        loadBitmapImage();
+    }
+}
+
+function calculateBalance(element) {
+    var row = element.closest('.item-row');
+    var orderMtr = parseFloat(row.querySelector('.item-ord-mtr').value) || 0;
+    var desMtr = parseFloat(row.querySelector('.item-des-mtr').value) || 0;
+    
+    var balMtrField = row.querySelector('.item-bal-mtr');
+    var excMtrField = row.querySelector('.item-exc-mtr');
+    
+    var diff = orderMtr - desMtr;
+    
+    if (diff >= 0) {
+        balMtrField.value = diff.toFixed(2);
+        excMtrField.value = '0.00';
+    } else {
+        balMtrField.value = '0.00';
+        excMtrField.value = Math.abs(diff).toFixed(2);
+    }
+}
+
+function addItemRow(design = '', bale = '', noBales = '', ord = '', des = '', bal = '', exc = '') {
+    var container = document.getElementById('itemsContainer');
+    var newRow = document.createElement('div');
+    newRow.className = 'item-row';
+    newRow.innerHTML = `
+        <div class="item-col-group full-width">
+            <label>Design No</label>
+            <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+        </div>
+        <div class="item-col-group">
+            <label>Bale No</label>
+            <input type="text" class="item-bale" placeholder="Bale No" value="${bale}">
+        </div>
+        <div class="item-col-group">
+            <label>No. of Bales</label>
+            <input type="number" class="item-no-bales" placeholder="No. of Bales" value="${noBales}">
+        </div>
+        <div class="item-col-group">
+            <label>Order Mtr</label>
+            <input type="number" class="item-ord-mtr" placeholder="Order Mtr" value="${ord}" oninput="calculateBalance(this)">
+        </div>
+        <div class="item-col-group">
+            <label>Despatched Mtr</label>
+            <input type="number" class="item-des-mtr" placeholder="Despatched" value="${des}" oninput="calculateBalance(this)">
+        </div>
+        <div class="item-col-group">
+            <label>Balance Mts</label>
+            <input type="text" class="item-bal-mtr" placeholder="0.00" value="${bal}" readonly style="background: #FFFFFF; color:#10B981; font-weight:bold;">
+        </div>
+        <div class="item-col-group">
+            <label>Excess Mts</label>
+            <input type="text" class="item-exc-mtr" placeholder="0.00" value="${exc}" readonly style="background: #FFFFFF; color:#D32F2F; font-weight:bold;">
+        </div>
+        <button type="button" class="del-item-btn" onclick="this.parentElement.remove()">✕ Remove Item</button>
+    `;
+    container.appendChild(newRow);
+    loadDesignDropdowns();
+    if(design) {
+        newRow.querySelector('.item-design').value = design;
+    }
+}
+
+async function quickCompleteToggle() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+    
+    let firstDesignSelect = document.querySelector('.item-design');
+    let designNo = firstDesignSelect ? firstDesignSelect.value : '';
+    let isCompleted = document.getElementById('top_completed_status').checked;
+
+    if(!designNo) {
+        alert("Mudhala Design Number select pannunga bro");
+        document.getElementById('top_completed_status').checked = false;
+        return;
+    }
+
+    let statusText = isCompleted ? 'completed' : 'running';
+
+    let despatchRecords = JSON.parse(localStorage.getItem('despatch_records')) || [];
+    let despatchData = JSON.parse(localStorage.getItem('despatch_data')) || [];
+
+    let foundRec = false;
+    despatchRecords.forEach(r => {
+        if(r.designNo === designNo || r.designNumber === designNo) {
+            r.status = isCompleted ? 'Completed' : 'Running';
+            foundRec = true;
+        }
+    });
+
+    if(!foundRec) {
+        let firstRow = document.querySelector('.item-row');
+        despatchRecords.push({
+            id: Date.now(),
+            date: document.getElementById('despatch_date').value || new Date().toISOString().split('T')[0],
+            invoiceNo: document.getElementById('invoice_no').value.trim() || 'N/A',
+            partyName: document.getElementById('despatch_party').value.trim() || 'N/A',
+            designNo: designNo,
+            designNumber: designNo,
+            mtr: parseFloat(firstRow ? firstRow.querySelector('.item-des-mtr').value : 0) || 0,
+            status: isCompleted ? 'Completed' : 'Running'
+        });
+    }
+
+    despatchData.forEach(d => {
+        if(d.items && d.items.some(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === designNo.toString().replace('#','').trim().toLowerCase())) {
+            d.status = statusText;
+        }
+    });
+
+    localStorage.setItem('despatch_records', JSON.stringify(despatchRecords));
+    localStorage.setItem('despatch_data', JSON.stringify(despatchData));
+
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let clean = designNo ? designNo.toString().replace('#', '').trim().toLowerCase() : '';
+    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || designNo;
+    
+    if(!designSpecs[specKey]) designSpecs[specKey] = {};
+    designSpecs[specKey].status = statusText;
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+
+    try {
+        if (window.supabaseSave) {
+            await window.supabaseSave('despatch_records', despatchRecords);
+            await window.supabaseSave('despatch_data', despatchData);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+        if (window.supabaseSaveIndividual) {
+            await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+        }
+    } catch(e) {
+        console.error("supabase Sync Error: ", e);
+    }
+
+    updateDespatchTable();
+    alert(`Design ${designNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
+}
+
+async function saveDespatchEntry() {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+
+    var date = document.getElementById('despatch_date').value;
+    var invoiceNo = document.getElementById('invoice_no').value.trim();
+    var partyName = document.getElementById('despatch_party').value.trim();
+    var isCompleted = document.getElementById('top_completed_status').checked;
+
+    if(!invoiceNo || !partyName) {
+        alert('தயவுசெய்து Invoice Number மற்றும் Party Name ஆகியவற்றை நிரப்பவும்!');
+        return;
+    }
+
+    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    let firstRowDesign = document.querySelector('.item-design');
+    let currentDesignNo = firstRowDesign ? firstRowDesign.value : '';
+    
+    if(editingIndex === null && currentDesignNo) {
+        let alreadyExists = despatchList.some(entry => 
+            entry.items && entry.items.some(i => (i.designNo || '').toString().replace('#','').trim().toLowerCase() === currentDesignNo.toString().replace('#','').trim().toLowerCase())
+        );
+        
+        if(alreadyExists) {
+            let confirmReEntry = confirm("இந்த டிசைனுக்கு ஏற்கனவே என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?");
+            if(!confirmReEntry) return;
+        }
+    }
+
+    var items = [];
+    var despatchRecords = JSON.parse(localStorage.getItem('despatch_records')) || [];
+    let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+    let savePromises = [];
+
+    document.querySelectorAll('.item-row').forEach(function(row) {
+        let dNo = row.querySelector('.item-design').value;
+        let desMtr = row.querySelector('.item-des-mtr').value.trim();
+
+        items.push({
+            designNo: dNo,
+            baleNo: row.querySelector('.item-bale').value.trim(),
+            noOfBales: row.querySelector('.item-no-bales').value.trim(),
+            orderMtr: row.querySelector('.item-ord-mtr').value.trim(),
+            despatchedMtr: desMtr,
+            balanceMtr: row.querySelector('.item-bal-mtr').value.trim(),
+            excessMtr: row.querySelector('.item-exc-mtr').value.trim()
+        });
+
+        if(dNo) {
+            despatchRecords.push({
+                id: Date.now(),
+                date: date,
+                partyName: partyName,
+                designNo: dNo,
+                designNumber: dNo,
+                mtr: parseFloat(desMtr) || 0,
+                status: isCompleted ? 'Completed' : 'Running'
+            });
+
+            let clean = dNo ? dNo.toString().replace('#', '').trim().toLowerCase() : '';
+            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || dNo;
+            
+            if(!designSpecs[specKey]) designSpecs[specKey] = {};
+            designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
+            
+            if (window.supabaseSaveIndividual) {
+                savePromises.push(window.supabaseSaveIndividual(specKey, designSpecs[specKey]));
+            }
+        }
+    });
+
+    var entryData = {
+        id: editingIndex !== null ? despatchList[editingIndex].id : Date.now(),
+        date: date,
+        invoiceNo: invoiceNo,
+        partyName: partyName,
+        poNo: document.getElementById('despatch_po').value,
+        transportName: document.getElementById('transport_name').value.trim(),
+        lrNumber: document.getElementById('lr_number').value.trim(),
+        items: items,
+        status: isCompleted ? 'completed' : 'running'
+    };
+
+    let saveBtn = document.getElementById('saveBtn');
+    saveBtn.innerText = "Saving ☁️...";
+
+    if(editingIndex !== null) {
+        despatchList[editingIndex] = entryData;
+        editingIndex = null;
+    } else {
+        despatchList.push(entryData);
+    }
+
+    localStorage.setItem('despatch_data', JSON.stringify(despatchList));
+    localStorage.setItem('despatch_records', JSON.stringify(despatchRecords));
+    localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+    
+    if (window.supabaseSave) {
+        savePromises.push(window.supabaseSave('despatch_data', despatchList));
+        savePromises.push(window.supabaseSave('despatch_records', despatchRecords));
+        savePromises.push(window.supabaseSave('design_specs', designSpecs));
+    }
+
+    await Promise.all(savePromises);
+
+    updateDespatchTable();
+    alert('Despatch Entry Saved to Cloud Successfully! ✅☁️');
+    
+    document.getElementById('invoice_no').value = '';
+    document.getElementById('despatch_party').value = '';
+    document.getElementById('despatch_po').value = '';
+    document.getElementById('transport_name').value = '';
+    document.getElementById('lr_number').value = '';
+    document.getElementById('top_completed_status').checked = false;
+    document.getElementById('itemsContainer').innerHTML = `
+        <div class="item-row">
+            <div class="item-col-group full-width">
+                <label>Design No</label>
+                <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+            </div>
+            <div class="item-col-group">
+                <label>Bale No</label>
+                <input type="text" class="item-bale" placeholder="Bale No">
+            </div>
+            <div class="item-col-group">
+                <label>No. of Bales</label>
+                <input type="number" class="item-no-bales" placeholder="No. of Bales">
+            </div>
+            <div class="item-col-group">
+                <label>Order Mtr</label>
+                <input type="number" class="item-ord-mtr" placeholder="Order Mtr" oninput="calculateBalance(this)">
+            </div>
+            <div class="item-col-group">
+                <label>Despatched Mtr</label>
+                <input type="number" class="item-des-mtr" placeholder="Despatched" oninput="calculateBalance(this)">
+            </div>
+            <div class="item-col-group">
+                <label>Balance Mts</label>
+                <input type="text" class="item-bal-mtr" placeholder="0.00" readonly style="background: #FFFFFF; color:#10B981; font-weight:bold;">
+            </div>
+            <div class="item-col-group">
+                <label>Excess Mts</label>
+                <input type="text" class="item-exc-mtr" placeholder="0.00" readonly style="background: #FFFFFF; color:#D32F2F; font-weight:bold;">
+            </div>
+            <button type="button" class="add-item-btn" onclick="addItemRow()">➕ Add More Items</button>
+        </div>
+    `;
+    loadDesignDropdowns();
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('despatch_date').value = today;
+    saveBtn.innerText = "Save Despatch Entry";
+}
+
+function updateDespatchTable() {
+    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    var tbody = document.querySelector('#despatchTable tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+
+    despatchList.slice().reverse().forEach(function(entry, originalIndexRev) {
+        let index = despatchList.length - 1 - originalIndexRev;
+        if(!entry.status) entry.status = "running";
+        let statusColor = entry.status == 'running' ? '#D97706' : '#10B981';
+        let statusBtn = entry.status == 'running' 
+            ? `<button class="action-complete" onclick="toggleStatus(${index}, 'completed')">Complete</button>` 
+            : `<button class="action-running" onclick="toggleStatus(${index}, 'running')">Running</button>`;
+
+        if(entry.items && entry.items.length > 0) {
+            entry.items.forEach(function(item, itemIdx) {
+                var row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td>${entry.invoiceNo}</td>
+                    <td>${entry.partyName}</td>
+                    <td><b>${item.designNo || '-'}</b></td>
+                    <td>${item.baleNo || '-'}</td>
+                    <td>${item.noOfBales || '-'}</td>
+                    <td>${item.despatchedMtr || '-'}</td>
+                    <td style="color:#10B981; font-weight:bold;">${item.balanceMtr || '0.00'}</td>
+                    <td style="color:#D32F2F; font-weight:bold;">${item.excessMtr || '0.00'}</td>
+                    <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${entry.status}</td>
+                    <td style="white-space:nowrap;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            ${itemIdx === 0 ? statusBtn : ''}
+                            ${itemIdx === 0 ? `<button class="action-edit" onclick="editDespatch(${index})">Edit</button>` : ''}
+                            ${itemIdx === 0 ? `<button class="action-del" onclick="deleteDespatch(${index})">Del</button>` : ''}
+                        </div>
+                    </td>
+                `;
+            });
+        }
+    });
+}
+
+async function toggleStatus(index, newStatus) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+    let msg = newStatus === 'completed' ? "Indha despatch entry-ai Completed-aga maatranuma?" : "Indha despatch entry-ai Running-ku maatranuma?";
+    if(confirm(msg)) {
+        var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+        despatchList[index].status = newStatus;
+        localStorage.setItem('despatch_data', JSON.stringify(despatchList));
+
+        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+        if(despatchList[index].items && despatchList[index].items.length > 0) {
+            for (let item of despatchList[index].items) {
+                if(item.designNo) {
+                    let clean = item.designNo.toString().replace('#', '').trim().toLowerCase();
+                    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || item.designNo;
+                    if(!designSpecs[specKey]) designSpecs[specKey] = {};
+                    designSpecs[specKey].status = newStatus;
+                    if(window.supabaseSaveIndividual) {
+                        await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
+                    }
+                }
+            }
+        }
+        
+        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+        if(window.supabaseSave) {
+            await window.supabaseSave('despatch_data', despatchList);
+            await window.supabaseSave('design_specs', designSpecs);
+        }
+
+        updateDespatchTable();
+    }
+}
+
+function editDespatch(index) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+    closeModal('despatchListModal'); 
+    if(confirm("Indha despatch entry-ai edit pannanuma?")) {
+        var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+        var entry = despatchList[index];
+        editingIndex = index;
+
+        document.getElementById('despatch_date').value = entry.date;
+        document.getElementById('invoice_no').value = entry.invoiceNo;
+        document.getElementById('despatch_party').value = entry.partyName;
+        document.getElementById('despatch_po').value = entry.poNo || '';
+        document.getElementById('transport_name').value = entry.transportName || '';
+        document.getElementById('lr_number').value = entry.lrNumber || '';
+        
+        document.getElementById('top_completed_status').checked = (entry.status === 'completed');
+
+        var container = document.getElementById('itemsContainer');
+        container.innerHTML = '';
+        if(entry.items && entry.items.length > 0) {
+            entry.items.forEach(function(item, idx) {
+                if(idx === 0) {
+                    container.innerHTML = `
+                        <div class="item-row">
+                            <div class="item-col-group full-width">
+                                <label>Design No</label>
+                                <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+                            </div>
+                            <div class="item-col-group">
+                                <label>Bale No</label>
+                                <input type="text" class="item-bale" placeholder="Bale No" value="${item.baleNo || ''}">
+                            </div>
+                            <div class="item-col-group">
+                                <label>No. of Bales</label>
+                                <input type="number" class="item-no-bales" placeholder="No. of Bales" value="${item.noOfBales || ''}">
+                            </div>
+                            <div class="item-col-group">
+                                <label>Order Mtr</label>
+                                <input type="number" class="item-ord-mtr" placeholder="Order Mtr" value="${item.orderMtr || ''}" oninput="calculateBalance(this)">
+                            </div>
+                            <div class="item-col-group">
+                                <label>Despatched Mtr</label>
+                                <input type="number" class="item-des-mtr" placeholder="Despatched" value="${item.despatchedMtr || ''}" oninput="calculateBalance(this)">
+                            </div>
+                            <div class="item-col-group">
+                                <label>Balance Mts</label>
+                                <input type="text" class="item-bal-mtr" placeholder="0.00" value="${item.balanceMtr || ''}" readonly style="background: #FFFFFF; color:#10B981; font-weight:bold;">
+                            </div>
+                            <div class="item-col-group">
+                                <label>Excess Mts</label>
+                                <input type="text" class="item-exc-mtr" placeholder="0.00" value="${item.excessMtr || ''}" readonly style="background: #FFFFFF; color:#D32F2F; font-weight:bold;">
+                            </div>
+                            <button type="button" class="add-item-btn" onclick="addItemRow()">➕ Add More Items</button>
+                        </div>
+                    `;
+                    loadDesignDropdowns();
+                    let dVal = item.designNo || '';
+                    document.querySelector('.item-design').value = dVal;
+                    onDesignSelect(dVal);
+                } else {
+                    addItemRow(item.designNo, item.baleNo, item.noOfBales, item.orderMtr, item.despatchedMtr, item.balanceMtr, item.excessMtr);
+                }
+            });
+        }
+
+        document.getElementById('saveBtn').innerText = "Update Despatch Entry";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+async function deleteDespatch(index) {
+    if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
+    if(confirm("Indha despatch entry-ai delete pannanuma?")) {
+        var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+        despatchList.splice(index, 1);
+        localStorage.setItem('despatch_data', JSON.stringify(despatchList));
+        
+        if(window.supabaseSave) {
+            await window.supabaseSave('despatch_data', despatchList);
+        }
+
+        updateDespatchTable();
+    }
+}
+
+function exportToExcel() {
+    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    if(despatchList.length === 0) {
+        alert('Export செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,Date,Invoice No,Party Name,PO No,Transport Name,LR Number,Design No,Bale No,No. of Bales,Order Mtr,Despatched Mtr,Balance Mtr,Excess Mtr\r\n";
+    
+    despatchList.forEach(function(entry) {
+        entry.items.forEach(function(item) {
+            let row = [
+                entry.date,
+                entry.invoiceNo,
+                `"${entry.partyName}"`,
+                entry.poNo,
+                `"${entry.transportName}"`,
+                entry.lrNumber,
+                item.designNo,
+                item.baleNo,
+                item.noOfBales,
+                item.orderMtr,
+                item.despatchedMtr,
+                item.balanceMtr,
+                item.excessMtr
+            ].join(",");
+            csvContent += row + "\r\n";
+        });
+    });
+
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "despatch_details.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function escPrint(v) {
+    return (v === null || v === undefined ? '' : String(v))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function printDespatchList() {
+    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    if (despatchList.length === 0) {
+        alert('Print செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+
+    var cell = 'border:1px solid #D1DED1; padding:6px; text-align:center;';
+    var headers = ['Date', 'Invoice No', 'Party', 'Design', 'Bale No', 'No Bales',
+                   'Despatched', 'Balance', 'Excess', 'Status'];
+
+    var headHtml = '<tr>' + headers.map(function (h) {
+        return '<th style="' + cell + ' background:#EAF0EA; color:#2F4F38; font-weight:700;">' + h + '</th>';
+    }).join('') + '</tr>';
+
+    var rowsHtml = '';
+    despatchList.forEach(function (entry) {
+        (entry.items || []).forEach(function (item) {
+            rowsHtml += '<tr>' +
+                '<td style="' + cell + '">' + escPrint(entry.date) + '</td>' +
+                '<td style="' + cell + '">' + escPrint(entry.invoiceNo) + '</td>' +
+                '<td style="' + cell + '">' + escPrint(entry.partyName) + '</td>' +
+                '<td style="' + cell + ' font-weight:800; color:#2F4F38;">' + escPrint(item.designNo || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.baleNo || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.noOfBales || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.despatchedMtr || '-') + '</td>' +
+                '<td style="' + cell + ' color:#10B981; font-weight:bold;">' + escPrint(item.balanceMtr || '0.00') + '</td>' +
+                '<td style="' + cell + ' color:#D32F2F; font-weight:bold;">' + escPrint(item.excessMtr || '0.00') + '</td>' +
+                '<td style="' + cell + ' text-transform:uppercase; font-weight:bold;">' + escPrint(entry.status) + '</td>' +
+                '</tr>';
+        });
+    });
+
+    var html =
+        '<div style="background:#FFFFFF; color:#1E2B23; width:100%; font-family:\'Poppins\',sans-serif; padding:15px;">' +
+        '<h2 style="text-align:center; font-size:16px; color:#2F4F38; margin-bottom:12px; text-transform:uppercase;">Despatch Details</h2>' +
+        '<table style="width:100%; border-collapse:collapse; font-size:11px;">' +
+        '<thead>' + headHtml + '</thead>' +
+        '<tbody>' + rowsHtml + '</tbody>' +
+        '</table>' +
+        '</div>';
+
+    appPrint(html);
+}
+</script>
+</body>
+</html>

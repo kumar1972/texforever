@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Advanced Denting, Drawing & Graph Editor</title>
+
+<!-- supabase -->
+<script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-app-compat.js"></script>
+<script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="printer.js"></script>
+<!-- Pre-Stock JS Link -->
+<script src="pre_stock.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+
+html,body{width:100%;min-height:100vh;background:#030712;color:#1E2B23;}
+
+body{padding:12px;display:flex;flex-direction:column;align-items:center;}
+
+.container{
+    width:100%;max-width:900px;background:#fff;padding:20px;border-radius:20px;
+    box-shadow:0 10px 35px rgba(30,43,35,.06);border:1px solid rgba(82,110,81,.15);
+    display:flex;flex-direction:column;gap:16px;transition:0.3s;
+}
+
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.header h1{
+    font-size:18px;margin-bottom:5px;font-weight:800;color:#D1DED1;text-align:center;
+    text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #EAF0EA;padding-bottom:12px;margin:0 auto;
+}
+.back-btn{
+    display:inline-flex;align-items:center;gap:5px;color:#fff;text-decoration:none;
+    font-weight:600;font-size:11px;background:#1A2421;padding:8px 16px;border-radius:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.action-bar{display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1fr;gap:10px;margin-top:5px;}
+.action-bar button{
+    color:#fff;border:0;padding:12px 16px;border-radius:8px;font-weight:700;cursor:pointer;
+    font-size:11px;transition:.2s;box-shadow:0 4px 10px rgba(30,43,35,.1);text-transform:uppercase;
+    letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:6px;
+    text-decoration:none;text-align:center;
+}
+.btn-save-dent{background:linear-gradient(135deg,#10B981,#059669);}
+.btn-save-graph{background:linear-gradient(135deg,#3B82F6,#1D4ED8);}
+.btn-undo{background:linear-gradient(135deg,#64748B,#475569);}
+.btn-reset{background:linear-gradient(135deg,#EF4444,#DC2626);}
+
+.pm-form-box{
+    background:#F8FAF8;border:1px solid #E2E8E2;border-radius:14px;
+    padding:22px 15px 15px;position:relative;margin-bottom:12px;
+}
+.pm-label-w{font-size:11px;font-weight:700;color:#4A554A;margin-bottom:6px;display:block;}
+
+input[type="text"], input[type="number"], select {
+    width:100%;padding:12px 14px;border-radius:8px;border:1px solid #D1DED1;background:#fff;
+    color:#1E2B23;font-size:12px;font-weight:600;outline:none;
+}
+select {appearance:auto;cursor:pointer;}
+input:focus, select:focus{border-color:#4A7C59;box-shadow:0 0 0 3px rgba(74,124,89,.15);}
+
+.denting-tabs{display:flex;gap:6px;margin:6px 0 10px;position:sticky;top:0;z-index:3;background:#fff;padding:8px 0;overflow-x:auto;border-bottom:2px solid #EAF0EA;}
+.denting-tab{
+    flex:1;min-width:95px;border:1px solid #D1DED1;background:#F4F7F4;color:#4A554A;
+    border-radius:8px;padding:10px 4px;font-weight:700;font-size:11px;cursor:pointer;
+    transition:0.2s;white-space:nowrap;text-align:center;text-transform:uppercase;
+}
+.denting-tab.active{background:linear-gradient(135deg,#4A7C59,#2F4F38);color:#fff;border-color:#4A7C59;box-shadow:0 4px 10px rgba(30,43,35,.1);}
+.denting-pane{display:none;}
+.denting-pane.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.preset-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:10px;}
+.preset-grid button, .preset-grid select{
+    border:1px solid #D1DED1;background:#EAF0EA;color:#2F4F38;border-radius:8px;
+    padding:10px 4px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;
+}
+
+.manual-box{background:#fff;border:1px solid #D1DED1;border-radius:10px;padding:15px;margin-top:10px;}
+.manual-row{
+    display:grid;grid-template-columns:75px 1fr 40px;gap:8px;align-items:center;
+    background:#F8FAF8;border:1px solid #E2E8E2;border-radius:8px;padding:10px;margin-bottom:8px;
+}
+.manual-row .num{color:#2F4F38;font-weight:700;font-size:11px;text-align:left;}
+.manual-row button{height:100%;min-height:38px;border:0;border-radius:6px;background:#EF4444;color:#fff;font-weight:700;cursor:pointer;}
+.btn-add{background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:11px;}
+
+#dentingResultDisplay{background:#F8FAF8;border:1px solid #E2E8E2;padding:16px;border-radius:10px;font-size:12px;color:#1E2B23;line-height:1.8;margin-top:10px;}
+
+/* ================= GRAPH EDITOR STYLES ================= */
+#graphPaneBox{display:flex;flex-direction:column;transition:0.3s;background:#F8FAF8;border:1px solid #E2E8E2;border-radius:14px;padding:22px 15px 15px;}
+#gridEditorSection{background:#fff;border:1px solid #D1DED1;padding:15px;border-radius:10px;margin-top:10px;display:flex;flex-direction:column;flex:1;}
+.grid-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;justify-content:center;}
+.grid-controls button{background:#1A2421;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;text-transform:uppercase;}
+
+.matrix-grid-container{height:60vh;overflow:hidden;position:relative;touch-action:none;padding:10px;border:1px solid #D1DED1;border-radius:10px;background:#FAF9F6;}
+.matrix-zoom-layer{display:inline-flex;flex-direction:column;gap:4px;transform-origin:0 0;will-change:transform;}
+.matrix-row-wrapper{display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:4px;}
+.row-num{width:30px;text-align:right;color:#2F4F38;font-weight:700;font-size:12px;}
+.matrix-row{display:flex;gap:3px;}
+.matrix-cell{
+    width:32px;height:32px;background:#fff;border:1px solid #D1DED1;color:#1E2B23;
+    font-weight:700;font-size:12px;display:flex;justify-content:center;align-items:center;
+    cursor:pointer;border-radius:6px;flex-shrink:0;transition:0.1s;
+}
+.matrix-cell.active{background:#4A7C59;color:#fff;border-color:#2F4F38;box-shadow:0 2px 5px rgba(74,124,89,0.3);}
+
+.row-actions{display:flex;gap:4px;margin-left:6px;}
+.btn-action{display:flex;justify-content:center;align-items:center;width:32px;height:32px;border:0;font-weight:700;border-radius:6px;cursor:pointer;font-size:12px;flex-shrink:0;}
+.btn-action.del{background:#EF4444;color:#fff;}
+
+.col-del-row{display:flex;gap:3px;margin-left:38px;margin-bottom:6px;padding-right:40px;}
+.col-num-row{display:flex;gap:3px;margin-left:38px;margin-top:4px;}
+.col-num-cell{width:32px;flex-shrink:0;text-align:center;color:#2F4F38;font-weight:700;font-size:11px;}
+.col-ctrl-box{width:32px;display:flex;flex-direction:column;gap:2px;}
+.btn-col-act{border:0;font-weight:700;border-radius:4px;cursor:pointer;font-size:10px;height:18px;display:flex;align-items:center;justify-content:center;color:#fff;}
+.btn-col-act.copy{background:#3B82F6;flex:1;}
+.btn-col-act.paste{background:#10B981;flex:1;}
+.btn-col-act.del{background:#EF4444;width:100%;height:18px;}
+
+body.full-graph-mode .header,
+body.full-graph-mode > .container > .action-bar,
+body.full-graph-mode .denting-tabs,
+body.full-graph-mode .pm-form-box:not(#graphPaneBox){display:none !important;}
+body.full-graph-mode{padding:0;margin:0;background:#030712 !important;}
+body.full-graph-mode .container{padding:0;height:100vh;max-width:100%;border-radius:0;border:none;box-shadow:none;}
+body.full-graph-mode #graphPaneBox{height:100vh;margin:0;border-radius:0;border:none;background:#fff !important;}
+body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
+
+.matrix-grid-wrap{position:relative;flex:1;min-height:0;}
+.zoom-hint{font-size:11px;color:#4A554A;text-align:center;margin-top:8px;font-weight:600;}
+
+/* ================= HD LIVE FABRIC PREVIEW BOX ================= */
+.fabric-preview-wrap{
+    position:absolute;top:10px;right:10px;z-index:30;
+    width:160px;background:#fff;
+    border:2px solid #4A7C59;border-radius:10px;padding:6px;
+    box-shadow:0 10px 24px rgba(0,0,0,0.15);
+    touch-action:none;user-select:none;
+    transform-origin:top left;
+    will-change:transform;
+}
+.fp-drag-handle{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;color:#2F4F38;font-weight:700;
+    margin-bottom:6px;padding:4px 6px;border-radius:6px;
+    background:#EAF0EA;cursor:grab;
+}
+.fp-drag-handle:active{cursor:grabbing;}
+.fp-toggle-btn{
+    background:#4A7C59;border:0;color:#fff;
+    font-size:12px;cursor:pointer;padding:0 6px;
+    font-weight:700;border-radius:4px;line-height:1.2;
+}
+.canvas-container{
+    width:146px;height:146px;border-radius:6px;
+    border:1px solid #D1DED1;overflow:hidden;background:#000;
+    position:relative;
+}
+.fabric-preview-wrap canvas{
+    width:100%;height:100%;display:block;
+    pointer-events:none;image-rendering:pixelated;
+}
+.fabric-preview-wrap.minimized .canvas-container{display:none;}
+.fabric-preview-wrap.minimized{width:auto;padding:4px 8px;}
+
+.print-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000000;justify-content:center;align-items:center;padding:10px;}
+.print-sheet{background:#fff;color:#000;padding:20px;border-radius:10px;width:100%;max-width:94vw;max-height:95vh;overflow:auto;}
+.print-controls{display:flex;gap:8px;justify-content:flex-end;margin-top:15px;}
+.print-controls button{border:0;padding:10px 15px;border-radius:6px;color:#fff;font-weight:bold;cursor:pointer;}
+
+@media print{
+    body{background:#fff !important;color:#000 !important;padding:0 !important;}
+    .container, .header, .action-bar, .denting-tabs, .pm-form-box{display:none !important;}
+    body.printing-graph #printModalBox{display:flex !important;position:static !important;background:#fff !important;padding:0 !important;}
+    .print-sheet{box-shadow:none !important;max-width:100% !important;}
+    .print-hide{display:none !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <a href="dashboard.html" class="back-btn">← Back</a>
+        <h1>📐 Denting, Drawing & Graph Editor</h1>
+        <div style="width: 60px;"></div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar" style="grid-template-columns: 1.2fr 1.2fr 1fr 1fr;">
+        <button class="btn-save-dent" onclick="saveDentingDrawingData()">💾 Save Dent/Draw</button>
+        <button class="btn-undo" onclick="undoData()">↩️ Undo</button>
+        <button class="btn-reset" onclick="resetData()">🗑️ Reset</button>
+    </div>
+
+    <!-- 1. TOP DESIGN DROPDOWN -->
+    <div class="pm-form-box top-config-box">
+        <label class="pm-label-w">🎨 Select Design</label>
+        <select id="designSelect" onchange="loadSelectedDesign()">
+            <option value="">-- Load Saved Design --</option>
+        </select>
+    </div>
+
+    <div class="pm-form-box top-config-box" style="display:flex; justify-content:space-between; align-items:center;">
+        <label class="pm-label-w" style="margin:0;">Total Warp Ends (Auto Calculated):</label>
+        <input type="number" id="totalWarpEnds" value="82" style="width:100px; text-align:center; height:38px; padding:4px;" oninput="calculateAdvancedDenting()">
+    </div>
+
+    <div class="denting-tabs">
+        <button class="denting-tab active" id="dentTabBtn" onclick="showDentingPane('dent')">📐 Denting</button>
+        <button class="denting-tab" id="drawTabBtn" onclick="showDentingPane('draw')">🧵 Drawing</button>
+        <button class="denting-tab" id="graphTabBtn" onclick="showDentingPane('graph')">🕸️ Weave Graph</button>
+        <button class="denting-tab" id="advTabBtn" onclick="showDentingPane('adv')">📊 Summary</button>
+    </div>
+
+    <!-- DENTING PANE -->
+    <div id="dentPane" class="denting-pane active">
+        <div class="pm-form-box">
+            <label class="pm-label-w">Denting Pattern (Short-hand)</label>
+            <input type="text" id="dentingPatternInput" value="2" oninput="saveHistory(); calculateAdvancedDenting(); buildManualDentingEditor(); buildGridEditor();">
+            <div class="preset-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <button onclick="setDentPreset('2')">2 per Dent</button>
+                <button onclick="setDentPreset('3')">3 per Dent</button>
+                <button onclick="setDentPreset('4')">4 per Dent</button>
+            </div>
+            <div style="font-size:11px; color:#4A554A; line-height:1.6; margin-top:10px; font-weight:600;">
+                <b>0</b> = Missing / Empty Dent. நேரடியாக உங்கள் பார்முலாவை (உதாரணம்: <b>2,2,0,3</b>) மேலே டைப் செய்யவும்.
+            </div>
+        </div>
+        <div class="manual-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <b style="font-size:12px; color:#2F4F38;">Manual Denting Order</b>
+                <button class="btn-add" onclick="addDentingManualRow()">➕ Add Dent</button>
+            </div>
+            <div id="dentingManualRows"></div>
+        </div>
+    </div>
+
+    <!-- DRAWING PANE -->
+    <div id="drawPane" class="denting-pane">
+        <div class="pm-form-box">
+            <label class="pm-label-w">Drawing / Frame Order</label>
+            <input type="text" id="drawingPatternInput" value="1,2,3,4" oninput="saveHistory(); calculateAdvancedDenting(); buildManualDrawingEditor(); buildGridEditor();">
+            <div class="preset-grid">
+                <button onclick="setDrawingPreset('1,2,3,4')">1-2-3-4</button>
+                <select id="frameDropdown" onchange="generateFramesFromDropdown()">
+                    <option value="">-- Select Frames --</option>
+                    <option value="1">1 Frame</option>
+                    <option value="2">2 Frames</option>
+                    <option value="3">3 Frames</option>
+                    <option value="4">4 Frames</option>
+                    <option value="5">5 Frames</option>
+                    <option value="6">6 Frames</option>
+                    <option value="7">7 Frames</option>
+                    <option value="8">8 Frames</option>
+                    <option value="9">9 Frames</option>
+                    <option value="10">10 Frames</option>
+                    <option value="11">11 Frames</option>
+                    <option value="12">12 Frames</option>
+                    <option value="13">13 Frames</option>
+                    <option value="14">14 Frames</option>
+                </select>
+                <button onclick="setDrawingPreset('1,2,3,4,3,2')">Return</button>
+            </div>
+        </div>
+        <div class="manual-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <b style="font-size:12px; color:#2F4F38;">Manual Drawing Order</b>
+                <button class="btn-add" onclick="addDrawingManualRow()">➕ Add Frame</button>
+            </div>
+            <div id="drawingManualRows"></div>
+        </div>
+    </div>
+
+    <!-- GRAPH PANE -->
+    <div id="graphPane" class="denting-pane">
+        <div class="pm-form-box" id="graphPaneBox" style="margin-bottom: 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="pm-label-w" style="margin:0;">Weave Type / Full Page Graph Editor</label>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:#2F4F38; font-size:11px; margin:0; font-weight:700;">
+                    <input type="checkbox" id="fsGraphCheck" onchange="toggleGraphFullscreen()" style="width:16px; height:16px; accent-color:#4A7C59; cursor:pointer;"> Full Screen
+                </label>
+            </div>
+            
+            <!-- Weave Type Dropdown -->
+            <select id="weaveType" onchange="onWeaveChange()" style="margin-top:8px;">
+            </select>
+
+            <div id="gridEditorSection" style="display:flex;">
+                <div class="grid-controls">
+                    <button onclick="addCol()">➕ Col</button>
+                    <button onclick="addRowTop()">➕ Row</button>
+                    <button onclick="removeLastRow()">➖ Row</button>
+                    <button onclick="removeLastCol()">➖ Col</button>
+                    <button onclick="copyFullGraph()" style="background:#F59E0B; color:#000;">📋 Copy Graph</button>
+                    <button onclick="pasteFullGraph()" style="background:#10B981; color:#fff;">📋 Paste Graph</button>
+                    <button onclick="saveGraphDataOnly()" style="background:#10B981; color:#fff;">💾 Save Graph</button>
+                </div>
+                
+                <div style="margin-bottom:10px; background:#F8FAF8; padding:10px; border-radius:8px; border:1px solid #E2E8E2;">
+                    <label class="pm-label-w" style="color:#2F4F38; font-size:11px;">↔️ Weft (Pick) Repeats Formula</label>
+                    <input type="text" id="pickPatternInput" placeholder="Eg: (1-4)" style="font-size:12px; padding:8px;" oninput="saveHistory(); buildGridEditor();">
+                </div>
+
+                <div class="matrix-grid-wrap">
+                    <div id="matrixGridContainer" class="matrix-grid-container">
+                        <div id="matrixZoomLayer" class="matrix-zoom-layer"></div>
+                    </div>
+
+                    <!-- LIVE VIEW BOX -->
+                    <div class="fabric-preview-wrap" id="fabricPreviewWrap">
+                        <div class="fp-drag-handle" id="fpDragHandle">
+                            <span>⠿ Live Weave</span>
+                            <button class="fp-toggle-btn" onclick="toggleLivePreview(event)" title="Minimize / Open">−</button>
+                        </div>
+                        <div class="canvas-container" id="fpCanvasBox">
+                            <canvas id="fabricPreviewCanvas" width="220" height="220"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="zoom-hint">✌️ Pinch to zoom • ☝️ Drag to pan the grid • Live preview-ஐ pinch செய்து பெரிதாக்கலாம்</div>
+                
+                <div style="font-size:11px; color:#4A554A; text-align:center; margin-top:8px; font-weight:600;">
+                    1 = Warp Up • 0 = Weft Up • Column-ல் C=Copy, P=Paste
+                </div>
+
+                <div class="action-bar" style="grid-template-columns: 1fr; margin-top:10px;">
+                    <button style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);" onclick="openGraphPrintPreview()">🖨️ Print Full Graph</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADVANCED PANE (SUMMARY) -->
+    <div id="advPane" class="denting-pane">
+        <div class="pm-form-box" style="padding: 15px;">
+            <h3 style="color:#2F4F38; font-size: 14px; margin-bottom: 15px; border-bottom: 2px solid #EAF0EA; padding-bottom: 8px; font-weight:800;">📊 Final Calculation Summary</h3>
+            <div id="dentingResultDisplay"></div>
+        </div>
+    </div>
+</div>
+
+<!-- GRAPH PRINT MODAL -->
+<div id="printModalBox" class="print-modal">
+    <div class="print-sheet">
+        <h3 style="text-align:center;margin-bottom:15px;color:#000;">Weave Graph Matrix Design</h3>
+        <div id="printTableContainer" style="overflow-x:auto; -webkit-overflow-scrolling:touch;"></div>
+        <div class="print-controls print-hide">
+            <button style="background:#2e7d32" onclick="window.print()">Print Graph</button>
+            <button style="background:#5c3a3a" onclick="closeGraphPrintPreview()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const TFDB = {
+        get(k) {
+            let v = null;
+            try { if (window.StorageDB) v = window.StorageDB.getItem(k); } catch(e) {}
+            if (v === null || v === undefined || v === "" || v === "[]" || v === "{}") {
+                let old = null;
+                try { old = localStorage.getItem(k); } catch(e) {}
+                if (old !== null && old !== undefined && old !== "") return old;
+            }
+            return v === undefined ? null : v;
+        },
+        set(k, v) { if (window.StorageDB) window.StorageDB.setItem(k, v); else localStorage.setItem(k, v); }
+    };
+
+    function safeJSON(key, fallback=null) { 
+        try { const raw = TFDB.get(key); return raw ? JSON.parse(raw) : fallback; } 
+        catch(e) { return fallback; } 
+    }
+
+    function safeLocalStorageSet(key, value) {
+        try {
+            TFDB.set(key, value);
+            return true;
+        } catch (e) {
+            console.error("LocalStorage save error:", key, e);
+            return false;
+        }
+    }
+
+    let historyStack = [];
+    let allCloudDesigns = [];
+    let activeDesignObj = null;
+    let copiedColData = null;
+
+    let weavePatterns = {
+        custom: [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
+    };
+
+    function cleanDesignName(str) { 
+        return str !== undefined && str !== null ? String(str).replace(/[#_]/g, '').replace(/\s+/g, '').trim().toLowerCase() : ''; 
+    }
+    function designName(d) { 
+        return String(d?.designNo ?? d?.design_no ?? d?.designNumber ?? d?.design_number ?? d?.name ?? d?.design ?? d?.id ?? "Unnamed").trim(); 
+    }
+
+    function resolveSelectedDesign() {
+        const selEl = document.getElementById("designSelect");
+        if (!selEl) return activeDesignObj || null;
+        const val = String(selEl.value ?? "").trim();
+        const findByName = (nm) => {
+            const c = cleanDesignName(nm);
+            return c ? (allCloudDesigns.find(d => cleanDesignName(designName(d)) === c) || null) : null;
+        };
+
+        if (val !== "" && /^\d+$/.test(val) && allCloudDesigns[Number(val)]) return allCloudDesigns[Number(val)];
+        if (val !== "") { const f = findByName(val); if (f) return f; }
+        const opt = selEl.options[selEl.selectedIndex];
+        const optionText = opt ? String(opt.text || "") : "";
+        const visibleName = optionText.replace(/^[^\w#]*/, "").trim();
+        const isPlaceholder = (selEl.selectedIndex <= 0) && (val === "");
+        if (!isPlaceholder) {
+            const f = findByName(visibleName);
+            if (f) return f;
+        }
+        if (activeDesignObj) return activeDesignObj;
+        const last = TFDB.get("selected_design_number") || TFDB.get("weave_last_design_name");
+        if (last) { const f = findByName(last); if (f) return f; }
+        if (!isPlaceholder && visibleName) return { designNo: visibleName, name: visibleName };
+        return null;
+    }
+    
+    function saveHistory() {
+        historyStack.push({
+            dent: document.getElementById("dentingPatternInput").value,
+            draw: document.getElementById("drawingPatternInput").value,
+            pick: document.getElementById("pickPatternInput").value,
+            type: document.getElementById("weaveType").value,
+            matrix: JSON.parse(JSON.stringify(weavePatterns.custom))
+        });
+        if(historyStack.length > 20) historyStack.shift(); 
+    }
+
+    function undoData() {
+        if(historyStack.length > 0) {
+            let lastState = historyStack.pop();
+            document.getElementById("dentingPatternInput").value = lastState.dent;
+            document.getElementById("drawingPatternInput").value = lastState.draw;
+            document.getElementById("pickPatternInput").value = lastState.pick || "";
+            document.getElementById("weaveType").value = lastState.type;
+            weavePatterns.custom = lastState.matrix;
+            onWeaveChange();
+            updateAll();
+        } else {
+            alert("Nothing to undo!");
+        }
+    }
+
+    function resetData() {
+        if(confirm("Are you sure you want to delete/reset the pattern & graph?")) {
+            saveHistory();
+            document.getElementById("dentingPatternInput").value = "2";
+            document.getElementById("drawingPatternInput").value = "1,2,3,4";
+            document.getElementById("pickPatternInput").value = "(1-2)";
+            document.getElementById("weaveType").value = "defulat";
+            weavePatterns.custom = [[1,0], [0,1]];
+            onWeaveChange();
+            updateAll();
+        }
+    }
+
+    function populateWeaveTypeDropdown(selectVal) {
+        let sel = document.getElementById("weaveType");
+        let currentVal = selectVal || sel.value || "defulat";
+        let html = '';
+
+        if (typeof preDefinedDesigns !== 'undefined' && Object.keys(preDefinedDesigns).length > 0) {
+            for (let key in preDefinedDesigns) {
+                html += `<option value="${key}">${preDefinedDesigns[key].name}</option>`;
+            }
+        } else {
+            html += `<option value="defulat">Default Plain</option>`;
+            html += `<option value="w_44plain14">4/4 Plain</option>`;
+            html += `<option value="twill89">2/2 Twill</option>`;
+            html += `<option value="twill42">2/1 Twill</option>`;
+        }
+
+        html += `<option value="custom">🛠️ Custom Graph Grid</option>`;
+
+        sel.innerHTML = html;
+        if(sel.querySelector(`option[value="${currentVal}"]`)) {
+            sel.value = currentVal;
+        } else {
+            sel.value = sel.options[0]?.value || "custom";
+        }
+    }
+
+    function showDentingPane(name) {
+        ["dent","draw","graph","adv"].forEach(x => {
+            let pane = document.getElementById(x+"Pane");
+            if(pane) pane.classList.toggle("active", x === name);
+        });
+        document.getElementById("dentTabBtn").classList.toggle("active", name === "dent");
+        document.getElementById("drawTabBtn").classList.toggle("active", name === "draw");
+        document.getElementById("graphTabBtn").classList.toggle("active", name === "graph");
+        document.getElementById("advTabBtn").classList.toggle("active", name === "adv");
+
+        if(name === 'graph') {
+            const chk = document.getElementById("fsGraphCheck");
+            if(chk && !chk.checked) {
+                document.body.classList.remove('full-graph-mode');
+            }
+            populateWeaveTypeDropdown(document.getElementById("weaveType")?.value);
+            onWeaveChange();
+        }
+        
+        calculateAdvancedDenting();
+    }
+
+    function toggleGraphFullscreen() {
+        let chk = document.getElementById("fsGraphCheck");
+        if(chk && chk.checked) {
+            document.body.classList.add('full-graph-mode');
+        } else {
+            document.body.classList.remove('full-graph-mode');
+        }
+    }
+
+    function safeJSONParse(key, fallback) {
+        try {
+            const raw = TFDB.get(key);
+            if (!raw) return fallback;
+            const parsed = JSON.parse(raw);
+            return parsed === null || parsed === undefined ? fallback : parsed;
+        } catch (e) {
+            console.error("Corrupt localStorage key '" + key + "', resetting to default.", e);
+            return fallback;
+        }
+    }
+
+    function loadDesignList() {
+        let local = safeJSONParse("design_masters_data", []);
+        let cache = safeJSONParse("weave_designs_cache", []);
+        let localEdits = safeJSONParse("local_edits_cache", {});
+        let warpEntry = safeJSONParse("warp_entry_data", []);
+        let dentDrawData = safeJSONParse("denting_drawing_data", []);
+        if (!Array.isArray(local)) local = [];
+        if (!Array.isArray(cache)) cache = [];
+        if (!localEdits || typeof localEdits !== "object") localEdits = {};
+        if (!Array.isArray(warpEntry)) warpEntry = [];
+        if (!Array.isArray(dentDrawData)) dentDrawData = [];
+
+        let map = new Map();
+        [...cache, ...local, ...warpEntry, ...dentDrawData].forEach(d => {
+            if(!d) return;
+            let n = cleanDesignName(designName(d));
+            if(n) {
+                let existing = map.get(n) || {};
+                let bestEdit = findLatestEdit(localEdits, n);
+                let editObj = bestEdit ? bestEdit.obj : {};
+                map.set(n, { ...existing, ...d, ...editObj });
+            }
+        });
+        allCloudDesigns = Array.from(map.values());
+        
+        let sel = document.getElementById("designSelect");
+        sel.innerHTML = '<option value="">-- Load Saved Design --</option>';
+        allCloudDesigns.forEach((d, i) => {
+            let n = designName(d);
+            sel.innerHTML += `<option value="${i}">🎨 ${n}</option>`;
+        });
+
+        let last = TFDB.get("selected_design_number") || TFDB.get("weave_last_design_name");
+        if(last) {
+            let cleanLast = cleanDesignName(last);
+            let idx = allCloudDesigns.findIndex(d => cleanDesignName(designName(d)) === cleanLast);
+            if(idx >= 0) {
+                sel.value = idx;
+                loadSelectedDesign();
+            }
+        }
+    }
+
+    function loadSelectedDesign() {
+        let sel = document.getElementById("designSelect").value;
+        if (sel === "") return;
+        activeDesignObj = allCloudDesigns[sel];
+        
+        if(activeDesignObj) {
+            let dName = designName(activeDesignObj);
+            let cleanTargetName = cleanDesignName(dName);
+
+            let foundEdits = null;
+            try {
+                let editsCache = JSON.parse(TFDB.get("local_edits_cache") || "{}");
+                let bestEdit = findLatestEdit(editsCache, cleanTargetName);
+                if(bestEdit) foundEdits = bestEdit.obj;
+            } catch(e) {}
+
+            let warpMatch = null;
+            try {
+                let parsedW = JSON.parse(TFDB.get("warp_entry_data") || "[]");
+                if(Array.isArray(parsedW)){
+                    warpMatch = parsedW.find(w => cleanDesignName(designName(w)) === cleanTargetName);
+                }
+            } catch(e) {}
+
+            let dentDrawMatch = null;
+            try {
+                let parsedDD = JSON.parse(TFDB.get("denting_drawing_data") || "[]");
+                if(Array.isArray(parsedDD)){
+                    dentDrawMatch = parsedDD.find(w => cleanDesignName(designName(w)) === cleanTargetName);
+                }
+            } catch(e) {}
+
+            let sourceObj = { 
+                ...activeDesignObj, 
+                ...(warpMatch || {}),
+                ...(dentDrawMatch || {}),
+                ...(foundEdits || {}) 
+            };
+
+            let total = calculateWarpEnds(sourceObj);
+            if(total > 0) {
+                document.getElementById("totalWarpEnds").value = total;
+            }
+
+            let matrixToUse = sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph;
+            if(matrixToUse && Array.isArray(matrixToUse) && matrixToUse.length > 0) {
+                weavePatterns.custom = JSON.parse(JSON.stringify(matrixToUse));
+                populateWeaveTypeDropdown("custom");
+                document.getElementById("weaveType").value = "custom";
+            } else {
+                let type = sourceObj.type ? String(sourceObj.type).trim().toLowerCase() : "custom";
+                populateWeaveTypeDropdown(type);
+                document.getElementById("weaveType").value = type;
+                if(typeof preDefinedDesigns !== 'undefined' && preDefinedDesigns[type]) {
+                    weavePatterns.custom = JSON.parse(JSON.stringify(preDefinedDesigns[type].matrix));
+                }
+            }
+
+            let mCols = (weavePatterns.custom && weavePatterns.custom[0]) ? weavePatterns.custom[0].length : 4;
+
+            let dentVal = sourceObj.dentingPatternFormula || sourceObj.dentingPattern || "2";
+            let drawVal = sourceObj.drawingPatternFormula || sourceObj.drawingPattern || "";
+            let pickVal = sourceObj.pickPattern || "";
+
+            if (!drawVal || (drawVal === "1,2,3,4" && mCols > 4)) {
+                let autoArr = [];
+                for(let f=1; f<=mCols; f++) autoArr.push(f);
+                drawVal = autoArr.join(",");
+            }
+
+            document.getElementById("dentingPatternInput").value = dentVal;
+            document.getElementById("drawingPatternInput").value = drawVal;
+            document.getElementById("pickPatternInput").value = pickVal || `(1-${weavePatterns.custom.length})`;
+
+            buildGridEditor();
+            updateAll();
+        }
+    }
+
+    function syncPickFormulaWithRowCount() {
+        let m = weavePatterns.custom;
+        if (!m || !m.length) return;
+        document.getElementById("pickPatternInput").value = `(1-${m.length})`;
+    }
+
+    function onWeaveChange() {
+        let t = document.getElementById("weaveType").value;
+        if (t !== "custom" && typeof preDefinedDesigns !== 'undefined' && preDefinedDesigns[t]) {
+            weavePatterns.custom = JSON.parse(JSON.stringify(preDefinedDesigns[t].matrix));
+            syncPickFormulaWithRowCount();
+            
+            let mCols = weavePatterns.custom[0]?.length || 4;
+            let autoArr = [];
+            for(let f=1; f<=mCols; f++) autoArr.push(f);
+            document.getElementById("drawingPatternInput").value = autoArr.join(",");
+        }
+        buildGridEditor();
+        updateAll();
+    }
+
+    function calculateWarpEnds(d) {
+        let total = 0;
+        let warpLines = d.warpLines || d.warp || [];
+        let wRanges = d.warpRanges || [];
+        if (warpLines.length === 0) {
+            for(let i=1; i<=30; i++) {
+                let ends = d[`warpEnds${i}`] || d[`warpEnd${i}`];
+                if(ends) warpLines.push({ends: ends});
+            }
+        }
+        let i = 0;
+        while(i < warpLines.length) {
+            let lineNum = i + 1;
+            let range = wRanges.find(r => parseInt(r.start) === lineNum);
+            if (range && range.end >= range.start && range.set > 1) {
+                let setSum = 0;
+                for(let j = range.start - 1; j < range.end && j < warpLines.length; j++) {
+                    let l = warpLines[j] || {};
+                    setSum += parseInt(l.ends || l.amount || l.end || l.qty || 0) || 0;
+                }
+                total += (setSum * range.set);
+                i = range.end;
+            } else {
+                let l = warpLines[i] || {};
+                total += parseInt(l.ends || l.amount || l.end || l.qty || 0) || 0;
+                i++;
+            }
+        }
+        return total;
+    }
+
+    function editStamp(o) {
+        if (!o) return 0;
+        if (typeof o._savedAt === "number") return o._savedAt;
+        const t = Date.parse(o.timestamp || "");
+        return isNaN(t) ? 0 : t;
+    }
+    
+    function findLatestEdit(editsCache, cleanTarget) {
+        let best = null;
+        Object.keys(editsCache || {}).forEach(k => {
+            const v = editsCache[k];
+            if (!v || typeof v !== "object") return;
+            if (cleanDesignName(k) === cleanTarget || cleanDesignName(designName(v)) === cleanTarget) {
+                if (!best || editStamp(v) >= editStamp(best.obj)) best = { key: k, obj: v };
+            }
+        });
+        return best;
+    }
+
+    function getLocalEditsCache() {
+        try {
+            const raw = TFDB.get("local_edits_cache") || "{}";
+            const obj = JSON.parse(raw);
+            return (obj && typeof obj === "object" && !Array.isArray(obj)) ? obj : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function getCompleteDesignState(d) {
+        const dentStr = document.getElementById("dentingPatternInput").value.trim() || "2";
+        const drawStr = document.getElementById("drawingPatternInput").value.trim() || "1,2,3,4";
+        const pickStr = document.getElementById("pickPatternInput").value.trim();
+        const wType = document.getElementById("weaveType").value || "custom";
+        const matrix = JSON.parse(JSON.stringify(weavePatterns.custom));
+        const totalWarp = parseInt(document.getElementById("totalWarpEnds").value) || 0;
+
+        return {
+            ...d,
+            dentingPattern: dentStr,
+            drawingPattern: drawStr,
+            dentingPatternFormula: dentStr,
+            drawingPatternFormula: drawStr,
+            pickPattern: pickStr,
+            type: wType,
+            customMatrix: matrix,
+            totalWarpEnds: totalWarp,
+            timestamp: new Date().toISOString(),
+            _savedAt: Date.now()
+        };
+    }
+
+    async function updateDesignStorage(d) {
+        if (!d) return false;
+        const name = String(d.designNo || d.name || designName(d) || "").trim();
+        if (!name) return false;
+
+        let cleanName = cleanDesignName(name);
+        let cloudSuccess = false;
+        let fullData = getCompleteDesignState(d);
+
+        try {
+            let edits = getLocalEditsCache();
+            const prevBest = findLatestEdit(edits, cleanName);
+            Object.keys(edits).forEach(k => {
+                const v = edits[k];
+                if (cleanDesignName(k) === cleanName || (v && cleanDesignName(designName(v)) === cleanName)) delete edits[k];
+            });
+            edits[cleanName] = { ...(prevBest ? prevBest.obj : {}), ...fullData };
+            safeLocalStorageSet("local_edits_cache", JSON.stringify(edits));
+            safeLocalStorageSet("last_edit_timestamp", Date.now().toString());
+
+            let local = JSON.parse(TFDB.get("design_masters_data") || "[]");
+            if (!Array.isArray(local)) local = [];
+
+            let mergedMaster = {};
+            local.forEach(x => { if (x && cleanDesignName(designName(x)) === cleanName) mergedMaster = { ...mergedMaster, ...x }; });
+            local = local.filter(x => !(x && cleanDesignName(designName(x)) === cleanName));
+            local.push({ ...mergedMaster, ...fullData });
+            safeLocalStorageSet("design_masters_data", JSON.stringify(local));
+
+            ["weave_designs", "weave_designs_cache", "denting_drawing_data"].forEach(key => {
+                try {
+                    let list = JSON.parse(TFDB.get(key) || "[]");
+                    if (Array.isArray(list)) {
+                        let filtered = list.filter(x => cleanDesignName(designName(x)) !== cleanName);
+                        filtered.push(fullData);
+                        safeLocalStorageSet(key, JSON.stringify(filtered));
+                    }
+                } catch(e) {}
+            });
+
+            if (typeof window.supabaseSave === "function") {
+                await window.supabaseSave("design_" + cleanName, fullData);
+                await window.supabaseSave("design_masters_data", local);
+                cloudSuccess = (window.supabaseConnected === true || navigator.onLine === true);
+            }
+        } catch (localErr) {
+            console.error(localErr);
+            return false;
+        }
+
+        return cloudSuccess;
+    }
+
+    async function saveDentingDrawingData() {
+        const dentStr = document.getElementById("dentingPatternInput").value.trim();
+        const drawStr = document.getElementById("drawingPatternInput").value.trim();
+
+        try {
+            safeLocalStorageSet("saved_denting_pattern", dentStr);
+            safeLocalStorageSet("saved_drawing_pattern", drawStr);
+
+            const d = resolveSelectedDesign();
+            if (d) {
+                let isCloudSaved = await updateDesignStorage(d);
+                calculateAdvancedDenting();
+                if(isCloudSaved) {
+                    alert("✅ Denting & Drawing வெற்றிகரமாக Save ஆகிவிட்டது (Local & Cloud)!");
+                } else {
+                    alert("⚠️ Local-ல் Save ஆகிவிட்டது! Network கிடைத்தவுடன் Cloud-ல் Auto-Sync ஆகிவிடும்.");
+                }
+            } else {
+                alert("⚠️ Design தேர்ந்தெடுக்கப்படவில்லை!");
+            }
+        } catch (err) {
+            alert("❌ Local save failed!");
+        }
+    }
+
+    async function saveGraphDataOnly() {
+        const pickStr = document.getElementById("pickPatternInput").value.trim();
+
+        try {
+            safeLocalStorageSet("saved_pick_pattern", pickStr);
+
+            const d = resolveSelectedDesign();
+            if (d) {
+                let isCloudSaved = await updateDesignStorage(d);
+                calculateAdvancedDenting();
+                if(isCloudSaved) {
+                    alert("✅ Weave Graph வெற்றிகரமாக Save ஆகிவிட்டது (Local & Cloud)!");
+                } else {
+                    alert("⚠️ Local-ல் Save ஆகிவிட்டது! Network கிடைத்தவுடன் Cloud-ல் Auto-Sync ஆகிவிடும்.");
+                }
+            } else {
+                alert("⚠️ Design தேர்ந்தெடுக்கப்படவில்லை!");
+            }
+        } catch (err) {
+            alert("❌ Local graph save failed!");
+        }
+    }
+
+    function copyCol(c) {
+        copiedColData = weavePatterns.custom.map(row => row[c]);
+    }
+    
+    function pasteCol(c) {
+        if(!copiedColData) { alert("Please click 'C' (Copy) on a column first!"); return; }
+        saveHistory();
+        weavePatterns.custom.forEach((row, r) => {
+            row[c] = copiedColData[r];
+        });
+        buildGridEditor();
+        updateAll();
+    }
+
+    function buildGridEditor() {
+        let box = document.getElementById("matrixZoomLayer");
+        let m = weavePatterns.custom;
+        if(!Array.isArray(m) || !m.length) { weavePatterns.custom = [[1,0], [0,1]]; m = weavePatterns.custom; }
+        box.innerHTML = ""; 
+        
+        let top = document.createElement("div"); top.className = "col-del-row";
+        for(let c=0; c<(m[0]?.length||0); c++) { 
+            let ctrlBox = document.createElement("div"); ctrlBox.className = "col-ctrl-box";
+            
+            let btnGrp = document.createElement("div"); btnGrp.style.display = "flex"; btnGrp.style.gap = "2px";
+            let cBtn = document.createElement("button"); cBtn.className = "btn-col-act copy"; cBtn.textContent = "C"; cBtn.title = "Copy"; cBtn.onclick = () => copyCol(c);
+            let pBtn = document.createElement("button"); pBtn.className = "btn-col-act paste"; pBtn.textContent = "P"; pBtn.title = "Paste"; pBtn.onclick = () => pasteCol(c);
+            btnGrp.appendChild(cBtn); btnGrp.appendChild(pBtn);
+            
+            let dBtn = document.createElement("button"); dBtn.className = "btn-col-act del"; dBtn.textContent = "✕"; dBtn.title = "Delete"; dBtn.onclick = () => removeCol(c);
+            
+            ctrlBox.appendChild(btnGrp);
+            ctrlBox.appendChild(dBtn);
+            top.appendChild(ctrlBox); 
+        }
+        box.appendChild(top);
+
+        m.forEach((row,r) => {
+            let rowNum = m.length - r;
+            let wrap = document.createElement("div"); wrap.className = "matrix-row-wrapper"; 
+            
+            let rNum = document.createElement("div"); rNum.className = "row-num"; rNum.textContent = rowNum; 
+            wrap.appendChild(rNum);
+
+            let rd = document.createElement("div"); rd.className = "matrix-row";
+            row.forEach((v,c) => { 
+                let cell = document.createElement("div"); cell.className = "matrix-cell" + (v === 1 ? " active" : ""); cell.textContent = v;
+                cell.onclick = () => { 
+                    document.getElementById("weaveType").value = 'custom';
+                    saveHistory(); 
+                    m[r][c] = m[r][c] ? 0 : 1; 
+                    buildGridEditor(); 
+                    updateAll();
+                }; 
+                rd.appendChild(cell); 
+            });
+            wrap.appendChild(rd); 
+
+            let act = document.createElement("div"); act.className = "row-actions";
+            let delBtn = document.createElement("button"); delBtn.className="btn-action del"; delBtn.innerHTML="❌"; delBtn.onclick = () => {
+                document.getElementById("weaveType").value = 'custom';
+                removeRow(r);
+            };
+            act.appendChild(delBtn);
+            wrap.appendChild(act);
+            box.appendChild(wrap);
+        });
+
+        let colNums = document.createElement("div"); colNums.className = "col-num-row";
+        for(let c=0; c<(m[0]?.length||0); c++) {
+            let numBox = document.createElement("div"); numBox.className = "col-num-cell"; numBox.textContent = c+1;
+            colNums.appendChild(numBox);
+        }
+        box.appendChild(colNums);
+
+        drawFabricPreview();
+    }
+
+    function toggleLivePreview(e) {
+        if(e) e.stopPropagation();
+        const wrap = document.getElementById("fabricPreviewWrap");
+        const btn = wrap.querySelector(".fp-toggle-btn");
+        wrap.classList.toggle("minimized");
+        btn.textContent = wrap.classList.contains("minimized") ? "+" : "−";
+    }
+
+    function drawFabricPreview() {
+        const canvas = document.getElementById("fabricPreviewCanvas");
+        if(!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = "#0c1510";
+        ctx.fillRect(0, 0, W, H);
+
+        const m = weavePatterns.custom;
+        if(!Array.isArray(m) || !m.length || !m[0].length) return;
+
+        const mRows = m.length;   
+        const mCols = m[0].length; 
+
+        let warpSeq = [];
+        for(let f = 0; f < mCols; f++) warpSeq.push(f);
+        
+        let pickSeq = [];
+        for(let r = 0; r < mRows; r++) pickSeq.push(r);
+
+        const rows = pickSeq.length;   
+        const cols = warpSeq.length; 
+
+        const targetCount = 16;
+        const repX = Math.max(1, Math.round(targetCount / cols));
+        const repY = Math.max(1, Math.round(targetCount / rows));
+        
+        const totalCols = cols * repX;
+        const totalRows = rows * repY;
+        
+        const cell = Math.floor(Math.min(W / totalCols, H / totalRows));
+        const totalW = cell * totalCols;
+        const totalH = cell * totalRows;
+        
+        const offX = Math.floor((W - totalW) / 2);
+        const offY = Math.floor((H - totalH) / 2);
+
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(offX, offY, totalW, totalH);
+
+        for(let ry = 0; ry < totalRows; ry++) {
+            const matrixRowIdx = pickSeq[ry % rows];
+            const pickRow = m[matrixRowIdx];
+            if(!pickRow) continue; 
+            
+            for(let rx = 0; rx < totalCols; rx++) {
+                const frameIdx = warpSeq[rx % cols];
+                const val = pickRow[frameIdx % mCols]; 
+                
+                const x = offX + rx * cell;
+                const y = offY + ry * cell;
+                
+                if(val === 1) {
+                    ctx.fillStyle = "#10b981"; 
+                    ctx.fillRect(x + 1, y, cell - 2, cell);
+
+                    ctx.fillStyle = "#34d399";
+                    ctx.fillRect(x + 2, y, Math.max(1, cell - 5), cell);
+
+                    ctx.fillStyle = "rgba(0,0,0,0.45)";
+                    ctx.fillRect(x + cell - 1, y, 1, cell);
+                    ctx.fillRect(x, y, 1, cell);
+                } else {
+                    ctx.fillStyle = "#fef08a"; 
+                    ctx.fillRect(x, y + 1, cell, cell - 2);
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(x, y + 2, cell, Math.max(1, cell - 5));
+
+                    ctx.fillStyle = "rgba(0,0,0,0.45)";
+                    ctx.fillRect(x + cell - 1, y, 1, cell); 
+                    ctx.fillRect(x, y, 1, cell);
+                }
+            }
+        }
+        ctx.strokeStyle = "#4A7C59";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(offX, offY, totalW, totalH);
+    }
+
+    let gridZoomState = { scale: 1, tx: 0, ty: 0 };
+
+    function applyGridZoomTransform() {
+        const layer = document.getElementById("matrixZoomLayer");
+        if(layer) layer.style.transform = `translate(${gridZoomState.tx}px, ${gridZoomState.ty}px) scale(${gridZoomState.scale})`;
+    }
+
+    function setupGridZoomPan() {
+        const el = document.getElementById("matrixGridContainer");
+        if(!el || el.dataset.zoomBound) return; 
+        el.dataset.zoomBound = "1";
+
+        const pointers = new Map();
+        let startDist = 0, startScale = 1;
+        let dragStart = null, dragOrigin = null;
+
+        const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+
+        el.addEventListener("pointerdown", (e) => {
+            el.setPointerCapture(e.pointerId);
+            pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+            if(pointers.size === 2) {
+                const [p1,p2] = [...pointers.values()];
+                startDist = dist(p1,p2);
+                startScale = gridZoomState.scale;
+                dragStart = null;
+            } else if(pointers.size === 1) {
+                dragStart = {x:e.clientX, y:e.clientY};
+                dragOrigin = {tx: gridZoomState.tx, ty: gridZoomState.ty};
+            }
+        });
+
+        el.addEventListener("pointermove", (e) => {
+            if(!pointers.has(e.pointerId)) return;
+            pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+
+            if(pointers.size === 2 && startDist) {
+                const [p1,p2] = [...pointers.values()];
+                const newDist = dist(p1,p2);
+                let newScale = startScale * (newDist / startDist);
+                newScale = Math.min(4, Math.max(0.5, newScale));
+                gridZoomState.scale = newScale;
+                applyGridZoomTransform();
+            } else if(pointers.size === 1 && dragStart) {
+                const p = pointers.get(e.pointerId);
+                gridZoomState.tx = dragOrigin.tx + (p.x - dragStart.x);
+                gridZoomState.ty = dragOrigin.ty + (p.y - dragStart.y);
+                applyGridZoomTransform();
+            }
+        });
+
+        const endPointer = (e) => {
+            pointers.delete(e.pointerId);
+            if(pointers.size < 2) startDist = 0;
+            if(pointers.size === 0) dragStart = null;
+        };
+        el.addEventListener("pointerup", endPointer);
+        el.addEventListener("pointercancel", endPointer);
+        el.addEventListener("pointerleave", endPointer);
+    }
+
+    let boxTransformState = { scale: 1, tx: 0, ty: 0 };
+
+    function applyBoxTransform() {
+        const wrap = document.getElementById("fabricPreviewWrap");
+        if(wrap) {
+            wrap.style.transform = `translate(${boxTransformState.tx}px, ${boxTransformState.ty}px) scale(${boxTransformState.scale})`;
+        }
+    }
+
+    function setupFabricPreviewBoxPinchAndPan() {
+        const wrap = document.getElementById("fabricPreviewWrap");
+        if(!wrap || wrap.dataset.boxZoomInit) return;
+        wrap.dataset.boxZoomInit = "1";
+
+        const pointers = new Map();
+        let startDist = 0;
+        let startScale = 1;
+        let dragStart = null;
+        let dragOrigin = null;
+
+        const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+        wrap.addEventListener("pointerdown", (e) => {
+            if(e.target.closest(".fp-toggle-btn")) return;
+            e.stopPropagation();
+            wrap.setPointerCapture(e.pointerId);
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+            if(pointers.size === 2) {
+                const [p1, p2] = [...pointers.values()];
+                startDist = dist(p1, p2);
+                startScale = boxTransformState.scale;
+                dragStart = null;
+            } else if(pointers.size === 1) {
+                dragStart = { x: e.clientX, y: e.clientY };
+                dragOrigin = { tx: boxTransformState.tx, ty: boxTransformState.ty };
+            }
+        });
+
+        wrap.addEventListener("pointermove", (e) => {
+            if(!pointers.has(e.pointerId)) return;
+            e.stopPropagation();
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+            if(pointers.size === 2 && startDist) {
+                const [p1, p2] = [...pointers.values()];
+                const curDist = dist(p1, p2);
+                let newScale = startScale * (curDist / startDist);
+                newScale = Math.min(3.5, Math.max(0.5, newScale));
+                boxTransformState.scale = newScale;
+                applyBoxTransform();
+            } else if(pointers.size === 1 && dragStart) {
+                const p = pointers.get(e.pointerId);
+                boxTransformState.tx = dragOrigin.tx + (p.x - dragStart.x);
+                boxTransformState.ty = dragOrigin.ty + (p.y - dragStart.y);
+                applyBoxTransform();
+            }
+        });
+
+        const onPointerEnd = (e) => {
+            pointers.delete(e.pointerId);
+            if(pointers.size < 2) startDist = 0;
+            if(pointers.size === 0) dragStart = null;
+        };
+
+        wrap.addEventListener("pointerup", onPointerEnd);
+        wrap.addEventListener("pointercancel", onPointerEnd);
+        wrap.addEventListener("pointerleave", onPointerEnd);
+    }
+
+    function addCol() { 
+        document.getElementById("weaveType").value = 'custom';
+        saveHistory(); weavePatterns.custom.forEach(r => r.push(0)); 
+        buildGridEditor(); 
+        updateAll();
+    }
+    function removeCol(c) { 
+        document.getElementById("weaveType").value = 'custom';
+        saveHistory(); if(!weavePatterns.custom.length || weavePatterns.custom[0].length<=2) return; 
+        weavePatterns.custom.forEach(r => r.splice(c,1)); 
+        buildGridEditor(); 
+        updateAll();
+    }
+    function addRowTop() { 
+        document.getElementById("weaveType").value = 'custom';
+        saveHistory(); let cols = weavePatterns.custom[0]?.length || 4; 
+        weavePatterns.custom.unshift(new Array(cols).fill(0)); 
+        syncPickFormulaWithRowCount();
+        buildGridEditor(); 
+        updateAll();
+    }
+    function removeRow(i) { 
+        document.getElementById("weaveType").value = 'custom';
+        saveHistory(); if(weavePatterns.custom.length<=2) return; 
+        weavePatterns.custom.splice(i,1); 
+        syncPickFormulaWithRowCount();
+        buildGridEditor(); 
+        updateAll();
+    }
+    function removeLastRow() { removeRow(weavePatterns.custom.length-1); }
+    function removeLastCol() { removeCol((weavePatterns.custom[0]?.length||1)-1); }
+
+    function copyFullGraph() {
+        let m = weavePatterns.custom;
+        if(!m || !m.length) { 
+            alert("காப்பி செய்ய Graph ஏதும் இல்லை!"); 
+            return; 
+        }
+        
+        let dataToCopy = {
+            matrix: m,
+            pickPattern: document.getElementById("pickPatternInput")?.value || ""
+        };
+        
+        safeLocalStorageSet("copied_full_graph", JSON.stringify(dataToCopy));
+        alert("✅ முழு Graph காப்பி (Copy) செய்யப்பட்டது!\n\nவேறு டிசைனைத் தேர்ந்தெடுத்து Paste பட்டனை அழுத்தவும்.");
+    }
+
+    function pasteFullGraph() {
+        let saved = TFDB.get("copied_full_graph");
+        if(!saved) { 
+            alert("⚠️ முதலில் ஒரு Graph-ஐ காப்பி (Copy) செய்யவும்!"); 
+            return; 
+        }
+        
+        try {
+            let data = JSON.parse(saved);
+            if(data.matrix && Array.isArray(data.matrix)) {
+                weavePatterns.custom = JSON.parse(JSON.stringify(data.matrix));
+                document.getElementById("weaveType").value = "custom";
+                
+                if(document.getElementById("pickPatternInput")) {
+                    document.getElementById("pickPatternInput").value = data.pickPattern || `(1-${data.matrix.length})`;
+                }
+                
+                let mCols = weavePatterns.custom[0]?.length || 4;
+                let autoArr = [];
+                for(let f=1; f<=mCols; f++) autoArr.push(f);
+                document.getElementById("drawingPatternInput").value = autoArr.join(",");
+
+                buildGridEditor();
+                updateAll();
+                alert("✅ Graph வெற்றிகரமாக Paste செய்யப்பட்டது!\n\nமாற்றங்களைச் சேமிக்க '💾 Save Graph' பட்டனை அழுத்தவும்.");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("⚠️ Graph Paste செய்வதில் பிழை!");
+        }
+    }
+
+    function openGraphPrintPreview() {
+        let m = weavePatterns.custom;
+        if(!m || !m.length) return;
+        
+        let html = '<div style="overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px;"><table style="border-collapse:collapse;margin:0 auto;text-align:center;color:#000;background:#fff;">';
+        
+        for(let r=0; r<m.length; r++) { 
+            let rowNum = m.length - r;
+            html += `<tr><td style="padding:5px;font-weight:bold">${rowNum}</td>`; 
+            
+            for(let c=0; c<m[r].length; c++) {
+                let borderStyle = `border:1px solid #000;`;
+                html += `<td style="width:30px;height:30px;${borderStyle};font-size:20px;font-weight:bold">${m[r][c]?"×":""}</td>`; 
+            }
+            html+="</tr>"; 
+        }
+        
+        html+="<tr><td></td>"; 
+        for(let c=1; c<=m[0].length; c++) html += `<td style="padding:6px;font-weight:bold">${c}</td>`; 
+        html+="</tr>";
+
+        html+="</table></div>";
+        
+        document.getElementById("printTableContainer").innerHTML = html; 
+        document.getElementById("printModalBox").style.display="flex"; 
+        document.body.classList.add("printing-graph");
+    }
+
+    function closeGraphPrintPreview() { 
+        document.getElementById("printModalBox").style.display="none"; 
+        document.body.classList.remove("printing-graph"); 
+    }
+
+    function expandPattern(str) {
+        if(!str) return [];
+        let s = String(str).toLowerCase().replace(/\s+/g, '').replace(/[x×X*]/g, '*'); 
+        let bracketRegex = /\(([^)]+)\)\*(\d+)/g;
+        let match;
+        while ((match = bracketRegex.exec(s)) !== null) {
+            let innerContent = match[1]; 
+            let multiplier = parseInt(match[2]);
+            let expandedStr = Array(multiplier).fill(innerContent).join(',');
+            s = s.replace(match[0], expandedStr);
+            bracketRegex.lastIndex = 0; 
+        }
+        let parts = s.split(','); let res = [];
+        for(let p of parts) {
+            if(!p) continue;
+            if(p.includes('*')) {
+                let [val, count] = p.split('*'); let v = parseInt(val.replace(/[^0-9]/g, '')); let c = parseInt(count.replace(/[^0-9]/g, ''));
+                if(!isNaN(v) && !isNaN(c) && c > 0) { for(let i=0; i<c; i++) res.push(v); }
+            } else {
+                let v = parseInt(p.replace(/[^0-9]/g, '')); if(!isNaN(v)) res.push(v);
+            }
+        }
+        return res;
+    }
+
+    function setDentPreset(value) { saveHistory(); document.getElementById("dentingPatternInput").value = value; updateAll(); }
+    function setDrawingPreset(value) { saveHistory(); document.getElementById("drawingPatternInput").value = value; updateAll(); buildGridEditor(); }
+
+    function generateFramesFromDropdown() {
+        let val = parseInt(document.getElementById("frameDropdown").value);
+        if(!val) return;
+        saveHistory(); let arr = []; for(let i=1; i<=val; i++) arr.push(i);
+        document.getElementById("drawingPatternInput").value = arr.join(",");
+        document.getElementById("frameDropdown").value = "";
+        updateAll();
+        buildGridEditor();
+    }
+
+    function updateAll() {
+        buildManualDentingEditor();
+        buildManualDrawingEditor();
+        calculateAdvancedDenting();
+    }
+
+    function buildManualDentingEditor() {
+        const box = document.getElementById("dentingManualRows"); if(!box) return;
+        const arr = expandPattern(document.getElementById("dentingPatternInput").value || "2");
+        box.innerHTML = (arr.length ? arr : [2]).map((v,i) => `
+            <div class="manual-row" style="grid-template-columns: 65px 1fr 40px;">
+                <div class="num">Dent ${i+1}</div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:#2F4F38; font-size:11px; font-weight:700;">Ends</span>
+                    <input type="number" min="0" value="${Math.max(0,v)}" oninput="syncManualDenting()">
+                </div>
+                <button onclick="removeDentingManualRow(${i})">✕</button>
+            </div>`).join("");
+    }
+    
+    function syncManualDenting() {
+        saveHistory();
+        const vals = [...document.getElementById("dentingManualRows").querySelectorAll("input")].map(x => Math.max(0, parseInt(x.value)||0));
+        if(vals.length) document.getElementById("dentingPatternInput").value = vals.join(",");
+        calculateAdvancedDenting();
+        buildGridEditor();
+    }
+
+    function addDentingManualRow() {
+        saveHistory(); const vals = expandPattern(document.getElementById("dentingPatternInput").value || "2");
+        vals.push(vals.length ? vals[vals.length-1] : 2);
+        document.getElementById("dentingPatternInput").value = vals.join(","); updateAll(); buildGridEditor();
+    }
+
+    function removeDentingManualRow(i) {
+        saveHistory(); const vals = expandPattern(document.getElementById("dentingPatternInput").value || "2");
+        if(vals.length <= 1) return; vals.splice(i,1);
+        document.getElementById("dentingPatternInput").value = vals.join(","); updateAll(); buildGridEditor();
+    }
+
+    function buildManualDrawingEditor() {
+        const box = document.getElementById("drawingManualRows"); if(!box) return;
+        const arr = expandPattern(document.getElementById("drawingPatternInput").value || "1,2,3,4");
+        box.innerHTML = (arr.length ? arr : [1,2,3,4]).map((v,i) => `
+            <div class="manual-row" style="grid-template-columns: 70px 1fr 40px;">
+                <div class="num">Thread ${i+1}</div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:#2F4F38; font-size:11px; font-weight:700;">Frame</span>
+                    <input type="number" min="1" value="${Math.max(1,v)}" oninput="syncManualDrawing()">
+                </div>
+                <button onclick="removeDrawingManualRow(${i})">✕</button>
+            </div>`).join("");
+    }
+
+    function syncManualDrawing() {
+        saveHistory();
+        const vals = [...document.getElementById("drawingManualRows").querySelectorAll("input")].map(x => Math.max(1, parseInt(x.value)||1));
+        if(vals.length) document.getElementById("drawingPatternInput").value = vals.join(",");
+        calculateAdvancedDenting();
+        buildGridEditor();
+    }
+
+    function addDrawingManualRow() {
+        saveHistory(); const vals = expandPattern(document.getElementById("drawingPatternInput").value || "1,2,3,4");
+        vals.push(vals.length ? vals[vals.length-1] : 1);
+        document.getElementById("drawingPatternInput").value = vals.join(","); updateAll(); buildGridEditor();
+    }
+
+    function removeDrawingManualRow(i) {
+        saveHistory(); const vals = expandPattern(document.getElementById("drawingPatternInput").value || "1,2,3,4");
+        if(vals.length <= 1) return; vals.splice(i,1);
+        document.getElementById("drawingPatternInput").value = vals.join(","); updateAll(); buildGridEditor();
+    }
+
+    function calculateAdvancedDenting() {
+        let totalEnds = parseInt(document.getElementById("totalWarpEnds").value) || 0;
+        let dentStr = document.getElementById("dentingPatternInput").value.trim() || "2";
+        let drawStr = document.getElementById("drawingPatternInput").value.trim() || "1,2,3,4";
+        let dentArr = expandPattern(dentStr); if(!dentArr.length) dentArr = [2];
+        let drawArr = expandPattern(drawStr); if(!drawArr.length) drawArr = [1,2,3,4];
+        
+        let resultContainer = document.getElementById("dentingResultDisplay");
+        if(!resultContainer) return;
+
+        if(totalEnds === 0) { 
+            resultContainer.innerHTML = "<span style='color:#ef4444;'>Warp Ends 0 ஆக உள்ளது.</span>"; 
+            return; 
+        }
+
+        let dentsUsed = 0, endsCounted = 0, emptyDents = 0, ptr = 0;
+        while(endsCounted < totalEnds && ptr < 50000){
+            const n = Math.max(0, dentArr[ptr % dentArr.length]); dentsUsed++;
+            if(n === 0) emptyDents++; else endsCounted += n; ptr++;
+        }
+        
+        let m = weavePatterns.custom;
+        let mCols = (m && m[0] && Array.isArray(m[0])) ? m[0].length : 4;
+        let framesRequired = Math.max(...drawArr, mCols);
+
+        resultContainer.innerHTML = `
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Total Warp Ends</b><span style="font-size:14px;font-weight:800;color:#2F4F38;">${totalEnds}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Required Dents</b><span style="font-size:14px;font-weight:800;color:#2F4F38;">${dentsUsed}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Missing / Empty Dents</b><span style="color:#D97706;font-size:14px;font-weight:800;">${emptyDents}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><b>Frames Required</b><span style="font-size:14px;font-weight:800;color:#10B981;">${framesRequired}</span></div>
+          <div style="font-size:11px;color:#4A554A;margin-top:15px;line-height:1.6;background:#fff;padding:12px;border-radius:8px;border:1px solid #D1DED1;font-weight:600;">
+            <b style="color:#2F4F38;">Denting Logic:</b> ${dentArr.join(", ")}<br><br><b style="color:#2F4F38;">Drawing Logic:</b> ${drawArr.join(", ")}
+          </div>`;
+    }
+
+    window.addEventListener("focus", async () => {
+        if (window.StorageDB && typeof window.StorageDB.reload === "function") await window.StorageDB.reload();
+        let lastEdit = TFDB.get("last_edit_timestamp");
+        if (window._lastEditStamp !== lastEdit) {
+            window._lastEditStamp = lastEdit;
+        }
+    });
+
+    window.onload = async () => {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+        loadDesignList();
+        populateWeaveTypeDropdown();
+        if(!activeDesignObj) {
+            if(TFDB.get("saved_denting_pattern")) document.getElementById("dentingPatternInput").value = TFDB.get("saved_denting_pattern");
+            if(TFDB.get("saved_drawing_pattern")) document.getElementById("drawingPatternInput").value = TFDB.get("saved_drawing_pattern");
+            onWeaveChange();
+        }
+        updateAll();
+        showDentingPane('dent');
+        setupGridZoomPan();
+        setupFabricPreviewBoxPinchAndPan();
+    };
+</script>
+
+</body>
+</html>
