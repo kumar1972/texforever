@@ -9,46 +9,46 @@
     <script src="translator.js"></script>
     <script src="printer.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
         
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         
         html, body { width: 100%; min-height: 100vh; background: #030712; color: #1E2B23; overflow-x: hidden; }
-        body { padding: 8px; display: flex; flex-direction: column; align-items: center; }
+        body { padding: 12px; display: flex; flex-direction: column; align-items: center; }
 
         .container {
-            width: 100%; max-width: 900px; background: #FFFFFF; padding: 14px;
-            border-radius: 16px; box-shadow: 0 10px 35px rgba(0,0,0,0.06);
-            border: 1px solid rgba(82, 110, 81, 0.15); display: flex; flex-direction: column; gap: 12px;
+            width: 100%; max-width: 900px; background: #FFFFFF; padding: 20px;
+            border-radius: 20px; box-shadow: 0 10px 35px rgba(30,43,35,0.06);
+            border: 1px solid rgba(82, 110, 81, 0.15); display: flex; flex-direction: column; gap: 16px;
             flex: 1;
         }
 
-        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .back-btn { 
-            display: inline-flex; align-items: center; gap: 4px; color: #FFFFFF; 
+            display: inline-flex; align-items: center; gap: 5px; color: #FFFFFF; 
             text-decoration: none; font-weight: 600; font-size: 11px; background: #1A2421; 
-            padding: 6px 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.3s ease; 
+            padding: 8px 16px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.3s ease; 
         }
         .back-btn:hover { background: #000000; transform: translateY(-2px); }
 
         .header-section { 
             display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid #EAF0EA; padding-bottom: 10px; margin-bottom: 4px; flex-wrap: wrap; gap: 8px;
+            border-bottom: 2px solid #EAF0EA; padding-bottom: 12px; margin-bottom: 5px; flex-wrap: wrap; gap: 10px;
         }
-        .page-title { font-size: 14px; font-weight: 800; color: #2F4F38; text-transform: uppercase; margin: 0; }
+        .page-title { font-size: 18px; font-weight: 800; color: #E2E8E2; text-transform: uppercase; margin: 0; letter-spacing: .5px; }
         
-        .action-btns { display: flex; gap: 6px; }
+        .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-action { 
-            color: #FFF; border: none; padding: 6px 10px; border-radius: 6px; 
-            font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: transform 0.2s; 
+            color: #FFF; border: none; padding: 8px 14px; border-radius: 8px; 
+            font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; 
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1); transition: transform 0.2s; letter-spacing: .5px;
         }
-        .btn-action:hover { transform: translateY(-2px); }
+        .btn-action:hover { transform: translateY(-1px); }
         .btn-print { background: linear-gradient(135deg, #10B981, #059669); }
         .btn-excel { background: linear-gradient(135deg, #F59E0B, #D97706); }
 
         .summary-box { 
-            background: #F8FAF8; border: 1px solid #E2E8E2; padding: 12px; 
+            background: #F8FAF8; border: 1px solid #E2E8E2; padding: 14px; 
             border-radius: 10px; font-size: 11px; color: #1E2B23; font-weight: 700; 
             display: flex; justify-content: space-between; align-items: center; 
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 8px;
@@ -58,17 +58,17 @@
             padding: 3px 8px; border-radius: 6px; margin-left: 4px;
         }
 
-        .table-container { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #D1DED1; background: #FFFFFF; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; text-align: center; white-space: nowrap; }
-        th { background: #EAF0EA; color: #2F4F38; padding: 10px 8px; font-weight: 700; border-bottom: 2px solid #D1DED1; font-size: 9px; text-transform: uppercase; }
-        td { padding: 10px 8px; border-bottom: 1px solid #E2E8E2; color: #1E2B23; font-weight: 500; vertical-align: middle; }
+        .table-container { width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid #D1DED1; background: #FFFFFF; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; white-space: nowrap; }
+        th { background: #EAF0EA; color: #2F4F38; padding: 10px; font-weight: 700; border-bottom: 1px solid #E2E8E2; font-size: 11px; text-transform: uppercase; }
+        td { padding: 10px; border-bottom: 1px solid #E2E8E2; color: #1E2B23; font-weight: 600; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tbody tr:hover { background: #F8FAF8; }
         td b { color: #2F4F38; font-weight: 800; }
 
         /* Table Bitmap Thumbnail */
         .table-img {
-            width: 32px; height: 32px; object-fit: cover; border-radius: 6px; border: 1px solid #4A7C59;
+            width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid #4A7C59;
             cursor: zoom-in; transition: transform 0.2s; vertical-align: middle;
         }
         .table-img:hover { transform: scale(1.15); }
@@ -107,9 +107,7 @@
     </div>
     
     <div class="header-section">
-        <h3 class="<h2 class=.card-header {
-    color: #ffffff; /* Inga unga color-a change pannikalam */
-}" id="pageTitle">TOTAL SAVED DESIGNS</h3>
+        <h3 class="page-title" id="pageTitle">TOTAL SAVED DESIGNS</h3>
         <div class="action-btns">
             <button class="btn-action btn-print" onclick="window.print()">🖨️ Print</button>
             <button class="btn-action btn-excel" onclick="exportToExcel()">📥 Excel</button>

@@ -10,7 +10,7 @@
 <script src="translator.js"></script>
 <script src="printer.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 *{
     box-sizing:border-box;
@@ -22,16 +22,16 @@
 html,body{
     width:100%;
     min-height:100vh;
-    background:#F4F7F4;
+    background:#030712;
     color:#1E2B23;
 }
 
 html{
-    background:#F4F7F4;
+    background:#030712;
 }
 
 body{
-    background:#F4F7F4;
+    background:#030712;
     overflow-x:hidden;
 }
 
@@ -46,14 +46,14 @@ body{
 .main-card{
     width:100%;
     max-width:900px;
-    background:#fff;
+    background:#FFFFFF;
     border:1px solid rgba(82,110,81,.15);
     border-radius:20px;
     padding:20px;
     box-shadow:0 10px 35px rgba(30,43,35,.06);
     display:flex;
     flex-direction:column;
-    gap:15px;
+    gap:16px;
 }
 
 .top-nav{
@@ -68,40 +68,42 @@ body{
     display:inline-flex;
     align-items:center;
     gap:5px;
-    color:#fff;
+    color:#FFFFFF;
     text-decoration:none;
     font-weight:600;
     font-size:11px;
-    background:#1A1;
+    background:#1A2421;
     padding:8px 16px;
     border-radius:8px;
     box-shadow:0 4px 10px rgba(0,0,0,.15);
 }
 
 .back-btn:hover{
-    background:#1A2;
+    background:#000000;
 }
 
 .completed-checkbox{
     display:flex;
     align-items:center;
     gap:6px;
-    background:#D8DFD6;
-    padding:6px 12px;
-    border-radius:6px;
-    border:1px solid rgba(82,110,81,.4);
+    background:#F8FAF8;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid #E2E8E2;
+    box-shadow:0 2px 5px rgba(0,0,0,0.04);
 }
 
 .completed-checkbox input{
     width:16px;
     height:16px;
-    accent-color:#526E51;
+    accent-color:#4A7C59;
 }
 
 .completed-checkbox label{
-    color:#3F5A3E;
-    font-size:12px;
+    color:#2F4F38;
+    font-size:11px;
     font-weight:700;
+    cursor:pointer;
 }
 
 #bitmapDisplayContainer{
@@ -111,35 +113,27 @@ body{
 #bitmapDisplayContainer img{
     max-height:40px;
     max-width:100px;
-    border-radius:4px;
-    border:1px solid rgba(82,110,81,.4);
+    border-radius:6px;
+    border:1px solid #4A7C59;
     cursor:zoom-in;
 }
 
 .card-header{
-    font-size:16px;
-    font-weight:700;
-    color:#2F4F38;
+    font-size:18px;
+    font-weight:800;
+    color:#F8FAF8;
     position:relative;
-    padding-left:12px;
-}
-
-.card-header:before{
-    content:'';
-    position:absolute;
-    left:0;
-    top:10%;
-    height:80%;
-    width:4px;
-    background:#4A7C59;
-    border-radius:4px;
+    padding-bottom:12px;
+    border-bottom:2px solid #EAF0EA;
+    text-transform:uppercase;
+    letter-spacing:.5px;
 }
 
 .form-section{
     background:#F8FAF8;
     border:1px solid #E2E8E2;
     border-radius:14px;
-    padding:20px 15px 15px;
+    padding:22px 15px 15px;
     margin-bottom:5px;
     position:relative;
 }
@@ -155,13 +149,14 @@ body{
     padding:4px 12px;
     border-radius:12px;
     letter-spacing:.5px;
+    text-transform:uppercase;
     box-shadow:0 4px 8px rgba(74,124,89,.25);
 }
 
 .form-group{
     display:flex;
     flex-direction:column;
-    gap:4px;
+    gap:6px;
     margin-bottom:12px;
 }
 
@@ -170,20 +165,20 @@ body{
 }
 
 .form-group label{
-    font-size:10px;
-    font-weight:600;
+    font-size:11px;
+    font-weight:700;
     color:#4A554A;
 }
 
 input,
 select{
     width:100%;
-    padding:10px 12px;
+    padding:12px 14px;
     border-radius:8px;
     border:1px solid #D1DED1;
-    background:#fff;
+    background:#FFFFFF;
     color:#1E2B23;
-    font-size:11px;
+    font-size:12px;
     font-weight:600;
 }
 
@@ -195,25 +190,26 @@ select:focus{
 }
 
 .btn-add-inline{
-    background:#10B981;
+    background:linear-gradient(135deg,#10B981,#059669);
     color:#fff;
     border:none;
-    padding:6px 10px;
+    padding:8px 12px;
     border-radius:8px;
     font-weight:700;
     font-size:10px;
     cursor:pointer;
+    text-transform:uppercase;
 }
 
 .btn-add-inline:hover{
-    background:#059669;
+    opacity:0.9;
 }
 
 .btn-del-inline{
     background:#FEE2E2;
     color:#DC2626;
     border:none;
-    padding:6px 10px;
+    padding:8px 12px;
     border-radius:8px;
     font-size:12px;
     cursor:pointer;
@@ -230,7 +226,7 @@ select:focus{
 .issue-grid-header div{
     font-size:10px;
     font-weight:700;
-    color:#4A7C59;
+    color:#F8FAF8;
     text-align:center;
     text-transform:uppercase;
 }
@@ -266,7 +262,7 @@ select:focus{
 }
 
 .btn-split-row{
-    background:#D1FAE5;
+    background:#EAF0EA;
     color:#059669;
 }
 
@@ -279,9 +275,9 @@ select:focus{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:12px;
-    background:linear-gradient(135deg,#F4F7F4,#EAF0EA);
+    background:#F8FAF8;
     border:1px dashed #4A7C59;
-    padding:12px 15px;
+    padding:15px;
     border-radius:12px;
     margin-top:10px;
 }
@@ -297,7 +293,7 @@ select:focus{
 }
 
 .total-item span:last-child{
-    background:#fff;
+    background:#FFFFFF;
     padding:6px 12px;
     border-radius:6px;
     border:1px solid #D1DED1;
@@ -310,29 +306,34 @@ select:focus{
     width:100%;
     padding:14px;
     border:none;
-    border-radius:10px;
+    border-radius:8px;
     color:#fff;
     font-weight:700;
-    font-size:13px;
+    font-size:12px;
     cursor:pointer;
-    background:linear-gradient(135deg,#4C59,#33593D);
-    box-shadow:0 6px 15px rgba(74,124,89,.25);
+    background:linear-gradient(135deg,#4A7C59,#2F4F38);
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
+    text-transform:uppercase;
+    letter-spacing:.5px;
 }
 
 .preview-trigger-btn{
-    background:linear-gradient(125deg,#64748B,#336569);
+    background:linear-gradient(135deg,#3B82F6,#1D4ED8);
     color:#fff;
     border:none;
     padding:14px;
-    border-radius:10px;
-    font-size:13px;
-    font-weight:bold;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
     cursor:pointer;
     width:100%;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
 }
 
 .preview-trigger-btn:hover{
-    background:#336655;
+    opacity:0.9;
 }
 
 .popup-trigger-btn{
@@ -340,11 +341,14 @@ select:focus{
     color:#fff;
     border:none;
     padding:14px;
-    border-radius:10px;
-    font-size:13px;
-    font-weight:bold;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
     cursor:pointer;
     width:100%;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
 }
 
 .overlay-modal{
@@ -353,7 +357,7 @@ select:focus{
     inset:0;
     width:100%;
     height:100%;
-    background:rgba(18,25,20,.85);
+    background:rgba(3,7,18,.85);
     backdrop-filter:blur(4px);
     z-index:99999;
     flex-direction:column;
@@ -367,44 +371,49 @@ select:focus{
 }
 
 .modal-content{
-    background:#fff;
+    background:#FFFFFF;
     width:100%;
     height:100%;
-    border-radius:16px;
+    border-radius:20px;
     display:flex;
     flex-direction:column;
     overflow:hidden;
+    box-shadow:0 10px 35px rgba(30,43,35,0.15);
+    border:1px solid rgba(82, 110, 81, 0.15);
 }
 
 .modal-header{
-    padding:15px 20px;
-    background:#F4F7F4;
+    padding:18px 20px;
+    background:#F8FAF8;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border-bottom:1px solid #E2E8E2;
+    border-bottom:2px solid #EAF0EA;
 }
 
 .modal-header h3{
-    font-size:15px;
-    color:#1E2B23;
+    font-size:16px;
+    color:#2F4F38;
+    font-weight:800;
 }
 
 .close-btn{
-    background:#FEE2E2;
-    color:#DC2626;
+    background:#EF4444;
+    color:#FFFFFF;
     border:none;
     padding:8px 14px;
     border-radius:8px;
-    font-weight:bold;
+    font-weight:700;
     cursor:pointer;
+    font-size:11px;
+    text-transform:uppercase;
 }
 
 .modal-body{
-    padding:15px;
+    padding:20px;
     overflow:auto;
     flex:1;
-    background:#FAFCFA;
+    background:#FFFFFF;
 }
 
 .fullscreen-modal{
@@ -444,8 +453,8 @@ select:focus{
     width:100%;
     border-radius:10px;
     overflow:auto;
-    border:1px solid #E2E8E2;
-    background:#fff;
+    border:1px solid #D1DED1;
+    background:#FFFFFF;
 }
 
 table{
@@ -473,10 +482,11 @@ th{
     position:sticky;
     top:0;
     z-index:10;
+    text-transform:uppercase;
 }
 
 tfoot td{
-    background:#F4F7F4;
+    background:#F8FAF8;
     color:#2F4F38;
     font-weight:700;
 }
@@ -491,22 +501,24 @@ tfoot td{
     cursor:pointer;
     font-size:10px;
     padding:6px 10px;
+    font-weight:700;
+    text-transform:uppercase;
 }
 
 .edit-action-btn{
-    background:#64748B;
+    background:linear-gradient(135deg,#64748B,#475569);
 }
 
 .del-action-btn{
-    background:#EF4444;
+    background:linear-gradient(135deg,#EF4444,#DC2626);
 }
 
 .action-complete{
-    background:#526E51;
+    background:linear-gradient(135deg,#10B981,#059669);
 }
 
 .action-running{
-    background:#D97706;
+    background:linear-gradient(135deg,#F59E0B,#D97706);
 }
 
 .checkbox-container{
@@ -516,7 +528,7 @@ tfoot td{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    border:1px dashed #A0AFA0;
+    border:1px solid #D1DED1;
 }
 
 
@@ -596,7 +608,7 @@ tfoot td{
     inset:0;
     width:100%;
     height:100%;
-    background:rgba(20,30,24,.55);
+    background:rgba(3,7,18,.75);
     backdrop-filter:blur(3px);
     z-index:100000;
     padding:12px;
@@ -613,10 +625,11 @@ tfoot td{
     width:100%;
     max-width:900px;
     margin:auto;
-    background:#fff;
-    border-radius:16px;
+    background:#FFFFFF;
+    border-radius:20px;
     overflow:hidden;
     box-shadow:0 20px 60px rgba(0,0,0,.22);
+    border:1px solid rgba(82, 110, 81, 0.15);
 }
 
 .preview-header{
@@ -624,14 +637,15 @@ tfoot td{
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    padding:13px 16px;
-    background:#F4F7F4;
-    border-bottom:1px solid #DDE5DD;
+    padding:15px 20px;
+    background:#F8FAF8;
+    border-bottom:2px solid #EAF0EA;
 }
 
 .preview-header h3{
     color:#2F4F38;
-    font-size:15px;
+    font-size:16px;
+    font-weight:800;
     margin:0;
 }
 
@@ -648,14 +662,14 @@ tfoot td{
 }
 
 .preview-body{
-    padding:16px;
-    background:#fff;
+    padding:20px;
+    background:#FFFFFF;
     overflow:auto;
 }
 
 .preview-sheet{
-    background:#fff;
-    color:#111827;
+    background:#FFFFFF;
+    color:#1E2B23;
     width:100%;
 }
 
@@ -663,23 +677,25 @@ tfoot td{
     text-align:center;
     color:#2F4F38;
     font-size:18px;
-    font-weight:700;
-    margin-bottom:12px;
+    font-weight:800;
+    margin-bottom:15px;
+    text-transform:uppercase;
 }
 
 .preview-meta{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin-bottom:12px;
+    gap:10px;
+    margin-bottom:15px;
 }
 
 .preview-meta div{
-    border:1px solid #DDE5DD;
-    border-radius:7px;
-    padding:8px 10px;
+    border:1px solid #D1DED1;
+    border-radius:8px;
+    padding:10px 12px;
     font-size:11px;
-    background:#FAFCFA;
+    background:#F8FAF8;
+    font-weight:600;
 }
 
 .preview-table-wrap{
@@ -691,13 +707,13 @@ tfoot td{
     width:100%;
     min-width:700px;
     border-collapse:collapse;
-    font-size:10px;
+    font-size:11px;
 }
 
 .preview-table th,
 .preview-table td{
-    border:1px solid #CBD5CB;
-    padding:7px 6px;
+    border:1px solid #D1DED1;
+    padding:10px 8px;
     text-align:center;
     color:#1E2B23;
 }
@@ -706,34 +722,37 @@ tfoot td{
     background:#EAF0EA;
     color:#2F4F38;
     font-weight:700;
+    text-transform:uppercase;
 }
 
 .preview-total-row td{
-    background:#F4F7F4;
+    background:#F8FAF8;
     font-weight:700;
+    color:#2F4F38;
 }
 
 .preview-footer{
     display:flex;
     justify-content:flex-end;
-    padding:12px 16px;
+    padding:15px 20px;
     background:#F8FAF8;
-    border-top:1px solid #DDE5DD;
+    border-top:2px solid #EAF0EA;
 }
 
 .preview-print-btn{
     border:0;
-    border-radius:9px;
+    border-radius:8px;
     padding:10px 18px;
-    background:#2F4F38;
+    background:linear-gradient(135deg,#10B981,#059669);
     color:#fff;
     font-weight:700;
     font-size:12px;
     cursor:pointer;
+    text-transform:uppercase;
 }
 
 .preview-print-btn:hover{
-    background:#24402D;
+    opacity:0.9;
 }
 
 @media(max-width:700px){
@@ -807,8 +826,8 @@ tfoot td{
 @media(max-width:700px){
 
     .main-card{
-        padding:14px;
-        border-radius:16px;
+        padding:15px;
+        border-radius:15px;
     }
 
     .top-nav{
@@ -867,7 +886,7 @@ tfoot td{
 
     </div>
 
-    <h2 class="color: #ffffff; /* Inga unga color-a change pannikalam */">
+    <h2 class="card-header">
         Dyeing Issue (Warp + Weft)
     </h2>
 
@@ -937,7 +956,7 @@ tfoot td{
                     style="
                     font-size:11px;
                     font-weight:700;
-                    color:#4A7C59;
+                    color:#2F4F38;
                     cursor:pointer;
                     margin:0;
                     "
@@ -2590,11 +2609,11 @@ function renderSavedIssueDetails(){
             </tr>`;
     }).join('');
 
-    const th = 'padding:6px;background:#E8F0E8;color:#2F5E3A;font-size:11px;border:1px solid #CBD5CB;';
-    const td = 'padding:6px;border:1px solid #DDE5DD;font-size:12px;';
+    const th = 'padding:6px;background:#EAF0EA;color:#2F4F38;font-size:11px;border:1px solid #D1DED1;';
+    const td = 'padding:6px;border:1px solid #E2E8E2;font-size:12px;';
 
     box.innerHTML = `
-        <div style="font-weight:bold;color:#2F5E3A;margin-bottom:6px;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
+        <div style="font-weight:700;color:#2F4F38;margin-bottom:6px;font-size:12px;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
         <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;">
                 <thead>
@@ -2615,9 +2634,9 @@ function renderSavedIssueDetails(){
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="6" style="${td}font-weight:bold;text-align:right;">Grand Total</td>
-                        <td style="${td}font-weight:bold;text-align:right;">${totOrd.toFixed(3)}</td>
-                        <td style="${td}font-weight:bold;text-align:right;">${totIss.toFixed(3)}</td>
+                        <td colspan="6" style="${td}font-weight:700;text-align:right;">Grand Total</td>
+                        <td style="${td}font-weight:700;text-align:right;">${totOrd.toFixed(3)}</td>
+                        <td style="${td}font-weight:700;text-align:right;">${totIss.toFixed(3)}</td>
                         <td style="${td}"></td>
                     </tr>
                 </tfoot>
@@ -4367,7 +4386,7 @@ function renderIssuedList(){
                     colspan="11"
                     style="
                     padding:20px;
-                    color:#A0AFA0;
+                    color:#64748B;
                     "
                 >
                     No Dyeing Orders Issued
@@ -4445,7 +4464,7 @@ function renderIssuedList(){
         const statusColor =
             status === 'running'
             ? '#D97706'
-            : '#526E51';
+            : '#10B981';
 
 
         const statusBtn =

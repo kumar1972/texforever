@@ -9,7 +9,7 @@
     <script src="translator.js"></script>
     <script src="printer.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
 
@@ -29,56 +29,57 @@
 
         .container {
             width: 100%;
-            max-width: 850px;
+            max-width: 900px;
             margin: 0 auto;
-            background: #E8ECE7;
-            padding: 18px;
-            border-radius: 16px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border: 1px solid rgba(82, 110, 81, 0.3);
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(30,43,35,0.06);
+            border: 1px solid rgba(82, 110, 81, 0.15);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
         }
 
         .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
         }
 
         .back-btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             color: #FFFFFF;
             text-decoration: none;
             font-weight: 600;
             font-size: 11px;
-            background: #1A1; 
-            padding: 8px 14px;
-            border-radius: 6px;
-            border: 1px solid #111;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: #1A2421;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             transition: all 0.2s;
         }
-        .back-btn:hover { background: #000000; }
+        .back-btn:hover { background: #000000; transform: translateY(-2px); }
 
         .completed-checkbox {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: #D8DFD6;
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(82, 110, 81, 0.4);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #F8FAF8;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #E2E8E2;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
         }
         
         .completed-checkbox input[type="checkbox"] {
             width: 16px;
             height: 16px;
             cursor: pointer;
-            accent-color: #526E51;
+            accent-color: #4A7C59;
             margin: 0;
             padding: 0;
             border: none;
@@ -86,9 +87,9 @@
         
         .completed-checkbox label {
             margin: 0;
-            color: #3F5A3E;
+            color: #2F4F38;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
         }
 
@@ -97,8 +98,8 @@
         }
         #bitmapDisplayContainer img {
             max-height: 40px;
-            border-radius: 4px;
-            border: 1px solid rgba(82, 110, 81, 0.4);
+            border-radius: 6px;
+            border: 1px solid #4A7C59;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: zoom-in;
             transition: transform 0.2s;
@@ -106,20 +107,21 @@
         #bitmapDisplayContainer img:hover { transform: scale(1.1); }
 
         .excel-btn {
-            background: #526E51;
+            background: linear-gradient(135deg, #10B981, #059669);
             color: white;
             border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: bold;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1);
+            text-transform: uppercase;
         }
-        .excel-btn:hover { background: #3F5A3E; }
+        .excel-btn:hover { transform: translateY(-1px); }
 
         .card { 
-            background: #E8ECE7; 
+            background: #FFFFFF; 
             padding: 0; 
             border-radius: 0; 
             margin-bottom: 0; 
@@ -129,73 +131,78 @@
         }
 
         h3 { 
-            font-size: 13px; 
-            padding-bottom: 4px; 
-            margin-bottom: 12px; 
-            font-weight: 700; 
-            border-bottom: 2px solid rgba(82, 110, 81, 0.3); 
-            color: #3F5A3E; 
+            font-size: 18px; 
+            padding-bottom: 12px; 
+            margin-bottom: 16px; 
+            font-weight: 800; 
+            border-bottom: 2px solid #EAF0EA; 
+            color: #E2E8E2; 
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
 
         .section-title {
-            background: #D8DFD6;
-            color: #3F5A3E;
-            padding: 6px 10px;
-            border-radius: 6px;
+            background: #EAF0EA;
+            color: #2F4F38;
+            padding: 8px 12px;
+            border-radius: 8px;
             font-size: 11px;
             font-weight: 700;
-            margin: 10px 0 8px 0;
-            border: 1px solid rgba(82, 110, 81, 0.25);
+            margin: 12px 0 10px 0;
+            border: 1px solid #D1DED1;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
 
         .form-grid-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 6px;
-            margin-bottom: 6px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 8px;
         }
 
         .form-group {
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         label { 
             display: block;
-            font-weight: 600; 
-            color: #3F5A3E; 
-            font-size: 9px; 
-            margin-bottom: 3px; 
+            font-weight: 700; 
+            color: #E2E8E2; 
+            font-size: 11px; 
+            margin-bottom: 6px; 
         }
 
         input, select { 
             width: 100%; 
-            padding: 8px 10px; 
-            border: 1px solid rgba(82, 110, 81, 0.4); 
-            border-radius: 6px; 
-            font-size: 11px; 
+            padding: 12px 14px; 
+            border: 1px solid #D1DED1; 
+            border-radius: 8px; 
+            font-size: 12px; 
             background: #FFFFFF; 
             color: #1E2B23; 
-            font-weight: 500; 
+            font-weight: 600; 
+            outline: none;
         }
 
         input:focus, select:focus { 
-            border-color: #526E51; 
-            outline: none; 
-            background: #F4F6F4; 
+            border-color: #4A7C59; 
+            box-shadow: 0 0 0 3px rgba(74,124,89,.15);
+            background: #FFFFFF; 
         }
 
         .item-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            background: #D8DFD6;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(82, 110, 81, 0.25);
+            gap: 12px;
+            background: #F8FAF8;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #E2E8E2;
         }
 
         .item-col-group {
@@ -208,14 +215,14 @@
         }
 
         .item-col-group label {
-            font-size: 9px;
-            color: #3F5A3E;
-            margin-bottom: 3px;
+            font-size: 11px;
+            color: #4A554A;
+            margin-bottom: 6px;
         }
 
         .item-col-group input, .item-col-group select {
-            padding: 8px 10px;
-            font-size: 11px;
+            padding: 10px 12px;
+            font-size: 12px;
             text-align: left;
         }
 
@@ -223,52 +230,59 @@
             grid-column: span 2;
             color: white;
             border: none;
-            height: 35px;
-            border-radius: 6px;
-            font-weight: bold;
+            height: 40px;
+            border-radius: 8px;
+            font-weight: 700;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1);
         }
-        .add-item-btn { background: #5DDAE5; }
-        .add-item-btn:hover { background: #3F5A3E; }
-        .del-item-btn { background: #D97706; }
-        .del-item-btn:hover { background: #B409; }
+        .add-item-btn { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .add-item-btn:hover { background: #1D4ED8; }
+        .del-item-btn { background: linear-gradient(135deg, #EF4444, #DC2626); }
+        .del-item-btn:hover { background: #DC2626; }
 
         .btn { 
             width: 100%; 
-            padding: 12px; 
-            margin: 10px 0 4px 0; 
+            padding: 14px; 
+            margin: 14px 0 6px 0; 
             border: none; 
             border-radius: 8px; 
             color: white; 
             font-weight: 700; 
-            font-size: 13px; 
+            font-size: 12px; 
             cursor: pointer; 
-            background: #526E51; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            background: linear-gradient(135deg, #4A7C59, #2F4F38); 
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1); 
+            text-transform: uppercase;
+            letter-spacing: .5px;
             transition: transform 0.15s ease; 
         }
 
-        .btn:hover { background: #3F5A3E; }
+        .btn:hover { transform: translateY(-1px); }
 
         .popup-trigger-btn {
-            background: #3B82F6;
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 10px rgba(30,43,35,0.1);
             margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
-        .popup-trigger-btn:hover { background: #2563EB; }
+        .popup-trigger-btn:hover { transform: translateY(-1px); }
 
         /* Full-Screen Pop-up Modal Styling */
         .overlay-modal {
@@ -278,43 +292,44 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(213, 221, 211, 0.98);
+            background: rgba(3, 7, 18, 0.85);
             z-index: 99999;
             flex-direction: column;
             padding: 15px;
         }
         .modal-content {
-            background: #E8ECE7;
+            background: #FFFFFF;
             width: 100%;
             height: 100%;
-            border-radius: 12px;
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border: 1px solid rgba(82, 110, 81, 0.3);
+            box-shadow: 0 10px 35px rgba(30,43,35,0.15);
+            border: 1px solid rgba(82, 110, 81, 0.15);
             overflow: hidden;
         }
         .modal-header {
-            padding: 15px;
-            background: #D8DFD6;
+            padding: 18px 20px;
+            background: #F8FAF8;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(82, 110, 81, 0.2);
+            border-bottom: 2px solid #EAF0EA;
         }
-        .modal-header h3 { margin: 0; font-size: 14px; color: #3F5A3E; border: none; padding: 0; }
+        .modal-header h3 { margin: 0; font-size: 16px; color: #2F4F38; border: none; padding: 0; }
         .close-btn {
             background: #EF4444;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: bold;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
             cursor: pointer;
             font-size: 11px;
+            text-transform: uppercase;
         }
         .modal-body {
-            padding: 15px;
+            padding: 20px;
             overflow-y: auto;
             flex: 1;
         }
@@ -335,15 +350,16 @@
             cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .action-del { background: #D97706; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
-        .action-del:hover { background: #B45309; }
-        .action-edit { background: #3F5A3E; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
-        .action-complete { background: #526E51; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
-        .action-running { background: #D97706; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+        .action-del { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .action-del:hover { opacity: 0.9; }
+        .action-edit { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .action-complete { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .action-running { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-        .excel-table { width: 100%; border-collapse: collapse; text-align: center; background: #E8ECE7; font-size: 10px; color: #1E2B23; }
-        .excel-table th, .excel-table td { border: 1px solid rgba(82, 110, 81, 0.3); padding: 6px; }
-        .excel-table th { background-color: #D8DFD6; color: #3F5A3E; font-weight: bold; }
+        .excel-table { width: 100%; border-collapse: collapse; text-align: center; background: #FFFFFF; font-size: 11px; color: #1E2B23; border-radius: 10px; overflow: hidden; border: 1px solid #D1DED1; }
+        .excel-table th, .excel-table td { border-bottom: 1px solid #E2E8E2; border-right: 1px solid #E2E8E2; padding: 10px 8px; }
+        .excel-table th { background-color: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; }
+        .excel-table td { font-weight: 600; }
     </style>
 </head>
 <body>
@@ -446,7 +462,7 @@
             <h3>📊 Saved Despatch List</h3>
             <div style="display: flex; gap: 8px;">
                 <button class="excel-btn" onclick="exportToExcel()">📥 Excel</button>
-                <button class="excel-btn" style="background:#3B82F6;" onclick="printDespatchList()">🖨️ Print</button>
+                <button class="excel-btn" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);" onclick="printDespatchList()">🖨️ Print</button>
                 <button class="close-btn" onclick="closeModal('despatchListModal')">Close ✕</button>
             </div>
         </div>
@@ -942,7 +958,7 @@ function updateDespatchTable() {
     despatchList.slice().reverse().forEach(function(entry, originalIndexRev) {
         let index = despatchList.length - 1 - originalIndexRev;
         if(!entry.status) entry.status = "running";
-        let statusColor = entry.status == 'running' ? '#D97706' : '#526E51';
+        let statusColor = entry.status == 'running' ? '#D97706' : '#10B981';
         let statusBtn = entry.status == 'running' 
             ? `<button class="action-complete" onclick="toggleStatus(${index}, 'completed')">Complete</button>` 
             : `<button class="action-running" onclick="toggleStatus(${index}, 'running')">Running</button>`;
@@ -1098,55 +1114,7 @@ function exportToExcel() {
         alert('Export செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
         return;
     }
-function escPrint(v) {
-    return (v === null || v === undefined ? '' : String(v))
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
 
-function printDespatchList() {
-    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
-    if (despatchList.length === 0) {
-        alert('Print செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
-        return;
-    }
-
-    var cell = 'border:1px solid #999; padding:4px; text-align:center;';
-    var headers = ['Date', 'Invoice No', 'Party', 'Design', 'Bale No', 'No Bales',
-                   'Despatched', 'Balance', 'Excess', 'Status'];
-
-    var headHtml = '<tr>' + headers.map(function (h) {
-        return '<th style="' + cell + ' background:#EAF0EA; font-weight:bold;">' + h + '</th>';
-    }).join('') + '</tr>';
-
-    var rowsHtml = '';
-    despatchList.forEach(function (entry) {
-        (entry.items || []).forEach(function (item) {
-            rowsHtml += '<tr>' +
-                '<td style="' + cell + '">' + escPrint(entry.date) + '</td>' +
-                '<td style="' + cell + '">' + escPrint(entry.invoiceNo) + '</td>' +
-                '<td style="' + cell + '">' + escPrint(entry.partyName) + '</td>' +
-                '<td style="' + cell + ' font-weight:bold;">' + escPrint(item.designNo || '-') + '</td>' +
-                '<td style="' + cell + '">' + escPrint(item.baleNo || '-') + '</td>' +
-                '<td style="' + cell + '">' + escPrint(item.noOfBales || '-') + '</td>' +
-                '<td style="' + cell + '">' + escPrint(item.despatchedMtr || '-') + '</td>' +
-                '<td style="' + cell + '">' + escPrint(item.balanceMtr || '0.00') + '</td>' +
-                '<td style="' + cell + '">' + escPrint(item.excessMtr || '0.00') + '</td>' +
-                '<td style="' + cell + ' text-transform:uppercase;">' + escPrint(entry.status) + '</td>' +
-                '</tr>';
-        });
-    });
-
-    var html =
-        '<div style="background:#ffffff; color:#000000; width:100%;">' +
-        '<h2 style="text-align:center; font-size:16px; margin-bottom:8px;">Despatch Details</h2>' +
-        '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
-        '<thead>' + headHtml + '</thead>' +
-        '<tbody>' + rowsHtml + '</tbody>' +
-        '</table>' +
-        '</div>';
-
-    appPrint(html);
-}
     let csvContent = "data:text/csv;charset=utf-8,Date,Invoice No,Party Name,PO No,Transport Name,LR Number,Design No,Bale No,No. of Bales,Order Mtr,Despatched Mtr,Balance Mtr,Excess Mtr\r\n";
     
     despatchList.forEach(function(entry) {
@@ -1177,6 +1145,56 @@ function printDespatchList() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function escPrint(v) {
+    return (v === null || v === undefined ? '' : String(v))
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function printDespatchList() {
+    var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
+    if (despatchList.length === 0) {
+        alert('Print செய்ய சேமிக்கப்பட்ட தரவுகள் எதுவும் இல்லை!');
+        return;
+    }
+
+    var cell = 'border:1px solid #D1DED1; padding:6px; text-align:center;';
+    var headers = ['Date', 'Invoice No', 'Party', 'Design', 'Bale No', 'No Bales',
+                   'Despatched', 'Balance', 'Excess', 'Status'];
+
+    var headHtml = '<tr>' + headers.map(function (h) {
+        return '<th style="' + cell + ' background:#EAF0EA; color:#2F4F38; font-weight:700;">' + h + '</th>';
+    }).join('') + '</tr>';
+
+    var rowsHtml = '';
+    despatchList.forEach(function (entry) {
+        (entry.items || []).forEach(function (item) {
+            rowsHtml += '<tr>' +
+                '<td style="' + cell + '">' + escPrint(entry.date) + '</td>' +
+                '<td style="' + cell + '">' + escPrint(entry.invoiceNo) + '</td>' +
+                '<td style="' + cell + '">' + escPrint(entry.partyName) + '</td>' +
+                '<td style="' + cell + ' font-weight:800; color:#2F4F38;">' + escPrint(item.designNo || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.baleNo || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.noOfBales || '-') + '</td>' +
+                '<td style="' + cell + '">' + escPrint(item.despatchedMtr || '-') + '</td>' +
+                '<td style="' + cell + ' color:#10B981; font-weight:bold;">' + escPrint(item.balanceMtr || '0.00') + '</td>' +
+                '<td style="' + cell + ' color:#D32F2F; font-weight:bold;">' + escPrint(item.excessMtr || '0.00') + '</td>' +
+                '<td style="' + cell + ' text-transform:uppercase; font-weight:bold;">' + escPrint(entry.status) + '</td>' +
+                '</tr>';
+        });
+    });
+
+    var html =
+        '<div style="background:#FFFFFF; color:#1E2B23; width:100%; font-family:\'Poppins\',sans-serif; padding:15px;">' +
+        '<h2 style="text-align:center; font-size:16px; color:#2F4F38; margin-bottom:12px; text-transform:uppercase;">Despatch Details</h2>' +
+        '<table style="width:100%; border-collapse:collapse; font-size:11px;">' +
+        '<thead>' + headHtml + '</thead>' +
+        '<tbody>' + rowsHtml + '</tbody>' +
+        '</table>' +
+        '</div>';
+
+    appPrint(html);
 }
 </script>
 </body>
