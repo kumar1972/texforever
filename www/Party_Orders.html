@@ -31,17 +31,17 @@
         div.container,
         .container {
             width: 100% !important;
-            max-width: 800px !important;
+            max-width: 900px !important;
             margin: 0 auto !important;
             background: #FFFFFF !important;
             background-color: #FFFFFF !important;
             padding: 20px !important;
             border-radius: 20px !important;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4) !important;
-            border: 1px solid rgba(82, 110, 81, 0.25) !important;
+            box-shadow: 0 10px 35px rgba(30,43,35,0.06) !important;
+            border: 1px solid rgba(82, 110, 81, 0.15) !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 15px !important;
+            gap: 16px !important;
         }
 
         .top-nav {
@@ -57,24 +57,24 @@
             gap: 5px;
             color: #FFFFFF;
             text-decoration: none;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 11px;
-            background: #1A1; 
+            background: #1A2421; 
             padding: 8px 16px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(74, 124, 89, 0.25);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             transition: all 0.3s ease;
         }
-        .back-btn:hover { background: #33593D; transform: translateY(-2px); }
+        .back-btn:hover { background: #4A7C59; transform: translateY(-2px); }
 
         #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
         #bitmapDisplayContainer img {
-            max-height: 45px;
+            max-height: 40px;
             border-radius: 6px;
-            border: 1px solid rgba(82, 110, 81, 0.2);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            border: 1px solid #4A7C59;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: zoom-in;
-            transition: transform 0.3s;
+            transition: transform 0.2s;
         }
         #bitmapDisplayContainer img:hover { transform: scale(1.1); }
 
@@ -84,68 +84,64 @@
             color: #2F4F38 !important;
             text-align: left;
             position: relative;
-            padding-left: 14px;
+            padding-left: 0;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
 
         .card-header::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 10%;
-            height: 80%;
-            width: 4px;
-            background: #4A7C59;
-            border-radius: 4px;
+            display: none;
         }
 
         .form-section {
             background: #F8FAF8 !important;
             border: 1px solid #E2E8E2 !important;
             border-radius: 14px;
-            padding: 18px 15px 15px 15px;
+            padding: 22px 15px 15px 15px;
             margin-bottom: 5px;
             position: relative;
         }
         
         .section-badge {
             position: absolute;
-            top: -10px;
+            top: -12px;
             left: 15px;
             background: #4A7C59;
             color: #FFF;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 700;
-            padding: 2px 10px;
-            border-radius: 10px;
-            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            letter-spacing: .5px;
             text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(74,124,89,.25);
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
         }
 
         label {
             display: block;
-            font-weight: 600;
+            font-weight: 700;
             color: #4A554A !important;
-            font-size: 10px;
-            margin-bottom: 4px;
+            font-size: 11px;
+            margin-bottom: 6px;
         }
 
         input, select {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 14px;
             border: 1px solid #D1DED1 !important;
             border-radius: 8px;
-            font-size: 11px;
+            font-size: 12px;
             background: #FFFFFF !important;
             color: #1E2B23 !important;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            outline: none;
         }
 
         input:focus, select:focus {
@@ -160,43 +156,44 @@
         .btn-main {
             width: 100%;
             padding: 14px;
-            margin: 10px 0 0 0;
+            margin: 14px 0 6px 0;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
-            background: linear-gradient(135deg, #4A79, #33593D);
-            box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25);
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #4A7C59, #2F4F38);
+            box-shadow: 0 4px 10px rgba(30,43,35,.1);
+            transition: transform 0.15s ease;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: .5px;
         }
-        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(74, 124, 89, 0.35); }
+        .btn-main:hover { transform: translateY(-1px); }
 
         .popup-trigger-btn {
-            background: linear-gradient(135deg, #2AA6, #1D4FC8);
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
             color: white;
             border: none;
             padding: 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(30,43,35,.1);
+            transition: transform 0.15s ease;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: .5px;
+            margin-top: 10px;
         }
-        .popup-trigger-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35); }
+        .popup-trigger-btn:hover { transform: translateY(-1px); }
 
         .overlay-modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(18, 25, 20, 0.85);
+            background: rgba(3, 7, 18, 0.85);
             backdrop-filter: blur(4px);
             z-index: 99999;
             flex-direction: column;
@@ -209,9 +206,10 @@
         .modal-content {
             background: #FFFFFF;
             width: 100%; height: 100%;
-            border-radius: 16px;
+            border-radius: 20px;
             display: flex; flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 35px rgba(30,43,35,0.15);
+            border: 1px solid rgba(82, 110, 81, 0.15);
             overflow: hidden;
             transform: scale(0.95);
             transition: transform 0.3s ease;
@@ -219,22 +217,22 @@
         .overlay-modal.show .modal-content { transform: scale(1); }
 
         .modal-header {
-            padding: 15px 20px;
-            background: #F4F7F4;
+            padding: 18px 20px;
+            background: #F8FAF8;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #E2E8E2;
+            border-bottom: 2px solid #EAF0EA;
         }
-        .modal-header h3 { margin: 0; font-size: 15px; color: #1E2B23; font-weight: 700; }
+        .modal-header h3 { margin: 0; font-size: 16px; color: #2F4F38; font-weight: 800; text-transform: uppercase; }
         .close-btn {
-            background: #FEE2E2; color: #DC2626; border: none; padding: 8px 14px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;
-            transition: all 0.2s ease;
+            background: #EF4444; color: white; border: none; padding: 8px 14px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px;
+            text-transform: uppercase;
         }
-        .close-btn:hover { background: #FECACA; transform: scale(1.05); }
+        .close-btn:hover { opacity: 0.9; }
 
-        .modal-body { padding: 15px; overflow-y: auto; flex: 1; background: #FAFCFA; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #FFFFFF; }
 
         .fullscreen-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -252,25 +250,27 @@
         }
 
         .excel-table {
-            width: 100%; border-collapse: separate; border-spacing: 0;
+            width: 100%; border-collapse: collapse; text-align: center;
             font-size: 11px; background: #FFFFFF; border-radius: 10px; overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2;
+            border: 1px solid #D1DED1;
         }
-        .excel-table th, .excel-table td { padding: 10px; text-align: left; border-bottom: 1px solid #E2E8E2; color: #1E2B23; }
-        .excel-table th { background: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .excel-table th, .excel-table td { border-bottom: 1px solid #E2E8E2; border-right: 1px solid #E2E8E2; padding: 10px 8px; color: #1E2B23; }
+        .excel-table th { background-color: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .excel-table td { font-weight: 600; text-align: center; }
         .excel-table tr:last-child td { border-bottom: none; }
         .excel-table tbody tr:hover { background: #F8FAF8; }
 
-        .action-cell { display: flex; flex-direction: row; gap: 5px; align-items: center; }
+        .action-cell { display: flex; flex-direction: row; gap: 5px; align-items: center; justify-content: center; }
 
         .action-btn {
             border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;
-            font-size: 10px; font-weight: 600; color: white; transition: all 0.2s ease;
+            font-size: 10px; font-weight: 700; color: white; transition: all 0.2s ease;
+            text-transform: uppercase;
         }
-        .action-del { background: #EF4444; } .action-del:hover { background: #DC2626; box-shadow: 0 2px 5px rgba(220, 38, 38, 0.3); }
-        .action-edit { background: #64748B; } .action-edit:hover { background: #475569; box-shadow: 0 2px 5px rgba(71, 85, 105, 0.3); }
-        .action-complete { background: #10B981; } .action-complete:hover { background: #059669; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3); }
-        .action-running { background: #F59E0B; } .action-running:hover { background: #D97706; box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3); }
+        .action-del { background: linear-gradient(135deg, #EF4444, #DC2626); } 
+        .action-edit { background: linear-gradient(135deg, #64748B, #475569); } 
+        .action-complete { background: linear-gradient(135deg, #10B981, #059669); } 
+        .action-running { background: linear-gradient(135deg, #F59E0B, #D97706); } 
     </style>
 </head>
 <body>
@@ -285,11 +285,11 @@
             <div id="bitmapDisplayContainer"></div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-            <h2 class="card-header" style="color: #2F4F38 !important; margin-bottom: 0;">Create Party Order</h2>
-            <label style="display: flex; align-items: center; gap: 6px; background: #EAF2EC; border: 1px solid #B4D3BC; padding: 6px 12px; border-radius: 8px; cursor: pointer; margin: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #EAF0EA; padding-bottom: 12px;">
+            <h2 class="card-header" style="color: #2F4F38 !important; margin-bottom: 0;">Create Party Order ( புது ஆர்டர் வரவு )</h2>
+            <label style="display: flex; align-items: center; gap: 6px; background: #F8FAF8; border: 1px solid #E2E8E2; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.04);">
                 <input type="checkbox" id="orderStatusToggle" onchange="quickCompleteToggle()" style="width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: #4A7C59;">
-                <span style="font-size: 11px; font-weight: 800; color: #2F4F38; text-transform: uppercase; margin: 0;">Completed</span>
+                <span style="font-size: 11px; font-weight: 700; color: #2F4F38; text-transform: uppercase; margin: 0;">Completed</span>
             </label>
         </div>
 
@@ -540,12 +540,10 @@
             if(val) {
                 let clean = val.toString().replace('#', '').trim().toLowerCase();
                 
-                // Data sources loading
                 let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
                 let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
                 let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
 
-                // 1. Find from Design Master (Priority 1)
                 let foundMaster = {};
                 if (Array.isArray(designMasters)) {
                     foundMaster = designMasters.find(d => {
@@ -554,23 +552,18 @@
                     }) || {};
                 }
 
-                // 2. Find from Design Specs
                 let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || val;
                 let specs = designSpecs[specKey] || {};
 
-                // Status Toggle update
                 let specStatus = (specs.status || foundMaster.status || '').toLowerCase();
                 document.getElementById('orderStatusToggle').checked = (specStatus === 'completed');
 
-                // Auto-filling fields with Design Master priority
                 document.getElementById('baseBeamCount').value = foundMaster.warp1 || foundMaster.baseBeamCount || specs.warp || specs.baseBeamCount || '2/60';
                 document.getElementById('topBeamCount').value = foundMaster.warp2 || foundMaster.topBeamCount || specs.warp2 || specs.topBeamCount || '';
                 
-                // 🟢 NEW: Auto-filling Weft 1 and Weft 2
                 document.getElementById('weftCount').value = foundMaster.weftCount || foundMaster.weft || specs.weftCount || specs.weft || '40s';
                 document.getElementById('weftCount2').value = foundMaster.weft2 || specs.weft2 || '';
                 
-                // Reed, Pick, Width (Directly from Design Master)
                 document.getElementById('reed').value = foundMaster.reed || specs.reed || '';
                 document.getElementById('pick').value = foundMaster.pick || specs.pick || '';
                 document.getElementById('width').value = foundMaster.width || specs.width || specs.finishWidth || '58';
@@ -738,7 +731,6 @@
                 designSpecs[specKey].topBeamCount = topBeam;
                 designSpecs[specKey].baseCount = combinedWarp;
                 
-                // 🟢 NEW: Update weft values in designSpecs
                 designSpecs[specKey].weftCount = document.getElementById('weftCount').value.trim();
                 designSpecs[specKey].weft2 = document.getElementById('weftCount2').value.trim();
                 
@@ -791,7 +783,6 @@
             document.getElementById('baseBeamCount').value = item.baseBeamCount || item.warpCount || '';
             document.getElementById('topBeamCount').value = item.topBeamCount || '';
             
-            // 🟢 NEW: Set Weft 1 and Weft 2 during edit
             document.getElementById('weftCount').value = item.weftCount || '';
             document.getElementById('weftCount2').value = item.weft2 || '';
             
@@ -814,7 +805,7 @@
             if(!tbody) return;
             tbody.innerHTML = '';
             partyOrders.slice().reverse().forEach(item => {
-                let statusColor = item.status == 'running' ? '#F59E0B' : '#10B981';
+                let statusColor = item.status == 'running' ? '#D97706' : '#10B981';
                 let statusBtn = item.status == 'running' 
                     ? `<button class="action-btn action-complete" onclick="toggleStatus(${item.id}, 'completed')">Complete</button>` 
                     : `<button class="action-btn action-running" onclick="toggleStatus(${item.id}, 'running')">Running</button>`;
@@ -829,7 +820,7 @@
                     <td>${item.topBeamCount || '-'}</td>
                     <td>${item.orderMtr || '0'}</td>
                     <td>₹${item.rateMtr || '0'}</td>
-                    <td><span style="color:${statusColor}; font-weight:800; font-size:9px; background:rgba(0,0,0,0.05); padding:3px 8px; border-radius:12px; text-transform:uppercase;">${item.status || 'running'}</span></td>
+                    <td><span style="color:${statusColor}; font-weight:700; text-transform:uppercase;">${item.status || 'running'}</span></td>
                     <td>
                         <div class="action-cell">
                             ${statusBtn}

@@ -10,9 +10,11 @@
 <script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script src="translator.js"></script>
-  <script src="printer.js"></script>
+<script src="printer.js"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
     html, body { width: 100%; min-height: 100vh; background: #030712; color: #1E2B23; }
     body { padding: 12px; display: flex; flex-direction: column; align-items: center; }
@@ -26,7 +28,7 @@
         width: 100%; max-width: 900px; margin: 0; background: #FFFFFF;
         border: 1px solid rgba(82, 110, 81, 0.15); border-radius: 20px;
         padding: 20px; box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06);
-        display: flex; flex-direction: column; gap: 15px;
+        display: flex; flex-direction: column; gap: 16px;
     }
 
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
@@ -40,52 +42,51 @@
 
     #bitmapDisplayContainer { text-align: right; display: flex; align-items: center; gap: 10px; }
     #bitmapDisplayContainer img {
-        max-height: 45px; border-radius: 6px; border: 1px solid rgba(82, 110, 81, 0.2);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.08); cursor: zoom-in; transition: transform 0.3s;
+        max-height: 40px; border-radius: 6px; border: 1px solid #4A7C59;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: zoom-in; transition: transform 0.2s;
     }
     #bitmapDisplayContainer img:hover { transform: scale(1.1); }
 
     .completed-checkbox {
-        display: flex; align-items: center; gap: 6px; background: #D8DFD6;
-        padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(82, 110, 81, 0.4);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex; align-items: center; gap: 6px; background: #F8FAF8;
+        padding: 8px 12px; border-radius: 8px; border: 1px solid #E2E8E2;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.04);
     }
-    .completed-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #526E51; margin: 0; }
-    .completed-checkbox label { margin: 0; color: #3F5A3E; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .completed-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #4A7C59; margin: 0; }
+    .completed-checkbox label { margin: 0; color: #2F4F38; cursor: pointer; font-size: 11px; font-weight: 700; }
 
-    .page-title { font-size: 16px; font-weight: 700; color: #2F4F38; text-align: left; position: relative; padding-left: 12px; margin-bottom: 5px; }
-    .page-title::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: #4A7C59; border-radius: 4px; }
+    .page-title { font-size: 18px; font-weight: 800; color: #FFFFFF; text-align: center; text-transform: uppercase; letter-spacing: .5px; border-bottom: 2px solid #EAF0EA; padding-bottom: 12px; margin-bottom: 5px; }
 
     .form-section { background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 14px; padding: 22px 15px 15px 15px; margin-bottom: 5px; position: relative; }
     .section-badge {
         position: absolute; top: -12px; left: 15px; background: #4A7C59; color: #FFF;
         font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 12px;
-        letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
+        letter-spacing: .5px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(74, 124, 89, 0.25);
     }
     .section-badge.blue { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25); }
     .section-badge.amber { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 4px 8px rgba(217, 119, 6, 0.25); }
 
     .bulk-color-box {
-        background: #EAF0EA; border: 1px dashed #4A7C59; border-radius: 10px;
-        padding: 10px 15px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+        background: #EAF0EA; border: 1px solid #D1DED1; border-radius: 10px;
+        padding: 12px 15px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
     }
     .bulk-color-box label { font-size: 11px; font-weight: 700; color: #2F4F38; white-space: nowrap; }
-    .bulk-color-box select, .bulk-color-box input { flex: 1; min-width: 100px; padding: 8px 10px; font-size: 11px; background: #FFFFFF; color: #1E2B23; }
+    .bulk-color-box select, .bulk-color-box input { flex: 1; min-width: 100px; padding: 10px 12px; font-size: 12px; background: #FFFFFF; color: #1E2B23; }
     
     .btn-bulk-change {
         background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; border: none;
-        padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;
-        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25); white-space: nowrap; transition: all 0.2s;
+        padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer;
+        box-shadow: 0 4px 10px rgba(30,43,35,.1); white-space: nowrap; transition: all 0.2s; text-transform: uppercase;
     }
-    .btn-bulk-change:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(59, 130, 246, 0.35); }
+    .btn-bulk-change:hover { transform: translateY(-1px); }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    .form-group label { font-size: 10px; font-weight: 600; color: #4A554A; white-space: nowrap; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 11px; font-weight: 700; color: #4A554A; white-space: nowrap; }
 
     input, select {
-        width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #D1DED1;
-        background: #FFFFFF; color: #1E2B23; font-size: 11px; font-weight: 600; transition: all 0.3s ease;
+        width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #D1DED1;
+        background: #FFFFFF; color: #1E2B23; font-size: 12px; font-weight: 600; transition: all 0.3s ease; outline: none;
     }
     input:focus, select:focus { border-color: #4A7C59; outline: none; box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15); }
 
@@ -94,79 +95,80 @@
     
     .btn-copy-design {
         background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; border: none;
-        padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;
-        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.25); white-space: nowrap; transition: all 0.2s;
+        padding: 12px 16px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer;
+        box-shadow: 0 4px 10px rgba(30,43,35,.1); white-space: nowrap; transition: all 0.2s; text-transform: uppercase;
     }
-    .btn-copy-design:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(139, 92, 246, 0.35); }
+    .btn-copy-design:hover { transform: translateY(-1px); }
 
     .btn-sskr-settings {
         background: linear-gradient(135deg, #06B6D4, #0E7490); color: white; border: none;
-        padding: 9px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;
-        box-shadow: 0 4px 8px rgba(6, 182, 212, 0.25); white-space: nowrap; transition: all 0.2s;
-        margin-top: 6px; display: none; align-items: center; justify-content: center; gap: 6px;
+        padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer;
+        box-shadow: 0 4px 10px rgba(30,43,35,.1); white-space: nowrap; transition: all 0.2s;
+        margin-top: 6px; display: none; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase;
     }
-    .btn-sskr-settings:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(6, 182, 212, 0.35); }
+    .btn-sskr-settings:hover { transform: translateY(-1px); }
 
     .sskr-row { display: grid; grid-template-columns: 32px 1.4fr 1.4fr 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .sskr-row input[type="number"] { text-align: center; background: #FFFEF7; border: 1px solid #8B5CF6; color: #6D28D9; font-weight: 700; }
+    .sskr-row input[type="number"] { text-align: center; background: #FFFFFF; border: 1px solid #8B5CF6; color: #6D28D9; font-weight: 700; }
     .sskr-row-label {
         font-size: 11px; font-weight: 600; text-align: center; color: #1E2B23; background: #F8FAF8;
-        padding: 8px 4px; border-radius: 6px; border: 1px solid #D1DED1; overflow: hidden; text-overflow: ellipsis;
+        padding: 10px 8px; border-radius: 8px; border: 1px solid #D1DED1; overflow: hidden; text-overflow: ellipsis;
     }
 
     .header-grid {
-        display: grid; grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 0.8fr 1fr 65px; gap: 4px;
-        padding: 5px 0; font-size: 9px; font-weight: 700; color: #2F4F38; text-align: center; text-transform: uppercase;
+        display: grid; grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 0.8fr 1fr 65px; gap: 6px;
+        padding: 8px 0; font-size: 10px; font-weight: 700; color: #2F4F38; text-align: center; text-transform: uppercase;
     }
-    .row-grid { display: grid; grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 0.8fr 1fr 65px; gap: 4px; margin-bottom: 8px; align-items: center; }
+    .row-grid { display: grid; grid-template-columns: 25px 1.2fr 1.2fr 1.2fr 0.8fr 1fr 65px; gap: 6px; margin-bottom: 10px; align-items: center; }
 
     .header-grid-range {
-        display: grid; grid-template-columns: 1fr 1fr 1fr 35px; gap: 6px;
-        padding: 5px 0; font-size: 10px; font-weight: 700; color: #2F4F38; text-align: center; text-transform: uppercase;
+        display: grid; grid-template-columns: 1fr 1fr 1fr 35px; gap: 8px;
+        padding: 8px 0; font-size: 10px; font-weight: 700; color: #2F4F38; text-align: center; text-transform: uppercase;
     }
-    .row-grid-range { display: grid; grid-template-columns: 1fr 1fr 1fr 35px; gap: 6px; margin-bottom: 8px; align-items: center; }
+    .row-grid-range { display: grid; grid-template-columns: 1fr 1fr 1fr 35px; gap: 8px; margin-bottom: 10px; align-items: center; }
 
-    .row-grid input, .row-grid select, .row-grid-range input { text-align: center; padding: 8px 2px; font-size: 11px; background: #FFFFFF; color: #1E2B23; }
+    .row-grid input, .row-grid select, .row-grid-range input { text-align: center; padding: 10px 6px; font-size: 11px; background: #FFFFFF; color: #1E2B23; }
 
-    .line-no { font-size: 10px; font-weight: 800; color: #4A7C59; text-align: center; background: #EAF0EA; padding: 8px 0; border-radius: 6px; border: 1px solid #D1DED1; }
-    .btn-add-small { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .line-no { font-size: 11px; font-weight: 800; color: #2F4F38; text-align: center; background: #EAF0EA; padding: 10px 0; border-radius: 8px; border: 1px solid #D1DED1; }
+    .btn-add-small { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 10px rgba(30,43,35,.1); }
     .action-cell-row { display: flex; gap: 4px; width: 100%; }
     
-    .btn-insert-small { background: #D1FAE5; color: #059669; border: none; width: 100%; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
-    .btn-insert-small:hover { background: #A7F3D0; transform: scale(1.05); }
-    .btn-del-small { background: #FEE2E2; color: #DC2626; border: none; width: 100%; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
-    .btn-del-small:hover { background: #FECACA; transform: scale(1.05); }
+    .btn-insert-small { background: #EAF0EA; color: #059669; border: none; width: 100%; height: 38px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; border: 1px solid #D1DED1; }
+    .btn-insert-small:hover { background: #D1FAE5; }
+    .btn-del-small { background: #FEE2E2; color: #DC2626; border: none; width: 100%; height: 38px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; border: 1px solid #FCA5A5; }
+    .btn-del-small:hover { background: #FECACA; }
 
     .action-btns-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-    .btn-main { width: 100%; padding: 14px; border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .btn-main:hover { transform: translateY(-2px); }
-    .btn-preview { background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25); }
-    .btn-save { background: linear-gradient(135deg, #AC7CAA, #33593D); box-shadow: 0 6px 15px rgba(74, 124, 89, 0.25); }
-    .btn-list { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 6px 15px rgba(245, 158,11,0.25); }
+    .btn-main { width: 100%; padding: 14px; border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 10px rgba(30,43,35,.1); letter-spacing: .5px; }
+    .btn-main:hover { transform: translateY(-1px); }
+    .btn-preview { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+    .btn-save { background: linear-gradient(135deg, #4A7C59, #2F4F38); }
+    .btn-list { background: linear-gradient(135deg, #F59E0B, #D97706); }
 
-    .overlay-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 25, 20, 0.95); backdrop-filter: blur(6px); z-index: 99999; flex-direction: column; padding: 0; opacity: 0; transition: opacity 0.3s ease; }
+    .overlay-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(6px); z-index: 99999; flex-direction: column; padding: 0; opacity: 0; transition: opacity 0.3s ease; }
     .overlay-modal.show { opacity: 1; }
     .modal-content { background: #FFFFFF; width: 100vw; height: 100vh; margin: 0; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; transform: scale(1); }
     
-    .modal-header { padding: 15px 20px; background: #F4F7F4; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8E2; flex-shrink: 0; }
-    .modal-header h3 { margin: 0; font-size: 16px; color: #4A7C59; font-weight: 800; }
+    .modal-header { padding: 18px 20px; background: #F8FAF8; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EAF0EA; flex-shrink: 0; }
+    .modal-header h3 { margin: 0; font-size: 16px; color: #2F4F38; font-weight: 800; text-transform: uppercase; }
     .modal-actions { display: flex; gap: 8px; }
-    .close-btn { background: #FEE2E2; color: #DC2626; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
-    .print-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .close-btn { background: #EF4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+    .print-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; }
     
-    .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #FAFCFA; width: 100%; max-width: 1000px; margin: 0 auto; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #FFFFFF; width: 100%; max-width: 1000px; margin: 0 auto; }
     .fullscreen-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center; padding: 20px; flex-direction: column; }
     .fullscreen-modal img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px; }
     .close-fullscreen { position: absolute; top: 20px; right: 20px; background: #EF4444; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-    .table-container { width: 100%; border-radius: 10px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #E2E8E2; background: #FFFFFF; }
+    .table-container { width: 100%; border-radius: 10px; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #D1DED1; background: #FFFFFF; }
     table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; white-space: nowrap; }
-    th, td { padding: 10px 12px; text-align: center; color: #1E2B23; }
-    .action-cell { display: flex; gap: 4px; justify-content: center; }
-    .edit-action-btn { background: #64748B; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; }
-    .del-action-btn { background: #EF4444; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; }
-    .action-complete { background: #526E51; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
-    .action-running { background: #D97706; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
+    th, td { padding: 10px 12px; text-align: center; color: #1E2B23; border-bottom: 1px solid #E2E8E2; }
+    th { background: #EAF0EA; color: #2F4F38; font-weight: 700; text-transform: uppercase; font-size: 10px; }
+    .action-cell { display: flex; gap: 6px; justify-content: center; }
+    .edit-action-btn { background: linear-gradient(135deg, #64748B, #475569); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .del-action-btn { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .action-complete { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .action-running { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
     @media print {
         @page { size: A4 portrait; margin: 10mm; }
@@ -226,7 +228,7 @@
 
             <div class="form-group">
                 <label>Fabric Type</label>
-                <select id="infoType" onchange="toggleSskrSettingsBtn()" style="width:100%; padding:12px; border:1px solid #e2c275; border-radius:10px; background:#FFFEF7; font-weight:700; color:#7a3d0a;">
+                <select id="infoType" onchange="toggleSskrSettingsBtn()" style="width:100%; padding:12px; border:1px solid #D1DED1; border-radius:8px; background:#FFFFFF; font-weight:600; color:#1E2B23;">
                     <option value="Plain stripe">Plain stripe</option>
                     <option value="Plain check">Plain check</option>
                     <option value="Dobby stripe">Dobby stripe</option>
@@ -243,7 +245,7 @@
             </div>
         </div>
 
-        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); background:#FFFFFF; padding:12px; border-radius:10px; border:1px dashed #D1DED1; margin-top:5px;">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); background:#FFFFFF; padding:15px; border-radius:10px; border:1px solid #D1DED1; margin-top:5px;">
             <div class="form-group"><label>Count 1 (Warp)</label><input type="text" id="infoCount1" placeholder="C1"></div>
             <div class="form-group"><label>Count 2 (Warp)</label><input type="text" id="infoCount2" placeholder="C2"></div>
             <div class="form-group"><label>Weft 1</label><input type="text" id="infoWeft1" placeholder="W1"></div>
@@ -263,7 +265,7 @@
             <input type="text" id="bulkNewColor" placeholder="Type New Color">
             <button class="btn-bulk-change" onclick="applyBulkColorChange()">Change Color</button>
         </div>
-        <div style="font-size:9px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">(Press Enter in Ends to add new line below)</div>
+        <div style="font-size:10px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">(Press Enter in Ends to add new line below)</div>
         <div style="overflow-x:auto;">
             <div style="min-width:540px;">
                 <div class="header-grid">
@@ -290,7 +292,7 @@
     </div>
 
     <!-- 🟢 WARP TOTAL SUMMARY BOX 🟢 -->
-    <div style="background:#FFFFFF; border-radius:14px; padding:12px 16px; border:1px solid #E2E8E2; margin-bottom:5px; box-shadow:0 4px 10px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:6px;">
+    <div style="background:#FFFFFF; border-radius:14px; padding:15px; border:1px solid #D1DED1; margin-bottom:5px; box-shadow:0 4px 10px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:6px;">
         <div style="font-size:13px; font-weight:700; color:#1E2B23;">Total Pattern Ends: <span id="entryPatternEnds" style="color:#D97706;">0</span></div>
         <div style="font-size:13px; font-weight:700; color:#059669;">Total Ends: <span id="entryTotalEndsCalc">0 x 0 = 0.00</span></div>
     </div>
@@ -651,7 +653,6 @@ function loadDesignData() {
     const masters = getLocalArray('design_masters_data');
     const foundMaster = masters.find(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; }) || null;
 
-    // 🟢 PRIORITY 1: Check warp_entry_data directly
     let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
     let foundWarpEntry = Array.isArray(warpEntryList) 
         ? warpEntryList.find(w => cleanDesignName(w.name || w.designNo) === cleanDNo) 
@@ -1017,10 +1018,8 @@ window.saveWarpDesign = async function () {
     if (idx === -1) masters.push(patternData);
     else masters[idx] = Object.assign({}, masters[idx], patternData);
 
-    // 🟢 SAVE INTO warp_entry_data WITH EXACT DESIGN NO 🟢
     let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
     if (!Array.isArray(warpEntryList)) warpEntryList = [];
-    // Remove old Live Preview or existing saved copy
     warpEntryList = warpEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo && w.designNo !== "🔴 Live Warp Entry Preview");
     warpEntryList.push(patternData);
     window.StorageDB.setItem('warp_entry_data', JSON.stringify(warpEntryList));
@@ -1054,7 +1053,6 @@ window.saveWarpDesign = async function () {
     }
 };
 
-/* Colour shown in this page must be a NAME, never a hex code (hex lines come from 3D/denting pages) */
 function warpLineColorName(l) {
     if (!l) return '';
     const c = (l.color === undefined || l.color === null) ? '' : String(l.color).trim();
@@ -1071,7 +1069,6 @@ async function toggleStatus(dNo, newStatus) {
 
     const cleanDNo = cleanDesignName(dNo);
 
-    // design_masters_data (only status is changed)
     const masters = getLocalArray('design_masters_data');
     const index = masters.findIndex(function (m) { return cleanDesignName(m.name || m.designNo) === cleanDNo; });
     if (index > -1) {
@@ -1079,7 +1076,6 @@ async function toggleStatus(dNo, newStatus) {
         window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
     }
 
-    // warp_entry_data (only status is changed)
     const entries = getLocalArray('warp_entry_data');
     let entryChanged = false;
     entries.forEach(function (w) {
@@ -1087,7 +1083,6 @@ async function toggleStatus(dNo, newStatus) {
     });
     if (entryChanged) window.StorageDB.setItem('warp_entry_data', JSON.stringify(entries));
 
-    // design_specs
     const designSpecs = getLocalObject('design_specs');
     const specKey = Object.keys(designSpecs).find(function (k) { return cleanDesignName(k) === cleanDNo; }) || dNo;
     if (!designSpecs[specKey]) designSpecs[specKey] = {};
@@ -1116,7 +1111,6 @@ function renderSavedList() {
 
     function hasLines(x) { return x && Array.isArray(x.warpLines) && x.warpLines.length > 0; }
 
-    // Merge design_masters_data + warp_entry_data by design name (Edit loads warp_entry_data first, so its line count wins)
     const rows = new Map();
     masters.forEach(function (m) {
         if (!hasLines(m)) return;
@@ -1135,7 +1129,7 @@ function renderSavedList() {
     let html = '';
     rows.forEach(function (r) {
         const status = r.status || 'running';
-        const statusColor = status === 'running' ? '#D97706' : '#526E51';
+        const statusColor = status === 'running' ? '#D97706' : '#10B981';
         const arg = escapeHtmlText(JSON.stringify(String(r.name)));
         const statusBtn = status === 'running'
             ? `<button class="action-complete" onclick="toggleStatus(${arg}, 'completed')">Complete</button>`
@@ -1199,8 +1193,8 @@ function previewPattern() {
     const sp = specKey ? designSpecs[specKey] : {};
 
     let headerHtml = `
-        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;background:#F4F7F4;border:1px solid #4A7C59;padding:8px 12px;border-radius:6px;margin-bottom:8px;font-size:11px;font-weight:700;color:#1E2B23;">
-            <span style="margin-right:8px;">Design: <span style="color:#4A7C59;">${escapeHtmlText(dNo || '-')}</span></span>
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;background:#F8FAF8;border:1px solid #D1DED1;padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:11px;font-weight:700;color:#1E2B23;">
+            <span style="margin-right:8px;">Design: <span style="color:#2F4F38;">${escapeHtmlText(dNo || '-')}</span></span>
             <span style="margin-right:8px;">Counts: ${escapeHtmlText(document.getElementById('infoCount1').value || '-')}, ${escapeHtmlText(document.getElementById('infoCount2').value || '-')}</span>
             <span style="margin-right:8px;">Order Mtr: ${escapeHtmlText(document.getElementById('infoOrderMtr').value || '-')}</span>
             <span style="margin-right:8px;">Top Beam: ${escapeHtmlText(document.getElementById('infoTopBeam').value || '-')}</span>
@@ -1214,9 +1208,9 @@ function previewPattern() {
     let col1Html = ''; let col2Html = ''; let currentLinesInCol1 = 0; const MAX_LINES_COL1 = 45;
     let groundTotal = 0; let topTotal = 0; let flatPattern = []; let i = 0;
 
-    const tdStyle = "padding:4px 6px;text-align:center;color:#1E2B23;font-size:11px;border-bottom:1px dashed #A0AFA0;";
-    const tdStyleColor = "padding:4px 6px;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;border-bottom:1px dashed #A0AFA0;";
-    const tdStyleLast = "padding:4px 6px;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:11px;border-bottom:1px dashed #A0AFA0;";
+    const tdStyle = "padding:6px 8px;text-align:center;color:#1E2B23;font-size:11px;border-bottom:1px solid #E2E8E2;";
+    const tdStyleColor = "padding:6px 8px;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;border-bottom:1px solid #E2E8E2;";
+    const tdStyleLast = "padding:6px 8px;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:11px;border-bottom:1px solid #E2E8E2;";
 
     while (i < warpLines.length) {
         const start = i + 1;
@@ -1309,21 +1303,21 @@ function previewPattern() {
     let dynamicBeamHeader = beamLabels.length > 0 ? beamLabels.join(" / ") : "Bottom";
     let topLabelStr = hasSskr && !hasTop ? "SSKR" : (hasTop && !hasSskr ? "Dobby" : "Dobby/SSKR");
 
-    const finalTotalDisplay = topTotal > 0 ? `<span style="color:#3F5A3E;">${groundTotal} <span style="font-size:9px;">(Bottom)</span></span> + <span style="color:#D97706;">${topTotal} <span style="font-size:9px;">(${topLabelStr})</span></span> = ${finalTotal}` : `${finalTotal}`;
+    const finalTotalDisplay = topTotal > 0 ? `<span style="color:#2F4F38;">${groundTotal} <span style="font-size:9px;">(Bottom)</span></span> + <span style="color:#D97706;">${topTotal} <span style="font-size:9px;">(${topLabelStr})</span></span> = ${finalTotal}` : `${finalTotal}`;
 
     let html = headerHtml;
     const tableHeader = `
         <tr style="background:#EAF0EA;">
-            <th style="padding:6px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:10%;">No</th>
-            <th style="padding:6px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:15%;">Count</th>
-            <th style="padding:6px;text-align:left;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:25%;">Colour</th>
-            <th style="padding:6px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;line-height:1.2;width:15%;">Ends<br><span style="font-size:7px;color:#4A554A;">${dynamicBeamHeader}</span></th>
-            <th style="padding:6px;text-align:left;padding-left:10px;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:35%;">Set</th>
+            <th style="padding:8px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:10%;">No</th>
+            <th style="padding:8px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:15%;">Count</th>
+            <th style="padding:8px;text-align:left;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:25%;">Colour</th>
+            <th style="padding:8px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;line-height:1.2;width:15%;">Ends<br><span style="font-size:7px;color:#4A554A;">${dynamicBeamHeader}</span></th>
+            <th style="padding:8px;text-align:left;padding-left:10px;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:35%;">Set</th>
         </tr>
     `;
 
-    html += `<div class="print-flex-row" style="display:flex;gap:20px;align-items:flex-start;justify-content:space-between;width:100%;"><div class="print-col-box" style="flex:1;width:48%;background:#FFF;"><table style="width:100%;border-collapse:collapse;font-size:11px;">${tableHeader}${col1Html}</table></div><div class="print-col-box" style="flex:1;width:48%;background:#FFF;">`;
-    if (col2Html !== '') html += `<table style="width:100%;border-collapse:collapse;font-size:11px;">${tableHeader}${col2Html}</table>`;
+    html += `<div class="print-flex-row" style="display:flex;gap:20px;align-items:flex-start;justify-content:space-between;width:100%;"><div class="print-col-box" style="flex:1;width:48%;background:#FFF;"><table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #D1DED1;border-radius:8px;overflow:hidden;">${tableHeader}${col1Html}</table></div><div class="print-col-box" style="flex:1;width:48%;background:#FFF;">`;
+    if (col2Html !== '') html += `<table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #D1DED1;border-radius:8px;overflow:hidden;">${tableHeader}${col2Html}</table>`;
     html += `</div></div>`;
 
     const curWidth = parseFloat(document.getElementById('infoWidth')?.value) || 0;
@@ -1333,14 +1327,14 @@ function previewPattern() {
     const curTotalEnds = Math.round(curWidth * curReed);
 
     html += `
-        <div style="margin-top:15px;border-top:2px solid #4A7C59;padding-top:5px;page-break-inside:avoid;">
-            <table style="width:100%;border-collapse:collapse;font-size:11px;background:#FFF;">
-                <tr style="font-weight:bold;font-size:12px;background:#F8FAF8;border-bottom:1px dashed #A0AFA0;">
-                    <td style="padding:8px;text-align:right;color:#2F4F38;width:60%;">Total Pattern Ends:</td>
-                    <td style="padding:8px;font-weight:bold;text-align:left;padding-left:15px;white-space:nowrap;color:#1E2B23;">${finalTotalDisplay}</td>
+        <div style="margin-top:15px;border-top:2px solid #4A7C59;padding-top:10px;page-break-inside:avoid;">
+            <table style="width:100%;border-collapse:collapse;font-size:11px;background:#FFF;border:1px solid #D1DED1;border-radius:8px;overflow:hidden;">
+                <tr style="font-weight:700;font-size:12px;background:#F8FAF8;border-bottom:1px solid #E2E8E2;">
+                    <td style="padding:10px;text-align:right;color:#2F4F38;width:60%;">Total Pattern Ends:</td>
+                    <td style="padding:10px;font-weight:700;text-align:left;padding-left:15px;white-space:nowrap;color:#1E2B23;">${finalTotalDisplay}</td>
                 </tr>
-                <tr style="background:#FFFFFF;border-bottom:1px dashed #A0AFA0;">
-                    <td colspan="2" style="padding:8px;text-align:center;font-size:12px;font-weight:700;color:#1E2B23;">
+                <tr style="background:#FFFFFF;border-bottom:1px solid #E2E8E2;">
+                    <td colspan="2" style="padding:10px;text-align:center;font-size:12px;font-weight:700;color:#1E2B23;">
                         Warp Width ${curWidth} X Reed ${curReed} = <span style="color:#059669;">${calcEnds}</span> Total Ends
                     </td>
                 </tr>
@@ -1362,17 +1356,17 @@ function previewPattern() {
         }
 
         html += `
-            <tr style="font-weight:700;font-size:12px;background:#FFFFFF;color:#2F4F38;border-bottom:1px dashed #A0AFA0;">
+            <tr style="font-weight:700;font-size:12px;background:#FFFFFF;color:#2F4F38;border-bottom:1px solid #E2E8E2;">
                 <td colspan="2" style="padding:10px;text-align:center;">
-                    <span style="color:#D97706;font-weight:800;">${repeats} Repeat</span> + 
-                    <span style="color:#D97706;font-weight:800;">${remEnds} Ends</span> = 
-                    <span style="font-size:13px;color:#1E2B23;font-weight:800;">${curTotalEnds} Total Ends</span>
+                    <span style="color:#D97706;font-weight:700;">${repeats} Repeat</span> + 
+                    <span style="color:#D97706;font-weight:700;">${remEnds} Ends</span> = 
+                    <span style="font-size:12px;color:#1E2B23;font-weight:700;">${curTotalEnds} Total Ends</span>
                 </td>
             </tr>
         `;
 
         const breakdownHtml = Object.keys(countTotals).map(c => `<span style="color:#1E2B23;"><b>${escapeHtmlText(c)}</b>: ${countTotals[c]} Ends</span>`).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
-        html += `<tr style="font-size:11px;background:#EAF0EA;"><td colspan="2" style="padding:10px;text-align:center;"><span style="color:#4A7C59;font-weight:800;margin-right:8px;text-transform:uppercase;">Count Wise Total:</span>${breakdownHtml}</td></tr>`;
+        html += `<tr style="font-size:11px;background:#EAF0EA;"><td colspan="2" style="padding:10px;text-align:center;"><span style="color:#2F4F38;font-weight:700;margin-right:8px;text-transform:uppercase;">Count Wise Total:</span>${breakdownHtml}</td></tr>`;
     }
 
     html += `</table></div>`;
@@ -1382,9 +1376,6 @@ function previewPattern() {
     openModal('previewModal');
 }
 
-/* ============================================================
-   3D PREVIEW DATA LINK (FIXED)
-============================================================ */
 function update3DPreviewData() {
     try {
         let colorInputs = document.querySelectorAll('.inp-color');
@@ -1410,7 +1401,6 @@ function update3DPreviewData() {
         let warpEntryList = safeJSONParse(window.StorageDB.getItem('warp_entry_data'), []);
         if (!Array.isArray(warpEntryList)) warpEntryList = [];
         
-        // பழைய Preview டேட்டா இருந்தால் அகற்றிவிட்டு புதியதை சேர்க்கவும் (மற்ற டிசைன்களை அழிக்காது)
         warpEntryList = warpEntryList.filter(w => w.designNo !== "🔴 Live Warp Entry Preview");
         warpEntryList.unshift(previewObj); 
         
@@ -1420,9 +1410,6 @@ function update3DPreviewData() {
     }
 }
 
-/* ============================================================
-   🟢 LIVE WARP TOTALS CALCULATION 🟢
-============================================================ */
 function calculateLiveWarpTotals() {
     let patternEnds = 0;
     
