@@ -28,6 +28,29 @@ window.isCloudSyncActive = function () {
     return setting !== "false";
 };
 
+// Indha keys device-specific / secret. Cloud-ku upload aagakoodaadhu.
+window.isCloudExcludedKey = function (key) {
+    key = String(key || "");
+    return (
+        key.indexOf("database_") === 0 ||
+        key.indexOf("custom_supabase_") === 0 ||
+        key.indexOf("supabase_") === 0 ||
+        key === "erp_cloud_sync_enabled" ||
+        key === "erp_dashboard_ui" ||
+        key.indexOf("lswt-") === 0
+    );
+};
+
+// Supabase URL-a https ku maathi, kadaisi / and /rest/v1 neekkum (Mixed Content / Failed to fetch thadukka)
+window.normalizeSupabaseUrl = function (u) {
+    u = String(u || "").trim();
+    if (!u) return "";
+    u = u.replace(/^http:\/\//i, "https://");
+    if (!/^https:\/\//i.test(u)) u = "https://" + u;
+    u = u.replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
+    return u;
+};
+
 // ============================================================
 // INDEXED DB STORAGE SYSTEM (GLOBAL UNLIMITED STORAGE)
 // ============================================================
@@ -107,7 +130,7 @@ window.StorageDB = {
             try { localStorage.setItem(key, value); } catch(e) {}
         }
         // Same cloud auto-sync that the old localStorage interceptor did
-        if (!skipCloud && key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom")) {
+        if (!skipCloud && key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom") && !window.isCloudExcludedKey(key)) {
             if (window.isCloudSyncActive && window.isCloudSyncActive()) {
                 let parsedData = value;
                 try { parsedData = JSON.parse(value); } catch(e) {}
@@ -198,14 +221,14 @@ function readSupabaseStoredValue(primaryKey, alternativeKeys = []) {
 }
 
 window.TEXFOREVER_SUPABASE_CONFIG = {
-    url: readSupabaseStoredValue("custom_supabase_url", ["supabase_url", "supabaseUrl", "serverUrl", "db_url"]),
+    url: window.normalizeSupabaseUrl(readSupabaseStoredValue("custom_supabase_url", ["supabase_url", "supabaseUrl", "serverUrl", "db_url"])),
     key: readSupabaseStoredValue("custom_supabase_key", ["supabase_key", "supabaseKey", "apiKey", "db_key"])
 };
 
 // Re-read URL/Key after IndexedDB (StorageDB) has loaded its data
 window.refreshSupabaseConfig = function () {
     window.TEXFOREVER_SUPABASE_CONFIG = {
-        url: readSupabaseStoredValue("custom_supabase_url", ["supabase_url", "supabaseUrl", "serverUrl", "db_url"]),
+        url: window.normalizeSupabaseUrl(readSupabaseStoredValue("custom_supabase_url", ["supabase_url", "supabaseUrl", "serverUrl", "db_url"])),
         key: readSupabaseStoredValue("custom_supabase_key", ["supabase_key", "supabaseKey", "apiKey", "db_key"])
     };
     return window.TEXFOREVER_SUPABASE_CONFIG;
@@ -759,7 +782,7 @@ window.supabaseSave = window.firebaseSave;
 const originalLocalStorageSet = localStorage.setItem;
 localStorage.setItem = function(key, value) {
     originalLocalStorageSet.apply(this, arguments);
-    if (key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom")) {
+    if (key && !key.startsWith("__") && !key.includes("theme") && !key.includes("zoom") && !window.isCloudExcludedKey(key)) {
         if (window.isCloudSyncActive && window.isCloudSyncActive()) {
             let parsedData = value;
             try { parsedData = JSON.parse(value); } catch(e) {}
