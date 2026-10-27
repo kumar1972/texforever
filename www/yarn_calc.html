@@ -115,6 +115,25 @@
         table input, table select { padding: 6px; font-size: 11px; text-align: center; width: 100%; min-width: 70px; }
         .row-total-display { font-weight: 700; color: #D97706; }
 
+        .sell-edit-btn {
+            background: #F59E0B; color: #fff; border: none; padding: 3px 10px; border-radius: 6px;
+            font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .sell-edit-btn.active { background: #6B7280; }
+        #costFabric.sell-editing {
+            background: #FFFFFF !important; border-color: #F59E0B !important; cursor: text;
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.25);
+        }
+
+        .field-editing { background: #FFFFFF !important; border-color: #F59E0B !important; box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
+        .field-label-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:6px; }
+        .field-label-row label { margin:0 !important; }
+        .refresh-btn {
+            background: #2563EB; color: white; border: none; padding: 10px 20px; border-radius: 8px;
+            font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s ease;
+        }
+        .refresh-btn:hover { background: #1D4ED8; transform: translateY(-2px); }
+
         .section-save-container { display: flex; justify-content: flex-end; margin-top: 10px; }
         .section-save-btn {
             background: #4A7C59; color: white; border: none;
@@ -197,14 +216,17 @@
             <div class="form-group" style="position: relative;">
                 <label>Design No</label>
                 <!-- Searchable Text Input -->
+                <div style="display:flex; gap:6px; align-items:center;">
                 <input
                     type="text"
                     id="designSearchInput"
                     placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
                     oninput="filterDesignDropdown()"
                     onfocus="openDesignDropdownList()"
-                    style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                    style="flex:1; min-width:0; width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
                 />
+                <button type="button" id="designRefreshBtn" class="refresh-btn" style="padding:8px 12px; flex-shrink:0;" title="Refresh from Warp / Weft entry" onclick="refreshCalculation()">🔄</button>
+                </div>
                 <!-- Custom Dropdown List Box -->
                 <div
                     id="designDropdownList"
@@ -251,7 +273,10 @@
         </div>
 
         <!-- WARP TABLE -->
-        <h3 class="section-title">🧵 WARP YARN ( வார்ப்பு நூல் )- GROUND BEAM</h3>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h3 class="section-title">🧵 WARP YARN ( வார்ப்பு நூல் )- GROUND BEAM</h3>
+            <button type="button" id="warpTblEditBtn" class="sell-edit-btn" onclick="toggleTableEdit('warp')">✏️ Edit Weight</button>
+        </div>
         <div class="table-container">
             <table>
                 <thead>
@@ -277,7 +302,10 @@
         </div>
 
         <!-- WEFT TABLE -->
-        <h3 class="section-title">🧶 WEFT YARN ( ஊடை நூல் )CALCULATION</h3>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h3 class="section-title">🧶 WEFT YARN ( ஊடை நூல் )CALCULATION</h3>
+            <button type="button" id="weftTblEditBtn" class="sell-edit-btn" onclick="toggleTableEdit('weft')">✏️ Edit Weight</button>
+        </div>
         <div class="table-container">
             <table>
                 <thead>
@@ -302,7 +330,8 @@
             </table>
         </div>
 
-        <div class="section-save-container">
+        <div class="section-save-container" style="gap:10px;">
+            <button type="button" class="refresh-btn" id="refreshCalcBtn" onclick="refreshCalculation()">🔄 Refresh</button>
             <button class="section-save-btn" id="saveCalcBtn" onclick="saveCalculationData()">💾 Save Calculation</button>
         </div>
     </div>
@@ -329,14 +358,30 @@
             <div class="form-group"><label>Washing Wages / Mtr</label><input type="number" id="costWashingWages" value="2" oninput="calculateFinalCosting()"></div>
             <div class="form-group"><label>Washing Shortage %</label><input type="number" id="costWashingShortPct" list="percentList" value="8" oninput="calculateFinalCosting()"></div>
             
-            <div class="form-group"><label>Profit Margin %</label><input type="number" id="costProfitPct" list="percentList" value="10" oninput="calculateFinalCosting()"></div>
+            <div class="form-group"><label>Profit Margin %</label><input type="number" id="costProfitPct" list="percentList" value="10" oninput="manualSellingRate=false; updateSellEditUI(); calculateFinalCosting()"></div>
             
             <div class="form-group"><label style="color:#D97706;">Production Cost / Mtr</label><input type="number" id="costProduction" readonly style="background:#FFFBEB; border-color:#F59E0B; font-weight:800;"></div>
-            <div class="form-group"><label style="color:#059669;">Final Selling Rate / Mtr</label><input type="number" id="costFabric" readonly style="background:#ECFDF5; border-color:#10B981; font-weight:800; font-size:14px;"></div>
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px;">
+                    <label style="color:#059669; margin:0;">Final Selling Rate / Mtr</label>
+                    <button type="button" id="sellEditBtn" class="sell-edit-btn" onclick="toggleSellingEdit()">✏️ Edit</button>
+                </div>
+                <input type="number" id="costFabric" step="0.01" readonly oninput="manualSellingRate=true; calculateFinalCosting()" style="background:#ECFDF5; border-color:#10B981; font-weight:800; font-size:14px;"></div>
         </div>
 
         <div class="section-save-container">
             <button class="section-save-btn" id="saveCostBtn" style="background: #1E2B23;" onclick="saveCostingData()">💾 Save Costing</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Confirm Modal (replaces native confirm so buttons are always visible) -->
+<div id="confirmModal" class="overlay-modal" style="z-index:9999999;">
+    <div class="modal-content" style="max-width:360px; max-height:none; padding:20px; gap:16px;">
+        <div id="confirmMsg" style="font-size:14px; font-weight:600; color:#1E2B23; line-height:1.5;"></div>
+        <div style="display:flex; gap:10px;">
+            <button type="button" id="confirmNoBtn" class="close-btn" style="flex:1; padding:12px; font-size:13px;">Cancel</button>
+            <button type="button" id="confirmYesBtn" class="print-btn-modal" style="flex:1; padding:12px; font-size:13px;">OK</button>
         </div>
     </div>
 </div>
@@ -362,6 +407,13 @@
     let manualOnloomReed = false;
     let manualOnloomPick = false;
     let manualTotalDyeing = false;
+    let manualSellingRate = false;
+    const manualField = { onloomWidth: false, onloomWeftWidth: false, topBeamDyeingMtr: false };
+    const tblEdit = { warp: false, weft: false };
+    const TBL = {
+        warp: { body: 'warpTableBody', wt: '.w-weight', btn: 'warpTblEditBtn' },
+        weft: { body: 'weftTableBody', wt: '.weft-weight', btn: 'weftTblEditBtn' }
+    };
     let allCombinedDesigns = [];
 
     function checkUserPermission() {
@@ -578,22 +630,25 @@
         const q = (r, sel) => { const el = r.querySelector(sel); return el ? el.value : ''; };
         const warpRows = Array.from(document.querySelectorAll('#warpTableBody tr')).map(r => ({
             mill: q(r, '.w-mill'), count: q(r, '.w-count'), color: q(r, '.w-color'),
-            rpt: q(r, '.w-ends-rpt'), ends: q(r, '.w-ends'), kora: q(r, '.w-kora-rate'), dye: q(r, '.w-dye-rate')
+            rpt: q(r, '.w-ends-rpt'), ends: q(r, '.w-ends'), kora: q(r, '.w-kora-rate'), dye: q(r, '.w-dye-rate'),
+            wt: q(r, '.w-weight'), wtManual: !!(r.querySelector('.w-weight') && r.querySelector('.w-weight').dataset.manual === '1')
         }));
         const weftRows = Array.from(document.querySelectorAll('#weftTableBody tr')).map(r => ({
             mill: q(r, '.weft-mill'), count: q(r, '.weft-count'), color: q(r, '.weft-color'),
-            rpt: q(r, '.weft-picks-rpt'), ends: q(r, '.weft-picks'), kora: q(r, '.weft-kora-rate'), dye: q(r, '.weft-dye-rate')
+            rpt: q(r, '.weft-picks-rpt'), ends: q(r, '.weft-picks'), kora: q(r, '.weft-kora-rate'), dye: q(r, '.weft-dye-rate'),
+            wt: q(r, '.weft-weight'), wtManual: !!(r.querySelector('.weft-weight') && r.querySelector('.weft-weight').dataset.manual === '1')
         }));
         const top = {};
         ['finishReed','onloomReed','finishPick','pickLess','onloomPick','finishWidth','orderMtr','exPercentage',
-         'warpCrimpTop','washingShortTop','dyeingLoss','totalDyeingMtr','topBeamPct','weftMtrs']
+         'warpCrimpTop','washingShortTop','dyeingLoss','totalDyeingMtr','topBeamPct','weftMtrs',
+         'onloomWidth','onloomWeftWidth','topBeamDyeingMtr']
             .forEach(id => top[id] = val(id));
         const costing = {};
-        ['costWarpingWages','costSizing','costWagesPick','costWashingWages','costProfitPct']
+        ['costWarpingWages','costSizing','costWagesPick','costWashingWages','costProfitPct','costFabric']
             .forEach(id => costing[id] = val(id));
         return {
             top, costing, warpRows, weftRows,
-            flags: { reed: manualOnloomReed, pick: manualOnloomPick, total: manualTotalDyeing }
+            flags: { reed: manualOnloomReed, pick: manualOnloomPick, total: manualTotalDyeing, sell: manualSellingRate, fields: Object.assign({}, manualField) }
         };
     }
 
@@ -606,6 +661,8 @@
             manualOnloomReed = !!yc.flags.reed;
             manualOnloomPick = !!yc.flags.pick;
             manualTotalDyeing = !!yc.flags.total;
+            manualSellingRate = !!yc.flags.sell;
+            if (yc.flags.fields) Object.keys(manualField).forEach(k => manualField[k] = !!yc.flags.fields[k]);
         }
     }
 
@@ -623,6 +680,9 @@
         window.StorageDB.setItem('selected_design_number', dName);
 
         manualTotalDyeing = false;
+        manualSellingRate = false;
+        Object.keys(manualField).forEach(k => manualField[k] = false);
+        tblEdit.warp = false; tblEdit.weft = false;
         let cleanDNo = cleanDesignName(dName);
         
         let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
@@ -683,6 +743,8 @@
         }
 
         applyYarnCalcState(sp.yarnCalc);
+        updateSellEditUI();
+        Object.keys(manualField).forEach(updateFieldEditUI);
         buildDynamicTables(sp, foundMaster);
         calculateTopData();
     }
@@ -820,7 +882,9 @@
         let fReed = parseFloat(document.getElementById('finishReed').value) || 80;
         
         let autoOnloomWidth = (fWidth * fReed) / (oReed || 1);
+        if (manualField.onloomWidth) autoOnloomWidth = parseFloat(document.getElementById('onloomWidth').value) || autoOnloomWidth;
         let onloomWeftWidth = parseFloat((autoOnloomWidth + 3).toFixed(2)) || 67.44;
+        if (manualField.onloomWeftWidth) onloomWeftWidth = parseFloat(document.getElementById('onloomWeftWidth').value) || onloomWeftWidth;
         let onloomPick = parseFloat(document.getElementById('onloomPick').value) || 74;
 
         let targetWarpEnds = Math.round(oReed * autoOnloomWidth) || 4640;
@@ -830,10 +894,17 @@
         let resolvedWarp = resolvePatternRepeats(warpLines, foundMaster.warpRanges || sp.warpRanges, targetWarpEnds, 'warp');
         let resolvedWeft = resolvePatternRepeats(weftLines, foundMaster.weftRanges || sp.weftRanges, targetWeftPicks, 'weft');
 
+        const fresh = !!window._freshRebuild;
+        const rowKey = (c, col) => (String(c || '').trim() + '||' + String(col || '').trim()).toLowerCase();
+        const pickSaved = (arr, item, idx) => {
+            if (!fresh) return arr[idx] || {};
+            const m = arr.find(x => x && rowKey(x.count, x.color) === rowKey(item.count, item.color));
+            return m ? { mill: m.mill, kora: m.kora, dye: m.dye } : {};
+        };
         let warpHtml = '';
         const savedWarp = (sp && sp.yarnCalc && sp.yarnCalc.warpRows) || [];
         resolvedWarp.forEach((w, idx) => {
-            const sv = savedWarp[idx] || {};
+            const sv = pickSaved(savedWarp, w, idx);
             w = { count: sv.count || w.count, color: sv.color || w.color, rpt: sv.rpt || w.rpt, total: sv.ends || w.total };
             let autoMill = sv.mill || getMillNameFromKora(dNo, w.count) || '';
             warpHtml += `
@@ -843,7 +914,7 @@
                     <td><input type="text" list="coloursList" class="w-color" value="${w.color}"></td>
                     <td><input type="number" class="w-ends-rpt" value="${w.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends" value="${w.total}" oninput="calculateTableRows()"></td>
-                    <td><input type="number" class="w-weight" readonly></td>
+                    <td><input type="number" class="w-weight" readonly oninput="this.dataset.manual='1'; calculateTableRows()" ${sv.wtManual ? `data-manual="1" value="${sv.wt}"` : ''}></td>
                     <td><input type="number" class="w-kora-rate" value="${sv.kora ?? 430}" oninput="syncKoraRates(this); calculateTableRows()"></td>
                     <td><input type="number" class="w-dye-rate" value="${sv.dye ?? (idx===1 ? 140 : 70)}" oninput="syncKoraRates(this); calculateTableRows()"></td>
                     <td class="row-total-display w-total-cost">0.00</td>
@@ -851,11 +922,13 @@
             `;
         });
         document.getElementById('warpTableBody').innerHTML = warpHtml;
+        tblEdit.warp = !!document.querySelector('#warpTableBody [data-manual="1"]');
+        applyTableEditUI('warp');
 
         let weftHtml = '';
         const savedWeft = (sp && sp.yarnCalc && sp.yarnCalc.weftRows) || [];
         resolvedWeft.forEach((wf, idx) => {
-            const sv = savedWeft[idx] || {};
+            const sv = pickSaved(savedWeft, wf, idx);
             wf = { count: sv.count || wf.count, color: sv.color || wf.color, rpt: sv.rpt || wf.rpt, total: sv.ends || wf.total };
             let autoMill = sv.mill || getMillNameFromKora(dNo, wf.count) || '';
             weftHtml += `
@@ -865,7 +938,7 @@
                     <td><input type="text" list="coloursList" class="weft-color" value="${wf.color}"></td>
                     <td><input type="number" class="weft-picks-rpt" value="${wf.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="weft-picks" value="${wf.total}" oninput="calculateTableRows()"></td>
-                    <td><input type="number" class="weft-weight" readonly></td>
+                    <td><input type="number" class="weft-weight" readonly oninput="this.dataset.manual='1'; calculateTableRows()" ${sv.wtManual ? `data-manual="1" value="${sv.wt}"` : ''}></td>
                     <td><input type="number" class="weft-kora-rate" value="${sv.kora ?? 365}" oninput="syncKoraRates(this); calculateTableRows()"></td>
                     <td><input type="number" class="weft-dye-rate" value="${sv.dye ?? (idx===1 ? 145 : 70)}" oninput="syncKoraRates(this); calculateTableRows()"></td>
                     <td class="row-total-display weft-total-cost">0.00</td>
@@ -873,6 +946,8 @@
             `;
         });
         document.getElementById('weftTableBody').innerHTML = weftHtml;
+        tblEdit.weft = !!document.querySelector('#weftTableBody [data-manual="1"]');
+        applyTableEditUI('weft');
     }
 
     function calculateTopData() {
@@ -888,10 +963,11 @@
         } else if (fWidth > 0) {
             autoOnloomWidth = fWidth.toFixed(2);
         }
-        document.getElementById('onloomWidth').value = autoOnloomWidth;
+        if (!manualField.onloomWidth) document.getElementById('onloomWidth').value = autoOnloomWidth;
 
-        let autoOnloomWeftWidth = autoOnloomWidth ? (parseFloat(autoOnloomWidth) + 3).toFixed(2) : '';
-        document.getElementById('onloomWeftWidth').value = autoOnloomWeftWidth;
+        let curOnloomWidth = document.getElementById('onloomWidth').value;
+        let autoOnloomWeftWidth = curOnloomWidth ? (parseFloat(curOnloomWidth) + 3).toFixed(2) : '';
+        if (!manualField.onloomWeftWidth) document.getElementById('onloomWeftWidth').value = autoOnloomWeftWidth;
 
         let exPct = parseFloat(document.getElementById('exPercentage').value) || 0;
         let crimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 0;
@@ -907,8 +983,8 @@
         let topBeamPct = document.getElementById('topBeamPct').value;
         if (topBeamPct !== '' && parseFloat(topBeamPct) >= 0) {
             let tbMtr = currentDyeMtr * (1 + parseFloat(topBeamPct)/100);
-            document.getElementById('topBeamDyeingMtr').value = tbMtr.toFixed(2);
-        } else {
+            if (!manualField.topBeamDyeingMtr) document.getElementById('topBeamDyeingMtr').value = tbMtr.toFixed(2);
+        } else if (!manualField.topBeamDyeingMtr) {
             document.getElementById('topBeamDyeingMtr').value = '';
         }
 
@@ -962,8 +1038,10 @@
             let dyeRate = parseFloat(row.querySelector('.w-dye-rate').value) || 0;
 
             let countNum = parseCountNumber(countStr);
-            let weight = (ends * totalDyeMtr) / (1693.33 * countNum);
-            row.querySelector('.w-weight').value = weight > 0 ? weight.toFixed(3) : '';
+            let wInp = row.querySelector('.w-weight');
+            let weight;
+            if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
+            else { weight = (ends * totalDyeMtr) / (1693.33 * countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
             
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -995,8 +1073,10 @@
             let dyeRate = parseFloat(row.querySelector('.weft-dye-rate').value) || 0;
 
             let countNum = parseCountNumber(countStr);
-            let weight = (picks * weftMtrs) / (1693.33 * countNum);
-            row.querySelector('.weft-weight').value = weight > 0 ? weight.toFixed(3) : '';
+            let wInp = row.querySelector('.weft-weight');
+            let weight;
+            if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
+            else { weight = (picks * weftMtrs) / (1693.33 * countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
 
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -1105,9 +1185,119 @@
         let productionCost = subtotalBeforeWashing + washingShortAmt;
         document.getElementById('costProduction').value = productionCost.toFixed(2);
 
-        let profitPct = parseFloat(document.getElementById('costProfitPct').value) || 0;
-        let finalFabricCost = productionCost + (productionCost * profitPct / 100);
-        document.getElementById('costFabric').value = finalFabricCost.toFixed(2);
+        if (manualSellingRate) {
+            // Selling rate edited manually: keep it fixed, show the resulting profit %
+            let sell = parseFloat(document.getElementById('costFabric').value) || 0;
+            if (productionCost > 0) {
+                document.getElementById('costProfitPct').value = ((sell / productionCost - 1) * 100).toFixed(2);
+            }
+        } else {
+            let profitPct = parseFloat(document.getElementById('costProfitPct').value) || 0;
+            let finalFabricCost = productionCost + (productionCost * profitPct / 100);
+            document.getElementById('costFabric').value = finalFabricCost.toFixed(2);
+        }
+    }
+
+    function updateFieldEditUI(id) {
+        const inp = document.getElementById(id), btn = document.getElementById(id + 'EditBtn');
+        if (!inp || !btn) return;
+        inp.readOnly = !manualField[id];
+        inp.classList.toggle('field-editing', manualField[id]);
+        btn.classList.toggle('active', manualField[id]);
+        btn.innerText = manualField[id] ? '🔄 Auto' : '✏️ Edit';
+    }
+
+    function toggleFieldEdit(id) {
+        manualField[id] = !manualField[id];
+        updateFieldEditUI(id);
+        if (manualField[id]) {
+            const inp = document.getElementById(id);
+            inp.focus(); inp.select();
+        } else {
+            calculateTopData();
+        }
+    }
+
+    function onManualFieldInput(id) {
+        if (!manualField[id]) return;
+        calculateTopData();
+    }
+
+    function applyTableEditUI(type) {
+        const c = TBL[type];
+        document.querySelectorAll('#' + c.body + ' ' + c.wt).forEach(i => {
+            i.readOnly = !tblEdit[type];
+            i.classList.toggle('field-editing', tblEdit[type]);
+            if (!tblEdit[type]) delete i.dataset.manual;
+        });
+        const btn = document.getElementById(c.btn);
+        if (btn) {
+            btn.classList.toggle('active', tblEdit[type]);
+            btn.innerText = tblEdit[type] ? '🔄 Auto Weight' : '✏️ Edit Weight';
+        }
+    }
+
+    function toggleTableEdit(type) {
+        tblEdit[type] = !tblEdit[type];
+        applyTableEditUI(type);
+        if (!tblEdit[type]) calculateTableRows();
+    }
+
+    function askConfirm(msg) {
+        return new Promise(resolve => {
+            const m = document.getElementById('confirmModal');
+            document.getElementById('confirmMsg').innerText = msg;
+            const done = v => { m.style.display = 'none'; resolve(v); };
+            document.getElementById('confirmYesBtn').onclick = () => done(true);
+            document.getElementById('confirmNoBtn').onclick = () => done(false);
+            m.style.display = 'flex';
+        });
+    }
+
+    async function refreshCalculation() {
+        if (!(await askConfirm("Pudhiya Warp / Weft data load aagum. Save seiyaadha maatrangal neekkappadum. Refresh seiyalaama?"))) return;
+        const btns = ['refreshCalcBtn', 'designRefreshBtn'].map(id => document.getElementById(id)).filter(Boolean);
+        const origs = btns.map(b => b.innerText);
+        btns.forEach(b => { b.innerText = "⏳"; b.disabled = true; });
+        window._freshRebuild = true;
+        try {
+            const sel = document.getElementById('designNo');
+            const cur = sel ? sel.value : '';
+            await initDropdowns();
+            if (cur && sel.value !== cur) {
+                sel.value = cur;
+                const si = document.getElementById('designSearchInput');
+                if (si) si.value = cur;
+                loadDesignData();
+            }
+        } catch (err) {
+            console.error("Refresh Error:", err);
+            alert("Refresh error: " + err.message);
+        } finally {
+            window._freshRebuild = false;
+            btns.forEach((b, i) => { b.innerText = origs[i]; b.disabled = false; });
+        }
+    }
+
+    function updateSellEditUI() {
+        const inp = document.getElementById('costFabric');
+        const btn = document.getElementById('sellEditBtn');
+        if (!inp || !btn) return;
+        inp.readOnly = !manualSellingRate;
+        inp.classList.toggle('sell-editing', manualSellingRate);
+        btn.classList.toggle('active', manualSellingRate);
+        btn.innerText = manualSellingRate ? '🔄 Auto' : '✏️ Edit';
+    }
+
+    function toggleSellingEdit() {
+        manualSellingRate = !manualSellingRate;
+        updateSellEditUI();
+        if (manualSellingRate) {
+            const inp = document.getElementById('costFabric');
+            inp.focus(); inp.select();
+        } else {
+            calculateFinalCosting();   // back to profit %-based auto rate
+        }
     }
 
     async function quickCompleteToggle() {
