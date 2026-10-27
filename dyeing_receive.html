@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dyeing Receive - TEX FOR EVER</title>
+<script src="config.js"></script>
+<script src="translator.js"></script>
+<script src="printer.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+html,body{width:100%;min-height:100%;background:#F3F6F3;color:#1E2B23}
+body{padding:12px;display:flex;flex-direction:column;align-items:center}
+.main-card{width:100%;max-width:900px;background:#FFF;border:1px solid #E2E8E2;border-radius:20px;padding:20px;box-shadow:0 10px 35px rgba(30,43,35,.06);display:flex;flex-direction:column;gap:15px}
+.top-nav{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.back-btn{display:inline-flex;align-items:center;gap:5px;color:#FFF;text-decoration:none;font-weight:600;font-size:11px;background:#1A1;padding:8px 16px;border-radius:8px}
+.completed-checkbox{display:flex;align-items:center;gap:6px;background:#D8DFD6;padding:6px 12px;border-radius:6px;border:1px solid rgba(82,110,81,.4)}
+.completed-checkbox input{width:16px;height:16px;accent-color:#526E51}
+.completed-checkbox label{color:#3F5A3E;font-size:12px;font-weight:700}
+#bitmapDisplayContainer{text-align:right}
+#bitmapDisplayContainer img{max-height:40px;max-width:120px;border-radius:4px;border:1px solid #BFCDBF;cursor:zoom-in}
+.card-header{font-size:16px;font-weight:700;color:#fff;text-align:left;position:relative;padding-left:12px}
+.card-header:before{content:'';position:absolute;left:0;top:10%;height:80%;width:4px;background:#4A7C59;border-radius:4px}
+.form-section{background:#F8FAF8;border:1px solid #E2E8E2;border-radius:14px;padding:20px 15px 15px;position:relative}
+.section-badge{position:absolute;top:-12px;left:15px;background:#4A7C59;color:#FFF;font-size:10px;font-weight:700;padding:4px 12px;border-radius:12px;letter-spacing:.5px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:10px;font-weight:600;color:#4A554A}
+input,select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #D1DED1;background:#FFF;color:#1E2B23;font-size:11px;font-weight:600;min-width:0}
+input:focus,select:focus{border-color:#4A7C59;outline:none;box-shadow:0 0 0 3px rgba(74,124,89,.15)}
+input[readonly]{background:#F4F7F4;color:#4A7C59}
+.checkbox-container{background:#FFF;padding:12px 15px;border-radius:10px;margin:5px 0 15px;display:flex;align-items:center;justify-content:space-between;border:1px dashed #A0AFA0;gap:10px}
+.receive-box{width:100%;overflow-x:auto;background:#FFF;padding:15px;border-radius:10px;border:1px solid #D1DED1;-webkit-overflow-scrolling:touch}
+.receive-grid-header,.receive-line-row{display:grid;grid-template-columns:90px 120px 130px 95px 105px 95px 80px 90px 90px;gap:6px;min-width:907px}
+.receive-grid-header{margin-bottom:8px;padding:0 4px}
+.receive-grid-header div{font-size:10px;font-weight:700;color:#4A7C59;text-align:center}
+.receive-line-row{align-items:center;margin-bottom:10px}
+.receive-line-row input{padding:10px 4px;font-size:11px;text-align:center}
+.btn-main,.popup-trigger-btn{width:100%;padding:14px;border:0;border-radius:10px;color:#FFF;font-weight:700;font-size:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.btn-main{background:linear-gradient(135deg,#4A79,#33593D);margin-top:0}
+.popup-trigger-btn{background:linear-gradient(135deg,#3BF6,#1D4ED8);margin-top:0}
+.front-action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:0}
+.preview-front-btn{width:100%;padding:14px;border:0;border-radius:10px;color:#1D4ED8;background:#DBEE;font-weight:700;font-size:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;box-shadow:0 6px 15px rgba(00,130,246,.15)}
+.preview-front-btn:active{transform:translateY(1px)}
+@media(max-width:520px){
+    .front-action-row{grid-template-columns:1fr}
+}
+.overlay-modal{display:none;position:fixed;inset:0;width:100%;height:100%;background:rgba(18,25,20,.72);backdrop-filter:blur(4px);z-index:99999;padding:12px;opacity:0;transition:opacity .25s}
+.overlay-modal.show{opacity:1}
+.modal-content{background:#FFF;width:100%;height:100%;max-width:1200px;margin:auto;border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{padding:12px 16px;background:#F4F7F4;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #E2E8E2}
+.modal-header h3{font-size:15px;color:#1E2B23}
+.modal-actions{display:flex;gap:6px}
+.close-btn,.preview-btn,.print-btn{border:0;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:11px}
+.close-btn{background:#FEE2E2;color:#DC2626}
+.preview-btn{background:#DBEAFE;color:#1D4ED8}
+.print-btn{background:#1A2421;color:#FFF}
+.modal-body{padding:12px;overflow:auto;flex:1;background:#FAFCFA}
+.table-container{width:100%;overflow:auto;border-radius:10px;border:1px solid #E2E8E2;background:#FFF}
+table{width:100%;min-width:1050px;border-collapse:separate;border-spacing:0;font-size:11px;text-align:center;white-space:nowrap}
+th,td{padding:10px 12px;text-align:center;border-bottom:1px solid #E2E8E2;color:#1E2B23}
+th{background:#EAF0EA;color:#2F4F38;font-weight:700;font-size:10px;position:sticky;top:0;z-index:10}
+tfoot td{background:#F4F7F4;font-weight:700;border-top:2px solid #D1DED1}
+.action-btns{display:flex;gap:6px;justify-content:center}
+.edit-action-btn{background:#64748B;color:#FFF;border:0;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:10px}
+.del-action-btn{background:#EF4444;color:#FFF;border:0;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:10px}
+.action-complete,.action-running{color:#FFF;border:0;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:9px;font-weight:bold}
+.action-complete{background:#526E51}.action-running{background:#D97706}
+.excess-text{color:#DC2626;font-weight:700}
+.fullscreen-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999999;justify-content:center;align-items:center;padding:20px}
+.fullscreen-modal img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:10px}
+.close-fullscreen{position:absolute;top:20px;right:20px;background:#EF4444;color:#FFF;border:0;padding:10px 18px;border-radius:8px;font-weight:bold}
+.preview-paper{background:#FFF;color:#111;max-width:900px;margin:0 auto;padding:24px;border:1px solid #DDD;box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.preview-title{text-align:center;font-size:20px;font-weight:700;margin-bottom:4px}
+.preview-subtitle{text-align:center;font-size:11px;color:#555;margin-bottom:18px}
+.preview-info{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.preview-info div{border:1px solid #DDD;padding:7px;font-size:10px}
+.preview-paper table{min-width:0;width:100%;font-size:10px;white-space:normal}
+.preview-paper th{position:static;background:#EEE;color:#111}
+.preview-paper th,.preview-paper td{padding:7px;border:1px solid #DDD}
+.preview-total{margin-top:12px;text-align:right;font-weight:700;font-size:11px}
+@media(max-width:600px){
+body{padding:6px;overflow-x:hidden}.main-card{padding:14px;border-radius:14px;max-width:100%;overflow:hidden}.top-nav{align-items:flex-start}.completed-checkbox{padding:5px 8px}
+.form-grid{grid-template-columns:1fr}
+.preview-paper{padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.preview-info{grid-template-columns:1fr 1fr}
+.modal-header h3{font-size:12px}.modal-actions button{padding:7px 8px}
+.modal-body{padding:8px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.table-container{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    border:1px solid #E2E8E2;
+    background:#FFF;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+}
+.table-container table{
+    width:max-content;
+    min-width:1050px!important;
+    display:table;
+    white-space:nowrap;
+    font-size:11px;
+}
+.table-container table thead{display:table-header-group}
+.table-container table tbody{display:table-row-group;width:auto}
+.table-container table tbody tr{display:table-row;width:auto;margin:0;background:#FFF;border:0;border-radius:0;overflow:visible;box-shadow:none}
+.table-container table tbody td{
+    display:table-cell;
+    width:auto;
+    min-width:0!important;
+    padding:9px 12px;
+    text-align:center;
+    white-space:nowrap;
+    word-break:normal;
+    border-bottom:1px solid #E8EEE8;
+}
+.table-container table tbody td::before{content:none!important}
+.table-container table tbody td.action-btns{display:table-cell;white-space:nowrap;min-height:0}
+.table-container table tbody td.action-btns::before{content:none!important}
+.table-container table tfoot{display:table-footer-group;width:auto;margin-top:0}
+.table-container table tfoot tr{display:table-row;width:auto;background:#F4F7F4;border:0;border-radius:0;overflow:visible}
+.table-container table tfoot td{display:table-cell;width:auto;min-width:0!important;padding:9px 12px;border:0;text-align:center;white-space:nowrap}
+.table-container table tfoot td:first-child{display:table-cell;width:auto;text-align:right;border-bottom:0}
+.table-container table tfoot td::before{content:none!important}
+
+.preview-paper table{
+    width:max-content;
+    min-width:1000px;
+    white-space:nowrap;
+}
+}
+@media print{
+html,body{background:#FFF!important;color:#111!important}
+body{padding:0;display:block}
+.main-card,.overlay-modal:not(#printPreviewModal),#fullscreenModal{display:none!important}
+#printPreviewModal{display:block!important;position:static!important;background:#FFF!important;padding:0!important}
+#printPreviewModal .modal-content{display:block!important;height:auto!important;max-width:none!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+#printPreviewModal .modal-header{display:none!important}
+#printPreviewModal .modal-body{display:block!important;padding:0!important;background:#FFF!important;overflow:visible!important}
+.preview-paper{max-width:none!important;border:0!important;box-shadow:none!important;margin:0!important;padding:12mm!important}
+.preview-paper table{width:100%!important}
+.preview-paper th{background:#EEE!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="main-card">
+<div class="top-nav">
+<a href="dashboard.html" class="back-btn">← Back to Menu</a>
+<div style="display:flex;align-items:center;gap:10px">
+<div class="completed-checkbox"><input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()"><label for="top_completed_status">Completed</label></div>
+<div id="bitmapDisplayContainer"></div>
+</div>
+</div>
+<h2 class="card-header">Dyeing Colour Received ( கலர் நூல் வரவு )</h2>
+
+<div class="form-section" style="margin-top:10px">
+<div class="section-badge">Receive Info</div>
+<div class="form-grid">
+<div class="form-group"><label>Received Date</label><input type="date" id="receiveDate"></div>
+<div class="form-group" style="position: relative;">
+<label>Select Design Number</label>
+<input
+    type="text"
+    id="designSearchInput"
+    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+    oninput="filterDesignDropdown()"
+    onfocus="openDesignDropdownList()"
+    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+/>
+<div
+    id="designDropdownList"
+    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+</div>
+<select id="designNumber" style="display:none;" onchange="loadPendingItems()">
+<option value="">Select Design No</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="form-section" style="background:transparent;border:none;padding:0">
+<div class="section-badge" style="top:-15px;left:0">Receiving Items</div>
+<div class="checkbox-container" style="margin-top:20px">
+<label for="combineToggle" style="font-size:11px;font-weight:700;color:#4A7C59;cursor:pointer">🔗 Combine Same Count, Colour & Unit</label>
+<input type="checkbox" id="combineToggle" checked onchange="loadPendingItems()" style="width:18px;height:18px;accent-color:#4A7C59">
+</div>
+<div id="receiveLinesContainer"></div>
+</div>
+
+<button class="btn-main" id="saveReceiveBtnTxt" onclick="saveReceiveEntry()">✅ Save Received Entry ( வரவை சேமி )</button>
+
+<div class="front-action-row">
+    <button class="popup-trigger-btn" onclick="openModal('receivedListModal')">📊 View Received Records</button>
+    <button class="preview-front-btn" onclick="openPreview()">👁 Preview</button>
+</div>
+</div>
+
+<div id="receivedListModal" class="overlay-modal">
+<div class="modal-content">
+<div class="modal-header">
+<h3>📊 Received & Loss Records</h3>
+<div class="modal-actions">
+<button class="close-btn" onclick="closeModal('receivedListModal')">Close ✕</button>
+</div>
+</div>
+<div class="modal-body">
+<div class="table-container"><table>
+<thead><tr><th>Date</th><th>Design</th><th>Count</th><th>Colour</th><th>Dyeing Unit</th><th>Issued Wt</th><th>Rcvd Wt</th><th>Loss Wt</th><th>Loss %</th><th>Excess Loss Wt</th><th>Over Wt</th><th>Status</th><th>Action</th></tr></thead>
+<tbody id="receivedListBody"></tbody><tfoot id="receivedListFoot"></tfoot>
+</table></div>
+</div>
+</div>
+</div>
+
+<div id="printPreviewModal" class="overlay-modal">
+<div class="modal-content">
+<div class="modal-header">
+<h3>👁 Dyeing Receive Preview</h3>
+<div class="modal-actions">
+<button class="print-btn" onclick="printPreview()">🖨 Print</button>
+<button class="close-btn" onclick="closeModal('printPreviewModal')">Close ✕</button>
+</div>
+</div>
+<div class="modal-body"><div id="previewContent" class="preview-paper"></div></div>
+</div>
+</div>
+
+<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
+<button class="close-fullscreen">Close ✕</button><img id="fullscreenImg" src="" alt="Fullscreen Preview">
+</div>
+
+<script>
+let allCombinedDesigns = [];
+
+function checkUserPermission(){
+let userRole=localStorage.getItem('erp_logged_role')||localStorage.getItem('user_role');
+if(userRole!=='Administrator'&&userRole!=='Admin'){
+let permissions=JSON.parse(localStorage.getItem('user_permissions')||'{}');
+if(permissions['dyeing_receive.html']===false||permissions['dyeing_receive']===false)return false}
+return true
+}
+
+document.addEventListener('DOMContentLoaded',async function(){
+if(window.StorageDB&&window.StorageDB.ready)await window.StorageDB.ready;
+if(!checkUserPermission()){alert("Access Denied! You do not have permission to access this page. ❌");location.href="dashboard.html";return}
+document.getElementById('receiveDate').valueAsDate=new Date();
+await loadPendingDesigns();
+
+document.addEventListener("click", function(e){
+    let container = document.getElementById("designSearchInput");
+    let list = document.getElementById("designDropdownList");
+    if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+        list.style.display = "none";
+    }
+});
+})
+
+function openModal(id){let m=document.getElementById(id);m.style.display='flex';setTimeout(()=>m.classList.add('show'),10);if(id==='receivedListModal')renderReceivedList();if(id==='printPreviewModal')buildPreview()}
+function closeModal(id){let m=document.getElementById(id);m.classList.remove('show');setTimeout(()=>m.style.display='none',250)}
+window.openFullscreenImage=function(src){if(!src||src==='null')return;document.getElementById('fullscreenImg').src=src;document.getElementById('fullscreenModal').style.display='flex'}
+window.closeFullscreenImage=function(){document.getElementById('fullscreenModal').style.display='none'}
+function cleanDesignName(s){return s?s.toString().replace('#','').trim().toLowerCase():''}
+function safeText(v){return String(v??'').replace(/[&<>\"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]))}
+function parseJsonArray(k){try{let v=JSON.parse(window.StorageDB.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+function parseJsonObject(k){try{let v=JSON.parse(window.StorageDB.getItem(k)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}}
+
+function loadBitmapImage(){
+let a=document.getElementById('designNumber').value||window.StorageDB.getItem('selected_design_number'),s=parseJsonObject('design_specs'),c=document.getElementById('bitmapDisplayContainer'),clean=cleanDesignName(a),key=Object.keys(s).find(k=>cleanDesignName(k)===clean)||a;
+if(a&&s[key]&&s[key].bitmap){let b=s[key].bitmap;c.innerHTML=`<img src="${safeText(b)}" alt="Design Bitmap" onclick="openFullscreenImage(this.src)" title="Click to view full screen">`}else c.innerHTML=''
+}
+
+async function loadPendingDesigns(){
+loadBitmapImage();
+let p=JSON.parse(window.StorageDB.getItem('pre_design_numbers')||'[]'),
+    m=JSON.parse(window.StorageDB.getItem('design_masters_data')||'[]'),
+    s=JSON.parse(window.StorageDB.getItem('design_specs')||'{}'),
+    o=JSON.parse(window.StorageDB.getItem('party_orders_data')||'[]'),
+    i=parseJsonArray('dyeing_issue_records'),
+    all=new Set();
+
+p.forEach(d=>all.add(d));
+if(Array.isArray(m))m.forEach(d=>{if(d.name||d.designNo)all.add(d.name||d.designNo)});
+Object.keys(s).forEach(d=>all.add(d));
+if(Array.isArray(o))o.forEach(x=>{if(x.designNumber||x.designNo)all.add(x.designNumber||x.designNo)});
+i.forEach(r=>{let d=r.designNo||r.designNumber||r.design||r.name||'';if(d.trim())all.add(d.trim())});
+
+allCombinedDesigns = Array.from(all).filter(Boolean).sort(
+    (a,b)=>
+    String(a).localeCompare(
+        String(b),
+        undefined,
+        {numeric:true,sensitivity:'base'}
+    )
+);
+
+let sel=document.getElementById('designNumber');
+if(sel){
+    let html='<option value="">Select Design No</option>';
+    allCombinedDesigns.forEach(d=>{
+        html+=`<option value="${safeText(d)}">${safeText(d)}</option>`;
+    });
+    sel.innerHTML=html;
+}
+
+let a=window.StorageDB.getItem('selected_design_number');
+if(a&&allCombinedDesigns.includes(a)){
+    if(sel) sel.value=a;
+    let searchInput=document.getElementById("designSearchInput");
+    if(searchInput) searchInput.value=a;
+    loadPendingItems();
+}
+}
+
+function openDesignDropdownList(){
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("designNumber");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        loadPendingItems();
+    }
+    if(list) list.style.display = "none";
+}
+
+function loadPendingItems(){
+loadBitmapImage();let d=document.getElementById('designNumber').value,c=document.getElementById('receiveLinesContainer');c.innerHTML='';if(!d)return;
+let specs=parseJsonObject('design_specs'),key=Object.keys(specs).find(k=>cleanDesignName(k)===cleanDesignName(d))||d,status=(specs[key]&&specs[key].status||'').toLowerCase(),receives=parseJsonArray('dyeing_receive_records'),rec=receives.find(r=>cleanDesignName(r.designNo||r.designNumber)===cleanDesignName(d));
+document.getElementById('top_completed_status').checked=status==='completed'||(rec&&rec.status==='completed');
+let issues=parseJsonArray('dyeing_issue_records'),pending=issues.filter(r=>(r.status||'').toLowerCase().trim()!=='received'&&remainingOf(r)>0.005&&cleanDesignName(r.designNo||r.designNumber||r.design||r.name)===cleanDesignName(d));
+let list=[];
+if(document.getElementById('combineToggle').checked){
+let map=new Map();pending.forEach(x=>{let count=(x.count||x.yarnCount||'-').toString().trim(),color=(x.color||x.colour||'-').toString().trim(),unit=(x.unit||x.dyeingName||'-').toString().trim(),key=count.toLowerCase()+'_'+color.toLowerCase()+'_'+unit.toLowerCase();if(!map.has(key))map.set(key,{count,color,unit,issueWt:0,ids:[]});let q=map.get(key);q.issueWt+=remainingOf(x);q.ids.push(x.id)});list=[...map.values()]
+}else list=pending.map(x=>({count:x.count||x.yarnCount||'-',color:x.color||x.colour||'-',unit:x.unit||x.dyeingName||'-',issueWt:remainingOf(x),ids:[x.id]}));
+if(!list.length){c.innerHTML='<div style="font-size:12px;text-align:center;padding:15px;color:#4A7C59;background:#FFF;border-radius:10px;border:1px solid #D1DED1"><b>No pending issues found for this Design!</b><br><span style="font-size:10px;color:#DC2626">(Note: Make sure you have Issued the Yarn in "Dyeing Issue" page first)</span></div>';return}
+let h='<div class="receive-box"><div class="receive-grid-header"><div>Count</div><div>Colour</div><div>Dyeing Unit</div><div>Iss Wt</div><div>Rcvd Wt</div><div>Loss Wt</div><div>Loss %</div><div>Excess Loss Wt</div><div>Over Rcvd</div></div>';
+list.forEach(x=>h+=`<div class="receive-line-row" data-ids="${x.ids.join(',')}" data-unit="${safeText(x.unit)}"><input class="inp-count" value="${safeText(x.count)}" readonly><input class="inp-color" value="${safeText(x.color)}" readonly><input class="inp-unit" value="${safeText(x.unit)}" readonly><input class="inp-issued" value="${x.issueWt.toFixed(3)}" readonly><input type="number" class="inp-received" placeholder="Wt" oninput="calculateLoss(this)"><input class="inp-loss-wt" placeholder="0.00" readonly><input class="inp-loss-perc" placeholder="0%" readonly><input class="inp-excess-wt" placeholder="-" readonly><input class="inp-over-wt" placeholder="-" readonly></div>`);
+c.innerHTML=h+'</div>'
+}
+function calculateLoss(inp){
+let r=inp.closest('.receive-line-row'),issued=parseFloat(r.querySelector('.inp-issued').value)||0,received=parseFloat(inp.value)||0,l=r.querySelector('.inp-loss-wt'),p=r.querySelector('.inp-loss-perc'),e=r.querySelector('.inp-excess-wt'),o=r.querySelector('.inp-over-wt');
+o.value='-';o.style.color='#10B981';
+if(received>0&&received<=issued){let lw=issued-received,lp=issued?(lw/issued)*100:0;l.value=lw.toFixed(3);p.value=lp.toFixed(2)+'%';if(lp>5){e.value=(lw-issued*.05).toFixed(3);e.style.color='#DC2626'}else{e.value='-';e.style.color='#10B981'}}
+else if(received>issued){l.value='0.000';p.value='0.00%';e.value='-';e.style.color='#10B981';o.value=(received-issued).toFixed(3);o.style.color='#DC2626'}
+else{l.value='';p.value='';e.value='-';e.style.color='#10B981'}
+}
+async function quickCompleteToggle(){
+if(!checkUserPermission()){alert("Access Denied!");document.getElementById('top_completed_status').checked=!document.getElementById('top_completed_status').checked;return}
+let d=document.getElementById('designNumber').value,done=document.getElementById('top_completed_status').checked;if(!d){alert("Mudhala Design Number select pannunga bro");document.getElementById('top_completed_status').checked=false;return}
+let status=done?'completed':'running',clean=cleanDesignName(d),r=parseJsonArray('dyeing_receive_records'),updated=false;r.forEach(x=>{if(cleanDesignName(x.designNo||x.designNumber)===clean){x.status=status;updated=true}});if(!updated){alert('இந்த Design-க்கு Received record இன்னும் இல்லை. முதலில் Received Entry save செய்யவும்.');document.getElementById('top_completed_status').checked=false;return}
+window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));let s=parseJsonObject('design_specs'),k=Object.keys(s).find(x=>cleanDesignName(x)===clean)||d;if(!s[k])s[k]={};s[k].status=status;window.StorageDB.setItem('design_specs',JSON.stringify(s));
+try{if(window.supabaseSave){await window.supabaseSave('dyeing_receive_records',r);await window.supabaseSave('design_specs',s)}if(window.supabaseSaveIndividual)await window.supabaseSaveIndividual(k,s[k])}catch(e){console.error(e)}
+renderReceivedList();alert(`Design ${d} status '${done?'COMPLETED':'RUNNING'}' ah update aagiduchu ✅`)
+}
+async function saveReceiveEntry(){
+if(!checkUserPermission()){alert("Access Denied!");return}
+let date=document.getElementById('receiveDate').value,d=document.getElementById('designNumber').value,done=document.getElementById('top_completed_status').checked;if(!d){alert("Please select a Design Number!");return}
+let receives=parseJsonArray('dyeing_receive_records'),batchId=String(Date.now())+'_'+Math.random().toString(36).slice(2),clean=cleanDesignName(d),rows=document.querySelectorAll('.receive-line-row');if(!rows.length)return;
+let btn=document.getElementById('saveReceiveBtnTxt'),old=btn.innerText;btn.innerText='⏳ Saving to Cloud...';let issues=parseJsonArray('dyeing_issue_records'),saved=0;
+rows.forEach(row=>{let rw=parseFloat(row.querySelector('.inp-received').value)||0;if(rw<=0)return;let issued=parseFloat(row.querySelector('.inp-issued').value)||0;if(issued<=0)return;let ids=(row.dataset.ids||'').split(',').filter(Boolean),unit=row.dataset.unit||'-',loss=parseFloat(row.querySelector('.inp-loss-wt').value)||0,ex=row.querySelector('.inp-excess-wt').value,ov=row.querySelector('.inp-over-wt').value;
+let allocs=allocateReceive(issues,ids,Math.min(rw,issued));receives.push({id:Date.now()+Math.random(),batchId,allocs,issueIds:ids,issueId:ids[0],date,unit,designNo:d,count:row.querySelector('.inp-count').value,color:row.querySelector('.inp-color').value,issuedWt:issued.toFixed(3),receivedWt:rw.toFixed(3),lossWt:loss.toFixed(3),lossPerc:row.querySelector('.inp-loss-perc').value||'0%',excessWt:ex&&ex!=='-'?parseFloat(ex).toFixed(3):'-',overWt:ov&&ov!=='-'?parseFloat(ov).toFixed(3):'-',status:done?'completed':'running'});
+saved++});
+if(saved){let specs=parseJsonObject('design_specs'),k=Object.keys(specs).find(x=>cleanDesignName(x)===clean)||d;if(!specs[k])specs[k]={};specs[k].status=done?'completed':'running';window.StorageDB.setItem('design_specs',JSON.stringify(specs));window.StorageDB.setItem('dyeing_issue_records',JSON.stringify(issues));window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(receives));
+try{if(window.supabaseSave){await window.supabaseSave('dyeing_issue_records',issues);await window.supabaseSave('dyeing_receive_records',receives);await window.supabaseSave('design_specs',specs)}if(window.supabaseSaveIndividual)await window.supabaseSaveIndividual(k,specs[k])}catch(e){alert('Local save completed, but Cloud sync failed. ⚠️');btn.innerText=old;return}
+alert("Received Entry Saved to Cloud Successfully! ✅☁️");document.getElementById('receiveLinesContainer').innerHTML='';document.getElementById('top_completed_status').checked=false;loadPendingDesigns();renderReceivedList()
+}else alert("Please enter Received Weight for at least one item.");btn.innerText=old
+}
+async function toggleStatus(id,status){
+if(!checkUserPermission())return;if(!confirm(status==='completed'?'Change this receive entry to Completed?':'Change this receive entry to Running?'))return;
+let r=parseJsonArray('dyeing_receive_records'),ix=r.findIndex(x=>String(x.id)===String(id));if(ix<0)return;r[ix].status=status;window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));let d=r[ix].designNo;
+if(d){let s=parseJsonObject('design_specs'),k=Object.keys(s).find(x=>cleanDesignName(x)===cleanDesignName(d))||d;if(!s[k])s[k]={};s[k].status=status;window.StorageDB.setItem('design_specs',JSON.stringify(s));if(window.supabaseSave)await window.supabaseSave('design_specs',s);if(window.supabaseSaveIndividual)await window.supabaseSaveIndividual(k,s[k])}
+if(window.supabaseSave)await window.supabaseSave('dyeing_receive_records',r);renderReceivedList()
+}
+async function editReceiveRecord(id){
+if(!checkUserPermission())return;closeModal('receivedListModal');let r=parseJsonArray('dyeing_receive_records'),issues=parseJsonArray('dyeing_issue_records'),ix=r.findIndex(x=>String(x.id)===String(id));if(ix<0)return;let sel=r[ix];document.getElementById('top_completed_status').checked=sel.status==='completed';
+let batch=getBatch(r,sel);revertBatch(issues,batch);let ids=batch.map(x=>String(x.id));r=r.filter(x=>!ids.includes(String(x.id)));window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));window.StorageDB.setItem('dyeing_issue_records',JSON.stringify(issues));if(window.supabaseSave){await window.supabaseSave('dyeing_receive_records',r);await window.supabaseSave('dyeing_issue_records',issues)}
+document.getElementById('receiveDate').value=sel.date;
+loadPendingDesigns();
+document.getElementById('designNumber').value=sel.designNo;
+let searchInput=document.getElementById('designSearchInput');
+if(searchInput) searchInput.value=sel.designNo;
+loadPendingItems();
+setTimeout(()=>document.querySelectorAll('.receive-line-row').forEach(row=>{let ids=(row.dataset.ids||'').split(',');let m=batch.find(x=>(x.issueIds||[x.issueId]).map(String).some(i=>ids.includes(String(i))));if(m){let inp=row.querySelector('.inp-received');inp.value=m.receivedWt;calculateLoss(inp)}}),150);window.scrollTo({top:0,behavior:'smooth'})
+}
+async function deleteReceiveRecord(id){
+if(!checkUserPermission()||!confirm("Are you sure you want to delete this record (and related batch items)? They will revert to Pending status."))return;
+let r=parseJsonArray('dyeing_receive_records'),issues=parseJsonArray('dyeing_issue_records'),ix=r.findIndex(x=>String(x.id)===String(id));if(ix<0)return;let sel=r[ix],batch=getBatch(r,sel);revertBatch(issues,batch);let ids=batch.map(x=>String(x.id));r=r.filter(x=>!ids.includes(String(x.id)));window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));window.StorageDB.setItem('dyeing_issue_records',JSON.stringify(issues));if(window.supabaseSave){await window.supabaseSave('dyeing_receive_records',r);await window.supabaseSave('dyeing_issue_records',issues)}loadPendingDesigns();renderReceivedList();document.getElementById('receiveLinesContainer').innerHTML='';
+document.getElementById('designNumber').value='';
+let searchInput=document.getElementById('designSearchInput');
+if(searchInput) searchInput.value='';
+}
+function remainingOf(x){return Math.max(0,(parseFloat(x.issueWt||x.weight||x.wt)||0)-(parseFloat(x.receivedWt)||0))}
+function allocateReceive(issues,ids,rw){let left=rw,allocs={};ids.forEach(id=>{let ix=issues.findIndex(x=>String(x.id)===String(id));if(ix<0||left<=0)return;let take=Math.min(remainingOf(issues[ix]),left);if(take<=0)return;issues[ix].receivedWt=((parseFloat(issues[ix].receivedWt)||0)+take).toFixed(3);issues[ix].status=remainingOf(issues[ix])<=0.005?'Received':'Partial';allocs[id]=take;left-=take});return allocs}
+function revertAllocs(issues,allocs){Object.keys(allocs||{}).forEach(id=>{let ix=issues.findIndex(x=>String(x.id)===String(id));if(ix<0)return;let nr=Math.max(0,(parseFloat(issues[ix].receivedWt)||0)-allocs[id]);issues[ix].receivedWt=nr.toFixed(3);issues[ix].status=nr<=0.005?'Pending':'Partial'})}
+function revertBatch(issues,batch){batch.forEach(x=>{if(x.allocs){revertAllocs(issues,x.allocs)}else{(x.issueIds||[x.issueId]).forEach(i=>{let j=issues.findIndex(q=>String(q.id)===String(i));if(j>-1)issues[j].status='Pending'})}})}
+function getBatch(r,sel){return sel.batchId?r.filter(x=>x.batchId===sel.batchId):r.filter(x=>cleanDesignName(x.designNo)===cleanDesignName(sel.designNo)&&x.date===sel.date&&x.unit===sel.unit)}
+function getFilteredRecords(){let r=parseJsonArray('dyeing_receive_records'),d=document.getElementById('designNumber').value.trim();return d?r.filter(x=>cleanDesignName(x.designNo||x.designNumber)===cleanDesignName(d)):r}
+function formatDate(v){let d=new Date(v);return isNaN(d)?safeText(v):('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()}
+function renderReceivedList(){
+let r=getFilteredRecords(),body=document.getElementById('receivedListBody'),foot=document.getElementById('receivedListFoot');body.innerHTML='';foot.innerHTML='';if(!r.length){body.innerHTML='<tr><td colspan="13" style="padding:15px">No Dyeing Orders Received for this design yet.</td></tr>';return}
+let totals={i:0,rcv:0,l:0,e:0,o:0};r.slice().reverse().forEach(x=>{let i=parseFloat(x.issuedWt)||0,q=parseFloat(x.receivedWt)||0,l=parseFloat(x.lossWt)||0,e=x.excessWt&&x.excessWt!=='-'?parseFloat(x.excessWt)||0:0;totals.i+=i;totals.rcv+=q;totals.l+=l;totals.e+=e;let o=parseFloat(x.overWt)||0;totals.o+=o;let st=x.status||'running';body.innerHTML+=`<tr><td>${formatDate(x.date)}</td><td><b>${safeText(x.designNo)}</b></td><td>${safeText(x.count)}</td><td>${safeText(x.color)}</td><td><b>${safeText(x.unit||'-')}</b></td><td>${i.toFixed(3)}</td><td><b style="color:#10B981">${q.toFixed(3)}</b></td><td>${l.toFixed(3)}</td><td>${safeText(x.lossPerc)}</td><td>${e?'<span class="excess-text">'+e.toFixed(3)+'</span>':'-'}</td><td>${o?o.toFixed(3):'-'}</td><td style="font-weight:bold;text-transform:uppercase">${safeText(st)}</td><td class="action-btns">${st==='running'?`<button class="action-complete" onclick="toggleStatus('${x.id}','completed')">Complete</button>`:`<button class="action-running" onclick="toggleStatus('${x.id}','running')">Running</button>`}<button class="edit-action-btn" onclick="editReceiveRecord('${x.id}')">✏️</button><button class="del-action-btn" onclick="deleteReceiveRecord('${x.id}')">🗑️</button></td></tr>`});
+foot.innerHTML=`<tr><td colspan="5" style="text-align:right">Grand Total:</td><td>${totals.i.toFixed(3)}</td><td>${totals.rcv.toFixed(3)}</td><td>${totals.l.toFixed(3)}</td><td>-</td><td>${totals.e?totals.e.toFixed(3):'-'}</td><td>${totals.o?totals.o.toFixed(3):'-'}</td><td colspan="2"></td></tr>`
+}
+function buildPreview(){
+let r=getFilteredRecords(),d=document.getElementById('designNumber').value||'All Designs',date=document.getElementById('receiveDate').value||'';
+let rows='',ti=0,tr=0,tl=0,te=0,to=0;r.slice().reverse().forEach(x=>{let i=parseFloat(x.issuedWt)||0,q=parseFloat(x.receivedWt)||0,l=parseFloat(x.lossWt)||0,e=x.excessWt&&x.excessWt!=='-'?parseFloat(x.excessWt)||0:0;ti+=i;tr+=q;tl+=l;te+=e;let o=parseFloat(x.overWt)||0;to+=o;rows+=`<tr><td>${formatDate(x.date)}</td><td>${safeText(x.designNo)}</td><td>${safeText(x.count)}</td><td>${safeText(x.color)}</td><td>${safeText(x.unit||'-')}</td><td>${i.toFixed(3)}</td><td>${q.toFixed(3)}</td><td>${l.toFixed(3)}</td><td>${safeText(x.lossPerc)}</td><td>${e?e.toFixed(3):'-'}</td><td>${o?o.toFixed(3):'-'}</td><td>${safeText(x.status||'running')}</td></tr>`});
+document.getElementById('previewContent').innerHTML=`<div class="preview-title">DYEING COLOUR RECEIVED</div><div class="preview-subtitle">TEX FOR EVER</div><div class="preview-info"><div><b>Design:</b> ${safeText(d)}</div><div><b>Report Date:</b> ${formatDate(date)}</div><div><b>Records:</b> ${r.length}</div></div><table><thead><tr><th>Date</th><th>Design</th><th>Count</th><th>Colour</th><th>Dyeing Unit</th><th>Issued</th><th>Received</th><th>Loss</th><th>Loss %</th><th>Excess Loss Wt</th><th>Over</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan="12">No records</td></tr>'}</tbody><tfoot><tr><td colspan="5" style="text-align:right"><b>Grand Total</b></td><td><b>${ti.toFixed(3)}</b></td><td><b>${tr.toFixed(3)}</b></td><td><b>${tl.toFixed(3)}</b></td><td>-</td><td><b>${te?te.toFixed(3):'-'}</b></td><td><b>${to?to.toFixed(3):'-'}</b></td><td></td></tr></tfoot></table><div class="preview-total">Printed from TEXFOREVER</div>`
+}
+function openPreview(printNow=false){buildPreview();openModal('printPreviewModal');if(printNow)setTimeout(printPreview,350)}
+</script>
+  <script>
+function printPreview() {
+    var content = document.getElementById('previewContent');
+    if (window.appPrint) {
+        window.appPrint(content ? content.innerHTML : undefined);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+}
+  </script>
+</body>
+</html>

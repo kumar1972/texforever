@@ -1,0 +1,4876 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Dyeing Issue - TEX FOR EVER</title>
+
+<script src="config.js"></script>
+<script src="translator.js"></script>
+<script src="printer.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:'Poppins',sans-serif;
+}
+
+html,body{
+    width:100%;
+    min-height:100vh;
+    background:#030712;
+    color:#1E2B23;
+}
+
+html{
+    background:#030712;
+}
+
+body{
+    background:#030712;
+    overflow-x:hidden;
+}
+
+body{
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+}
+
+.main-card{
+    width:100%;
+    max-width:900px;
+    background:#FFFFFF;
+    border:1px solid rgba(82,110,81,.15);
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 10px 35px rgba(30,43,35,.06);
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+.top-nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:5px;
+    gap:10px;
+}
+
+.back-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    color:#FFFFFF;
+    text-decoration:none;
+    font-weight:600;
+    font-size:11px;
+    background:#1A2421;
+    padding:8px 16px;
+    border-radius:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.back-btn:hover{
+    background:#000000;
+}
+
+.completed-checkbox{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:#F8FAF8;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid #E2E8E2;
+    box-shadow:0 2px 5px rgba(0,0,0,0.04);
+}
+
+.completed-checkbox input{
+    width:16px;
+    height:16px;
+    accent-color:#4A7C59;
+}
+
+.completed-checkbox label{
+    color:#2F4F38;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+#bitmapDisplayContainer{
+    text-align:right;
+}
+
+#bitmapDisplayContainer img{
+    max-height:40px;
+    max-width:100px;
+    border-radius:6px;
+    border:1px solid #4A7C59;
+    cursor:zoom-in;
+}
+
+.card-header{
+    font-size:18px;
+    font-weight:800;
+    color:#F8FAF8;
+    position:relative;
+    padding-bottom:12px;
+    border-bottom:2px solid #EAF0EA;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.form-section{
+    background:#F8FAF8;
+    border:1px solid #E2E8E2;
+    border-radius:14px;
+    padding:22px 15px 15px;
+    margin-bottom:5px;
+    position:relative;
+}
+
+.section-badge{
+    position:absolute;
+    top:-12px;
+    left:15px;
+    background:#4A7C59;
+    color:#fff;
+    font-size:10px;
+    font-weight:700;
+    padding:4px 12px;
+    border-radius:12px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    box-shadow:0 4px 8px rgba(74,124,89,.25);
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-bottom:12px;
+}
+
+.form-group:last-child{
+    margin-bottom:0;
+}
+
+.form-group label{
+    font-size:11px;
+    font-weight:700;
+    color:#4A554A;
+}
+
+input,
+select{
+    width:100%;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1px solid #D1DED1;
+    background:#FFFFFF;
+    color:#1E2B23;
+    font-size:12px;
+    font-weight:600;
+}
+
+input:focus,
+select:focus{
+    border-color:#4A7C59;
+    outline:none;
+    box-shadow:0 0 0 3px rgba(74,124,89,.15);
+}
+
+.btn-add-inline{
+    background:linear-gradient(135deg,#10B981,#059669);
+    color:#fff;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:10px;
+    cursor:pointer;
+    text-transform:uppercase;
+}
+
+.btn-add-inline:hover{
+    opacity:0.9;
+}
+
+.btn-del-inline{
+    background:#FEE2E2;
+    color:#DC2626;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:12px;
+    cursor:pointer;
+}
+
+.issue-grid-header{
+    display:grid;
+    grid-template-columns:.8fr 1.2fr 1fr .8fr .8fr 1.2fr 70px;
+    gap:6px;
+    padding:0 4px;
+    margin-bottom:8px;
+}
+
+.issue-grid-header div{
+    font-size:10px;
+    font-weight:700;
+    color:#F8FAF8;
+    text-align:center;
+    text-transform:uppercase;
+}
+
+.line-row{
+    display:grid;
+    grid-template-columns:.8fr 1.2fr 1fr .8fr .8fr 1.2fr 70px;
+    gap:6px;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.line-row input,
+.line-row select{
+    padding:10px 6px;
+    font-size:11px;
+    text-align:center;
+    width:100%;
+}
+
+.btn-split-row,
+.del-row-btn{
+    width:32px;
+    height:32px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:bold;
+}
+
+.btn-split-row{
+    background:#EAF0EA;
+    color:#059669;
+}
+
+.del-row-btn{
+    background:#FEE2E2;
+    color:#DC2626;
+}
+
+.totals-box{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    background:#F8FAF8;
+    border:1px dashed #4A7C59;
+    padding:15px;
+    border-radius:12px;
+    margin-top:10px;
+}
+
+.total-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:700;
+    color:#2F4F38;
+}
+
+.total-item span:last-child{
+    background:#FFFFFF;
+    padding:6px 12px;
+    border-radius:6px;
+    border:1px solid #D1DED1;
+    min-width:80px;
+    text-align:center;
+    color:#10B981;
+}
+
+.btn-main{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    color:#fff;
+    font-weight:700;
+    font-size:12px;
+    cursor:pointer;
+    background:linear-gradient(135deg,#4A7C59,#2F4F38);
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.preview-trigger-btn{
+    background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+    color:#fff;
+    border:none;
+    padding:14px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
+}
+
+.preview-trigger-btn:hover{
+    opacity:0.9;
+}
+
+.popup-trigger-btn{
+    background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+    color:#fff;
+    border:none;
+    padding:14px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    box-shadow:0 4px 10px rgba(30,43,35,.1);
+}
+
+.overlay-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    background:rgba(3,7,18,.85);
+    backdrop-filter:blur(4px);
+    z-index:99999;
+    flex-direction:column;
+    padding:15px;
+    opacity:0;
+    transition:opacity .3s;
+}
+
+.overlay-modal.show{
+    opacity:1;
+}
+
+.modal-content{
+    background:#FFFFFF;
+    width:100%;
+    height:100%;
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 10px 35px rgba(30,43,35,0.15);
+    border:1px solid rgba(82, 110, 81, 0.15);
+}
+
+.modal-header{
+    padding:18px 20px;
+    background:#F8FAF8;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2px solid #EAF0EA;
+}
+
+.modal-header h3{
+    font-size:16px;
+    color:#2F4F38;
+    font-weight:800;
+}
+
+.close-btn{
+    background:#EF4444;
+    color:#FFFFFF;
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:11px;
+    text-transform:uppercase;
+}
+
+.modal-body{
+    padding:20px;
+    overflow:auto;
+    flex:1;
+    background:#FFFFFF;
+}
+
+.fullscreen-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.9);
+    z-index:999999;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.fullscreen-modal img{
+    max-width:100%;
+    max-height:85vh;
+    object-fit:contain;
+    border-radius:10px;
+}
+
+.close-fullscreen{
+    position:absolute;
+    top:20px;
+    right:20px;
+    background:#EF4444;
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.table-container{
+    width:100%;
+    border-radius:10px;
+    overflow:auto;
+    border:1px solid #D1DED1;
+    background:#FFFFFF;
+}
+
+table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    font-size:11px;
+    text-align:center;
+    white-space:nowrap;
+}
+
+th,
+td{
+    padding:10px 12px;
+    text-align:center;
+    border-bottom:1px solid #E2E8E2;
+    color:#1E2B23;
+}
+
+th{
+    background:#EAF0EA;
+    color:#2F4F38;
+    font-weight:700;
+    font-size:10px;
+    position:sticky;
+    top:0;
+    z-index:10;
+    text-transform:uppercase;
+}
+
+tfoot td{
+    background:#F8FAF8;
+    color:#2F4F38;
+    font-weight:700;
+}
+
+.edit-action-btn,
+.del-action-btn,
+.action-complete,
+.action-running{
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:10px;
+    padding:6px 10px;
+    font-weight:700;
+    text-transform:uppercase;
+}
+
+.edit-action-btn{
+    background:linear-gradient(135deg,#64748B,#475569);
+}
+
+.del-action-btn{
+    background:linear-gradient(135deg,#EF4444,#DC2626);
+}
+
+.action-complete{
+    background:linear-gradient(135deg,#10B981,#059669);
+}
+
+.action-running{
+    background:linear-gradient(135deg,#F59E0B,#D97706);
+}
+
+.checkbox-container{
+    background:#F8FAF8;
+    padding:12px 15px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border:1px solid #D1DED1;
+}
+
+
+/* ============================================================
+   FIXED RESPONSIVE LAYOUT
+   - Keeps the data rows below the Yarn Details header.
+   - Prevents grid columns from collapsing/overlapping.
+   - Mobile uses horizontal scrolling for the 7-column entry grid.
+============================================================ */
+.yarn-grid-scroll{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:visible;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+    padding-bottom:4px;
+}
+
+.yarn-grid-inner{
+    width:100%;
+    min-width:760px;
+}
+
+.issue-grid-header,
+.line-row{
+    width:100%;
+    min-width:760px;
+    grid-template-columns:80px 145px 110px 90px 90px 135px 75px;
+}
+
+.line-row{
+    margin-bottom:8px;
+}
+
+.line-row > *{
+    min-width:0;
+}
+
+.line-row .inp-count,
+.line-row .inp-color,
+.line-row .inp-ordwt,
+.line-row .inp-isswt{
+    min-width:0;
+}
+
+.line-row > div:last-child{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    min-width:75px;
+}
+
+.issue-grid-header{
+    align-items:center;
+}
+
+/* The hidden yarn type must never consume a grid column. */
+.line-row .inp-type{
+    display:none !important;
+}
+
+/* Keep all visible data inside the white card. */
+.main-card,
+.form-section,
+.yarn-grid-scroll{
+    overflow:visible;
+}
+
+/* ============================================================
+   ISSUE PREVIEW
+============================================================ */
+.preview-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    background:rgba(3,7,18,.75);
+    backdrop-filter:blur(3px);
+    z-index:100000;
+    padding:12px;
+    overflow:auto;
+}
+
+.preview-modal.show{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+}
+
+.preview-window{
+    width:100%;
+    max-width:900px;
+    margin:auto;
+    background:#FFFFFF;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.22);
+    border:1px solid rgba(82, 110, 81, 0.15);
+}
+
+.preview-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:15px 20px;
+    background:#F8FAF8;
+    border-bottom:2px solid #EAF0EA;
+}
+
+.preview-header h3{
+    color:#2F4F38;
+    font-size:16px;
+    font-weight:800;
+    margin:0;
+}
+
+.preview-close{
+    width:34px;
+    height:34px;
+    border:0;
+    border-radius:8px;
+    background:#FEE2E2;
+    color:#DC2626;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.preview-body{
+    padding:20px;
+    background:#FFFFFF;
+    overflow:auto;
+}
+
+.preview-sheet{
+    background:#FFFFFF;
+    color:#1E2B23;
+    width:100%;
+}
+
+.preview-title{
+    text-align:center;
+    color:#2F4F38;
+    font-size:18px;
+    font-weight:800;
+    margin-bottom:15px;
+    text-transform:uppercase;
+}
+
+.preview-meta{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.preview-meta div{
+    border:1px solid #D1DED1;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:11px;
+    background:#F8FAF8;
+    font-weight:600;
+}
+
+.preview-table-wrap{
+    width:100%;
+    overflow-x:auto;
+}
+
+.preview-table{
+    width:100%;
+    min-width:700px;
+    border-collapse:collapse;
+    font-size:11px;
+}
+
+.preview-table th,
+.preview-table td{
+    border:1px solid #D1DED1;
+    padding:10px 8px;
+    text-align:center;
+    color:#1E2B23;
+}
+
+.preview-table th{
+    background:#EAF0EA;
+    color:#2F4F38;
+    font-weight:700;
+    text-transform:uppercase;
+}
+
+.preview-total-row td{
+    background:#F8FAF8;
+    font-weight:700;
+    color:#2F4F38;
+}
+
+.preview-footer{
+    display:flex;
+    justify-content:flex-end;
+    padding:15px 20px;
+    background:#F8FAF8;
+    border-top:2px solid #EAF0EA;
+}
+
+.preview-print-btn{
+    border:0;
+    border-radius:8px;
+    padding:10px 18px;
+    background:linear-gradient(135deg,#10B981,#059669);
+    color:#fff;
+    font-weight:700;
+    font-size:12px;
+    cursor:pointer;
+    text-transform:uppercase;
+}
+
+.preview-print-btn:hover{
+    opacity:0.9;
+}
+
+@media(max-width:700px){
+    .preview-modal{
+        padding:6px;
+    }
+
+    .preview-meta{
+        grid-template-columns:1fr;
+    }
+
+    .preview-body{
+        padding:10px;
+    }
+}
+
+@media print{
+    html,body{
+        background:#fff !important;
+        color:#111 !important;
+        min-height:auto !important;
+    }
+
+    body > *:not(#issuePreviewModal){
+        display:none !important;
+    }
+
+    #issuePreviewModal{
+        display:block !important;
+        position:static !important;
+        background:#fff !important;
+        padding:0 !important;
+        width:100% !important;
+        height:auto !important;
+        overflow:visible !important;
+    }
+
+    #issuePreviewModal .preview-window{
+        max-width:none !important;
+        width:100% !important;
+        box-shadow:none !important;
+        border-radius:0 !important;
+    }
+
+    #issuePreviewModal .preview-header,
+    #issuePreviewModal .preview-footer{
+        display:none !important;
+    }
+
+    #issuePreviewModal .preview-body{
+        padding:0 !important;
+        overflow:visible !important;
+    }
+
+    #issuePreviewModal .preview-table-wrap{
+        overflow:visible !important;
+    }
+
+    #issuePreviewModal .preview-table{
+        min-width:0 !important;
+        width:100% !important;
+        font-size:9px !important;
+    }
+
+    #issuePreviewModal .preview-table th,
+    #issuePreviewModal .preview-table td{
+        padding:5px 4px !important;
+    }
+}
+
+@media(max-width:700px){
+
+    .main-card{
+        padding:15px;
+        border-radius:15px;
+    }
+
+    .top-nav{
+        align-items:flex-start;
+    }
+
+    .issue-grid-header,
+    .line-row{
+        grid-template-columns:
+        70px
+        120px
+        100px
+        80px
+        80px
+        120px
+        70px;
+    }
+
+    .totals-box{
+        grid-template-columns:1fr;
+    }
+
+    .total-item{
+        font-size:11px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="main-card">
+
+    <div class="top-nav">
+
+        <a href="dashboard.html" class="back-btn">
+            ← Back to Menu
+        </a>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+
+            <div class="completed-checkbox">
+                <input
+                    type="checkbox"
+                    id="top_completed_status"
+                    onchange="quickCompleteToggle()"
+                >
+                <label for="top_completed_status">
+                    Completed
+                </label>
+            </div>
+
+            <div id="bitmapDisplayContainer"></div>
+
+        </div>
+
+    </div>
+
+    <h2 class="card-header">
+        Dyeing Issue (Warp + Weft) (டையிங் கொடுத்தது )
+    </h2>
+
+    <div class="form-section" style="margin-top:10px;">
+
+        <div class="section-badge">
+            Issue Info
+        </div>
+
+        <div class="form-group">
+
+            <label>
+                Issue Date
+            </label>
+
+            <input
+                type="date"
+                id="issueDate"
+            >
+
+        </div>
+
+        <div class="form-group" style="position: relative;">
+
+            <label>
+                Select Design Number
+            </label>
+
+            <!-- Searchable Text Input -->
+            <input
+                type="text"
+                id="designSearchInput"
+                placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                oninput="filterDesignDropdown()"
+                onfocus="openDesignDropdownList()"
+                style="width:100%; padding:12px 14px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+            />
+
+            <!-- Custom Dropdown List Box -->
+            <div
+                id="designDropdownList"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+            </div>
+
+            <select
+                id="designNumber"
+                style="display:none;"
+                onchange="loadDesignItems()"
+            >
+                <option value="">
+                    Select Design No
+                </option>
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <div class="form-section">
+
+        <div class="section-badge">
+            Yarn Details
+        </div>
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:12px;
+            gap:10px;
+            flex-wrap:wrap;
+        ">
+
+            <div
+                class="checkbox-container"
+                style="flex:1;min-width:250px;"
+            >
+
+                <label
+                    for="combineToggle"
+                    style="
+                    font-size:11px;
+                    font-weight:700;
+                    color:#2F4F38;
+                    cursor:pointer;
+                    margin:0;
+                    "
+                >
+                    🔗 Combine Warp & Weft
+                </label>
+
+                <input
+                    type="checkbox"
+                    id="combineToggle"
+                    checked
+                    onchange="loadDesignItems()"
+                    style="
+                    width:18px;
+                    height:18px;
+                    accent-color:#4A7C59;
+                    cursor:pointer;
+                    "
+                >
+
+            </div>
+
+            <div
+                style="
+                display:flex;
+                gap:6px;
+                flex-wrap:wrap;
+                justify-content:flex-end;
+                "
+            >
+
+                <button
+                    type="button"
+                    class="btn-add-inline"
+                    onclick="addMasterUnit()"
+                >
+                    + Add Unit
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-del-inline"
+                    onclick="deleteMasterItem('unit')"
+                >
+                    🗑️
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div style="margin-top:5px;overflow-x:auto;">
+
+            <div style="min-width:650px;">
+
+                <div class="issue-grid-header">
+
+                    <div>Count</div>
+                    <div>Mill Name</div>
+                    <div>Colour</div>
+                    <div>Ord Wt</div>
+                    <div>Iss Wt</div>
+                    <div>Dyeing Unit</div>
+                    <div>Action</div>
+
+                </div>
+
+                <div id="issueLinesContainer"></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="totals-box">
+
+            <div class="total-item">
+
+                <span>
+                    Total Balance Ord Wt:
+                </span>
+
+                <span id="sumOrdWt">
+                    0.000
+                </span>
+
+            </div>
+
+            <div class="total-item">
+
+                <span>
+                    Total Iss Wt:
+                </span>
+
+                <span id="sumIssWt">
+                    0.000
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="savedIssueDetails" style="margin:12px 0;"></div>
+
+    <button
+        class="btn-main"
+        id="saveIssueBtnTxt"
+        onclick="saveIssueEntries()"
+    >
+        ✅ Save Dyeing Order Issue ( கொடுத்ததை சேமி )
+    </button>
+
+
+    <button
+        class="popup-trigger-btn"
+        onclick="openModal('issuedListModal')"
+    >
+        📊 View Issued Orders List
+    </button>
+
+    <button
+        type="button"
+        class="preview-trigger-btn"
+        onclick="openIssuePreview()"
+    >
+        👁️ Preview
+    </button>
+
+</div>
+
+
+<div
+    id="issuedListModal"
+    class="overlay-modal"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>
+                📊 Issued Orders Registry
+            </h3>
+
+            <button
+                class="close-btn"
+                onclick="closeModal('issuedListModal')"
+            >
+                Close ✕
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Date</th>
+                            <th>Dyeing Unit</th>
+                            <th>Design No</th>
+                            <th>Type</th>
+                            <th>Count</th>
+                            <th>Mill Name</th>
+                            <th>Colour</th>
+                            <th>Ord Wt</th>
+                            <th>Iss Wt</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="issuedListBody"></tbody>
+
+                    <tfoot id="issuedListFoot"></tfoot>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div
+    id="issuePreviewModal"
+    class="preview-modal"
+    onclick="if(event.target===this) closeIssuePreview()"
+>
+    <div class="preview-window">
+        <div class="preview-header">
+            <h3>👁️ Dyeing Issue Preview</h3>
+            <button type="button" class="preview-close" onclick="closeIssuePreview()" title="Close">✕</button>
+        </div>
+
+        <div class="preview-body">
+            <div id="issuePreviewContent" class="preview-sheet"></div>
+        </div>
+
+        <div class="preview-footer">
+            <button type="button" class="preview-print-btn" onclick="printIssuePreview()">🖨️ Print</button>
+        </div>
+    </div>
+</div>
+
+<div
+    id="fullscreenModal"
+    class="fullscreen-modal"
+    onclick="closeFullscreenImage()"
+>
+
+    <button
+        class="close-fullscreen"
+        onclick="event.stopPropagation();closeFullscreenImage()"
+    >
+        Close ✕
+    </button>
+
+    <img
+        id="fullscreenImg"
+        src=""
+        alt="Fullscreen Preview"
+        onclick="event.stopPropagation()"
+    >
+
+</div>
+
+
+<script>
+
+'use strict';
+
+let editingIssueId = null;
+let allCombinedDesigns = [];
+
+
+/* ============================================================
+   SAFE HELPERS
+============================================================ */
+
+function storeRaw(key){
+    if(window.StorageDB && typeof window.StorageDB.getItem === "function"){
+        return window.StorageDB.getItem(key);
+    }
+    return localStorage.getItem(key);
+}
+
+function safeArray(key){
+    try{
+        const data = JSON.parse(storeRaw(key) || '[]');
+        return Array.isArray(data) ? data : [];
+    }catch(e){
+        console.warn('Array parse error:',key,e);
+        return [];
+    }
+}
+
+function safeObject(key){
+    try{
+        const data = JSON.parse(storeRaw(key) || '{}');
+        return data && typeof data === 'object' && !Array.isArray(data)
+            ? data
+            : {};
+    }catch(e){
+        console.warn('Object parse error:',key,e);
+        return {};
+    }
+}
+
+function safeNumber(value, fallback=0){
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function fixed3(value){
+    return safeNumber(value,0).toFixed(3);
+}
+
+function escapeHTML(value){
+    return String(value ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+}
+
+function cleanDesignName(str){
+    return str
+        ? String(str)
+            .replace(/#/g,'')
+            .trim()
+            .toLowerCase()
+        : '';
+}
+
+function normalizeText(value){
+    return String(value ?? '')
+        .trim()
+        .toLowerCase();
+}
+
+
+/* ============================================================
+   PERMISSION
+============================================================ */
+
+function checkUserPermission(){
+
+    const userRole =
+        localStorage.getItem('erp_logged_role') ||
+        localStorage.getItem('user_role');
+
+    if(
+        userRole === 'Administrator' ||
+        userRole === 'Admin'
+    ){
+        return true;
+    }
+
+    const permissions =
+        safeObject('user_permissions');
+
+    if(
+        permissions['dyeing_issue.html'] === false ||
+        permissions['dyeing_issue'] === false
+    ){
+        return false;
+    }
+
+    return true;
+}
+
+
+/* ============================================================
+   INITIAL LOAD
+============================================================ */
+
+document.addEventListener('DOMContentLoaded', async function(){
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+
+    if(!checkUserPermission()){
+
+        alert(
+            'Access Denied! You do not have permission to access this page. ❌'
+        );
+
+        window.location.href='dashboard.html';
+        return;
+    }
+
+    const dateInput =
+        document.getElementById('issueDate');
+
+    if(dateInput){
+
+        const today =
+            new Date();
+
+        const localDate =
+            new Date(
+                today.getTime() -
+                today.getTimezoneOffset()*60000
+            )
+            .toISOString()
+            .split('T')[0];
+
+        dateInput.value =
+            localDate;
+    }
+
+    loadDesignDropdowns();
+    refreshAllSelects();
+    updateTotals();
+
+    document.addEventListener("click", function(e){
+        let container = document.getElementById("designSearchInput");
+        let list = document.getElementById("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+    });
+
+});
+
+
+/* ============================================================
+   CLOUD SYNC
+============================================================ */
+
+async function syncMasterToCloud(key,data){
+
+    window.StorageDB.setItem(
+        key,
+        JSON.stringify(data)
+    );
+
+    try{
+
+        if(typeof window.supabaseSave === 'function'){
+
+            await window.supabaseSave(
+                key,
+                data
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            'supabaseSave error:',
+            error
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   MASTER MILL
+============================================================ */
+
+async function addMasterMill(){
+
+    let val =
+        prompt(
+            'புதிய மில் பெயரை உள்ளிடவும்\nEnter new Mill Name:'
+        );
+
+    if(!val) return;
+
+    val =
+        val.trim();
+
+    if(!val) return;
+
+    const masterMills =
+        safeArray('tex_master_mills');
+
+    const exists =
+        masterMills.some(
+            m =>
+            normalizeText(m) ===
+            normalizeText(val)
+        );
+
+    if(exists){
+
+        alert(
+            'This Mill Name is already in the Master List!'
+        );
+
+        return;
+    }
+
+    masterMills.push(val);
+
+    await syncMasterToCloud(
+        'tex_master_mills',
+        masterMills
+    );
+
+    refreshAllSelects();
+
+    alert(
+        `Mill '${val}' added successfully! ✅☁️`
+    );
+}
+
+
+/* ============================================================
+   MASTER UNIT
+============================================================ */
+
+async function addMasterUnit(){
+
+    let val =
+        prompt(
+            'புதிய யூனிட் பெயரை உள்ளிடவும்\nEnter new Dyeing/Unit Name:'
+        );
+
+    if(!val) return;
+
+    val =
+        val.trim();
+
+    if(!val) return;
+
+    const masterUnits =
+        safeArray('tex_master_units');
+
+    const exists =
+        masterUnits.some(
+            u =>
+            normalizeText(u) ===
+            normalizeText(val)
+        );
+
+    if(exists){
+
+        alert(
+            'This Unit Name is already in the Master List!'
+        );
+
+        return;
+    }
+
+    masterUnits.push(val);
+
+    await syncMasterToCloud(
+        'tex_master_units',
+        masterUnits
+    );
+
+    refreshAllSelects();
+
+    alert(
+        `Unit '${val}' added successfully! ✅☁️`
+    );
+}
+
+
+/* ============================================================
+   DELETE MASTER
+============================================================ */
+
+async function deleteMasterItem(type){
+
+    let storageKey='';
+    let title='';
+
+    if(type === 'mill'){
+
+        storageKey =
+            'tex_master_mills';
+
+        title='Mill';
+
+    }else if(type === 'unit'){
+
+        storageKey =
+            'tex_master_units';
+
+        title='Unit';
+
+    }else{
+
+        return;
+    }
+
+    const masterList =
+        safeArray(storageKey);
+
+    if(masterList.length === 0){
+
+        alert(
+            `No manually added ${title}s found to delete.`
+        );
+
+        return;
+    }
+
+    const listStr =
+        masterList
+        .map(
+            (m,i) =>
+            `${i+1}. ${m}`
+        )
+        .join('\n');
+
+    const idxStr =
+        prompt(
+            `எந்த ${title} பெயரை நீக்க வேண்டும்?\n\n${listStr}\n\nNumber:`
+        );
+
+    if(!idxStr) return;
+
+    const idx =
+        parseInt(idxStr,10)-1;
+
+    if(
+        !Number.isInteger(idx) ||
+        idx<0 ||
+        idx>=masterList.length
+    ){
+
+        alert(
+            'தவறான எண் (Invalid Number)!'
+        );
+
+        return;
+    }
+
+    const deleted =
+        masterList.splice(idx,1);
+
+    await syncMasterToCloud(
+        storageKey,
+        masterList
+    );
+
+    refreshAllSelects();
+
+    alert(
+        `'${deleted[0]}' deleted successfully! ✅`
+    );
+}
+
+
+/* ============================================================
+   MILL OPTIONS
+============================================================ */
+
+function getMillOptions(selectedVal=''){
+
+    const masterMills =
+        safeArray('tex_master_mills');
+
+    const inwards =
+        safeArray('kora_stock_records');
+
+    const issues =
+        safeArray('kora_issue_records');
+
+    const millsSet =
+        new Set();
+
+    masterMills.forEach(
+        m=>{
+            if(String(m).trim())
+                millsSet.add(String(m).trim());
+        }
+    );
+
+    inwards.forEach(item=>{
+
+        if(item && item.supplier)
+            millsSet.add(
+                String(item.supplier).trim()
+            );
+
+        if(item && item.millName)
+            millsSet.add(
+                String(item.millName).trim()
+            );
+
+    });
+
+    issues.forEach(item=>{
+
+        if(item && item.millName)
+            millsSet.add(
+                String(item.millName).trim()
+            );
+
+    });
+
+    const sorted =
+        Array.from(millsSet)
+        .filter(Boolean)
+        .sort(
+            (a,b)=>
+            a.localeCompare(
+                b,
+                undefined,
+                {numeric:true,sensitivity:'base'}
+            )
+        );
+
+    let html =
+        '<option value="">Select Mill</option>';
+
+    sorted.forEach(mill=>{
+
+        const selected =
+            normalizeText(mill) ===
+            normalizeText(selectedVal)
+            ? 'selected'
+            : '';
+
+        html += `
+            <option
+                value="${escapeHTML(mill)}"
+                ${selected}
+            >
+                ${escapeHTML(mill)}
+            </option>
+        `;
+
+    });
+
+    return html;
+}
+
+
+/* ============================================================
+   UNIT OPTIONS
+============================================================ */
+
+function getUnitOptions(selectedVal=''){
+
+    const masterUnits =
+        safeArray('tex_master_units');
+
+    const issues =
+        safeArray('kora_issue_records');
+
+    const dyeIssues =
+        safeArray('dyeing_issue_records');
+
+    const unitSet =
+        new Set();
+
+    masterUnits.forEach(u=>{
+
+        if(String(u).trim())
+            unitSet.add(
+                String(u).trim()
+            );
+
+    });
+
+    issues.forEach(item=>{
+
+        if(item && item.dyeingName)
+            unitSet.add(
+                String(item.dyeingName).trim()
+            );
+
+        if(item && item.unit)
+            unitSet.add(
+                String(item.unit).trim()
+            );
+
+    });
+
+    dyeIssues.forEach(item=>{
+
+        if(item && item.unit)
+            unitSet.add(
+                String(item.unit).trim()
+            );
+
+    });
+
+    const sorted =
+        Array.from(unitSet)
+        .filter(Boolean)
+        .sort(
+            (a,b)=>
+            a.localeCompare(
+                b,
+                undefined,
+                {numeric:true,sensitivity:'base'}
+            )
+        );
+
+    let html =
+        '<option value="">Select Unit</option>';
+
+    sorted.forEach(unit=>{
+
+        const selected =
+            normalizeText(unit) ===
+            normalizeText(selectedVal)
+            ? 'selected'
+            : '';
+
+        html += `
+            <option
+                value="${escapeHTML(unit)}"
+                ${selected}
+            >
+                ${escapeHTML(unit)}
+            </option>
+        `;
+
+    });
+
+    return html;
+}
+
+
+/* ============================================================
+   REFRESH SELECTS
+============================================================ */
+
+function refreshAllSelects(){
+
+    document
+        .querySelectorAll('.inp-mill')
+        .forEach(select=>{
+
+            const current =
+                select.value;
+
+            select.innerHTML =
+                getMillOptions(current);
+
+        });
+
+    document
+        .querySelectorAll('.inp-unit')
+        .forEach(select=>{
+
+            const current =
+                select.value;
+
+            select.innerHTML =
+                getUnitOptions(current);
+
+        });
+
+}
+
+
+/* ============================================================
+   MODAL
+============================================================ */
+
+function openModal(modalId){
+
+    const modal =
+        document.getElementById(modalId);
+
+    if(!modal) return;
+
+    modal.style.display='flex';
+
+    setTimeout(
+        ()=>modal.classList.add('show'),
+        10
+    );
+
+    if(modalId === 'issuedListModal'){
+        renderIssuedList();
+    }
+}
+
+function closeModal(modalId){
+
+    const modal =
+        document.getElementById(modalId);
+
+    if(!modal) return;
+
+    modal.classList.remove('show');
+
+    setTimeout(
+        ()=>modal.style.display='none',
+        300
+    );
+}
+
+
+/* ============================================================
+   FULLSCREEN IMAGE
+============================================================ */
+
+window.openFullscreenImage =
+function(src){
+
+    if(!src || src==='null')
+        return;
+
+    const modal =
+        document.getElementById(
+            'fullscreenModal'
+        );
+
+    const img =
+        document.getElementById(
+            'fullscreenImg'
+        );
+
+    if(!modal || !img)
+        return;
+
+    img.src=src;
+
+    modal.style.display='flex';
+
+};
+
+window.closeFullscreenImage =
+function(){
+
+    const modal =
+        document.getElementById(
+            'fullscreenModal'
+        );
+
+    if(modal)
+        modal.style.display='none';
+
+};
+
+
+/* ============================================================
+   BITMAP
+============================================================ */
+
+function loadBitmapImage(){
+
+    const select =
+        document.getElementById(
+            'designNumber'
+        );
+
+    const container =
+        document.getElementById(
+            'bitmapDisplayContainer'
+        );
+
+    if(!select || !container)
+        return;
+
+    const activeDesign =
+        select.value ||
+        storeRaw(
+            'selected_design_number'
+        );
+
+    const designSpecs =
+        safeObject('design_specs');
+
+    if(!activeDesign){
+
+        container.innerHTML='';
+        return;
+    }
+
+    const clean =
+        cleanDesignName(activeDesign);
+
+    const specKey =
+        Object.keys(designSpecs)
+        .find(
+            k =>
+            cleanDesignName(k)===clean
+        );
+
+    const spec =
+        specKey
+        ? designSpecs[specKey]
+        : null;
+
+    if(
+        spec &&
+        spec.bitmap
+    ){
+
+        const img =
+            document.createElement('img');
+
+        img.src =
+            spec.bitmap;
+
+        img.alt =
+            'Design Bitmap';
+
+        img.title =
+            'Click to view full screen';
+
+        img.onclick =
+            function(){
+
+                openFullscreenImage(
+                    spec.bitmap
+                );
+
+            };
+
+        container.innerHTML='';
+
+        container.appendChild(img);
+
+    }else{
+
+        container.innerHTML='';
+
+    }
+}
+
+
+/* ============================================================
+   DESIGN DROPDOWN & SEARCH
+============================================================ */
+
+function loadDesignDropdowns(){
+
+    const preDesigns =
+        safeArray('pre_design_numbers');
+
+    const designMasters =
+        safeArray('design_masters_data');
+
+    const designSpecs =
+        safeObject('design_specs');
+
+    const partyOrders =
+        safeArray('party_orders_data');
+
+    const allMap =
+        new Map();
+
+    preDesigns.forEach(d=>{
+
+        if(d)
+            allMap.set(
+                cleanDesignName(d),
+                String(d)
+            );
+
+    });
+
+    designMasters.forEach(d=>{
+
+        const name =
+            d &&
+            (d.name || d.designNo);
+
+        if(name)
+            allMap.set(
+                cleanDesignName(name),
+                String(name)
+            );
+
+    });
+
+    Object.keys(designSpecs)
+        .forEach(k=>{
+
+            if(k)
+                allMap.set(
+                    cleanDesignName(k),
+                    String(k)
+                );
+
+        });
+
+    partyOrders.forEach(o=>{
+
+        const name =
+            o &&
+            (o.designNumber || o.designNo);
+
+        if(name)
+            allMap.set(
+                cleanDesignName(name),
+                String(name)
+            );
+
+    });
+
+    allCombinedDesigns =
+        Array.from(allMap.values())
+        .sort(
+            (a,b)=>
+            a.localeCompare(
+                b,
+                undefined,
+                {
+                    numeric:true,
+                    sensitivity:'base'
+                }
+            )
+        );
+
+    const select =
+        document.getElementById(
+            'designNumber'
+        );
+
+    if(!select)
+        return;
+
+    let html =
+        '<option value="">Select Design No</option>';
+
+    allCombinedDesigns.forEach(name=>{
+
+        html += `
+            <option value="${escapeHTML(name)}">
+                ${escapeHTML(name)}
+            </option>
+        `;
+
+    });
+
+    select.innerHTML=html;
+
+    const activeDesign =
+        storeRaw(
+            'selected_design_number'
+        );
+
+    if(activeDesign){
+
+        const found =
+            allCombinedDesigns.find(
+                d =>
+                cleanDesignName(d) ===
+                cleanDesignName(activeDesign)
+            );
+
+        if(found){
+
+            select.value = found;
+            const searchInput = document.getElementById("designSearchInput");
+            if(searchInput) searchInput.value = found;
+
+            loadDesignItems();
+
+        }
+
+    }
+
+}
+
+function openDesignDropdownList(){
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("designNumber");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        loadDesignItems();
+    }
+    if(list) list.style.display = "none";
+}
+
+
+/* ============================================================
+   PARSE YARN COUNT
+============================================================ */
+
+function parseYarnCount(countStr){
+
+    if(!countStr)
+        return 0;
+
+    let str =
+        String(countStr)
+        .trim()
+        .toLowerCase()
+        .replace(/s/g,'');
+
+    if(str.includes('/')){
+
+        const parts =
+            str.split('/');
+
+        if(parts.length===2){
+
+            const ply =
+                safeNumber(parts[0],1);
+
+            const singleCount =
+                safeNumber(parts[1],1);
+
+            if(ply>0)
+                return singleCount/ply;
+
+        }
+
+    }
+
+    return safeNumber(str,0);
+}
+
+
+/* ============================================================
+   RESOLVE PATTERN
+============================================================ */
+
+function resolvePattern(
+    lines,
+    ranges,
+    type,
+    defaultCount
+){
+
+    if(!Array.isArray(lines) || lines.length===0)
+        return [];
+
+    const safeRanges =
+        Array.isArray(ranges)
+        ? ranges
+        : [];
+
+    const covered =
+        new Array(lines.length)
+        .fill(false);
+
+    const orderedPattern=[];
+
+    safeRanges.forEach(r=>{
+
+        const start =
+            Math.max(
+                1,
+                parseInt(r.start,10) || 1
+            );
+
+        const end =
+            Math.min(
+                lines.length,
+                parseInt(r.end,10) || start
+            );
+
+        const setCount =
+            Math.max(
+                1,
+                parseInt(r.set,10) || 1
+            );
+
+        for(
+            let s=0;
+            s<setCount;
+            s++
+        ){
+
+            for(
+                let j=start;
+                j<=end;
+                j++
+            ){
+
+                if(lines[j-1])
+                    orderedPattern.push({
+                        ...lines[j-1]
+                    });
+
+            }
+
+        }
+
+        for(
+            let j=start;
+            j<=end;
+            j++
+        ){
+
+            if(j-1>=0 && j-1<covered.length)
+                covered[j-1]=true;
+
+        }
+
+    });
+
+    lines.forEach(
+        (line,index)=>{
+
+            if(!covered[index]){
+
+                orderedPattern.push({
+                    ...line
+                });
+
+            }
+
+        }
+    );
+
+    const exactSequence=[];
+
+    orderedPattern.forEach(item=>{
+
+        const val =
+            Math.max(
+                0,
+                Math.floor(
+                    safeNumber(
+                        type==='warp'
+                        ? item.ends
+                        : item.picks,
+                        0
+                    )
+                )
+            );
+
+        const count =
+            item.count !== undefined &&
+            item.count !== ''
+            ? String(item.count).trim()
+            : String(defaultCount);
+
+        const color =
+            item.color
+            ? String(item.color).trim()
+            : '-';
+
+        for(
+            let k=0;
+            k<val;
+            k++
+        ){
+
+            exactSequence.push({
+                count,
+                color
+            });
+
+        }
+
+    });
+
+    const summaryMap =
+        new Map();
+
+    const order=[];
+
+    exactSequence.forEach(item=>{
+
+        const key =
+            normalizeText(item.count) +
+            '||' +
+            normalizeText(item.color);
+
+        if(!summaryMap.has(key)){
+
+            summaryMap.set(
+                key,
+                {
+                    count:item.count,
+                    color:item.color,
+                    patternVal:0
+                }
+            );
+
+            order.push(key);
+
+        }
+
+        summaryMap.get(key).patternVal++;
+
+    });
+
+    return order.map(
+        key =>
+        summaryMap.get(key)
+    );
+
+}
+
+
+/* ============================================================
+   KORA MILL LOOKUP
+============================================================ */
+
+function getMillNameFromKora(
+    designNo,
+    countStr
+){
+
+    const stockRecords =
+        safeArray('kora_stock_records');
+
+    const issueRecords =
+        safeArray('kora_issue_records');
+
+    const allRecords =
+        [
+            ...stockRecords,
+            ...issueRecords
+        ];
+
+    const cleanDNo =
+        normalizeText(designNo);
+
+    const cleanCount =
+        normalizeText(countStr);
+
+    const match =
+        allRecords.find(r=>{
+
+            const rDno =
+                normalizeText(
+                    r &&
+                    (
+                        r.designNo ||
+                        r.designNumber ||
+                        r.design
+                    )
+                );
+
+            const rCount =
+                normalizeText(
+                    r &&
+                    r.count
+                );
+
+            return (
+                cleanDesignName(rDno) ===
+                cleanDesignName(cleanDNo)
+            ) &&
+            rCount === cleanCount;
+
+        });
+
+    if(
+        match &&
+        (
+            match.millName ||
+            match.supplier
+        )
+    ){
+
+        return String(
+            match.millName ||
+            match.supplier
+        ).trim();
+
+    }
+
+    return '';
+}
+
+
+/* ============================================================
+   CREATE ISSUE ROW
+============================================================ */
+
+function createIssueRow(data={}){
+
+    const row =
+        document.createElement('div');
+
+    row.className='line-row';
+
+    const count =
+        data.count ?? '';
+
+    const mill =
+        data.mill ?? '';
+
+    const color =
+        data.color ?? '-';
+
+    const ordWt =
+        data.orderWt ?? 0;
+
+    const issWt =
+        data.issueWt ?? '';
+
+    const unit =
+        data.unit ?? '';
+
+    const type =
+        data.type ?? 'Combined';
+
+    row.innerHTML=`
+
+        <input
+            type="text"
+            class="inp-count"
+            value="${escapeHTML(count)}"
+            readonly
+        >
+
+        <select class="inp-mill">
+            ${getMillOptions(mill)}
+        </select>
+
+        <input
+            type="text"
+            class="inp-color"
+            value="${escapeHTML(color)}"
+            readonly
+        >
+
+        <input
+            type="number"
+            class="inp-ordwt"
+            value="${fixed3(ordWt)}"
+            step="0.001"
+            readonly
+        >
+
+        <input
+            type="number"
+            class="inp-isswt"
+            value="${issWt === '' ? '' : fixed3(issWt)}"
+            placeholder="Wt"
+            step="0.001"
+            min="0"
+            oninput="updateTotals()"
+        >
+
+        <select class="inp-unit">
+            ${getUnitOptions(unit)}
+        </select>
+
+        <input
+            type="hidden"
+            class="inp-type"
+            value="${escapeHTML(type)}"
+        >
+
+        <div
+            style="
+            display:flex;
+            gap:4px;
+            align-items:center;
+            "
+        >
+
+            <button
+                type="button"
+                class="btn-split-row"
+                onclick="duplicateRow(this)"
+                title="Split / Duplicate Row"
+            >
+                ➕
+            </button>
+
+            <button
+                type="button"
+                class="del-row-btn"
+                onclick="
+                    this.closest('.line-row').remove();
+                    updateTotals();
+                "
+                title="Delete Row"
+            >
+                ✕
+            </button>
+
+        </div>
+
+    `;
+
+    return row;
+}
+
+
+/* ============================================================
+   DUPLICATE / SPLIT ROW
+============================================================ */
+
+window.duplicateRow =
+function(btn){
+
+    const currentRow =
+        btn.closest('.line-row');
+
+    if(!currentRow)
+        return;
+
+    const data={
+
+        count:
+            currentRow.querySelector(
+                '.inp-count'
+            )?.value || '',
+
+        mill:
+            currentRow.querySelector(
+                '.inp-mill'
+            )?.value || '',
+
+        color:
+            currentRow.querySelector(
+                '.inp-color'
+            )?.value || '',
+
+        orderWt:
+            safeNumber(
+                currentRow.querySelector(
+                    '.inp-ordwt'
+                )?.value,
+                0
+            ),
+
+        issueWt:
+            currentRow.querySelector(
+                '.inp-isswt'
+            )?.value || '',
+
+        unit:
+            currentRow.querySelector(
+                '.inp-unit'
+            )?.value || '',
+
+        type:
+            currentRow.querySelector(
+                '.inp-type'
+            )?.value || 'Combined'
+
+    };
+
+    const newRow =
+        createIssueRow(data);
+
+    currentRow.parentNode.insertBefore(
+        newRow,
+        currentRow.nextSibling
+    );
+
+    updateTotals();
+};
+
+
+/* ============================================================
+   LOAD DESIGN ITEMS (MODIFIED TO PULL FROM YARN CALCULATIONS)
+============================================================ */
+
+function renderSavedIssueDetails(){
+    const box = document.getElementById('savedIssueDetails');
+    if(!box) return;
+
+    const dNo = document.getElementById('designNumber')?.value || '';
+    if(!dNo){
+        box.innerHTML = '';
+        return;
+    }
+
+    const cleanDNo = cleanDesignName(dNo);
+    const records = safeArray('dyeing_issue_records').filter(r =>
+        cleanDesignName(r.designNo || r.designNumber) === cleanDNo
+    );
+
+    if(records.length === 0){
+        box.innerHTML = '<div style="padding:10px;color:#64748B;text-align:center;">இந்த டிசைனுக்கு இதுவரை Dyeing Issue எதுவும் இல்லை.</div>';
+        return;
+    }
+
+    const fmtDate = d => {
+        const m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : (d || '-');
+    };
+
+    let totOrd = 0, totIss = 0;
+    const rowsHtml = records.map((r, i) => {
+        totOrd += safeNumber(r.orderWt, 0);
+        totIss += safeNumber(r.issueWt, 0);
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${escapeHTML(fmtDate(r.date))}</td>
+                <td>${escapeHTML(r.unit || '-')}</td>
+                <td>${escapeHTML(r.count || '-')}</td>
+                <td>${escapeHTML(r.millName || '-')}</td>
+                <td>${escapeHTML(r.color || '-')}</td>
+                <td style="text-align:right;">${fixed3(r.orderWt)}</td>
+                <td style="text-align:right;">${fixed3(r.issueWt)}</td>
+                <td>${escapeHTML(r.status === 'completed' ? 'COMPLETED' : 'RUNNING')}</td>
+            </tr>`;
+    }).join('');
+
+    const th = 'padding:6px;background:#EAF0EA;color:#2F4F38;font-size:11px;border:1px solid #D1DED1;';
+    const td = 'padding:6px;border:1px solid #E2E8E2;font-size:12px;';
+
+    box.innerHTML = `
+        <div style="font-weight:700;color:#2F4F38;margin-bottom:6px;font-size:12px;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="${th}">S.No</th>
+                        <th style="${th}">Date</th>
+                        <th style="${th}">Dyeing Unit</th>
+                        <th style="${th}">Count</th>
+                        <th style="${th}">Mill</th>
+                        <th style="${th}">Colour</th>
+                        <th style="${th}">Ord Wt</th>
+                        <th style="${th}">Iss Wt</th>
+                        <th style="${th}">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml.replace(/<td>/g, `<td style="${td}">`).replace(/<td style="text-align:right;">/g, `<td style="${td}text-align:right;">`)}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6" style="${td}font-weight:700;text-align:right;">Grand Total</td>
+                        <td style="${td}font-weight:700;text-align:right;">${totOrd.toFixed(3)}</td>
+                        <td style="${td}font-weight:700;text-align:right;">${totIss.toFixed(3)}</td>
+                        <td style="${td}"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>`;
+}
+
+function loadDesignItems(){
+
+    loadBitmapImage();
+
+    renderIssuedList();
+
+    const designSelect =
+        document.getElementById(
+            'designNumber'
+        );
+
+    const container =
+        document.getElementById(
+            'issueLinesContainer'
+        );
+
+    if(!designSelect || !container)
+        return;
+
+    const dNo =
+        designSelect.value;
+
+    container.innerHTML='';
+
+    if(!dNo){
+
+        renderSavedIssueDetails();
+        updateTotals();
+        return;
+    }
+
+    window.StorageDB.setItem(
+        'selected_design_number',
+        dNo
+    );
+
+    const cleanDNo =
+        cleanDesignName(dNo);
+
+    const designMastersList =
+        safeArray(
+            'design_masters_data'
+        );
+
+    const foundMaster =
+        designMastersList.find(
+            d =>
+            cleanDesignName(
+                d &&
+                (
+                    d.name ||
+                    d.designNo
+                )
+            ) === cleanDNo
+        ) || {};
+
+    const designSpecs =
+        safeObject(
+            'design_specs'
+        );
+
+    const specKey =
+        Object.keys(designSpecs)
+        .find(
+            k =>
+            cleanDesignName(k)===cleanDNo
+        );
+
+    const foundSpec =
+        specKey
+        ? designSpecs[specKey] || {}
+        : {};
+
+    const partyOrders =
+        safeArray(
+            'party_orders_data'
+        );
+
+    const foundOrder =
+        partyOrders.find(
+            o =>
+            cleanDesignName(
+                o &&
+                (
+                    o.designNumber ||
+                    o.designNo
+                )
+            ) === cleanDNo
+        ) || {};
+
+    const existingIssues =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+    const existingDesignRecord =
+        existingIssues.find(
+            r =>
+            cleanDesignName(
+                r &&
+                (
+                    r.designNo ||
+                    r.designNumber
+                )
+            ) === cleanDNo
+        );
+
+    const specStatus =
+        normalizeText(
+            foundSpec.status
+        );
+
+    const recordStatus =
+        normalizeText(
+            existingDesignRecord &&
+            existingDesignRecord.status
+        );
+
+    const completed =
+        specStatus === 'completed' ||
+        recordStatus === 'completed';
+
+    const topCheckbox =
+        document.getElementById(
+            'top_completed_status'
+        );
+
+    if(topCheckbox)
+        topCheckbox.checked=completed;
+
+
+    /* ========================================================
+       DEFAULT VALUES (FOR FALLBACK UI)
+    ======================================================== */
+
+    const defaultWarpCount =
+        foundOrder.baseBeamCount ||
+        foundMaster.warp1 ||
+        foundSpec.baseBeamCount ||
+        foundMaster.count1 ||
+        foundSpec.warp ||
+        '20';
+
+    const defaultWeftCount =
+        foundOrder.weftCount ||
+        foundMaster.weftCount ||
+        foundSpec.weftCount ||
+        foundSpec.weft ||
+        '40';
+
+    const combinedMap = new Map();
+    const isCombineChecked = document.getElementById('combineToggle')?.checked !== false;
+    let displayList = [];
+
+    /* ========================================================
+       FETCH FROM YARN CALCULATIONS DATA
+    ======================================================== */
+
+    const yarnCalcRecords = [
+        ...safeArray('yarn_calculation_data'), 
+        ...safeArray('yarn_calculations')
+    ];
+    
+    let matchedYarnData = yarnCalcRecords.filter(
+        r => cleanDesignName(r.designNo || r.designNumber) === cleanDNo
+    );
+
+    if(matchedYarnData.length === 0){
+        if(foundOrder && foundOrder.yarnDetails && foundOrder.yarnDetails.length > 0) {
+            matchedYarnData = foundOrder.yarnDetails;
+        }
+    }
+
+    if(matchedYarnData.length > 0) {
+        
+        matchedYarnData.forEach(item => {
+            const type = item.type || item.yarnType || 'Combined';
+            const count = String(item.count || '');
+            const color = String(item.color || item.colour || '-');
+            const mill = String(item.millName || item.mill || item.supplier || '');
+            const weight = safeNumber(item.orderWt || item.reqWt || item.weight || item.totalWt || item.requiredWt, 0);
+
+            const key = (isCombineChecked ? '' : type + '_') + normalizeText(count) + '_' + normalizeText(color);
+
+            if(combinedMap.has(key)){
+                combinedMap.get(key).orderWt += weight;
+                if(mill && !combinedMap.get(key).mill) combinedMap.get(key).mill = mill;
+            } else {
+                combinedMap.set(key, {
+                    type: isCombineChecked ? 'Combined' : type,
+                    count: count,
+                    color: color,
+                    mill: mill,
+                    orderWt: weight
+                });
+            }
+        });
+        displayList = Array.from(combinedMap.values());
+        
+    } else {
+
+        const uiReed =
+            safeNumber(
+                foundMaster.reed ||
+                foundSpec.reed ||
+                foundOrder.reed ||
+                foundSpec.baseReed,
+                52
+            );
+
+        const baseWidth =
+            safeNumber(
+                foundMaster.width ||
+                foundSpec.width ||
+                foundOrder.width ||
+                foundSpec.baseWidth,
+                66.92
+            );
+
+        const totalWarpEnds =
+            Math.max(
+                0,
+                Math.round(
+                    uiReed * baseWidth
+                )
+            );
+
+        const baseOrderMtr =
+            safeNumber(
+                foundOrder.orderMtr ||
+                foundOrder.productionMeter ||
+                foundOrder.prodMtr ||
+                foundMaster.orderMtr ||
+                foundSpec.orderMtr,
+                100
+            );
+
+        const warpingMts =
+            Math.max(
+                0,
+                baseOrderMtr -
+                (baseOrderMtr*.05)
+            );
+
+        const uiPick =
+            safeNumber(
+                foundMaster.pick ||
+                foundSpec.pick ||
+                foundOrder.pick ||
+                foundSpec.basePick,
+                56
+            );
+
+        const weftWidth =
+            safeNumber(
+                foundMaster.weftWidth ||
+                foundSpec.weftWidth,
+                baseWidth+3
+            );
+
+        const totalFabricPick =
+            Math.max(
+                0,
+                weftWidth*uiPick
+            );
+
+        const weftMtrs =
+            Math.max(
+                0,
+                warpingMts*
+                (0.94/0.95)
+            );
+
+        const warpList =
+            resolvePattern(
+                foundMaster.warpLines || [],
+                foundMaster.warpRanges || [],
+                'warp',
+                defaultWarpCount
+            );
+
+        const weftList =
+            resolvePattern(
+                foundMaster.weftLines || [],
+                foundMaster.weftRanges || [],
+                'weft',
+                defaultWeftCount
+            );
+
+        const totalWarpPattern =
+            warpList.reduce(
+                (sum,item)=>
+                sum+
+                safeNumber(
+                    item.patternVal,
+                    0
+                ),
+                0
+            );
+
+        warpList.forEach(item=>{
+
+            const calcCount =
+                parseYarnCount(
+                    item.count
+                ) ||
+                parseYarnCount(
+                    defaultWarpCount
+                ) ||
+                20;
+
+            if(calcCount<=0)
+                return;
+
+            const totalEndsForColor =
+                totalWarpPattern>0
+                ? (
+                    safeNumber(
+                        item.patternVal,
+                        0
+                    ) /
+                    totalWarpPattern
+                ) *
+                totalWarpEnds
+                : 0;
+
+            const weightKg =
+                (
+                    totalEndsForColor *
+                    warpingMts
+                ) /
+                (
+                    1693.33 *
+                    calcCount
+                );
+
+            const key =
+                (
+                    isCombineChecked
+                    ? ''
+                    : 'warp_'
+                ) +
+                normalizeText(item.count) +
+                '_' +
+                normalizeText(item.color);
+
+            combinedMap.set(
+                key,
+                {
+                    type:'Warp',
+                    count:String(item.count),
+                    color:String(item.color),
+                    orderWt:weightKg
+                }
+            );
+
+        });
+
+        const totalWeftPattern =
+            weftList.reduce(
+                (sum,item)=>
+                sum+
+                safeNumber(
+                    item.patternVal,
+                    0
+                ),
+                0
+            );
+
+        weftList.forEach(item=>{
+
+            const calcCount =
+                parseYarnCount(
+                    item.count
+                ) ||
+                parseYarnCount(
+                    defaultWeftCount
+                ) ||
+                40;
+
+            if(calcCount<=0)
+                return;
+
+            const totalWeftPicks =
+                totalWeftPattern>0
+                ? (
+                    safeNumber(
+                        item.patternVal,
+                        0
+                    ) /
+                    totalWeftPattern
+                ) *
+                totalFabricPick
+                : 0;
+
+            const weightKg =
+                (
+                    totalWeftPicks *
+                    weftMtrs
+                ) /
+                (
+                    1693.33 *
+                    calcCount
+                );
+
+            const key =
+                (
+                    isCombineChecked
+                    ? ''
+                    : 'weft_'
+                ) +
+                normalizeText(item.count) +
+                '_' +
+                normalizeText(item.color);
+
+            if(combinedMap.has(key)){
+
+                const existing =
+                    combinedMap.get(key);
+
+                existing.orderWt +=
+                    weightKg;
+
+                if(isCombineChecked)
+                    existing.type='Combined';
+
+            }else{
+
+                combinedMap.set(
+                    key,
+                    {
+                        type:'Weft',
+                        count:String(item.count),
+                        color:String(item.color),
+                        orderWt:weightKg
+                    }
+                );
+
+            }
+
+        });
+
+        displayList = Array.from(combinedMap.values());
+    }
+
+    /* ========================================================
+       SUBTRACT ALREADY ISSUED
+    ======================================================== */
+
+    displayList.forEach(item=>{
+
+        let alreadyIssuedWt=0;
+
+        existingIssues.forEach(record=>{
+
+            const rDno =
+                cleanDesignName(
+                    record &&
+                    (
+                        record.designNo ||
+                        record.designNumber ||
+                        record.design
+                    )
+                );
+
+            const rCount =
+                normalizeText(
+                    record &&
+                    record.count
+                );
+
+            const rColor =
+                normalizeText(
+                    record &&
+                    record.color
+                );
+
+            if(
+                rDno === cleanDNo &&
+                rCount ===
+                normalizeText(item.count) &&
+                rColor ===
+                normalizeText(item.color)
+            ){
+
+                alreadyIssuedWt +=
+                    safeNumber(
+                        record.issueWt,
+                        0
+                    );
+
+            }
+
+        });
+
+        item.orderWt =
+            Math.max(
+                0,
+                safeNumber(
+                    item.orderWt,
+                    0
+                ) -
+                alreadyIssuedWt
+            );
+
+    });
+
+    displayList =
+        displayList.filter(
+            item =>
+            safeNumber(
+                item.orderWt,
+                0
+            ) > 0.005
+        );
+
+
+    /* ========================================================
+       BUILD ROWS
+    ======================================================== */
+
+    if(displayList.length>0){
+
+        displayList.forEach(item=>{
+
+            const autofillMill =
+                item.mill || getMillNameFromKora(
+                    dNo,
+                    item.count
+                );
+
+            const row =
+                createIssueRow({
+                    count:item.count,
+                    mill:autofillMill,
+                    color:item.color,
+                    orderWt:item.orderWt,
+                    issueWt:'',
+                    unit:'',
+                    type:item.type
+                });
+
+            container.appendChild(row);
+
+        });
+
+    }else{
+
+        container.innerHTML = `
+            <div style="padding:14px;text-align:center;color:#B45309;font-weight:bold;">
+                இந்த டிசைனுக்கு நிலுவை Order Weight இல்லை (Balance 0).<br>
+                புதிய Issue எதுவும் பதிவு செய்ய முடியாது.
+            </div>
+        `;
+
+    }
+
+    renderSavedIssueDetails();
+    updateTotals();
+}
+
+
+/* ============================================================
+   TOTALS
+============================================================ */
+
+function updateTotals(){
+
+    const ordInputs =
+        document.querySelectorAll(
+            '.inp-ordwt'
+        );
+
+    const issInputs =
+        document.querySelectorAll(
+            '.inp-isswt'
+        );
+
+    let totalOrd=0;
+    let totalIss=0;
+
+    ordInputs.forEach(
+        input=>{
+            totalOrd +=
+                safeNumber(
+                    input.value,
+                    0
+                );
+        }
+    );
+
+    issInputs.forEach(
+        input=>{
+            totalIss +=
+                safeNumber(
+                    input.value,
+                    0
+                );
+        }
+    );
+
+    const ordDisplay =
+        document.getElementById(
+            'sumOrdWt'
+        );
+
+    const issDisplay =
+        document.getElementById(
+            'sumIssWt'
+        );
+
+    if(ordDisplay)
+        ordDisplay.innerText =
+            totalOrd.toFixed(3);
+
+    if(issDisplay)
+        issDisplay.innerText =
+            totalIss.toFixed(3);
+}
+
+
+/* ============================================================
+   QUICK STATUS TOGGLE
+============================================================ */
+
+async function quickCompleteToggle(){
+
+    const checkbox =
+        document.getElementById(
+            'top_completed_status'
+        );
+
+    if(!checkbox)
+        return;
+
+    if(!checkUserPermission()){
+
+        alert(
+            'Access Denied! You do not have permission to modify status. ❌'
+        );
+
+        checkbox.checked =
+            !checkbox.checked;
+
+        return;
+    }
+
+    const dNo =
+        document.getElementById(
+            'designNumber'
+        )?.value || '';
+
+    if(!dNo){
+
+        alert(
+            'Mudhala Design Number select pannunga bro'
+        );
+
+        checkbox.checked=false;
+        return;
+    }
+
+    const statusText =
+        checkbox.checked
+        ? 'completed'
+        : 'running';
+
+    const records =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+    let updated=false;
+
+    records.forEach(record=>{
+
+        if(
+            cleanDesignName(
+                record.designNo ||
+                record.designNumber
+            ) ===
+            cleanDesignName(dNo)
+        ){
+
+            record.status =
+                statusText;
+
+            updated=true;
+        }
+
+    });
+
+
+    if(!updated){
+
+        const firstRow =
+            document.querySelector(
+                '.line-row'
+            );
+
+        const dateVal =
+            document.getElementById(
+                'issueDate'
+            )?.value ||
+            new Date()
+            .toISOString()
+            .split('T')[0];
+
+        const count =
+            firstRow?.querySelector(
+                '.inp-count'
+            )?.value ||
+            '20/s';
+
+        const mill =
+            firstRow?.querySelector(
+                '.inp-mill'
+            )?.value ||
+            '';
+
+        const color =
+            firstRow?.querySelector(
+                '.inp-color'
+            )?.value ||
+            'General';
+
+        const ordWt =
+            safeNumber(
+                firstRow?.querySelector(
+                    '.inp-ordwt'
+                )?.value,
+                0
+            );
+
+        const issWt =
+            safeNumber(
+                firstRow?.querySelector(
+                    '.inp-isswt'
+                )?.value,
+                0
+            );
+
+        const unit =
+            firstRow?.querySelector(
+                '.inp-unit'
+            )?.value ||
+            'Default Unit';
+
+        const type =
+            firstRow?.querySelector(
+                '.inp-type'
+            )?.value ||
+            'Combined';
+
+        records.push({
+
+            id:
+                Date.now() +
+                Math.random(),
+
+            date:dateVal,
+
+            designNo:dNo,
+
+            yarnType:type,
+
+            count:count,
+
+            millName:mill,
+
+            color:color,
+
+            orderWt:
+                fixed3(ordWt),
+
+            issueWt:
+                fixed3(issWt),
+
+            unit:unit,
+
+            status:statusText
+
+        });
+
+    }
+
+
+    window.StorageDB.setItem(
+        'dyeing_issue_records',
+        JSON.stringify(records)
+    );
+
+
+    const designSpecs =
+        safeObject(
+            'design_specs'
+        );
+
+    const clean =
+        cleanDesignName(dNo);
+
+    const specKey =
+        Object.keys(designSpecs)
+        .find(
+            k =>
+            cleanDesignName(k)===clean
+        ) || dNo;
+
+    if(!designSpecs[specKey])
+        designSpecs[specKey]={};
+
+    designSpecs[specKey].status =
+        statusText;
+
+    window.StorageDB.setItem(
+        'design_specs',
+        JSON.stringify(designSpecs)
+    );
+
+
+    try{
+
+        if(typeof window.supabaseSave === 'function'){
+
+            await window.supabaseSave(
+                'dyeing_issue_records',
+                records
+            );
+
+            await window.supabaseSave(
+                'design_specs',
+                designSpecs
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            'Status cloud sync failed:',
+            error
+        );
+
+    }
+
+    renderIssuedList();
+
+    alert(
+        `Design ${dNo} status '${checkbox.checked ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`
+    );
+
+}
+
+
+/* ============================================================
+   SAVE ISSUE
+============================================================ */
+
+async function saveIssueEntries(){
+
+    if(!checkUserPermission()){
+
+        alert(
+            'Access Denied! You do not have permission to save entries. ❌'
+        );
+
+        return;
+    }
+
+    const dateVal =
+        document.getElementById(
+            'issueDate'
+        )?.value || '';
+
+    const dNo =
+        document.getElementById(
+            'designNumber'
+        )?.value || '';
+
+    const isCompleted =
+        document.getElementById(
+            'top_completed_status'
+        )?.checked || false;
+
+
+    if(!dNo){
+
+        alert(
+            'Please select a Design Number!'
+        );
+
+        return;
+    }
+
+
+    if(!dateVal){
+
+        alert(
+            'Please select Issue Date!'
+        );
+
+        return;
+    }
+
+
+    const container =
+        document.getElementById(
+            'issueLinesContainer'
+        );
+
+    const rows =
+        container
+        ? container.querySelectorAll(
+            '.line-row'
+        )
+        : [];
+
+
+    if(rows.length===0){
+
+        alert(
+            'Please add at least one yarn item row.'
+        );
+
+        return;
+    }
+
+
+    const records =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+
+    const btn =
+        document.getElementById(
+            'saveIssueBtnTxt'
+        );
+
+    const originalText =
+        btn?.innerText ||
+        'Save Dyeing Order Issue';
+
+    if(btn){
+
+        btn.disabled=true;
+
+        btn.innerText =
+            '⏳ Saving...';
+
+    }
+
+
+    let savedCount=0;
+
+
+    try{
+
+        if(editingIssueId !== null){
+
+            const rowIndex =
+                records.findIndex(
+                    r =>
+                    String(r.id) ===
+                    String(editingIssueId)
+                );
+
+            if(rowIndex>-1){
+
+                const row =
+                    rows[0];
+
+                if(row){
+
+                    const record =
+                        records[rowIndex];
+
+                    record.date =
+                        dateVal;
+
+                    record.designNo =
+                        dNo;
+
+                    record.count =
+                        row.querySelector(
+                            '.inp-count'
+                        )?.value.trim() ||
+                        record.count ||
+                        '20/s';
+
+                    record.millName =
+                        row.querySelector(
+                            '.inp-mill'
+                        )?.value.trim() ||
+                        '';
+
+                    record.color =
+                        row.querySelector(
+                            '.inp-color'
+                        )?.value.trim() ||
+                        '-';
+
+                    record.orderWt =
+                        fixed3(
+                            row.querySelector(
+                                '.inp-ordwt'
+                            )?.value
+                        );
+
+                    record.issueWt =
+                        fixed3(
+                            row.querySelector(
+                                '.inp-isswt'
+                            )?.value
+                        );
+
+                    record.unit =
+                        row.querySelector(
+                            '.inp-unit'
+                        )?.value.trim() ||
+                        'Default Unit';
+
+                    record.yarnType =
+                        row.querySelector(
+                            '.inp-type'
+                        )?.value ||
+                        record.yarnType ||
+                        'Combined';
+
+                    record.status =
+                        isCompleted
+                        ? 'completed'
+                        : 'running';
+
+                    savedCount++;
+
+                }
+
+            }
+
+            editingIssueId=null;
+
+        }else{
+
+            rows.forEach(row=>{
+
+                const count =
+                    row.querySelector(
+                        '.inp-count'
+                    )?.value.trim() ||
+                    '20/s';
+
+                const mill =
+                    row.querySelector(
+                        '.inp-mill'
+                    )?.value.trim() ||
+                    '';
+
+                const color =
+                    row.querySelector(
+                        '.inp-color'
+                    )?.value.trim() ||
+                    '-';
+
+                const ordWt =
+                    safeNumber(
+                        row.querySelector(
+                            '.inp-ordwt'
+                        )?.value,
+                        0
+                    );
+
+                const issInput =
+                    row.querySelector(
+                        '.inp-isswt'
+                    )?.value;
+
+                const issWt =
+                    String(
+                        issInput ?? ''
+                    ).trim() === ''
+                    ? ordWt
+                    : Math.max(
+                        0,
+                        safeNumber(
+                            issInput,
+                            0
+                        )
+                    );
+
+                if(issWt <= 0) return;
+
+                const unit =
+                    row.querySelector(
+                        '.inp-unit'
+                    )?.value.trim() ||
+                    'Default Unit';
+
+                const type =
+                    row.querySelector(
+                        '.inp-type'
+                    )?.value.trim() ||
+                    'Combined';
+
+
+                records.push({
+
+                    id:
+                        Date.now() +
+                        Math.random(),
+
+                    date:
+                        dateVal,
+
+                    designNo:
+                        dNo,
+
+                    yarnType:
+                        type,
+
+                    count:
+                        count,
+
+                    millName:
+                        mill,
+
+                    color:
+                        color,
+
+                    orderWt:
+                        fixed3(ordWt),
+
+                    issueWt:
+                        fixed3(issWt),
+
+                    unit:
+                        unit,
+
+                    status:
+                        isCompleted
+                        ? 'completed'
+                        : 'running'
+
+                });
+
+                savedCount++;
+
+            });
+
+        }
+
+
+        if(savedCount<=0){
+
+            alert(
+                'Please check your entry fields.'
+            );
+
+            return;
+        }
+
+
+        const designSpecs =
+            safeObject(
+                'design_specs'
+            );
+
+        const cleanDNo =
+            cleanDesignName(dNo);
+
+        const specKey =
+            Object.keys(designSpecs)
+            .find(
+                k =>
+                cleanDesignName(k) ===
+                cleanDNo
+            ) || dNo;
+
+        if(!designSpecs[specKey])
+            designSpecs[specKey]={};
+
+        designSpecs[specKey].status =
+            isCompleted
+            ? 'completed'
+            : 'running';
+
+
+        window.StorageDB.setItem(
+            'dyeing_issue_records',
+            JSON.stringify(records)
+        );
+
+        window.StorageDB.setItem(
+            'design_specs',
+            JSON.stringify(designSpecs)
+        );
+
+
+        if(typeof window.supabaseSave === 'function'){
+
+            await window.supabaseSave(
+                'dyeing_issue_records',
+                records
+            );
+
+            await window.supabaseSave(
+                'design_specs',
+                designSpecs
+            );
+
+        }
+
+
+        if(
+            typeof window.supabaseSaveIndividual ===
+            'function'
+        ){
+
+            try{
+
+                await window.supabaseSaveIndividual(
+                    specKey,
+                    designSpecs[specKey]
+                );
+
+            }catch(individualError){
+
+                console.warn(
+                    'Individual cloud save failed:',
+                    individualError
+                );
+
+            }
+
+        }
+
+
+        alert(
+            'Dyeing Order Issues Saved Successfully! ✅☁️'
+        );
+
+
+        container.innerHTML='';
+
+        document.getElementById(
+            'designNumber'
+        ).value='';
+
+        const searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = '';
+
+        document.getElementById(
+            'top_completed_status'
+        ).checked=false;
+
+        document.getElementById(
+            'bitmapDisplayContainer'
+        ).innerHTML='';
+
+        window.StorageDB.removeItem(
+            'selected_design_number'
+        );
+
+        updateTotals();
+
+        renderIssuedList();
+
+    }catch(error){
+
+        console.error(
+            'SAVE ERROR:',
+            error
+        );
+
+        alert(
+            'Save செய்யும்போது error ஏற்பட்டுள்ளது.\n\n' +
+            (
+                error?.message ||
+                'Unknown error'
+            )
+        );
+
+    }finally{
+
+        if(btn){
+
+            btn.disabled=false;
+
+            btn.innerText =
+                originalText;
+
+        }
+
+    }
+
+}
+
+
+/* ============================================================
+   EDIT RECORD
+============================================================ */
+
+async function editIssuedRecord(id){
+
+    if(!checkUserPermission()){
+
+        alert(
+            'Access Denied! You do not have permission to edit entries. ❌'
+        );
+
+        return;
+    }
+
+    const records =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+    const rec =
+        records.find(
+            r =>
+            String(r.id) ===
+            String(id)
+        );
+
+    if(!rec){
+
+        alert(
+            'Record not found!'
+        );
+
+        return;
+    }
+
+    closeModal(
+        'issuedListModal'
+    );
+
+    editingIssueId=id;
+
+
+    document.getElementById(
+        'issueDate'
+    ).value =
+        rec.date ||
+        new Date()
+        .toISOString()
+        .split('T')[0];
+
+
+    const designSelect =
+        document.getElementById(
+            'designNumber'
+        );
+
+    const option =
+        Array.from(
+            designSelect.options
+        ).find(
+            opt =>
+            cleanDesignName(opt.value) ===
+            cleanDesignName(rec.designNo)
+        );
+
+    if(option){
+        designSelect.value = option.value;
+        const searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = option.value;
+    } else {
+        designSelect.value = rec.designNo || '';
+        const searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = rec.designNo || '';
+    }
+
+
+    document.getElementById(
+        'top_completed_status'
+    ).checked =
+        normalizeText(rec.status) ===
+        'completed';
+
+
+    const container =
+        document.getElementById(
+            'issueLinesContainer'
+        );
+
+    container.innerHTML='';
+
+
+    const row =
+        createIssueRow({
+
+            count:
+                rec.count,
+
+            mill:
+                rec.millName,
+
+            color:
+                rec.color,
+
+            orderWt:
+                rec.orderWt,
+
+            issueWt:
+                rec.issueWt,
+
+            unit:
+                rec.unit,
+
+            type:
+                rec.yarnType
+
+        });
+
+
+    container.appendChild(row);
+
+    updateTotals();
+
+    window.scrollTo({
+        top:0,
+        behavior:'smooth'
+    });
+
+}
+
+
+/* ============================================================
+   TOGGLE STATUS
+============================================================ */
+
+async function toggleStatus(
+    id,
+    newStatus
+){
+
+    if(!checkUserPermission()){
+
+        alert(
+            'Access Denied! You do not have permission to change status. ❌'
+        );
+
+        return;
+    }
+
+    const msg =
+        newStatus === 'completed'
+        ? 'Change this issue to Completed?'
+        : 'Change this issue to Running?';
+
+    if(!confirm(msg))
+        return;
+
+
+    const records =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+    const recIndex =
+        records.findIndex(
+            r =>
+            String(r.id) ===
+            String(id)
+        );
+
+    if(recIndex<0){
+
+        alert(
+            'Record not found!'
+        );
+
+        return;
+    }
+
+
+    records[recIndex].status =
+        newStatus;
+
+
+    window.StorageDB.setItem(
+        'dyeing_issue_records',
+        JSON.stringify(records)
+    );
+
+
+    const dNo =
+        records[recIndex].designNo;
+
+
+    if(dNo){
+
+        const designSpecs =
+            safeObject(
+                'design_specs'
+            );
+
+        const clean =
+            cleanDesignName(dNo);
+
+        const specKey =
+            Object.keys(designSpecs)
+            .find(
+                k =>
+                cleanDesignName(k) ===
+                clean
+            ) || dNo;
+
+        if(!designSpecs[specKey])
+            designSpecs[specKey]={};
+
+        designSpecs[specKey].status =
+            newStatus;
+
+        window.StorageDB.setItem(
+            'design_specs',
+            JSON.stringify(designSpecs)
+        );
+
+
+        try{
+
+            if(
+                typeof window.supabaseSave ===
+                'function'
+            ){
+
+                await window.supabaseSave(
+                    'design_specs',
+                    designSpecs
+                );
+
+                await window.supabaseSave(
+                    'dyeing_issue_records',
+                    records
+                );
+
+            }
+
+        }catch(error){
+
+            console.error(
+                'Status sync error:',
+                error
+            );
+
+        }
+
+    }
+
+
+    renderIssuedList();
+
+}
+
+
+/* ============================================================
+   DELETE RECORD
+============================================================ */
+
+async function deleteIssuedRecord(id){
+
+    if(!checkUserPermission()){
+
+        alert(
+            'Access Denied! You do not have permission to delete entries. ❌'
+        );
+
+        return;
+    }
+
+    if(
+        !confirm(
+            'Are you sure you want to delete this record?'
+        )
+    ){
+
+        return;
+    }
+
+
+    let records =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+    const before =
+        records.length;
+
+
+    records =
+        records.filter(
+            r =>
+            String(r.id) !==
+            String(id)
+        );
+
+
+    if(records.length === before){
+
+        alert(
+            'Record not found!'
+        );
+
+        return;
+    }
+
+
+    window.StorageDB.setItem(
+        'dyeing_issue_records',
+        JSON.stringify(records)
+    );
+
+
+    try{
+
+        if(
+            typeof window.supabaseSave ===
+            'function'
+        ){
+
+            await window.supabaseSave(
+                'dyeing_issue_records',
+                records
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            'Delete cloud sync error:',
+            error
+        );
+
+    }
+
+
+    renderIssuedList();
+
+}
+
+
+/* ============================================================
+   RENDER ISSUED LIST
+============================================================ */
+
+function renderIssuedList(){
+
+    const body =
+        document.getElementById(
+            'issuedListBody'
+        );
+
+    const foot =
+        document.getElementById(
+            'issuedListFoot'
+        );
+
+    if(!body || !foot)
+        return;
+
+
+    let records =
+        safeArray(
+            'dyeing_issue_records'
+        );
+
+
+    const selectedDesign =
+        document.getElementById(
+            'designNumber'
+        )?.value.trim() || '';
+
+
+    if(selectedDesign){
+
+        records =
+            records.filter(
+                r =>
+                cleanDesignName(
+                    r.designNo ||
+                    r.designNumber
+                ) ===
+                cleanDesignName(
+                    selectedDesign
+                )
+            );
+
+    }
+
+
+    body.innerHTML='';
+    foot.innerHTML='';
+
+
+    if(records.length===0){
+
+        body.innerHTML=`
+            <tr>
+                <td
+                    colspan="11"
+                    style="
+                    padding:20px;
+                    color:#64748B;
+                    "
+                >
+                    No Dyeing Orders Issued
+                    for this design yet.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    let grandOrdWt=0;
+    let grandIssWt=0;
+
+
+    records
+    .slice()
+    .reverse()
+    .forEach(record=>{
+
+        const rawDate =
+            record.date
+            ? new Date(record.date)
+            : null;
+
+        let dateStr='-';
+
+        if(
+            rawDate &&
+            !isNaN(
+                rawDate.getTime()
+            )
+        ){
+
+            dateStr =
+                String(
+                    rawDate.getDate()
+                ).padStart(2,'0') +
+                '/' +
+                String(
+                    rawDate.getMonth()+1
+                ).padStart(2,'0') +
+                '/' +
+                rawDate.getFullYear();
+
+        }
+
+
+        const oWt =
+            safeNumber(
+                record.orderWt,
+                0
+            );
+
+        const iWt =
+            safeNumber(
+                record.issueWt,
+                0
+            );
+
+
+        grandOrdWt += oWt;
+        grandIssWt += iWt;
+
+
+        const status =
+            normalizeText(
+                record.status
+            ) === 'completed'
+            ? 'completed'
+            : 'running';
+
+
+        const statusColor =
+            status === 'running'
+            ? '#D97706'
+            : '#10B981';
+
+
+        const statusBtn =
+            status === 'running'
+            ? `
+                <button
+                    class="action-complete"
+                    onclick="
+                    toggleStatus(
+                        '${escapeHTML(record.id)}',
+                        'completed'
+                    )
+                    "
+                >
+                    Complete
+                </button>
+            `
+            : `
+                <button
+                    class="action-running"
+                    onclick="
+                    toggleStatus(
+                        '${escapeHTML(record.id)}',
+                        'running'
+                    )
+                >
+                    Running
+                </button>
+            `;
+
+
+        body.innerHTML += `
+
+            <tr>
+
+                <td>
+                    ${escapeHTML(dateStr)}
+                </td>
+
+                <td>
+                    <b>
+                        ${escapeHTML(
+                            record.unit || '-'
+                        )}
+                    </b>
+                </td>
+
+                <td>
+                    <b>
+                        ${escapeHTML(
+                            record.designNo || '-'
+                        )}
+                    </b>
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        record.yarnType ||
+                        'Combined'
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        record.count || '-'
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        record.millName || '-'
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        record.color || '-'
+                    )}
+                </td>
+
+                <td>
+                    ${oWt.toFixed(3)}
+                </td>
+
+                <td
+                    style="
+                    color:#10B981;
+                    font-weight:bold;
+                    "
+                >
+                    ${iWt.toFixed(3)}
+                </td>
+
+                <td
+                    style="
+                    color:${statusColor};
+                    font-weight:bold;
+                    text-transform:uppercase;
+                    "
+                >
+                    ${status}
+                </td>
+
+                <td
+                    style="white-space:nowrap;"
+                >
+
+                    <div
+                        style="
+                        display:flex;
+                        gap:4px;
+                        justify-content:center;
+                        "
+                    >
+
+                        ${statusBtn}
+
+                        <button
+                            class="edit-action-btn"
+                            onclick="
+                            editIssuedRecord(
+                                '${escapeHTML(record.id)}'
+                            )
+                            "
+                            title="Edit"
+                        >
+                            ✏️
+                        </button>
+
+                        <button
+                            class="del-action-btn"
+                            onclick="
+                            deleteIssuedRecord(
+                                '${escapeHTML(record.id)}'
+                            )
+                            "
+                            title="Delete"
+                        >
+                            🗑️
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+
+    foot.innerHTML=`
+
+        <tr>
+
+            <td
+                colspan="7"
+                style="
+                text-align:right;
+                padding:12px;
+                "
+            >
+                Grand Total:
+            </td>
+
+            <td>
+                <b>
+                    ${grandOrdWt.toFixed(3)}
+                </b>
+            </td>
+
+            <td>
+                <b
+                    style="
+                    color:#10B981;
+                    "
+                >
+                    ${grandIssWt.toFixed(3)}
+                </b>
+            </td>
+
+            <td colspan="2"></td>
+
+        </tr>
+
+    `;
+
+}
+
+
+/* ============================================================
+   ISSUE PREVIEW + PRINT
+============================================================ */
+function getPreviewRows(){
+    const container=document.getElementById('issueLinesContainer');
+    if(!container) return [];
+
+    return Array.from(container.querySelectorAll('.line-row')).map(row=>({
+        count:row.querySelector('.inp-count')?.value || '-',
+        mill:row.querySelector('.inp-mill')?.value || '-',
+        color:row.querySelector('.inp-color')?.value || '-',
+        orderWt:safeNumber(row.querySelector('.inp-ordwt')?.value,0),
+        issueWt:safeNumber(row.querySelector('.inp-isswt')?.value,0),
+        unit:row.querySelector('.inp-unit')?.value || '-',
+        type:row.querySelector('.inp-type')?.value || 'Combined'
+    }));
+}
+
+function openIssuePreview(){
+    const modal=document.getElementById('issuePreviewModal');
+    const content=document.getElementById('issuePreviewContent');
+    if(!modal || !content) return;
+
+    const date=document.getElementById('issueDate')?.value || '-';
+    const design=document.getElementById('designNumber')?.value || '-';
+    const rows=getPreviewRows();
+
+    let totalOrd=0;
+    let totalIss=0;
+    rows.forEach(r=>{
+        totalOrd += safeNumber(r.orderWt,0);
+        totalIss += safeNumber(r.issueWt,0);
+    });
+
+    const formattedDate = (()=>{
+        if(!date || date==='-') return '-';
+        const d=new Date(date+'T00:00:00');
+        if(Number.isNaN(d.getTime())) return date;
+        return String(d.getDate()).padStart(2,'0')+'/'+
+               String(d.getMonth()+1).padStart(2,'0')+'/'+
+               d.getFullYear();
+    })();
+
+    let tableRows='';
+    if(rows.length){
+        rows.forEach((r,i)=>{
+            tableRows += `
+                <tr>
+                    <td>${i+1}</td>
+                    <td>${escapeHTML(r.type)}</td>
+                    <td>${escapeHTML(r.count)}</td>
+                    <td>${escapeHTML(r.mill)}</td>
+                    <td>${escapeHTML(r.color)}</td>
+                    <td>${safeNumber(r.orderWt,0).toFixed(3)}</td>
+                    <td>${safeNumber(r.issueWt,0).toFixed(3)}</td>
+                    <td>${escapeHTML(r.unit)}</td>
+                </tr>
+            `;
+        });
+    }else{
+        tableRows=`
+            <tr>
+                <td colspan="8" style="padding:18px;">No yarn rows available for preview.</td>
+            </tr>
+        `;
+    }
+
+    content.innerHTML=`
+        <div class="preview-title">Dyeing Issue (Warp + Weft)</div>
+
+        <div class="preview-meta">
+            <div><b>Issue Date:</b> ${escapeHTML(formattedDate)}</div>
+            <div><b>Design No:</b> ${escapeHTML(design)}</div>
+        </div>
+
+        <div class="preview-table-wrap">
+            <table class="preview-table">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Type</th>
+                        <th>Count</th>
+                        <th>Mill Name</th>
+                        <th>Colour</th>
+                        <th>Ord Wt</th>
+                        <th>Iss Wt</th>
+                        <th>Dyeing Unit</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+                <tfoot>
+                    <tr class="preview-total-row">
+                        <td colspan="5" style="text-align:right;">Grand Total</td>
+                        <td>${totalOrd.toFixed(3)}</td>
+                        <td>${totalIss.toFixed(3)}</td>
+                        <td>-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+
+    modal.classList.add('show');
+    document.body.style.overflow='hidden';
+}
+
+function closeIssuePreview(){
+    const modal=document.getElementById('issuePreviewModal');
+    if(modal) modal.classList.remove('show');
+    document.body.style.overflow='';
+}
+
+
+/* ============================================================
+   ESC KEY
+============================================================ */
+
+document.addEventListener(
+    'keydown',
+    function(event){
+
+        if(event.key !== 'Escape')
+            return;
+
+        const issuedModal =
+            document.getElementById(
+                'issuedListModal'
+            );
+
+        if(
+            issuedModal &&
+            issuedModal.style.display ===
+            'flex'
+        ){
+
+            closeModal(
+                'issuedListModal'
+            );
+
+        }
+
+        const previewModal =
+            document.getElementById(
+                'issuePreviewModal'
+            );
+
+        if(
+            previewModal &&
+            previewModal.classList.contains('show')
+        ){
+            closeIssuePreview();
+        }
+
+        const fullModal =
+            document.getElementById(
+                'fullscreenModal'
+            );
+
+        if(
+            fullModal &&
+            fullModal.style.display ===
+            'flex'
+        ){
+
+            closeFullscreenImage();
+
+        }
+
+    }
+);
+
+</script>
+<script>
+function printIssuePreview() {
+    var content = document.getElementById('issuePreviewContent');
+    if (window.appPrint) {
+        window.appPrint(content ? content.innerHTML : undefined);
+    } else {
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+    }
+}
+</script>
+</body>
+</html>
