@@ -516,6 +516,22 @@ input, select {
 .swatch-sub { font-size: 0.54rem; color: #9fc5aa; margin-top: 1px; }
 .colour-popup-footer { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-top: 1px solid #2c4b3d; flex-shrink: 0; background: #14251e; }
 .colour-use-btn { background: #10b981; border: 0; border-radius: 8px; padding: 12px; color: #fff; font-weight: 900; font-size: .85rem; cursor: pointer; width: 100%; text-align: center; }
+
+/* SEARCHABLE DESIGN DROPDOWN */
+.sd-wrap { position: relative; width: 100%; }
+.sd-input { padding-right: 26px; cursor: pointer; }
+.sd-arrow { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-size: .8rem; color: #17231d; pointer-events: none; }
+.sd-list {
+    display: none; position: absolute; left: 0; right: 0; top: calc(100% + 2px);
+    max-height: 220px; overflow-y: auto; z-index: 1000;
+    background: #fff; border: 1px solid #c8d3cd; border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+.sd-list.open { display: block; }
+.sd-item { padding: 8px 10px; font-size: .8rem; color: #17231d; cursor: pointer; border-bottom: 1px solid #eef2ef; }
+.sd-item:last-child { border-bottom: 0; }
+.sd-item:hover, .sd-item.sd-active { background: #dff3e8; font-weight: 800; }
+.sd-empty { padding: 8px 10px; font-size: .75rem; color: #777; }
 </style>
 </head>
 <body>
@@ -534,9 +550,14 @@ input, select {
     <!-- DESIGN -->
     <div class="card">
     <label>🎨 Design</label>
-    <select id="designSelect" onchange="loadSelectedDesign()">
+    <select id="designSelect" onchange="loadSelectedDesign()" style="display:none;">
         <option value="">-- டிசைனைத் தேர்ந்தெடுக்கவும் --</option>
     </select>
+    <div class="sd-wrap" id="designSearchWrap">
+        <input type="text" id="designSearchInput" class="sd-input" placeholder="🔍 டிசைனைத் தேடவும்..." autocomplete="off">
+        <span class="sd-arrow">▾</span>
+        <div class="sd-list" id="designSearchList"></div>
+    </div>
     <div class="active-design">
         <span class="active-dot"></span>
         <span id="activeDesignText">Design loading...</span>
@@ -3843,6 +3864,82 @@ window.addEventListener("load", async () => {
     }
 });
 
+</script>
+
+<script>
+/* ===== Searchable Design Dropdown (wraps the existing #designSelect, no other logic changed) ===== */
+(function () {
+    const sel = document.getElementById("designSelect");
+    const inp = document.getElementById("designSearchInput");
+    const list = document.getElementById("designSearchList");
+    const wrap = document.getElementById("designSearchWrap");
+    if (!sel || !inp || !list || !wrap) return;
+
+    function selectedLabel() {
+        const o = sel.options[sel.selectedIndex];
+        return (o && o.value !== "") ? o.textContent : "";
+    }
+    function render(filter) {
+        const q = (filter || "").trim().toLowerCase();
+        list.innerHTML = "";
+        let count = 0;
+        [...sel.options].forEach(o => {
+            if (o.value === "") return;
+            if (q && o.textContent.toLowerCase().indexOf(q) === -1) return;
+            const d = document.createElement("div");
+            d.className = "sd-item" + (o.value === sel.value ? " sd-active" : "");
+            d.textContent = o.textContent;
+            d.addEventListener("mousedown", function (e) {
+                e.preventDefault();
+                choose(o.value);
+            });
+            list.appendChild(d);
+            count++;
+        });
+        if (!count) {
+            const e = document.createElement("div");
+            e.className = "sd-empty";
+            e.textContent = "டிசைன் எதுவும் இல்லை";
+            list.appendChild(e);
+        }
+    }
+    function open(filter) { render(filter); list.classList.add("open"); }
+    function close() { list.classList.remove("open"); inp.value = selectedLabel(); }
+    function choose(val) {
+        sel.value = val;
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        list.classList.remove("open");
+        inp.value = selectedLabel();
+        inp.blur();
+    }
+
+    inp.addEventListener("focus", function () { inp.select(); open(""); });
+    inp.addEventListener("click", function () { if (!list.classList.contains("open")) open(""); });
+    inp.addEventListener("input", function () { open(inp.value); });
+    inp.addEventListener("blur", function () { setTimeout(close, 120); });
+    inp.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const first = list.querySelector(".sd-item");
+            if (first) {
+                const q = inp.value.trim().toLowerCase();
+                const m = [...sel.options].find(o => o.value !== "" && o.textContent.toLowerCase().indexOf(q) !== -1);
+                if (m) choose(m.value);
+            }
+        } else if (e.key === "Escape") { inp.blur(); }
+    });
+
+    // Keep in sync whenever the original select is repopulated or its value changes
+    new MutationObserver(function () {
+        inp.value = selectedLabel();
+        if (list.classList.contains("open")) render(inp.value === selectedLabel() ? "" : inp.value);
+    }).observe(sel, { childList: true });
+    sel.addEventListener("change", function () { inp.value = selectedLabel(); });
+    setInterval(function () {
+        if (document.activeElement !== inp && inp.value !== selectedLabel()) inp.value = selectedLabel();
+    }, 800);
+    inp.value = selectedLabel();
+})();
 </script>
 </body>
 </html>
