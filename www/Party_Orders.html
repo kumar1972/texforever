@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PARTY ORDERS - TEX FOR EVER</title>
+    <title>PARTY ORDERS - TEXFOREVER</title>
     <!-- IMPORTANT: config.js must load first -->
     <script src="config.js"></script>
     <script src="translator.js"></script>
@@ -287,6 +287,14 @@
         .sd-item:last-child { border-bottom: 0; }
         .sd-item:hover, .sd-item.sd-active { background: #E6F0E8; color: #2F4F38; }
         .sd-empty { padding: 10px 14px; font-size: 12px; color: #888; }
+
+        /* DESIGN MASTER AUTO-FILL LOCK + EDIT */
+        input.spec-locked { background: #EAF0EA !important; color: #2F4F38 !important; }
+        .spec-edit-btn {
+            display: none; position: absolute; top: -13px; right: 15px;
+            background: #F59E0B; color: #fff; border: none; padding: 5px 14px; border-radius: 12px;
+            font-size: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 8px rgba(245,158,11,.3);
+        }
 </style>
 </head>
 <body>
@@ -338,6 +346,7 @@
             <!-- Section 2: Design Specifications -->
             <div class="form-section">
                 <div class="section-badge">Design Specs</div>
+                <button type="button" id="specEditBtn" class="spec-edit-btn" onclick="toggleSpecEdit()">✏️ Edit</button>
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Design Number</label>
@@ -447,6 +456,48 @@
     <script>
         let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
         let editingId = null;
+
+        // Design Master saves through StorageDB; read from the same place (fallback: localStorage)
+        function pgGet(key) {
+            let v = null;
+            try { if (window.StorageDB && typeof window.StorageDB.getItem === 'function') v = window.StorageDB.getItem(key); } catch (e) {}
+            if (v === null || v === undefined) v = localStorage.getItem(key);
+            return v;
+        }
+        function pgJSON(key, fallback) {
+            try { let v = JSON.parse(pgGet(key)); return (v === null || v === undefined) ? fallback : v; }
+            catch (e) { return fallback; }
+        }
+
+        const SPEC_FIELDS = ['baseBeamCount', 'topBeamCount', 'weftCount', 'weftCount2', 'reed', 'pick', 'width', 'weaveType'];
+        let specLocked = false;
+
+        function setSpecLock(lock, hasDesign) {
+            specLocked = lock;
+            SPEC_FIELDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.readOnly = lock;
+                el.classList.toggle('spec-locked', lock);
+            });
+            const btn = document.getElementById('specEditBtn');
+            if (!btn) return;
+            if (lock) { btn.style.display = 'block'; btn.innerText = '✏️ Edit'; }
+            else if (hasDesign) { btn.style.display = 'block'; btn.innerText = '🔄 Auto'; }
+            else { btn.style.display = 'none'; }
+        }
+
+        function toggleSpecEdit() {
+            const dNo = document.getElementById('designNumber').value;
+            if (!dNo) return;
+            if (specLocked) {
+                setSpecLock(false, true);
+                const first = document.getElementById(SPEC_FIELDS[0]);
+                if (first) first.focus();
+            } else {
+                onDesignSelect(dNo);   // reload from Design Master and lock again
+            }
+        }
         
         function checkUserPermission() {
             let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -459,7 +510,8 @@
             return true;
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (window.StorageDB && window.StorageDB.ready) { try { await window.StorageDB.ready; } catch (e) {} }
             if (!checkUserPermission()) {
                 alert("Access Denied! You do not have permission to access this page. ❌");
                 window.location.href = "dashboard.html";
@@ -485,9 +537,9 @@
         }
 
         function loadDesignList() {
-            let preDesigns = JSON.parse(localStorage.getItem('pre_design_numbers')) || [];
-            let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let preDesigns = pgJSON('pre_design_numbers', []);
+            let designMasters = pgJSON('design_masters_data', []);
+            let designSpecs = pgJSON('design_specs', {});
 
             let allDesigns = new Set();
             preDesigns.forEach(d => allDesigns.add(d));
@@ -503,7 +555,7 @@
             });
             select.innerHTML = html;
 
-            let activeDesign = localStorage.getItem('selected_design_number');
+            let activeDesign = pgGet('selected_design_number');
             if(activeDesign && allDesigns.has(activeDesign)) {
                 select.value = activeDesign;
                 onDesignSelect(activeDesign);
@@ -535,13 +587,13 @@
         };
 
         function loadBitmapImage() {
-            let activeDesign = localStorage.getItem('selected_design_number');
+            let activeDesign = pgGet('selected_design_number');
             let designSelect = document.getElementById('designNumber');
             if(designSelect && designSelect.value) {
                 activeDesign = designSelect.value;
             }
             
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+            let designSpecs = pgJSON('design_specs', {});
             let bitmapContainer = document.getElementById('bitmapDisplayContainer');
             
             let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
@@ -561,8 +613,8 @@
             if(val) {
                 let clean = val.toString().replace('#', '').trim().toLowerCase();
                 
-                let designMasters = JSON.parse(localStorage.getItem('design_masters_data')) || [];
-                let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
+                let designMasters = pgJSON('design_masters_data', []);
+                let designSpecs = pgJSON('design_specs', {});
                 let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
 
                 let foundMaster = {};
@@ -590,6 +642,8 @@
                 document.getElementById('width').value = foundMaster.width || specs.width || specs.finishWidth || '58';
                 
                 document.getElementById('weaveType').value = foundMaster.weave || foundMaster.weaveType || specs.weave || specs.weaveType || '';
+
+                setSpecLock(true, true);   // auto-filled from Design Master; use Edit to change
             } else {
                 document.getElementById('orderStatusToggle').checked = false;
                 document.getElementById('baseBeamCount').value = '';
@@ -600,6 +654,7 @@
                 document.getElementById('pick').value = '';
                 document.getElementById('width').value = '58';
                 document.getElementById('weaveType').value = '';
+                setSpecLock(false, false);
             }
         }
 
@@ -779,6 +834,7 @@
             document.getElementById('orderStatusToggle').checked = false;
             document.getElementById('orderDate').valueAsDate = new Date();
             document.getElementById('width').value = '58';
+            setSpecLock(false, false);
             
             loadDesignList();
             btn.innerText = "✅ Save Order Details";
@@ -815,6 +871,7 @@
             document.getElementById('rateMtr').value = item.rateMtr || '';
             document.getElementById('orderStatusToggle').checked = (item.status === 'completed');
 
+            setSpecLock(false, false);
             document.getElementById('saveBtn').innerText = "🔄 Update Order Details";
             window.scrollTo({ top: 0, behavior: 'smooth' });
             loadBitmapImage();
