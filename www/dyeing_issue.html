@@ -1078,8 +1078,6 @@ tfoot td{
     </div>
 
 
-    <div id="savedIssueDetails" style="margin:12px 0;"></div>
-
     <button
         class="btn-main"
         id="saveIssueBtnTxt"
@@ -4757,6 +4755,71 @@ function openIssuePreview(){
         `;
     }
 
+    // Previously issued records for this design (shown only in Preview)
+    let prevHtml='';
+    (function(){
+        const dNo=document.getElementById('designNumber')?.value || '';
+        if(!dNo) return;
+        const cleanDNo=cleanDesignName(dNo);
+        const records=safeArray('dyeing_issue_records').filter(r =>
+            cleanDesignName(r.designNo || r.designNumber) === cleanDNo
+        );
+        if(!records.length) return;
+
+        const fmtDate=d=>{
+            const m=String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            return m ? `${m[3]}/${m[2]}/${m[1]}` : (d || '-');
+        };
+
+        let pOrd=0, pIss=0;
+        const rowsHtml=records.map((r,i)=>{
+            pOrd += safeNumber(r.orderWt,0);
+            pIss += safeNumber(r.issueWt,0);
+            return `
+                <tr>
+                    <td>${i+1}</td>
+                    <td>${escapeHTML(fmtDate(r.date))}</td>
+                    <td>${escapeHTML(r.unit || '-')}</td>
+                    <td>${escapeHTML(r.count || '-')}</td>
+                    <td>${escapeHTML(r.millName || '-')}</td>
+                    <td>${escapeHTML(r.color || '-')}</td>
+                    <td>${fixed3(r.orderWt)}</td>
+                    <td>${fixed3(r.issueWt)}</td>
+                    <td>${escapeHTML(r.status === 'completed' ? 'COMPLETED' : 'RUNNING')}</td>
+                </tr>`;
+        }).join('');
+
+        prevHtml=`
+            <div style="font-weight:800;color:#2F4F38;font-size:13px;margin:20px 0 8px 0;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
+            <div class="preview-table-wrap">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Date</th>
+                            <th>Dyeing Unit</th>
+                            <th>Count</th>
+                            <th>Mill</th>
+                            <th>Colour</th>
+                            <th>Ord Wt</th>
+                            <th>Iss Wt</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                    <tfoot>
+                        <tr class="preview-total-row">
+                            <td colspan="6" style="text-align:right;">Grand Total</td>
+                            <td>${pOrd.toFixed(3)}</td>
+                            <td>${pIss.toFixed(3)}</td>
+                            <td>-</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+    })();
+
     content.innerHTML=`
         <div class="preview-title">Dyeing Issue (Warp + Weft)</div>
 
@@ -4790,6 +4853,8 @@ function openIssuePreview(){
                 </tfoot>
             </table>
         </div>
+
+        ${prevHtml}
     `;
 
     modal.classList.add('show');
