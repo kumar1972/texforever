@@ -271,7 +271,23 @@
         .action-edit { background: linear-gradient(135deg, #64748B, #475569); } 
         .action-complete { background: linear-gradient(135deg, #10B981, #059669); } 
         .action-running { background: linear-gradient(135deg, #F59E0B, #D97706); } 
-    </style>
+    
+        /* SEARCHABLE DESIGN DROPDOWN */
+        .sd-wrap { position: relative; width: 100%; }
+        .sd-input { padding-right: 28px; cursor: pointer; }
+        .sd-arrow { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #4A7C59; pointer-events: none; }
+        .sd-list {
+            display: none; position: absolute; left: 0; right: 0; top: calc(100% + 2px);
+            max-height: 240px; overflow-y: auto; z-index: 1000;
+            background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0,0,0,.18);
+        }
+        .sd-list.open { display: block; }
+        .sd-item { padding: 10px 14px; font-size: 12px; font-weight: 600; color: #1E2B23; cursor: pointer; border-bottom: 1px solid #EEF3EE; }
+        .sd-item:last-child { border-bottom: 0; }
+        .sd-item:hover, .sd-item.sd-active { background: #E6F0E8; color: #2F4F38; }
+        .sd-empty { padding: 10px 14px; font-size: 12px; color: #888; }
+</style>
 </head>
 <body>
     <datalist id="countsList">
@@ -325,9 +341,14 @@
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Design Number</label>
-                        <select id="designNumber" onchange="onDesignSelect(this.value)">
+                        <select id="designNumber" onchange="onDesignSelect(this.value)" style="display:none;">
                             <option value="">Select Design</option>
                         </select>
+                        <div class="sd-wrap" id="designSearchWrap">
+                            <input type="text" id="designSearchInput" class="sd-input" placeholder="🔍 Search Design..." autocomplete="off">
+                            <span class="sd-arrow">▾</span>
+                            <div class="sd-list" id="designSearchList"></div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Base Beam (Warp)</label>
@@ -889,5 +910,72 @@
             }
         }
     </script>
+
+<script>
+/* ===== Searchable Design Dropdown (wraps existing #designNumber; no other logic changed) ===== */
+(function () {
+    const sel = document.getElementById("designNumber");
+    const inp = document.getElementById("designSearchInput");
+    const list = document.getElementById("designSearchList");
+    if (!sel || !inp || !list) return;
+
+    function selectedLabel() {
+        const o = sel.options[sel.selectedIndex];
+        return (o && o.value !== "") ? o.textContent : "";
+    }
+    function render(filter) {
+        const q = (filter || "").trim().toLowerCase();
+        list.innerHTML = "";
+        let count = 0;
+        [...sel.options].forEach(o => {
+            if (o.value === "") return;
+            if (q && o.textContent.toLowerCase().indexOf(q) === -1) return;
+            const d = document.createElement("div");
+            d.className = "sd-item" + (o.value === sel.value ? " sd-active" : "");
+            d.textContent = o.textContent;
+            d.addEventListener("mousedown", function (e) { e.preventDefault(); choose(o.value); });
+            list.appendChild(d);
+            count++;
+        });
+        if (!count) {
+            const e = document.createElement("div");
+            e.className = "sd-empty";
+            e.textContent = "No design found";
+            list.appendChild(e);
+        }
+    }
+    function open(filter) { render(filter); list.classList.add("open"); }
+    function close() { list.classList.remove("open"); inp.value = selectedLabel(); }
+    function choose(val) {
+        sel.value = val;
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        list.classList.remove("open");
+        inp.value = selectedLabel();
+        inp.blur();
+    }
+
+    inp.addEventListener("focus", function () { inp.select(); open(""); });
+    inp.addEventListener("click", function () { if (!list.classList.contains("open")) open(""); });
+    inp.addEventListener("input", function () { open(inp.value); });
+    inp.addEventListener("blur", function () { setTimeout(close, 120); });
+    inp.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const q = inp.value.trim().toLowerCase();
+            const m = [...sel.options].find(o => o.value !== "" && o.textContent.toLowerCase().indexOf(q) !== -1);
+            if (m) choose(m.value);
+        } else if (e.key === "Escape") { inp.blur(); }
+    });
+
+    // Stay in sync when the select is repopulated or its value is set by other code
+    new MutationObserver(function () { if (document.activeElement !== inp) inp.value = selectedLabel(); })
+        .observe(sel, { childList: true });
+    sel.addEventListener("change", function () { inp.value = selectedLabel(); });
+    setInterval(function () {
+        if (document.activeElement !== inp && inp.value !== selectedLabel()) inp.value = selectedLabel();
+    }, 500);
+    inp.value = selectedLabel();
+})();
+</script>
 </body>
 </html>
