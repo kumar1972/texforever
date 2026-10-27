@@ -3953,6 +3953,8 @@ async function saveIssueEntries(){
             'Dyeing Order Issues Saved Successfully! ✅☁️'
         );
 
+        // Remember the design just saved so Preview can still show its issues
+        window._lastIssuedDesign = dNo;
 
         container.innerHTML='';
 
@@ -4712,7 +4714,7 @@ function openIssuePreview(){
     if(!modal || !content) return;
 
     const date=document.getElementById('issueDate')?.value || '-';
-    const design=document.getElementById('designNumber')?.value || '-';
+    const design=document.getElementById('designNumber')?.value || window._lastIssuedDesign || '-';
     const rows=getPreviewRows();
 
     let totalOrd=0;
@@ -4758,7 +4760,7 @@ function openIssuePreview(){
     // Previously issued records for this design (shown only in Preview)
     let prevHtml='';
     (function(){
-        const dNo=document.getElementById('designNumber')?.value || '';
+        const dNo=(design && design!=='-') ? design : '';
         if(!dNo) return;
         const cleanDNo=cleanDesignName(dNo);
         const records=safeArray('dyeing_issue_records').filter(r =>
@@ -4826,32 +4828,6 @@ function openIssuePreview(){
         <div class="preview-meta">
             <div><b>Issue Date:</b> ${escapeHTML(formattedDate)}</div>
             <div><b>Design No:</b> ${escapeHTML(design)}</div>
-        </div>
-
-        <div class="preview-table-wrap">
-            <table class="preview-table">
-                <thead>
-                    <tr>
-                        <th>S.No</th>
-                        <th>Type</th>
-                        <th>Count</th>
-                        <th>Mill Name</th>
-                        <th>Colour</th>
-                        <th>Ord Wt</th>
-                        <th>Iss Wt</th>
-                        <th>Dyeing Unit</th>
-                    </tr>
-                </thead>
-                <tbody>${tableRows}</tbody>
-                <tfoot>
-                    <tr class="preview-total-row">
-                        <td colspan="5" style="text-align:right;">Grand Total</td>
-                        <td>${totalOrd.toFixed(3)}</td>
-                        <td>${totalIss.toFixed(3)}</td>
-                        <td>-</td>
-                    </tr>
-                </tfoot>
-            </table>
         </div>
 
         ${prevHtml}
