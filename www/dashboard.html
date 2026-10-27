@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TEX FOR EVER ">
 
- <title>Dashboard - TEXFOREVER   BRG TEXTILES</title>
+<title>Dashboard - TEXFOREVER </title>
 
 <!-- IMPORTANT: config.js and translator.js already exist -->
 <script src="config.js" defer></script>
@@ -2840,14 +2840,24 @@ function loadDashboardStats(){
    COMPANY SETTINGS / LOGO
 ========================================================= */
 
+function readStored(key){
+    let v = null;
+    try{
+        if(window.StorageDB) v = window.StorageDB.getItem(key);
+        if(v === null || v === undefined || v === "")
+            v = localStorage.getItem(key);
+    }catch(e){}
+    if(typeof v === "string" && v.startsWith('"')){
+        try{ v = JSON.parse(v); }catch(e){}
+    }
+    return v;
+}
+
 function loadCompanySettings(){
 
     try{
 
-        const heading =
-            localStorage.getItem(
-                "app_heading_name"
-            );
+        const heading = readStored("app_heading_name");
 
 
         const title =
@@ -2874,15 +2884,9 @@ function loadCompanySettings(){
 
 
         let logo =
-            localStorage.getItem(
-                "company_logo_base64"
-            ) ||
-            localStorage.getItem(
-                "company_logo"
-            ) ||
-            localStorage.getItem(
-                "logo"
-            ) ||
+            readStored("company_logo_base64") ||
+            readStored("company_logo") ||
+            readStored("logo") ||
             "";
 
 
@@ -4142,6 +4146,10 @@ window.addEventListener(
             loadUserInfo();
 
 
+            if(window.StorageDB && window.StorageDB.ready){
+                await window.StorageDB.ready;
+            }
+
             loadCompanySettings();
 
 
@@ -4149,6 +4157,8 @@ window.addEventListener(
 
 
             await waitForCloudSync(5000);
+
+            loadCompanySettings();
 
 
             await new Promise(
