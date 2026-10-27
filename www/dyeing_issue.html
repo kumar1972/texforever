@@ -1215,6 +1215,9 @@ tfoot td{
 'use strict';
 
 let editingIssueId = null;
+let editingIssueIds = null;          // design-wide edit (all records of one design)
+let editingLoadedDate = '';
+let editingLoadedCompleted = false;
 let allCombinedDesigns = [];
 
 
@@ -2714,6 +2717,8 @@ function renderSavedIssueDetails(){
 
 function loadDesignItems(){
 
+    editingIssueIds = null;
+
     loadBitmapImage();
 
     renderIssuedList();
@@ -3670,7 +3675,62 @@ async function saveIssueEntries(){
 
     try{
 
-        if(editingIssueId !== null){
+        if(editingIssueIds && editingIssueIds.length){
+
+            const keepIds = new Set();
+
+            rows.forEach(row=>{
+
+                const vals = {
+                    count: row.querySelector('.inp-count')?.value.trim() || '20/s',
+                    millName: row.querySelector('.inp-mill')?.value.trim() || '',
+                    color: row.querySelector('.inp-color')?.value.trim() || '-',
+                    orderWt: fixed3(row.querySelector('.inp-ordwt')?.value),
+                    issueWt: fixed3(row.querySelector('.inp-isswt')?.value),
+                    unit: row.querySelector('.inp-unit')?.value.trim() || 'Default Unit',
+                    yarnType: row.querySelector('.inp-type')?.value || 'Combined'
+                };
+
+                const rid = row.dataset.recordId;
+                const rec = rid
+                    ? records.find(r => String(r.id) === String(rid))
+                    : null;
+
+                if(rec){
+
+                    Object.assign(rec, vals);
+                    rec.designNo = dNo;
+                    if(dateVal !== editingLoadedDate) rec.date = dateVal;
+                    if(isCompleted !== editingLoadedCompleted){
+                        rec.status = isCompleted ? 'completed' : 'running';
+                    }
+                    keepIds.add(String(rec.id));
+                    savedCount++;
+
+                }else{
+
+                    records.push(Object.assign({
+                        id: Date.now() + Math.random(),
+                        date: dateVal,
+                        designNo: dNo,
+                        status: isCompleted ? 'completed' : 'running'
+                    }, vals));
+                    savedCount++;
+
+                }
+
+            });
+
+            // rows removed from the screen = records removed
+            const oldIds = editingIssueIds.map(String);
+            for(let i = records.length - 1; i >= 0; i--){
+                const id = String(records[i].id);
+                if(oldIds.includes(id) && !keepIds.has(id)) records.splice(i, 1);
+            }
+
+            editingIssueIds = null;
+
+        }else if(editingIssueId !== null){
 
             const rowIndex =
                 records.findIndex(
@@ -4140,6 +4200,67 @@ async function editIssuedRecord(id){
         behavior:'smooth'
     });
 
+}
+
+
+/* ============================================================
+   EDIT ALL ENTRIES OF A DESIGN (from Preview)
+============================================================ */
+function editDesignIssues(designNo){
+
+    if(!checkUserPermission()){
+        alert('Access Denied! You do not have permission to edit entries. ❌');
+        return;
+    }
+
+    const cleanDNo = cleanDesignName(designNo);
+    const records = safeArray('dyeing_issue_records').filter(r =>
+        cleanDesignName(r.designNo || r.designNumber) === cleanDNo
+    );
+
+    if(!records.length){
+        alert('Record not found!');
+        return;
+    }
+
+    editingIssueId = null;
+    editingIssueIds = records.map(r => r.id);
+    editingLoadedDate = records[0].date || new Date().toISOString().split('T')[0];
+    editingLoadedCompleted = records.every(r => normalizeText(r.status) === 'completed');
+
+    document.getElementById('issueDate').value = editingLoadedDate;
+
+    const designSelect = document.getElementById('designNumber');
+    const option = Array.from(designSelect.options).find(opt =>
+        cleanDesignName(opt.value) === cleanDNo
+    );
+    const val = option ? option.value : (records[0].designNo || designNo);
+    designSelect.value = val;
+    const searchInput = document.getElementById('designSearchInput');
+    if(searchInput) searchInput.value = val;
+
+    document.getElementById('top_completed_status').checked = editingLoadedCompleted;
+
+    const container = document.getElementById('issueLinesContainer');
+    container.innerHTML = '';
+
+    records.forEach(rec => {
+        const row = createIssueRow({
+            count: rec.count,
+            mill: rec.millName,
+            color: rec.color,
+            orderWt: rec.orderWt,
+            issueWt: rec.issueWt,
+            unit: rec.unit,
+            type: rec.yarnType
+        });
+        row.dataset.recordId = String(rec.id);
+        container.appendChild(row);
+    });
+
+    updateTotals();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 
@@ -4792,7 +4913,10 @@ function openIssuePreview(){
         }).join('');
 
         prevHtml=`
-            <div style="font-weight:800;color:#2F4F38;font-size:13px;margin:20px 0 8px 0;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:20px 0 8px 0;">
+                <div style="font-weight:800;color:#2F4F38;font-size:13px;">📋 இந்த டிசைனுக்கு ஏற்கனவே Issue பண்ணியவை</div>
+                <button type="button" class="pv-edit-col" onclick="closeIssuePreview(); editDesignIssues('${escapeHTML(dNo)}')" title="Edit all entries of this design" style="background:#64748B;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;">✏️ Edit</button>
+            </div>
             <div class="preview-table-wrap">
                 <table class="preview-table">
                     <thead>
@@ -4906,8 +5030,14 @@ document.addEventListener(
 <script>
 function printIssuePreview() {
     var content = document.getElementById('issuePreviewContent');
+    var printHtml;
+    if (content) {
+        var clone = content.cloneNode(true);
+        clone.querySelectorAll('.pv-edit-col').forEach(function (el) { el.remove(); });
+        printHtml = clone.innerHTML;
+    }
     if (window.appPrint) {
-        window.appPrint(content ? content.innerHTML : undefined);
+        window.appPrint(printHtml);
     } else {
         alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
     }
