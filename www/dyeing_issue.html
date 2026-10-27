@@ -887,7 +887,7 @@ tfoot td{
     </div>
 
     <h2 class="card-header">
-        Dyeing Issue (Warp + Weft) ( டையிங் கொடுத்தது )
+        Dyeing Issue (Warp + Weft) (டையிங் கொடுத்தது )
     </h2>
 
     <div class="form-section" style="margin-top:10px;">
@@ -909,21 +909,36 @@ tfoot td{
 
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
 
             <label>
                 Select Design Number
             </label>
 
+            <!-- Searchable Text Input -->
+            <input
+                type="text"
+                id="designSearchInput"
+                placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                oninput="filterDesignDropdown()"
+                onfocus="openDesignDropdownList()"
+                style="width:100%; padding:12px 14px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+            />
+
+            <!-- Custom Dropdown List Box -->
+            <div
+                id="designDropdownList"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+            </div>
+
             <select
                 id="designNumber"
+                style="display:none;"
                 onchange="loadDesignItems()"
             >
-
                 <option value="">
                     Select Design No
                 </option>
-
             </select>
 
         </div>
@@ -1070,7 +1085,7 @@ tfoot td{
         id="saveIssueBtnTxt"
         onclick="saveIssueEntries()"
     >
-        ✅ Save Dyeing Order Issue( கொடுத்ததை சேமி )
+        ✅ Save Dyeing Order Issue ( கொடுத்ததை சேமி )
     </button>
 
 
@@ -1202,15 +1217,23 @@ tfoot td{
 'use strict';
 
 let editingIssueId = null;
+let allCombinedDesigns = [];
 
 
 /* ============================================================
    SAFE HELPERS
 ============================================================ */
 
+function storeRaw(key){
+    if(window.StorageDB && typeof window.StorageDB.getItem === "function"){
+        return window.StorageDB.getItem(key);
+    }
+    return localStorage.getItem(key);
+}
+
 function safeArray(key){
     try{
-        const data = JSON.parse(window.StorageDB.getItem(key) || '[]');
+        const data = JSON.parse(storeRaw(key) || '[]');
         return Array.isArray(data) ? data : [];
     }catch(e){
         console.warn('Array parse error:',key,e);
@@ -1220,7 +1243,7 @@ function safeArray(key){
 
 function safeObject(key){
     try{
-        const data = JSON.parse(window.StorageDB.getItem(key) || '{}');
+        const data = JSON.parse(storeRaw(key) || '{}');
         return data && typeof data === 'object' && !Array.isArray(data)
             ? data
             : {};
@@ -1335,6 +1358,14 @@ document.addEventListener('DOMContentLoaded', async function(){
     loadDesignDropdowns();
     refreshAllSelects();
     updateTotals();
+
+    document.addEventListener("click", function(e){
+        let container = document.getElementById("designSearchInput");
+        let list = document.getElementById("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+    });
 
 });
 
@@ -1874,7 +1905,7 @@ function loadBitmapImage(){
 
     const activeDesign =
         select.value ||
-        window.StorageDB.getItem(
+        storeRaw(
             'selected_design_number'
         );
 
@@ -1941,7 +1972,7 @@ function loadBitmapImage(){
 
 
 /* ============================================================
-   DESIGN DROPDOWN
+   DESIGN DROPDOWN & SEARCH
 ============================================================ */
 
 function loadDesignDropdowns(){
@@ -2010,6 +2041,20 @@ function loadDesignDropdowns(){
 
     });
 
+    allCombinedDesigns =
+        Array.from(allMap.values())
+        .sort(
+            (a,b)=>
+            a.localeCompare(
+                b,
+                undefined,
+                {
+                    numeric:true,
+                    sensitivity:'base'
+                }
+            )
+        );
+
     const select =
         document.getElementById(
             'designNumber'
@@ -2021,50 +2066,37 @@ function loadDesignDropdowns(){
     let html =
         '<option value="">Select Design No</option>';
 
-    Array.from(allMap.values())
-        .sort(
-            (a,b)=>
-            a.localeCompare(
-                b,
-                undefined,
-                {
-                    numeric:true,
-                    sensitivity:'base'
-                }
-            )
-        )
-        .forEach(name=>{
+    allCombinedDesigns.forEach(name=>{
 
-            html += `
-                <option value="${escapeHTML(name)}">
-                    ${escapeHTML(name)}
-                </option>
-            `;
+        html += `
+            <option value="${escapeHTML(name)}">
+                ${escapeHTML(name)}
+            </option>
+        `;
 
-        });
+    });
 
     select.innerHTML=html;
 
     const activeDesign =
-        window.StorageDB.getItem(
+        storeRaw(
             'selected_design_number'
         );
 
     if(activeDesign){
 
         const found =
-            Array.from(
-                select.options
-            ).find(
-                opt =>
-                cleanDesignName(opt.value) ===
+            allCombinedDesigns.find(
+                d =>
+                cleanDesignName(d) ===
                 cleanDesignName(activeDesign)
             );
 
         if(found){
 
-            select.value =
-                found.value;
+            select.value = found;
+            const searchInput = document.getElementById("designSearchInput");
+            if(searchInput) searchInput.value = found;
 
             loadDesignItems();
 
@@ -2072,6 +2104,60 @@ function loadDesignDropdowns(){
 
     }
 
+}
+
+function openDesignDropdownList(){
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("designNumber");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        loadDesignItems();
+    }
+    if(list) list.style.display = "none";
 }
 
 
@@ -2297,17 +2383,6 @@ function getMillNameFromKora(
     designNo,
     countStr
 ){
-
-    /*
-       FIX:
-       Previously:
-       JSON.parse(stock) || JSON.parse(issue)
-
-       Empty [] is truthy, so issue records
-       were never checked.
-
-       Now both lists are combined.
-    */
 
     const stockRecords =
         safeArray('kora_stock_records');
@@ -2544,11 +2619,6 @@ function(btn){
             )?.value || 'Combined'
 
     };
-
-    /*
-       For split row, keep the same order balance.
-       User can change issue weight separately.
-    */
 
     const newRow =
         createIssueRow(data);
@@ -2844,10 +2914,6 @@ function loadDesignItems(){
         displayList = Array.from(combinedMap.values());
         
     } else {
-
-        /* ========================================================
-           OLD FALLBACK LOGIC (IF NO YARN DATA FOUND)
-        ======================================================== */
 
         const uiReed =
             safeNumber(
@@ -3341,11 +3407,6 @@ async function quickCompleteToggle(){
     });
 
 
-    /*
-       If no record exists, create one only
-       when there is a row.
-    */
-
     if(!updated){
 
         const firstRow =
@@ -3611,10 +3672,6 @@ async function saveIssueEntries(){
 
     try{
 
-        /* ====================================================
-           EDIT
-        ==================================================== */
-
         if(editingIssueId !== null){
 
             const rowIndex =
@@ -3701,10 +3758,6 @@ async function saveIssueEntries(){
 
         }else{
 
-            /* =================================================
-               NEW RECORDS
-            ================================================= */
-
             rows.forEach(row=>{
 
                 const count =
@@ -3737,11 +3790,6 @@ async function saveIssueEntries(){
                     row.querySelector(
                         '.inp-isswt'
                     )?.value;
-
-                /*
-                   If Issue Weight is empty,
-                   use Order Weight.
-                */
 
                 const issWt =
                     String(
@@ -3828,10 +3876,6 @@ async function saveIssueEntries(){
         }
 
 
-        /* ====================================================
-           DESIGN STATUS
-        ==================================================== */
-
         const designSpecs =
             safeObject(
                 'design_specs'
@@ -3857,10 +3901,6 @@ async function saveIssueEntries(){
             : 'running';
 
 
-        /* ====================================================
-           LOCAL SAVE
-        ==================================================== */
-
         window.StorageDB.setItem(
             'dyeing_issue_records',
             JSON.stringify(records)
@@ -3871,10 +3911,6 @@ async function saveIssueEntries(){
             JSON.stringify(designSpecs)
         );
 
-
-        /* ====================================================
-           CLOUD SAVE
-        ==================================================== */
 
         if(typeof window.supabaseSave === 'function'){
 
@@ -3890,10 +3926,6 @@ async function saveIssueEntries(){
 
         }
 
-
-        /*
-           Individual design save only if function exists.
-        */
 
         if(
             typeof window.supabaseSaveIndividual ===
@@ -3924,15 +3956,14 @@ async function saveIssueEntries(){
         );
 
 
-        /* ====================================================
-           RESET FORM
-        ==================================================== */
-
         container.innerHTML='';
 
         document.getElementById(
             'designNumber'
         ).value='';
+
+        const searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = '';
 
         document.getElementById(
             'top_completed_status'
@@ -4047,12 +4078,15 @@ async function editIssuedRecord(id){
             cleanDesignName(rec.designNo)
         );
 
-    if(option)
-        designSelect.value =
-            option.value;
-    else
-        designSelect.value =
-            rec.designNo || '';
+    if(option){
+        designSelect.value = option.value;
+        const searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = option.value;
+    } else {
+        designSelect.value = rec.designNo || '';
+        const searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = rec.designNo || '';
+    }
 
 
     document.getElementById(
@@ -4658,8 +4692,6 @@ function renderIssuedList(){
 
 /* ============================================================
    ISSUE PREVIEW + PRINT
-   Preview is UI-only. Existing localStorage/supabase/cloud logic
-   is intentionally untouched.
 ============================================================ */
 function getPreviewRows(){
     const container=document.getElementById('issueLinesContainer');

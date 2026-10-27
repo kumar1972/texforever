@@ -211,9 +211,23 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
     </div>
 
     <!-- 1. TOP DESIGN DROPDOWN -->
-    <div class="pm-form-box top-config-box">
+    <div class="pm-form-box top-config-box" style="position: relative;">
         <label class="pm-label-w">🎨 Select Design</label>
-        <select id="designSelect" onchange="loadSelectedDesign()">
+        <!-- Searchable Text Input -->
+        <input
+            type="text"
+            id="designSearchInput"
+            placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+            oninput="filterDesignDropdown()"
+            onfocus="openDesignDropdownList()"
+            style="width:100%; padding:12px 14px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+        />
+        <!-- Custom Dropdown List Box -->
+        <div
+            id="designDropdownList"
+            style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+        </div>
+        <select id="designSelect" style="display:none;" onchange="loadSelectedDesign()">
             <option value="">-- Load Saved Design --</option>
         </select>
     </div>
@@ -370,6 +384,8 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
 </div>
 
 <script>
+    let allCombinedDesigns = [];
+
     const TFDB = {
         get(k) {
             let v = null;
@@ -573,23 +589,88 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
             }
         });
         allCloudDesigns = Array.from(map.values());
-        
+        allCombinedDesigns = allCloudDesigns.map(d => designName(d)).filter(Boolean).sort(
+            (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+        );
+
         let sel = document.getElementById("designSelect");
-        sel.innerHTML = '<option value="">-- Load Saved Design --</option>';
-        allCloudDesigns.forEach((d, i) => {
-            let n = designName(d);
-            sel.innerHTML += `<option value="${i}">🎨 ${n}</option>`;
-        });
+        if(sel) {
+            let html = '<option value="">-- Load Saved Design --</option>';
+            allCloudDesigns.forEach((d, i) => {
+                let n = designName(d);
+                html += `<option value="${i}">🎨 ${n}</option>`;
+            });
+            sel.innerHTML = html;
+        }
 
         let last = TFDB.get("selected_design_number") || TFDB.get("weave_last_design_name");
         if(last) {
             let cleanLast = cleanDesignName(last);
             let idx = allCloudDesigns.findIndex(d => cleanDesignName(designName(d)) === cleanLast);
             if(idx >= 0) {
-                sel.value = idx;
+                if(sel) sel.value = idx;
+                let searchInput = document.getElementById("designSearchInput");
+                if(searchInput) searchInput.value = designName(allCloudDesigns[idx]);
                 loadSelectedDesign();
             }
         }
+    }
+
+    function openDesignDropdownList(){
+        renderDesignDropdownItems(allCombinedDesigns);
+    }
+
+    function filterDesignDropdown(){
+        let input = document.getElementById("designSearchInput");
+        let filter = input.value.toLowerCase().trim();
+        
+        let matched = allCombinedDesigns.filter(function(d){
+            return String(d).toLowerCase().includes(filter);
+        });
+
+        matched.sort(function(a, b){
+            let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+            let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+            return aMatch - bMatch;
+        });
+
+        renderDesignDropdownItems(matched);
+    }
+
+    function renderDesignDropdownItems(items){
+        let list = document.getElementById("designDropdownList");
+        if(!list) return;
+
+        if(!items || items.length === 0){
+            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+            list.style.display = "block";
+            return;
+        }
+
+        let html = "";
+        items.forEach(function(d){
+            let safeVal = String(d).replace(/'/g, "\\'");
+            html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+        });
+
+        list.innerHTML = html;
+        list.style.display = "block";
+    }
+
+    function selectDesignItem(val){
+        let input = document.getElementById("designSearchInput");
+        let hiddenSelect = document.getElementById("designSelect");
+        let list = document.getElementById("designDropdownList");
+
+        if(input) input.value = val;
+        if(hiddenSelect){
+            let idx = allCloudDesigns.findIndex(d => cleanDesignName(designName(d)) === cleanDesignName(val));
+            if(idx >= 0) {
+                hiddenSelect.value = idx;
+                loadSelectedDesign();
+            }
+        }
+        if(list) list.style.display = "none";
     }
 
     function loadSelectedDesign() {
@@ -1043,17 +1124,17 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         ctx.strokeRect(offX, offY, totalW, totalH);
     }
 
-    let gridZoomState = { scale: 1, tx: 0, ty: 0 };
-
-    function applyGridZoomTransform() {
-        const layer = document.getElementById("matrixZoomLayer");
-        if(layer) layer.style.transform = `translate(${gridZoomState.tx}px, ${gridZoomState.ty}px) scale(${gridZoomState.scale})`;
-    }
-
-        function setupGridZoomPan() {
+    function setupGridZoomPan() {
         const el = document.getElementById("matrixGridContainer");
         if(!el || el.dataset.zoomBound) return; 
         el.dataset.zoomBound = "1";
+
+        let scale = 1, tx = 0, ty = 0;
+        const layer = document.getElementById("matrixZoomLayer");
+
+        const updateTransform = () => {
+            if(layer) layer.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+        };
 
         const pointers = new Map();
         let startDist = 0, startScale = 1;
@@ -1067,11 +1148,11 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
             if(pointers.size === 2) {
                 const [p1,p2] = [...pointers.values()];
                 startDist = dist(p1,p2);
-                startScale = gridZoomState.scale;
+                startScale = scale;
                 dragStart = null;
             } else if(pointers.size === 1) {
                 dragStart = {x:e.clientX, y:e.clientY};
-                dragOrigin = {tx: gridZoomState.tx, ty: gridZoomState.ty};
+                dragOrigin = {tx, ty};
             }
         });
 
@@ -1081,20 +1162,13 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
 
             if(pointers.size === 2 && startDist) {
                 const [p1,p2] = [...pointers.values()];
-                const newDist = dist(p1,p2);
-                let newScale = startScale * (newDist / startDist);
-                newScale = Math.min(3, Math.max(0.7, newScale)); // மிகையாக வெளியே போகாமல் இருக்க வரம்பு
-                gridZoomState.scale = newScale;
-                applyGridZoomTransform();
+                scale = Math.min(3, Math.max(0.7, startScale * (dist(p1,p2) / startDist)));
+                updateTransform();
             } else if(pointers.size === 1 && dragStart) {
                 const p = pointers.get(e.pointerId);
-                let newTx = dragOrigin.tx + (p.x - dragStart.x);
-                let newTy = dragOrigin.ty + (p.y - dragStart.y);
-                
-                // கன்டெய்னரை விட்டு கிராஃப் முற்றிலுமாக வெளியே மறைந்து போகாமல் இருக்க எல்லைக் கட்டுப்பாடு (Boundaries)
-                gridZoomState.tx = newTx;
-                gridZoomState.ty = newTy;
-                applyGridZoomTransform();
+                tx = dragOrigin.tx + (p.x - dragStart.x);
+                ty = dragOrigin.ty + (p.y - dragStart.y);
+                updateTransform();
             }
         });
 
@@ -1106,77 +1180,6 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         el.addEventListener("pointerup", endPointer);
         el.addEventListener("pointercancel", endPointer);
         el.addEventListener("pointerleave", endPointer);
-    }
-
-
-    let boxTransformState = { scale: 1, tx: 0, ty: 0 };
-
-    function applyBoxTransform() {
-        const wrap = document.getElementById("fabricPreviewWrap");
-        if(wrap) {
-            wrap.style.transform = `translate(${boxTransformState.tx}px, ${boxTransformState.ty}px) scale(${boxTransformState.scale})`;
-        }
-    }
-
-    function setupFabricPreviewBoxPinchAndPan() {
-        const wrap = document.getElementById("fabricPreviewWrap");
-        if(!wrap || wrap.dataset.boxZoomInit) return;
-        wrap.dataset.boxZoomInit = "1";
-
-        const pointers = new Map();
-        let startDist = 0;
-        let startScale = 1;
-        let dragStart = null;
-        let dragOrigin = null;
-
-        const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-
-        wrap.addEventListener("pointerdown", (e) => {
-            if(e.target.closest(".fp-toggle-btn")) return;
-            e.stopPropagation();
-            wrap.setPointerCapture(e.pointerId);
-            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-            if(pointers.size === 2) {
-                const [p1, p2] = [...pointers.values()];
-                startDist = dist(p1, p2);
-                startScale = boxTransformState.scale;
-                dragStart = null;
-            } else if(pointers.size === 1) {
-                dragStart = { x: e.clientX, y: e.clientY };
-                dragOrigin = { tx: boxTransformState.tx, ty: boxTransformState.ty };
-            }
-        });
-
-        wrap.addEventListener("pointermove", (e) => {
-            if(!pointers.has(e.pointerId)) return;
-            e.stopPropagation();
-            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-            if(pointers.size === 2 && startDist) {
-                const [p1, p2] = [...pointers.values()];
-                const curDist = dist(p1, p2);
-                let newScale = startScale * (curDist / startDist);
-                newScale = Math.min(3.5, Math.max(0.5, newScale));
-                boxTransformState.scale = newScale;
-                applyBoxTransform();
-            } else if(pointers.size === 1 && dragStart) {
-                const p = pointers.get(e.pointerId);
-                boxTransformState.tx = dragOrigin.tx + (p.x - dragStart.x);
-                boxTransformState.ty = dragOrigin.ty + (p.y - dragStart.y);
-                applyBoxTransform();
-            }
-        });
-
-        const onPointerEnd = (e) => {
-            pointers.delete(e.pointerId);
-            if(pointers.size < 2) startDist = 0;
-            if(pointers.size === 0) dragStart = null;
-        };
-
-        wrap.addEventListener("pointerup", onPointerEnd);
-        wrap.addEventListener("pointercancel", onPointerEnd);
-        wrap.addEventListener("pointerleave", onPointerEnd);
     }
 
     function addCol() { 
@@ -1460,6 +1463,14 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         showDentingPane('dent');
         setupGridZoomPan();
         setupFabricPreviewBoxPinchAndPan();
+
+        document.addEventListener("click", function(e){
+            let container = document.getElementById("designSearchInput");
+            let list = document.getElementById("designDropdownList");
+            if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+                list.style.display = "none";
+            }
+        });
     };
 </script>
 

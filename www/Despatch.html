@@ -380,7 +380,6 @@
   
         <h3>🚚 Despatch Details Entry</h3>
         
-        <div class="section-title">Despatch Order Details</div>
 
         <div class="form-grid-row">
             <div class="form-group">
@@ -391,18 +390,42 @@
                 <label>Invoice Number</label>
                 <input type="text" id="invoice_no" placeholder="Invoice No">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>PO Number</label>
-                <select id="despatch_po" onchange="onPoSelect(this.value)">
+                <input
+                    type="text"
+                    id="poSearchInput"
+                    placeholder="PO எண்ணை டைப் செய்யவும்..."
+                    oninput="filterPoDropdown()"
+                    onfocus="openPoDropdownList()"
+                    style="width:100%; padding:12px 14px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="poDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="despatch_po" style="display:none;" onchange="onPoSelect(this.value)">
                     <option value="">Select PO</option>
                 </select>
             </div>
         </div>
 
         <div class="form-grid-row">
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Party Name</label>
-                <input type="text" id="despatch_party" placeholder="Party Name" readonly style="background: #FFFFFF; color:#1E2B23;">
+                <input
+                    type="text"
+                    id="partySearchInput"
+                    placeholder="பார்ட்டி பெயரை டைப் செய்யவும்..."
+                    oninput="filterPartyDropdown()"
+                    onfocus="openPartyDropdownList()"
+                    style="width:100%; padding:12px 14px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="partyDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <input type="text" id="despatch_party" placeholder="Party Name" style="display:none;" />
             </div>
             <div class="form-group">
                 <label>Transport Name</label>
@@ -418,9 +441,21 @@
 
         <div id="itemsContainer">
             <div class="item-row">
-                <div class="item-col-group full-width">
+                <div class="item-col-group full-width" style="position: relative;">
                     <label>Design No</label>
-                    <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+                    <input
+                        type="text"
+                        class="item-design-search"
+                        placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                        oninput="filterRowDesignDropdown(this)"
+                        onfocus="openRowDesignDropdown(this)"
+                        style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                    />
+                    <div
+                        class="item-design-dropdown"
+                        style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                    </div>
+                    <select class="item-design" style="display:none;" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
                 </div>
                 <div class="item-col-group">
                     <label>Bale No</label>
@@ -500,6 +535,8 @@
 <script>
 var preDesignList = [];
 let editingIndex = null;
+let allCombinedPOs = [];
+let allCombinedParties = [];
 
 function checkUserPermission() {
     let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -522,8 +559,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if(dateEl && !dateEl.value) dateEl.value = today;
 
     loadPoDropdown();
+    loadPartyDropdown();
     loadDesignList();
     updateDespatchTable();
+
+    document.addEventListener("click", function(e){
+        let poIn = document.getElementById("poSearchInput");
+        let poList = document.getElementById("poDropdownList");
+        if(poIn && poList && !poIn.contains(e.target) && !poList.contains(e.target)) poList.style.display = "none";
+
+        let ptIn = document.getElementById("partySearchInput");
+        let ptList = document.getElementById("partyDropdownList");
+        if(ptIn && ptList && !ptIn.contains(e.target) && !ptList.contains(e.target)) ptList.style.display = "none";
+
+        document.querySelectorAll('.item-row').forEach(row => {
+            let dSearch = row.querySelector('.item-design-search');
+            let dDrop = row.querySelector('.item-design-dropdown');
+            if(dSearch && dDrop && !dSearch.contains(e.target) && !dDrop.contains(e.target)) {
+                dDrop.style.display = "none";
+            }
+        });
+    });
 });
 
 function openModal(modalId) {
@@ -545,9 +601,9 @@ window.closeFullscreenImage = function() {
 
 function loadBitmapImage() {
     let activeDesign = localStorage.getItem('selected_design_number');
-    let firstDesignSelect = document.querySelector('.item-design');
-    if(firstDesignSelect && firstDesignSelect.value) {
-        activeDesign = firstDesignSelect.value;
+    let firstDesignSearch = document.querySelector('.item-design-search');
+    if(firstDesignSearch && firstDesignSearch.value) {
+        activeDesign = firstDesignSearch.value;
     }
     
     let designSpecs = JSON.parse(localStorage.getItem('design_specs') || '{}');
@@ -584,34 +640,131 @@ function onDesignSelect(val) {
 }
 
 function loadPoDropdown() {
-    var poSelect = document.getElementById('despatch_po');
-    if(!poSelect) return;
     var partyOrdersList = JSON.parse(localStorage.getItem('party_orders_data')) || [];
-    var html = '<option value="">Select PO</option>';
+    var poSet = new Set();
     partyOrdersList.forEach(function(po) {
         let pNum = po.poNo || po.poNumber;
-        if(pNum) {
-            html += `<option value="${pNum}">${pNum} (${po.partyName || 'Party'})</option>`;
-        }
+        if(pNum) poSet.add(pNum);
+    });
+    allCombinedPOs = Array.from(poSet).filter(Boolean);
+
+    var poSelect = document.getElementById('despatch_po');
+    if(!poSelect) return;
+    var html = '<option value="">Select PO</option>';
+    allCombinedPOs.forEach(function(p) {
+        html += `<option value="${p}">${p}</option>`;
     });
     poSelect.innerHTML = html;
+}
+
+function openPoDropdownList() {
+    renderPoDropdownItems(allCombinedPOs);
+}
+
+function filterPoDropdown() {
+    let input = document.getElementById("poSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    let matched = allCombinedPOs.filter(p => String(p).toLowerCase().includes(filter));
+    renderPoDropdownItems(matched);
+}
+
+function renderPoDropdownItems(items) {
+    let list = document.getElementById("poDropdownList");
+    if(!list) return;
+    if(items.length === 0) {
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">PO கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+    let html = "";
+    items.forEach(p => {
+        html += `<div onclick="selectPoItem('${String(p).replace(/'/g, "\\'")}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${p}</div>`;
+    });
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectPoItem(val) {
+    let input = document.getElementById("poSearchInput");
+    let hiddenSelect = document.getElementById("despatch_po");
+    let list = document.getElementById("poDropdownList");
+    if(input) input.value = val;
+    if(hiddenSelect) {
+        hiddenSelect.value = val;
+        onPoSelect(val);
+    }
+    if(list) list.style.display = "none";
+}
+
+function loadPartyDropdown() {
+    var partyOrdersList = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    var masterParties = JSON.parse(localStorage.getItem('tex_master_parties') || localStorage.getItem('master_parties') || '[]');
+    var partySet = new Set();
+    partyOrdersList.forEach(p => { if(p.partyName) partySet.add(p.partyName); });
+    if(Array.isArray(masterParties)) masterParties.forEach(p => partySet.add(p));
+    allCombinedParties = Array.from(partySet).filter(Boolean);
+}
+
+function openPartyDropdownList() {
+    loadPartyDropdown();
+    renderPartyDropdownItems(allCombinedParties);
+}
+
+function filterPartyDropdown() {
+    let input = document.getElementById("partySearchInput");
+    let filter = input.value.toLowerCase().trim();
+    let matched = allCombinedParties.filter(pt => String(pt).toLowerCase().includes(filter));
+    renderPartyDropdownItems(matched);
+}
+
+function renderPartyDropdownItems(items) {
+    let list = document.getElementById("partyDropdownList");
+    if(!list) return;
+    if(items.length === 0) {
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">பார்ட்டி கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+    let html = "";
+    items.forEach(pt => {
+        html += `<div onclick="selectPartyItem('${String(pt).replace(/'/g, "\\'")}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${pt}</div>`;
+    });
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectPartyItem(val) {
+    let input = document.getElementById("partySearchInput");
+    let partyInput = document.getElementById("despatch_party");
+    let list = document.getElementById("partyDropdownList");
+    if(input) input.value = val;
+    if(partyInput) partyInput.value = val;
+    if(list) list.style.display = "none";
 }
 
 function onPoSelect(poNo) {
     if(!poNo) {
         document.getElementById('despatch_party').value = '';
+        let ptInp = document.getElementById('partySearchInput');
+        if(ptInp) ptInp.value = '';
         return;
     }
     var partyOrdersList = JSON.parse(localStorage.getItem('party_orders_data')) || [];
     var matchedOrder = partyOrdersList.find(function(p) { return (p.poNo === poNo || p.poNumber === poNo); });
     
     if(matchedOrder) {
-        document.getElementById('despatch_party').value = matchedOrder.partyName || '';
+        let pName = matchedOrder.partyName || '';
+        document.getElementById('despatch_party').value = pName;
+        let ptInp = document.getElementById('partySearchInput');
+        if(ptInp) ptInp.value = pName;
+
         if(matchedOrder.designNumber || matchedOrder.designNo) {
-            var firstDesignSelect = document.querySelector('.item-design');
-            if(firstDesignSelect) {
+            var firstDesignSearch = document.querySelector('.item-design-search');
+            var firstDesignSel = document.querySelector('.item-design');
+            if(firstDesignSearch) {
                 let dVal = matchedOrder.designNumber || matchedOrder.designNo;
-                firstDesignSelect.value = dVal;
+                firstDesignSearch.value = dVal;
+                if(firstDesignSel) firstDesignSel.value = dVal;
                 onDesignSelect(dVal);
             }
         }
@@ -654,12 +807,57 @@ function loadDesignDropdowns() {
     });
 
     var activeDesign = localStorage.getItem('selected_design_number');
-    if(activeDesign && designSelects.length > 0 && !designSelects[0].value) {
-        designSelects[0].value = activeDesign;
+    let firstSearch = document.querySelector('.item-design-search');
+    let firstSel = document.querySelector('.item-design');
+    if(activeDesign && firstSel && !firstSel.value) {
+        firstSel.value = activeDesign;
+        if(firstSearch) firstSearch.value = activeDesign;
         onDesignSelect(activeDesign);
     } else {
         loadBitmapImage();
     }
+}
+
+function openRowDesignDropdown(inputEl) {
+    let dropdown = inputEl.nextElementSibling;
+    renderRowDesignItems(dropdown, preDesignList, inputEl);
+}
+
+function filterRowDesignDropdown(inputEl) {
+    let filter = inputEl.value.toLowerCase().trim();
+    let dropdown = inputEl.nextElementSibling;
+    let matched = preDesignList.filter(d => String(d).toLowerCase().includes(filter));
+    renderRowDesignItems(dropdown, matched, inputEl);
+}
+
+function renderRowDesignItems(dropdown, items, inputEl) {
+    if(!dropdown) return;
+    if(items.length === 0) {
+        dropdown.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        dropdown.style.display = "block";
+        return;
+    }
+    let html = "";
+    items.forEach(d => {
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectRowDesignItem(this, '${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+    dropdown.innerHTML = html;
+    dropdown.style.display = "block";
+}
+
+function selectRowDesignItem(el, val) {
+    let dropdown = el.parentElement;
+    let container = dropdown.parentElement;
+    let inputEl = container.querySelector('.item-design-search');
+    let selectEl = container.querySelector('.item-design');
+
+    if(inputEl) inputEl.value = val;
+    if(selectEl) {
+        selectEl.value = val;
+        onDesignSelect(val);
+    }
+    dropdown.style.display = "none";
 }
 
 function calculateBalance(element) {
@@ -686,9 +884,22 @@ function addItemRow(design = '', bale = '', noBales = '', ord = '', des = '', ba
     var newRow = document.createElement('div');
     newRow.className = 'item-row';
     newRow.innerHTML = `
-        <div class="item-col-group full-width">
+        <div class="item-col-group full-width" style="position: relative;">
             <label>Design No</label>
-            <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+            <input
+                type="text"
+                class="item-design-search"
+                placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                oninput="filterRowDesignDropdown(this)"
+                onfocus="openRowDesignDropdown(this)"
+                value="${design}"
+                style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+            />
+            <div
+                class="item-design-dropdown"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+            </div>
+            <select class="item-design" style="display:none;" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
         </div>
         <div class="item-col-group">
             <label>Bale No</label>
@@ -719,15 +930,19 @@ function addItemRow(design = '', bale = '', noBales = '', ord = '', des = '', ba
     container.appendChild(newRow);
     loadDesignDropdowns();
     if(design) {
-        newRow.querySelector('.item-design').value = design;
+        let sel = newRow.querySelector('.item-design');
+        let inp = newRow.querySelector('.item-design-search');
+        if(sel) sel.value = design;
+        if(inp) inp.value = design;
+        onDesignSelect(design);
     }
 }
 
 async function quickCompleteToggle() {
     if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
     
-    let firstDesignSelect = document.querySelector('.item-design');
-    let designNo = firstDesignSelect ? firstDesignSelect.value : '';
+    let firstDesignSearch = document.querySelector('.item-design-search');
+    let designNo = firstDesignSearch ? firstDesignSearch.value : '';
     let isCompleted = document.getElementById('top_completed_status').checked;
 
     if(!designNo) {
@@ -811,8 +1026,8 @@ async function saveDespatchEntry() {
     }
 
     var despatchList = JSON.parse(localStorage.getItem('despatch_data')) || [];
-    let firstRowDesign = document.querySelector('.item-design');
-    let currentDesignNo = firstRowDesign ? firstRowDesign.value : '';
+    let firstDesignSearch = document.querySelector('.item-design-search');
+    let currentDesignNo = firstDesignSearch ? firstDesignSearch.value : '';
     
     if(editingIndex === null && currentDesignNo) {
         let alreadyExists = despatchList.some(entry => 
@@ -831,7 +1046,7 @@ async function saveDespatchEntry() {
     let savePromises = [];
 
     document.querySelectorAll('.item-row').forEach(function(row) {
-        let dNo = row.querySelector('.item-design').value;
+        let dNo = row.querySelector('.item-design-search').value.trim();
         let desMtr = row.querySelector('.item-des-mtr').value.trim();
 
         items.push({
@@ -906,15 +1121,33 @@ async function saveDespatchEntry() {
     
     document.getElementById('invoice_no').value = '';
     document.getElementById('despatch_party').value = '';
+    let ptInp = document.getElementById('partySearchInput');
+    if(ptInp) ptInp.value = '';
+
     document.getElementById('despatch_po').value = '';
+    let poInp = document.getElementById('poSearchInput');
+    if(poInp) poInp.value = '';
+
     document.getElementById('transport_name').value = '';
     document.getElementById('lr_number').value = '';
     document.getElementById('top_completed_status').checked = false;
     document.getElementById('itemsContainer').innerHTML = `
         <div class="item-row">
-            <div class="item-col-group full-width">
+            <div class="item-col-group full-width" style="position: relative;">
                 <label>Design No</label>
-                <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+                <input
+                    type="text"
+                    class="item-design-search"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterRowDesignDropdown(this)"
+                    onfocus="openRowDesignDropdown(this)"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                />
+                <div
+                    class="item-design-dropdown"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select class="item-design" style="display:none;" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
             </div>
             <div class="item-col-group">
                 <label>Bale No</label>
@@ -1034,7 +1267,13 @@ function editDespatch(index) {
         document.getElementById('despatch_date').value = entry.date;
         document.getElementById('invoice_no').value = entry.invoiceNo;
         document.getElementById('despatch_party').value = entry.partyName;
+        let ptInp = document.getElementById('partySearchInput');
+        if(ptInp) ptInp.value = entry.partyName || '';
+
         document.getElementById('despatch_po').value = entry.poNo || '';
+        let poInp = document.getElementById('poSearchInput');
+        if(poInp) poInp.value = entry.poNo || '';
+
         document.getElementById('transport_name').value = entry.transportName || '';
         document.getElementById('lr_number').value = entry.lrNumber || '';
         
@@ -1047,9 +1286,22 @@ function editDespatch(index) {
                 if(idx === 0) {
                     container.innerHTML = `
                         <div class="item-row">
-                            <div class="item-col-group full-width">
+                            <div class="item-col-group full-width" style="position: relative;">
                                 <label>Design No</label>
-                                <select class="item-design" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
+                                <input
+                                    type="text"
+                                    class="item-design-search"
+                                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                                    oninput="filterRowDesignDropdown(this)"
+                                    onfocus="openRowDesignDropdown(this)"
+                                    value="${item.designNo || ''}"
+                                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                                />
+                                <div
+                                    class="item-design-dropdown"
+                                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                                </div>
+                                <select class="item-design" style="display:none;" onchange="onDesignSelect(this.value)"><option value="">Select</option></select>
                             </div>
                             <div class="item-col-group">
                                 <label>Bale No</label>
@@ -1081,6 +1333,8 @@ function editDespatch(index) {
                     loadDesignDropdowns();
                     let dVal = item.designNo || '';
                     document.querySelector('.item-design').value = dVal;
+                    let dInp = document.querySelector('.item-design-search');
+                    if(dInp) dInp.value = dVal;
                     onDesignSelect(dVal);
                 } else {
                     addItemRow(item.designNo, item.baleNo, item.noOfBales, item.orderMtr, item.despatchedMtr, item.balanceMtr, item.excessMtr);

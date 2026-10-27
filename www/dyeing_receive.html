@@ -20,7 +20,7 @@ body{padding:12px;display:flex;flex-direction:column;align-items:center}
 .completed-checkbox label{color:#3F5A3E;font-size:12px;font-weight:700}
 #bitmapDisplayContainer{text-align:right}
 #bitmapDisplayContainer img{max-height:40px;max-width:120px;border-radius:4px;border:1px solid #BFCDBF;cursor:zoom-in}
-.card-header{font-size:16px;font-weight:700;color:#2F4F38;text-align:left;position:relative;padding-left:12px}
+.card-header{font-size:16px;font-weight:700;color:#fff;text-align:left;position:relative;padding-left:12px}
 .card-header:before{content:'';position:absolute;left:0;top:10%;height:80%;width:4px;background:#4A7C59;border-radius:4px}
 .form-section{background:#F8FAF8;border:1px solid #E2E8E2;border-radius:14px;padding:20px 15px 15px;position:relative}
 .section-badge{position:absolute;top:-12px;left:15px;background:#4A7C59;color:#FFF;font-size:10px;font-weight:700;padding:4px 12px;border-radius:12px;letter-spacing:.5px}
@@ -88,7 +88,6 @@ body{padding:6px;overflow-x:hidden}.main-card{padding:14px;border-radius:14px;ma
 .modal-header h3{font-size:12px}.modal-actions button{padding:7px 8px}
 .modal-body{padding:8px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
 
-/* MOBILE: keep the records table and allow horizontal scrolling */
 .table-container{
     width:100%;
     max-width:100%;
@@ -128,7 +127,6 @@ body{padding:6px;overflow-x:hidden}.main-card{padding:14px;border-radius:14px;ma
 .table-container table tfoot td:first-child{display:table-cell;width:auto;text-align:right;border-bottom:0}
 .table-container table tfoot td::before{content:none!important}
 
-/* Preview table also scrolls horizontally on small screens */
 .preview-paper table{
     width:max-content;
     min-width:1000px;
@@ -158,13 +156,30 @@ body{padding:0;display:block}
 <div id="bitmapDisplayContainer"></div>
 </div>
 </div>
-<h2 class="color: #ffffff; /* Inga unga color-a change pannikalam */">Dyeing Colour Received ( கலர் நூல் வரவு )</h2>
+<h2 class="card-header">Dyeing Colour Received ( கலர் நூல் வரவு )</h2>
 
 <div class="form-section" style="margin-top:10px">
 <div class="section-badge">Receive Info</div>
 <div class="form-grid">
 <div class="form-group"><label>Received Date</label><input type="date" id="receiveDate"></div>
-<div class="form-group"><label>Select Design Number</label><select id="designNumber" onchange="loadPendingItems()"><option value="">Select Design No</option></select></div>
+<div class="form-group" style="position: relative;">
+<label>Select Design Number</label>
+<input
+    type="text"
+    id="designSearchInput"
+    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+    oninput="filterDesignDropdown()"
+    onfocus="openDesignDropdownList()"
+    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+/>
+<div
+    id="designDropdownList"
+    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+</div>
+<select id="designNumber" style="display:none;" onchange="loadPendingItems()">
+<option value="">Select Design No</option>
+</select>
+</div>
 </div>
 </div>
 
@@ -220,6 +235,8 @@ body{padding:0;display:block}
 </div>
 
 <script>
+let allCombinedDesigns = [];
+
 function checkUserPermission(){
 let userRole=localStorage.getItem('erp_logged_role')||localStorage.getItem('user_role');
 if(userRole!=='Administrator'&&userRole!=='Admin'){
@@ -227,11 +244,22 @@ let permissions=JSON.parse(localStorage.getItem('user_permissions')||'{}');
 if(permissions['dyeing_receive.html']===false||permissions['dyeing_receive']===false)return false}
 return true
 }
+
 document.addEventListener('DOMContentLoaded',async function(){
 if(window.StorageDB&&window.StorageDB.ready)await window.StorageDB.ready;
 if(!checkUserPermission()){alert("Access Denied! You do not have permission to access this page. ❌");location.href="dashboard.html";return}
-document.getElementById('receiveDate').valueAsDate=new Date();loadPendingDesigns()
+document.getElementById('receiveDate').valueAsDate=new Date();
+await loadPendingDesigns();
+
+document.addEventListener("click", function(e){
+    let container = document.getElementById("designSearchInput");
+    let list = document.getElementById("designDropdownList");
+    if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+        list.style.display = "none";
+    }
+});
 })
+
 function openModal(id){let m=document.getElementById(id);m.style.display='flex';setTimeout(()=>m.classList.add('show'),10);if(id==='receivedListModal')renderReceivedList();if(id==='printPreviewModal')buildPreview()}
 function closeModal(id){let m=document.getElementById(id);m.classList.remove('show');setTimeout(()=>m.style.display='none',250)}
 window.openFullscreenImage=function(src){if(!src||src==='null')return;document.getElementById('fullscreenImg').src=src;document.getElementById('fullscreenModal').style.display='flex'}
@@ -240,16 +268,108 @@ function cleanDesignName(s){return s?s.toString().replace('#','').trim().toLower
 function safeText(v){return String(v??'').replace(/[&<>\"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]))}
 function parseJsonArray(k){try{let v=JSON.parse(window.StorageDB.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
 function parseJsonObject(k){try{let v=JSON.parse(window.StorageDB.getItem(k)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}}
+
 function loadBitmapImage(){
 let a=document.getElementById('designNumber').value||window.StorageDB.getItem('selected_design_number'),s=parseJsonObject('design_specs'),c=document.getElementById('bitmapDisplayContainer'),clean=cleanDesignName(a),key=Object.keys(s).find(k=>cleanDesignName(k)===clean)||a;
 if(a&&s[key]&&s[key].bitmap){let b=s[key].bitmap;c.innerHTML=`<img src="${safeText(b)}" alt="Design Bitmap" onclick="openFullscreenImage(this.src)" title="Click to view full screen">`}else c.innerHTML=''
 }
-function loadPendingDesigns(){
-loadBitmapImage();let p=JSON.parse(window.StorageDB.getItem('pre_design_numbers')||'[]'),m=JSON.parse(window.StorageDB.getItem('design_masters_data')||'[]'),s=JSON.parse(window.StorageDB.getItem('design_specs')||'{}'),o=JSON.parse(window.StorageDB.getItem('party_orders_data')||'[]'),i=parseJsonArray('dyeing_issue_records'),all=new Set();
-p.forEach(d=>all.add(d));if(Array.isArray(m))m.forEach(d=>{if(d.name||d.designNo)all.add(d.name||d.designNo)});Object.keys(s).forEach(d=>all.add(d));if(Array.isArray(o))o.forEach(x=>{if(x.designNumber||x.designNo)all.add(x.designNumber||x.designNo)});i.forEach(r=>{let d=r.designNo||r.designNumber||r.design||r.name||'';if(d.trim())all.add(d.trim())});
-let sel=document.getElementById('designNumber');sel.innerHTML='<option value="">Select Design No</option>';Array.from(all).forEach(d=>{if(d)sel.innerHTML+=`<option value="${safeText(d)}">${safeText(d)}</option>`});
-let a=window.StorageDB.getItem('selected_design_number');if(a&&all.has(a)){sel.value=a;loadPendingItems()}
+
+async function loadPendingDesigns(){
+loadBitmapImage();
+let p=JSON.parse(window.StorageDB.getItem('pre_design_numbers')||'[]'),
+    m=JSON.parse(window.StorageDB.getItem('design_masters_data')||'[]'),
+    s=JSON.parse(window.StorageDB.getItem('design_specs')||'{}'),
+    o=JSON.parse(window.StorageDB.getItem('party_orders_data')||'[]'),
+    i=parseJsonArray('dyeing_issue_records'),
+    all=new Set();
+
+p.forEach(d=>all.add(d));
+if(Array.isArray(m))m.forEach(d=>{if(d.name||d.designNo)all.add(d.name||d.designNo)});
+Object.keys(s).forEach(d=>all.add(d));
+if(Array.isArray(o))o.forEach(x=>{if(x.designNumber||x.designNo)all.add(x.designNumber||x.designNo)});
+i.forEach(r=>{let d=r.designNo||r.designNumber||r.design||r.name||'';if(d.trim())all.add(d.trim())});
+
+allCombinedDesigns = Array.from(all).filter(Boolean).sort(
+    (a,b)=>
+    String(a).localeCompare(
+        String(b),
+        undefined,
+        {numeric:true,sensitivity:'base'}
+    )
+);
+
+let sel=document.getElementById('designNumber');
+if(sel){
+    let html='<option value="">Select Design No</option>';
+    allCombinedDesigns.forEach(d=>{
+        html+=`<option value="${safeText(d)}">${safeText(d)}</option>`;
+    });
+    sel.innerHTML=html;
 }
+
+let a=window.StorageDB.getItem('selected_design_number');
+if(a&&allCombinedDesigns.includes(a)){
+    if(sel) sel.value=a;
+    let searchInput=document.getElementById("designSearchInput");
+    if(searchInput) searchInput.value=a;
+    loadPendingItems();
+}
+}
+
+function openDesignDropdownList(){
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("designNumber");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        loadPendingItems();
+    }
+    if(list) list.style.display = "none";
+}
+
 function loadPendingItems(){
 loadBitmapImage();let d=document.getElementById('designNumber').value,c=document.getElementById('receiveLinesContainer');c.innerHTML='';if(!d)return;
 let specs=parseJsonObject('design_specs'),key=Object.keys(specs).find(k=>cleanDesignName(k)===cleanDesignName(d))||d,status=(specs[key]&&specs[key].status||'').toLowerCase(),receives=parseJsonArray('dyeing_receive_records'),rec=receives.find(r=>cleanDesignName(r.designNo||r.designNumber)===cleanDesignName(d));
@@ -301,11 +421,20 @@ if(window.supabaseSave)await window.supabaseSave('dyeing_receive_records',r);ren
 async function editReceiveRecord(id){
 if(!checkUserPermission())return;closeModal('receivedListModal');let r=parseJsonArray('dyeing_receive_records'),issues=parseJsonArray('dyeing_issue_records'),ix=r.findIndex(x=>String(x.id)===String(id));if(ix<0)return;let sel=r[ix];document.getElementById('top_completed_status').checked=sel.status==='completed';
 let batch=getBatch(r,sel);revertBatch(issues,batch);let ids=batch.map(x=>String(x.id));r=r.filter(x=>!ids.includes(String(x.id)));window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));window.StorageDB.setItem('dyeing_issue_records',JSON.stringify(issues));if(window.supabaseSave){await window.supabaseSave('dyeing_receive_records',r);await window.supabaseSave('dyeing_issue_records',issues)}
-document.getElementById('receiveDate').value=sel.date;loadPendingDesigns();document.getElementById('designNumber').value=sel.designNo;loadPendingItems();setTimeout(()=>document.querySelectorAll('.receive-line-row').forEach(row=>{let ids=(row.dataset.ids||'').split(',');let m=batch.find(x=>(x.issueIds||[x.issueId]).map(String).some(i=>ids.includes(String(i))));if(m){let inp=row.querySelector('.inp-received');inp.value=m.receivedWt;calculateLoss(inp)}}),150);window.scrollTo({top:0,behavior:'smooth'})
+document.getElementById('receiveDate').value=sel.date;
+loadPendingDesigns();
+document.getElementById('designNumber').value=sel.designNo;
+let searchInput=document.getElementById('designSearchInput');
+if(searchInput) searchInput.value=sel.designNo;
+loadPendingItems();
+setTimeout(()=>document.querySelectorAll('.receive-line-row').forEach(row=>{let ids=(row.dataset.ids||'').split(',');let m=batch.find(x=>(x.issueIds||[x.issueId]).map(String).some(i=>ids.includes(String(i))));if(m){let inp=row.querySelector('.inp-received');inp.value=m.receivedWt;calculateLoss(inp)}}),150);window.scrollTo({top:0,behavior:'smooth'})
 }
 async function deleteReceiveRecord(id){
 if(!checkUserPermission()||!confirm("Are you sure you want to delete this record (and related batch items)? They will revert to Pending status."))return;
-let r=parseJsonArray('dyeing_receive_records'),issues=parseJsonArray('dyeing_issue_records'),ix=r.findIndex(x=>String(x.id)===String(id));if(ix<0)return;let sel=r[ix],batch=getBatch(r,sel);revertBatch(issues,batch);let ids=batch.map(x=>String(x.id));r=r.filter(x=>!ids.includes(String(x.id)));window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));window.StorageDB.setItem('dyeing_issue_records',JSON.stringify(issues));if(window.supabaseSave){await window.supabaseSave('dyeing_receive_records',r);await window.supabaseSave('dyeing_issue_records',issues)}loadPendingDesigns();renderReceivedList();document.getElementById('receiveLinesContainer').innerHTML='';document.getElementById('designNumber').value=''
+let r=parseJsonArray('dyeing_receive_records'),issues=parseJsonArray('dyeing_issue_records'),ix=r.findIndex(x=>String(x.id)===String(id));if(ix<0)return;let sel=r[ix],batch=getBatch(r,sel);revertBatch(issues,batch);let ids=batch.map(x=>String(x.id));r=r.filter(x=>!ids.includes(String(x.id)));window.StorageDB.setItem('dyeing_receive_records',JSON.stringify(r));window.StorageDB.setItem('dyeing_issue_records',JSON.stringify(issues));if(window.supabaseSave){await window.supabaseSave('dyeing_receive_records',r);await window.supabaseSave('dyeing_issue_records',issues)}loadPendingDesigns();renderReceivedList();document.getElementById('receiveLinesContainer').innerHTML='';
+document.getElementById('designNumber').value='';
+let searchInput=document.getElementById('designSearchInput');
+if(searchInput) searchInput.value='';
 }
 function remainingOf(x){return Math.max(0,(parseFloat(x.issueWt||x.weight||x.wt)||0)-(parseFloat(x.receivedWt)||0))}
 function allocateReceive(issues,ids,rw){let left=rw,allocs={};ids.forEach(id=>{let ix=issues.findIndex(x=>String(x.id)===String(id));if(ix<0||left<=0)return;let take=Math.min(remainingOf(issues[ix]),left);if(take<=0)return;issues[ix].receivedWt=((parseFloat(issues[ix].receivedWt)||0)+take).toFixed(3);issues[ix].status=remainingOf(issues[ix])<=0.005?'Received':'Partial';allocs[id]=take;left-=take});return allocs}
