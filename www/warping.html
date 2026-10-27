@@ -112,7 +112,7 @@
         font-size: 16px;
         margin-bottom: 2px;
         font-weight: 700;
-        color: #2F4F38;
+        color: #FFFF;
         text-align: left;
         position: relative;
         padding-left: 10px;
@@ -362,7 +362,7 @@
         </div>
     </div>
 
-    <div class="color: #ffffff; /* Inga unga color-a change pannikalam */">Warping Entry System</div>
+    <div class="page-title">Warping Entry ( வார்ப்பு என்ட்ரி )</div>
 
     <!-- 1. TOP SECTION (ORDER DETAILS) -->
     <div class="form-section" id="sectionTop">
@@ -374,9 +374,23 @@
                 <label>Date</label>
                 <input type="date" id="topDate">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Design No</label>
-                <select id="topDesignNo" onchange="loadTopDesignSpecs(this.value)">
+                <!-- Searchable Text Input -->
+                <input
+                    type="text"
+                    id="designSearchInput"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterDesignDropdown()"
+                    onfocus="openDesignDropdownList()"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <!-- Custom Dropdown List Box -->
+                <div
+                    id="designDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="topDesignNo" style="display:none;" onchange="loadTopDesignSpecs(this.value)">
                     <option value="">Select Design</option>
                 </select>
             </div>
@@ -422,10 +436,24 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
             <label>Weaver To</label>
-            <div class="input-group-btn">
-                <select id="topWeaverTo"><option value="">Select Weaver / Party</option></select>
+            <!-- Searchable Text Input for Weaver -->
+            <input
+                type="text"
+                id="weaverSearchInput"
+                placeholder="Weaver பெயரை டைப் செய்யவும்..."
+                oninput="filterWeaverDropdown()"
+                onfocus="openWeaverDropdownList()"
+                style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+            />
+            <!-- Custom Dropdown List Box for Weaver -->
+            <div
+                id="weaverDropdownList"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+            </div>
+            <div class="input-group-btn" style="margin-top: 6px;">
+                <select id="topWeaverTo" style="display:none;"><option value="">Select Weaver / Party</option></select>
                 <button type="button" class="btn-add-inline" onclick="addWeaver()">+ Add</button>
                 <button type="button" class="btn-del-inline" onclick="deleteWeaver()">🗑️</button>
             </div>
@@ -484,13 +512,20 @@
     <button type="button" class="popup-trigger-btn" onclick="openModal('savedListModal')">View Saved Warping Data</button>
 </div>
 
-<div class="modal-header" style="flex-wrap:wrap; gap:8px;">
+<!-- Saved Warping Modal -->
+<div id="savedListModal" class="overlay-modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header" style="flex-wrap:wrap; gap:8px;">
             <h3 style="flex:1; min-width:150px;">Saved Warping Data</h3>
             <div style="display:flex; gap:6px; flex-shrink:0;">
                 <button type="button" class="popup-trigger-btn" data-print-bound="true" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background:#3B82F6; position:relative; z-index:2;" onclick="printWarpingList()">🖨️ Print</button>
-                <button type="button" class="close-btn" style="position:relative; z-index:2;" onclick="document.getElementById('savedListModal').style.display='none'; document.body.style.overflow='';">Close ✕</button>
+                <button type="button" class="close-btn" style="position:relative; z-index:2;" onclick="closeModal('savedListModal')">Close ✕</button>
             </div>
+        </div>
+        <div class="modal-body" id="savedCardsContainer"></div>
+    </div>
 </div>
+
 <!-- Fullscreen Image Modal -->
 <div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
     <button class="close-fullscreen">Close ✕</button>
@@ -499,6 +534,8 @@
 
 <script>
 let editingWarpId = null;
+let allCombinedDesigns = [];
+let allCombinedWeavers = [];
 
 function checkUserPermission() {
     let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -523,8 +560,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('botDate').valueAsDate = new Date();
     loadWarpingUnitSuggestions();
     loadWeaverSuggestions();
-    loadTopDesignDropdown();
+    await loadTopDesignDropdown();
     loadBottomOrderDropdown();
+
+    document.addEventListener("click", function(e){
+        let container = document.getElementById("designSearchInput");
+        let list = document.getElementById("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+
+        let wContainer = document.getElementById("weaverSearchInput");
+        let wList = document.getElementById("weaverDropdownList");
+        if(wContainer && wList && !wContainer.contains(e.target) && !wList.contains(e.target)){
+            wList.style.display = "none";
+        }
+    });
 });
 
 function openModal(modalId) {
@@ -698,6 +749,8 @@ function addWeaver() {
             alert("This Weaver Name is already in the Master List!");
         }
         document.getElementById('topWeaverTo').value = val;
+        let wInput = document.getElementById('weaverSearchInput');
+        if(wInput) wInput.value = val;
     }
 }
 
@@ -727,20 +780,90 @@ function loadWeaverSuggestions() {
     let weaverSet = new Set([...masterWeavers]);
     issues.forEach(item => { if(item.weaverTo) weaverSet.add(item.weaverTo.trim()); });
 
+    allCombinedWeavers = Array.from(weaverSet).filter(Boolean).sort(
+        (a,b)=>
+        String(a).localeCompare(
+            String(b),
+            undefined,
+            {numeric:true,sensitivity:'base'}
+        )
+    );
+
     let currentVal = document.getElementById('topWeaverTo') ? document.getElementById('topWeaverTo').value : '';
     let html = '<option value="">Select Weaver / Party</option>';
-    Array.from(weaverSet).sort().forEach(u => { 
+    allCombinedWeavers.forEach(u => { 
         let sel = (currentVal && u.toLowerCase() === currentVal.toLowerCase()) ? 'selected' : '';
         html += `<option value="${u}" ${sel}>${u}</option>`; 
     });
     
-    if (document.getElementById('topWeaverTo')) {
-        document.getElementById('topWeaverTo').innerHTML = html;
-        if(currentVal) document.getElementById('topWeaverTo').value = currentVal;
+    let hiddenSelect = document.getElementById('topWeaverTo');
+    if (hiddenSelect) {
+        hiddenSelect.innerHTML = html;
+        if(currentVal) hiddenSelect.value = currentVal;
+    }
+
+    let wInput = document.getElementById('weaverSearchInput');
+    if(wInput && currentVal) {
+        wInput.value = currentVal;
     }
 }
 
-function loadTopDesignDropdown() {
+function openWeaverDropdownList(){
+    renderWeaverDropdownItems(allCombinedWeavers);
+}
+
+function filterWeaverDropdown(){
+    let input = document.getElementById("weaverSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedWeavers.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderWeaverDropdownItems(matched);
+}
+
+function renderWeaverDropdownItems(items){
+    let list = document.getElementById("weaverDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">Weaver கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectWeaverItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectWeaverItem(val){
+    let input = document.getElementById("weaverSearchInput");
+    let hiddenSelect = document.getElementById("topWeaverTo");
+    let list = document.getElementById("weaverDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+    }
+    if(list) list.style.display = "none";
+}
+
+async function loadTopDesignDropdown() {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+
     let allDesignSet = new Set();
     let preDesignList = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
     preDesignList.forEach(d => allDesignSet.add(d));
@@ -754,16 +877,83 @@ function loadTopDesignDropdown() {
     let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
     if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesignSet.add(o.designNumber || o.designNo); });
 
+    allCombinedDesigns = Array.from(allDesignSet).filter(Boolean).sort(
+        (a,b)=>
+        String(a).localeCompare(
+            String(b),
+            undefined,
+            {numeric:true,sensitivity:'base'}
+        )
+    );
+
     let select = document.getElementById('topDesignNo');
-    let html = '<option value="">Select Design</option>';
-    Array.from(allDesignSet).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
-    select.innerHTML = html;
+    if(select) {
+        let html = '<option value="">Select Design</option>';
+        allCombinedDesigns.forEach(d => { html += `<option value="${d}">${d}</option>`; });
+        select.innerHTML = html;
+    }
 
     let activeDesign = window.StorageDB.getItem('selected_design_number');
-    if(activeDesign && allDesignSet.has(activeDesign)) {
-        select.value = activeDesign;
+    if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
+        if(select) select.value = activeDesign;
+        let searchInput = document.getElementById("designSearchInput");
+        if(searchInput) searchInput.value = activeDesign;
         loadTopDesignSpecs(activeDesign);
     }
+}
+
+function openDesignDropdownList(){
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById('topDesignNo');
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        loadTopDesignSpecs(val);
+    }
+    if(list) list.style.display = "none";
 }
 
 function loadTopDesignSpecs(dNo) {
@@ -773,6 +963,8 @@ function loadTopDesignSpecs(dNo) {
         document.getElementById('topDesignNo').value = '';
         document.getElementById('topUnit').value = '';
         if(document.getElementById('topWeaverTo')) document.getElementById('topWeaverTo').value = '';
+        let wInput = document.getElementById('weaverSearchInput');
+        if(wInput) wInput.value = '';
         document.getElementById('topOnloomReed').value = '';
         document.getElementById('topOnloomWidth').value = '';
         document.getElementById('topCount1').value = '';
@@ -820,16 +1012,16 @@ function loadTopDesignSpecs(dNo) {
     document.getElementById('topCount1').value = found.warp1 || sp.baseBeamCount || matchedOrder.baseBeamCount || sp.warp || found.count1 || '';
     document.getElementById('topCount2').value = found.warp2 || sp.topBeamCount || matchedOrder.topBeamCount || sp.warp2 || found.count2 || '';
 
-    // 🟢 1. Total Dyeing Mtr - 5% = Order Mtrs 🟢
     let totalDyeingMtr = parseFloat(sp.totalDyeingMtr) || parseFloat(matchedOrder.orderMtr || matchedOrder.productionMeter || matchedOrder.prodMtr || sp.yarnOrderMtr || sp.orderMtr || found.orderMtr) || 0;
     let orderMtrsCalc = totalDyeingMtr > 0 ? (totalDyeingMtr * 0.95) : 0;
     document.getElementById('topOrderMtrs').value = orderMtrsCalc > 0 ? orderMtrsCalc.toFixed(2) : '';
 
-    // 🟢 2. Warping Mtrs ALWAYS EMPTY FOR MANUAL ENTRY on Design Select 🟢
     if (!editingWarpId) {
         document.getElementById('topWarpingMts').value = '';
         document.getElementById('topUnit').value = '';
         if(document.getElementById('topWeaverTo')) document.getElementById('topWeaverTo').value = '';
+        let wInput = document.getElementById('weaverSearchInput');
+        if(wInput) wInput.value = '';
     }
 
     loadTopYarnLines();
@@ -1003,8 +1195,13 @@ async function saveTopOrder() {
         editingWarpId = specKey = null;
         window.editingOriginal = null;
         document.getElementById('topDesignNo').value = '';
+        let searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = '';
         document.getElementById('topUnit').value = '';
         document.getElementById('topWarpingMts').value = '';
+        document.getElementById('topWeaverTo').value = '';
+        let wInput = document.getElementById('weaverSearchInput');
+        if(wInput) wInput.value = '';
         document.getElementById('topLinesContainer').innerHTML = '';
         document.getElementById('top_completed_status').checked = false;
         renderCards();
@@ -1195,7 +1392,13 @@ function editWarpingGroup(dNo, unitName) {
         document.getElementById('topDate').value = targetIssue.date;
         document.getElementById('topUnit').value = targetIssue.unit;
         document.getElementById('topDesignNo').value = targetIssue.designNo;
-        if(targetIssue.weaverTo) document.getElementById('topWeaverTo').value = targetIssue.weaverTo;
+        let searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = targetIssue.designNo;
+        if(targetIssue.weaverTo) {
+            document.getElementById('topWeaverTo').value = targetIssue.weaverTo;
+            let wInput = document.getElementById('weaverSearchInput');
+            if(wInput) wInput.value = targetIssue.weaverTo;
+        }
         if(targetIssue.warpingMts) document.getElementById('topWarpingMts').value = targetIssue.warpingMts;
         
         document.getElementById('top_completed_status').checked = (targetIssue.status === 'completed');
@@ -1237,6 +1440,8 @@ async function deleteWarpingGroup(dNo, unitName) {
 }
 
 // Masters helpers
+var WARP_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
+
 function escWarp(v) {
     return (v === null || v === undefined ? '' : String(v))
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

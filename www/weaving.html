@@ -112,7 +112,7 @@
         font-size: 15px;
         margin-bottom: 2px;
         font-weight: 800;
-        color: #2F4F38;
+        color: #ffff;
         text-align: left;
         position: relative;
         padding-left: 10px;
@@ -322,7 +322,7 @@
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
-            <h2 style="color: #FFFFFF; /* Inga unga color-a change pannikalam */">Weaving Loom Ledger ( தறிக்காரர் கணக்கு )</h2>
+            <h2>Weaving Loom Ledger ( தறிக்காரர் கணக்கு )</h2>
             <div class="report-btn-group">
                 <button type="button" class="report-btn" onclick="openPreview('warp')">👁️ Warp Preview</button>
                 <button type="button" class="report-btn" onclick="openPreview('weft')">👁️ Weft Preview</button>
@@ -338,16 +338,40 @@
                     <label>Order Date</label>
                     <input type="date" id="topDate" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                     <label>Weaver Name</label>
-                    <div class="input-group-btn">
-                        <select id="topWeaverName" required><option value="">Select Weaver</option></select>
+                    <input
+                        type="text"
+                        id="weaverSearchInput"
+                        placeholder="Weaver பெயரை டைப் செய்யவும்..."
+                        oninput="filterWeaverDropdown()"
+                        onfocus="openWeaverDropdownList()"
+                        style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                    />
+                    <div
+                        id="weaverDropdownList"
+                        style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                    </div>
+                    <div class="input-group-btn" style="margin-top: 4px;">
+                        <select id="topWeaverName" style="display:none;" required><option value="">Select Weaver</option></select>
                         <button type="button" class="btn-add-inline" onclick="addWeaver()">+ Add</button>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                     <label>Design Number</label>
-                    <select id="topDesignNo" onchange="onDesignSelect(this.value)" required>
+                    <input
+                        type="text"
+                        id="designSearchInput"
+                        placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                        oninput="filterDesignDropdown()"
+                        onfocus="openDesignDropdownList()"
+                        style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                    />
+                    <div
+                        id="designDropdownList"
+                        style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                    </div>
+                    <select id="topDesignNo" style="display:none;" onchange="onDesignSelect(this.value)" required>
                         <option value="">Select Design</option>
                     </select>
                 </div>
@@ -587,6 +611,8 @@
         let warpTransactions = [];
         let weftTransactions = [];
         let weavingHistory = [];
+        let allCombinedDesigns = [];
+        let allCombinedWeavers = [];
 
         function checkUserPermission() {
             let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -613,11 +639,25 @@
 
             document.getElementById('topDate').valueAsDate = new Date();
             document.getElementById('botDate').valueAsDate = new Date();
-            loadTopDesignDropdown();
-            loadBottomOrderDropdown();
+            await loadTopDesignDropdown();
             loadWeaverDropdown();
+            loadBottomOrderDropdown();
             loadWarpingUnitDropdown();
             updateTables();
+
+            document.addEventListener("click", function(e){
+                let container = document.getElementById("designSearchInput");
+                let list = document.getElementById("designDropdownList");
+                if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+                    list.style.display = "none";
+                }
+
+                let wContainer = document.getElementById("weaverSearchInput");
+                let wList = document.getElementById("weaverDropdownList");
+                if(wContainer && wList && !wContainer.contains(e.target) && !wList.contains(e.target)){
+                    wList.style.display = "none";
+                }
+            });
         });
 
         function openModal(modalId) {
@@ -672,7 +712,6 @@
                 if (r.allocs) {
                     ids.forEach(id => { if (r.allocs[id] !== undefined) total += parseFloat(r.allocs[id]) || 0; });
                 } else {
-                    // older receive entries (before partial-receive tracking)
                     if ((r.issueIds || [r.issueId]).map(String).some(x => ids.includes(x))) total += parseFloat(r.receivedWt) || 0;
                 }
             });
@@ -713,14 +752,84 @@
 
         function loadWeaverDropdown() {
             let weavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
+            let weavingOrders = JSON.parse(window.StorageDB.getItem('weaving_master_data')) || [];
+            let setW = new Set([...weavers]);
+            weavingOrders.forEach(o => { if(o.weaverName) setW.add(o.weaverName.trim()); });
+
+            allCombinedWeavers = Array.from(setW).filter(Boolean).sort(
+                (a,b)=>
+                String(a).localeCompare(
+                    String(b),
+                    undefined,
+                    {numeric:true,sensitivity:'base'}
+                )
+            );
+
             let select = document.getElementById('topWeaverName');
             let currentVal = select.value;
             let html = '<option value="">Select Weaver</option>';
-            weavers.forEach(w => {
+            allCombinedWeavers.forEach(w => {
                 html += `<option value="${w}">${w}</option>`;
             });
             select.innerHTML = html;
-            if(currentVal) select.value = currentVal;
+            if(currentVal) {
+                select.value = currentVal;
+                let wInput = document.getElementById('weaverSearchInput');
+                if(wInput) wInput.value = currentVal;
+            }
+        }
+
+        function openWeaverDropdownList(){
+            renderWeaverDropdownItems(allCombinedWeavers);
+        }
+
+        function filterWeaverDropdown(){
+            let input = document.getElementById("weaverSearchInput");
+            let filter = input.value.toLowerCase().trim();
+            
+            let matched = allCombinedWeavers.filter(function(d){
+                return String(d).toLowerCase().includes(filter);
+            });
+
+            matched.sort(function(a, b){
+                let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+                let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+                return aMatch - bMatch;
+            });
+
+            renderWeaverDropdownItems(matched);
+        }
+
+        function renderWeaverDropdownItems(items){
+            let list = document.getElementById("weaverDropdownList");
+            if(!list) return;
+
+            if(!items || items.length === 0){
+                list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">Weaver கிடைக்கவில்லை</div>`;
+                list.style.display = "block";
+                return;
+            }
+
+            let html = "";
+            items.forEach(function(d){
+                let safeVal = String(d).replace(/'/g, "\\'");
+                html += `<div onclick="selectWeaverItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+            });
+
+            list.innerHTML = html;
+            list.style.display = "block";
+        }
+
+        function selectWeaverItem(val){
+            let input = document.getElementById("weaverSearchInput");
+            let hiddenSelect = document.getElementById("topWeaverName");
+            let list = document.getElementById("weaverDropdownList");
+
+            if(input) input.value = val;
+            if(hiddenSelect){
+                hiddenSelect.value = val;
+            }
+            if(list) list.style.display = "none";
         }
 
         function addWeaver() {
@@ -737,6 +846,8 @@
                     alert(`Weaver '${name}' added successfully! ✅`);
                 }
                 document.getElementById('topWeaverName').value = name;
+                let wInput = document.getElementById('weaverSearchInput');
+                if(wInput) wInput.value = name;
             }
         }
 
@@ -769,7 +880,9 @@
             }
         }
 
-        function loadTopDesignDropdown() {
+        async function loadTopDesignDropdown() {
+            if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+
             let preDesignList = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
             let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
             let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
@@ -780,16 +893,83 @@
             Object.keys(designSpecs).forEach(d => allDesigns.add(d));
             if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
 
+            allCombinedDesigns = Array.from(allDesigns).filter(Boolean).sort(
+                (a,b)=>
+                String(a).localeCompare(
+                    String(b),
+                    undefined,
+                    {numeric:true,sensitivity:'base'}
+                )
+            );
+
             let select = document.getElementById('topDesignNo');
-            let html = '<option value="">Select Design</option>';
-            Array.from(allDesigns).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
-            select.innerHTML = html;
+            if(select) {
+                let html = '<option value="">Select Design</option>';
+                allCombinedDesigns.forEach(d => { html += `<option value="${d}">${d}</option>`; });
+                select.innerHTML = html;
+            }
 
             let activeDesign = window.StorageDB.getItem('selected_design_number');
-            if(activeDesign && allDesigns.has(activeDesign)) {
-                select.value = activeDesign;
+            if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
+                if(select) select.value = activeDesign;
+                let searchInput = document.getElementById("designSearchInput");
+                if(searchInput) searchInput.value = activeDesign;
                 onDesignSelect(activeDesign);
             }
+        }
+
+        function openDesignDropdownList(){
+            renderDropdownItems(allCombinedDesigns);
+        }
+
+        function filterDesignDropdown(){
+            let input = document.getElementById("designSearchInput");
+            let filter = input.value.toLowerCase().trim();
+            
+            let matched = allCombinedDesigns.filter(function(d){
+                return String(d).toLowerCase().includes(filter);
+            });
+
+            matched.sort(function(a, b){
+                let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+                let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+                return aMatch - bMatch;
+            });
+
+            renderDropdownItems(matched);
+        }
+
+        function renderDropdownItems(items){
+            let list = document.getElementById("designDropdownList");
+            if(!list) return;
+
+            if(!items || items.length === 0){
+                list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+                list.style.display = "block";
+                return;
+            }
+
+            let html = "";
+            items.forEach(function(d){
+                let safeVal = String(d).replace(/'/g, "\\'");
+                html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+            });
+
+            list.innerHTML = html;
+            list.style.display = "block";
+        }
+
+        function selectDesignItem(val){
+            let input = document.getElementById("designSearchInput");
+            let hiddenSelect = document.getElementById("topDesignNo");
+            let list = document.getElementById("designDropdownList");
+
+            if(input) input.value = val;
+            if(hiddenSelect){
+                hiddenSelect.value = val;
+                onDesignSelect(val);
+            }
+            if(list) list.style.display = "none";
         }
 
         function loadBottomOrderDropdown() {
@@ -878,7 +1058,6 @@
                 let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
                 let matchedOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanDNo) || {} : {};
 
-                // 🟢 FETCH WARPING MTRS FROM WARPING ISSUE RECORDS OR SPECS 🟢
                 let warpingIssues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
                 let matchedWarping = warpingIssues.slice().reverse().find(w => cleanDesignName(w.designNo) === cleanDNo);
                 
@@ -888,6 +1067,8 @@
                     if (matchedWarping.unit) document.getElementById('warpingUnitName').value = matchedWarping.unit;
                     if (matchedWarping.weaverTo) {
                         document.getElementById('topWeaverName').value = matchedWarping.weaverTo;
+                        let wInput = document.getElementById('weaverSearchInput');
+                        if(wInput) wInput.value = matchedWarping.weaverTo;
                     }
                 } else if (specs.warpingMts) {
                     warpingMtrsFound = parseFloat(specs.warpingMts);
@@ -909,7 +1090,6 @@
                 document.getElementById('warpCount2').value = matchedOrder.topBeamCount || specs.topBeamCount || found.warp2 || specs.warp2 || specs.count2 || ''; 
                 document.getElementById('weftCount').value = matchedOrder.weftCount || specs.weftCount || found.weftCount || specs.weft || '';
 
-                // 🟢 AUTO-FILL WITH EXACT WARPING MTRS 🟢
                 document.getElementById('weavingMts').value = warpingMtrsFound > 0 ? warpingMtrsFound.toFixed(2) : '';
                 document.getElementById('crimpPerc').value = "5";
                 
@@ -1036,259 +1216,6 @@
             document.getElementById('botDesignNo').value = dNo;
             document.getElementById('botWeaverName').value = weaver;
             loadBottomRows();
-        }
-
-        function addWarpRow(c = '', col = '', w = '', iss = '') {
-            const table = document.getElementById('warpRowsTable').getElementsByTagName('tbody')[0];
-            const row = table.insertRow();
-            row.innerHTML = `
-                <td><input type="text" placeholder="Count" class="w-count" value="${c}" required></td>
-                <td><input type="text" placeholder="Colour" class="w-colour" value="${col}" required></td>
-                <td><input type="number" step="0.001" placeholder="0.000" class="w-weight" value="${w}" onblur="formatDecimal(this)" required></td>
-                <td><input type="number" step="0.001" placeholder="0.000" class="w-issued" value="${iss}" onblur="formatDecimal(this)" required></td>
-                <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
-            `;
-        }
-
-        function addWeftRow(c = '', col = '', w = '', iss = '') {
-            const table = document.getElementById('weftRowsTable').getElementsByTagName('tbody')[0];
-            const row = table.insertRow();
-            row.innerHTML = `
-                <td><input type="text" placeholder="Count" class="wf-count" value="${c}" required></td>
-                <td><input type="text" placeholder="Colour" class="wf-colour" value="${col}" required></td>
-                <td><input type="number" step="0.001" placeholder="0.000" class="wf-weight" value="${w}" onblur="formatDecimal(this)" required></td>
-                <td><input type="number" step="0.001" placeholder="0.000" class="wf-issued" value="${iss}" onblur="formatDecimal(this)" required></td>
-                <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
-            `;
-        }
-
-        async function quickCompleteToggle() {
-            if (!checkUserPermission()) { alert("Access Denied! You do not have permission. ❌"); return; }
-
-            let dNo = document.getElementById('topDesignNo').value;
-            let isCompleted = document.getElementById('top_completed_status').checked;
-
-            if(!dNo) {
-                alert("Mudhala Design Number select pannunga bro");
-                document.getElementById('top_completed_status').checked = false;
-                return;
-            }
-
-            let statusText = isCompleted ? 'completed' : 'running';
-            let cleanKey = dNo.toString().replace('#', '').trim().toLowerCase();
-
-            let weaverName = document.getElementById('topWeaverName').value.trim() || 'Direct Weaver';
-            let index = weavingMasterData.findIndex(x => (x.designNo || x.designNumber || '').toString().replace('#','').trim().toLowerCase() === cleanKey);
-
-            if(index > -1) {
-                weavingMasterData[index].status = statusText;
-            }
-
-            warpTransactions.forEach(x => {
-                if((x.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanKey) x.status = statusText;
-            });
-            weftTransactions.forEach(x => {
-                if((x.designNo || '').toString().replace('#','').trim().toLowerCase() === cleanKey) x.status = statusText;
-            });
-
-            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
-            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
-
-            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
-            let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanKey) || dNo;
-
-            if(!designSpecs[specKey]) {
-                designSpecs[specKey] = {};
-            }
-            designSpecs[specKey].status = statusText;
-            window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
-
-            try {
-                if (window.supabaseSave) {
-                    await window.supabaseSave('weaving_master_data', weavingMasterData);
-                    await window.supabaseSave('weaving_warp_trans', warpTransactions);
-                    await window.supabaseSave('weaving_weft_trans', weftTransactions);
-                    await window.supabaseSave('design_specs', designSpecs);
-                }
-                if (window.supabaseSaveIndividual) {
-                    await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
-                }
-            } catch(e) {
-                console.error("supabase Sync Error: ", e);
-            }
-
-            updateTables();
-            alert(`Design ${dNo} status '${isCompleted ? 'COMPLETED' : 'RUNNING'}' ah update aagiduchu ✅`);
-        }
-
-        async function saveTopData(e) {
-            e.preventDefault();
-            if (!checkUserPermission()) { alert("Access Denied! You do not have permission to save entries on this page. ❌"); return; }
-
-            const designNo = document.getElementById('topDesignNo').value.trim();
-            const weaverName = document.getElementById('topWeaverName').value.trim();
-            const topDate = document.getElementById('topDate').value;
-            const weavingMts = document.getElementById('weavingMts').value;
-            const fabricMts = document.getElementById('fabricMts').value;
-            const crimpPerc = document.getElementById('crimpPerc').value;
-            const isCompleted = document.getElementById('top_completed_status').checked;
-
-            const warpingUnitName = document.getElementById('warpingUnitName').value.trim();
-            const noOfBeams = document.getElementById('noOfBeams').value.trim();
-            const beamMtrs = document.getElementById('beamMtrs').value.trim();
-
-            if(!designNo || !weaverName) {
-                alert("Please fill Weaver Name and Design Number!");
-                return;
-            }
-
-            let cleanDNo = cleanDesignName(designNo);
-
-            let alreadyExists = weavingMasterData.some(x => cleanDesignName(x.designNo || x.designNumber) === cleanDNo);
-            if(alreadyExists) {
-                let confirmReEntry = confirm("இந்த டிசைனுக்கு ஏற்கனவே Weaving Order என்ட்ரி செய்யப்பட்டுள்ளது. மீண்டும் ரீ-என்ட்ரி செய்ய வேண்டுமா?");
-                if(!confirmReEntry) {
-                    return; 
-                }
-                weavingMasterData = weavingMasterData.filter(x => cleanDesignName(x.designNo || x.designNumber) !== cleanDNo);
-                weavingHistory = weavingHistory.concat(
-                    warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDNo && x.status === 'completed').map(x => ({ ...x, type: 'Warp' })),
-                    weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDNo && x.status === 'completed').map(x => ({ ...x, type: 'Weft' }))
-                );
-                warpTransactions = warpTransactions.filter(x => cleanDesignName(x.designNo || x.designNumber) !== cleanDNo);
-                weftTransactions = weftTransactions.filter(x => cleanDesignName(x.designNo || x.designNumber) !== cleanDNo);
-                window.StorageDB.setItem('weaving_history', JSON.stringify(weavingHistory));
-                if (window.supabaseSave) await window.supabaseSave('weaving_history', weavingHistory);
-            }
-
-            let btn = document.getElementById('saveTopBtnTxt');
-            let origText = btn.innerText;
-            btn.innerText = "⏳ Saving to Cloud...";
-
-            let warpRows = [];
-            document.querySelectorAll('#warpRowsTable tbody tr').forEach(tr => {
-                const c = tr.querySelector('.w-count').value;
-                const col = tr.querySelector('.w-colour').value;
-                const w = parseFloat(tr.querySelector('.w-weight').value || 0).toFixed(3);
-                const iss = parseFloat(tr.querySelector('.w-issued').value || 0).toFixed(3);
-                if(c || col || w || iss) {
-                    warpRows.push({ count: c, colour: col, weight: w, issuedWt: iss });
-                }
-            });
-
-            let weftRows = [];
-            document.querySelectorAll('#weftRowsTable tbody tr').forEach(tr => {
-                const c = tr.querySelector('.wf-count').value;
-                const col = tr.querySelector('.wf-colour').value;
-                const w = parseFloat(tr.querySelector('.wf-weight').value || 0).toFixed(3);
-                const iss = parseFloat(tr.querySelector('.wf-issued').value || 0).toFixed(3);
-                if(c || col || w || iss) {
-                    weftRows.push({ count: c, colour: col, weight: w, issuedWt: iss });
-                }
-            });
-
-            if(warpRows.length === 0 && weftRows.length === 0) {
-                alert("Please add at least one Warp or Weft row detail!");
-                btn.innerText = origText;
-                return;
-            }
-
-            const data = {
-                id: Date.now(),
-                date: topDate,
-                weaverName: weaverName,
-                designNo: designNo,
-                weavingMts: weavingMts,
-                fabricMts: fabricMts,
-                crimpPerc: crimpPerc,
-                warpingUnitName: warpingUnitName,
-                noOfBeams: noOfBeams,
-                beamMtrs: beamMtrs,
-                warpRows: warpRows,
-                weftRows: weftRows,
-                status: isCompleted ? 'completed' : 'running'
-            };
-
-            let existingIndex = weavingMasterData.findIndex(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName);
-            if(existingIndex > -1) {
-                weavingMasterData[existingIndex] = data;
-            } else {
-                weavingMasterData.push(data);
-            }
-
-            warpTransactions = warpTransactions.filter(x => !(cleanDesignName(x.designNo) === cleanDesignName(designNo) && (x.weaverName || '') === weaverName && x.status === 'running'));
-            weftTransactions = weftTransactions.filter(x => !(cleanDesignName(x.designNo) === cleanDesignName(designNo) && (x.weaverName || '') === weaverName && x.status === 'running'));
-
-            warpRows.forEach((r, idx) => {
-                warpTransactions.push({
-                    id: Date.now() + idx,
-                    designNo: designNo,
-                    weaverName: weaverName,
-                    count: r.count,
-                    colour: r.colour,
-                    orderWt: parseFloat(r.weight) || 0,
-                    issuedWt: parseFloat(r.issuedWt) || 0,
-                    returnWt: '',
-                    diff: '-' + (parseFloat(r.weight) || 0).toFixed(2),
-                    status: isCompleted ? 'completed' : 'running'
-                });
-            });
-
-            weftRows.forEach((r, idx) => {
-                weftTransactions.push({
-                    id: Date.now() + 1000 + idx,
-                    designNo: designNo,
-                    weaverName: weaverName,
-                    count: r.count,
-                    colour: r.colour,
-                    orderWt: parseFloat(r.weight) || 0,
-                    issuedWt: parseFloat(r.issuedWt) || 0,
-                    returnWt: '',
-                    diff: '-' + (parseFloat(r.weight) || 0).toFixed(2),
-                    status: isCompleted ? 'completed' : 'running'
-                });
-            });
-
-            let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
-            let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || designNo;
-
-            if(!designSpecs[specKey]) designSpecs[specKey] = {};
-            designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
-            window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
-
-            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
-            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
-
-            if(window.supabaseSave) {
-                await window.supabaseSave('weaving_master_data', weavingMasterData);
-                await window.supabaseSave('weaving_warp_trans', warpTransactions);
-                await window.supabaseSave('weaving_weft_trans', weftTransactions);
-                await window.supabaseSave('design_specs', designSpecs);
-            }
-            if(window.supabaseSaveIndividual) {
-                await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
-            }
-
-            updateTables();
-            loadBottomOrderDropdown();
-            alert("Top Weaving Order Saved to Cloud Successfully! ✅☁️");
-            
-            document.getElementById('topDesignNo').value = '';
-            document.getElementById('topWeaverName').value = '';
-            document.getElementById('weavingMts').value = '';
-            document.getElementById('fabricMts').value = '';
-            document.getElementById('crimpPerc').value = '5';
-            document.getElementById('warpCount').value = '';
-            document.getElementById('warpCount2').value = '';
-            document.getElementById('weftCount').value = '';
-            document.getElementById('warpingUnitName').value = '';
-            document.getElementById('noOfBeams').value = '';
-            document.getElementById('beamMtrs').value = '';
-            document.getElementById('top_completed_status').checked = false;
-            loadBitmapImage();
-            btn.innerText = origText;
         }
 
         function loadBottomRows() {
@@ -1509,12 +1436,6 @@
             });
         }
 
-        function persistWeaving() {
-            window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
-            window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
-            window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
-        }
-
         function removeEmptyWeavingOrders() {
             weavingMasterData = weavingMasterData.filter(o => {
                 let k = cleanDesignName(o.designNo || o.designNumber);
@@ -1548,7 +1469,8 @@
             if(confirm("Indha warp entry-ai delete pannanuma?")) {
                 warpTransactions = warpTransactions.filter(item => String(item.id) !== String(id));
                 removeEmptyWeavingOrders();
-                persistWeaving();
+                window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+                window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
                 if(window.supabaseSave) {
                     await window.supabaseSave('weaving_warp_trans', warpTransactions);
                     await window.supabaseSave('weaving_master_data', weavingMasterData);
@@ -1563,7 +1485,8 @@
             if(confirm("Indha weft entry-ai delete pannanuma?")) {
                 weftTransactions = weftTransactions.filter(item => String(item.id) !== String(id));
                 removeEmptyWeavingOrders();
-                persistWeaving();
+                window.StorageDB.setItem('weaving_master_data', JSON.stringify(weavingMasterData));
+                window.StorageDB.setItem('weaving_weft_trans', JSON.stringify(weftTransactions));
                 if(window.supabaseSave) {
                     await window.supabaseSave('weaving_weft_trans', weftTransactions);
                     await window.supabaseSave('weaving_master_data', weavingMasterData);

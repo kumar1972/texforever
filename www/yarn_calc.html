@@ -47,7 +47,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 5px;
         }
         .header-bar h3 {
-            font-size: 16px; color: #EF4444; font-weight: 700; margin: 0;
+            font-size: 16px; color: #F8FAF8; font-weight: 700; margin: 0;
             display: flex; align-items: center; gap: 6px;
         }
 
@@ -181,7 +181,7 @@
     </div>
 
     <div class="header-bar">
-        <h3>🧵 Yarn Calculation & Costing</h3>
+        <h3>🧵 Yarn Calculation & Costing ( நூல் கணக்கு )</h3>
         <div class="header-btns">
             <div class="top-action-badge gsm-badge" id="displayGsmBadge">GSM: 0</div>
             <button class="top-action-badge preview-badge" type="button" onclick="openYarnPreview()">👁️ Yarn Preview</button>
@@ -191,10 +191,29 @@
 
     <!-- 1. YARN CALCULATION DETAILS -->
     <div class="form-section-box">
-        <div class="section-badge-top">1. Yarn Calculation Details (Top)</div>
+        <div class="section-badge-top">1. Yarn Calculation Details (Top) நூல் கணக்கு </div>
         
         <div class="input-grid">
-            <div class="form-group"><label>Design No</label><select id="designNo" onchange="loadDesignData()"><option value="">Select Design</option></select></div>
+            <div class="form-group" style="position: relative;">
+                <label>Design No</label>
+                <!-- Searchable Text Input -->
+                <input
+                    type="text"
+                    id="designSearchInput"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterDesignDropdown()"
+                    onfocus="openDesignDropdownList()"
+                    style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:12px; font-weight:600; outline:none;"
+                />
+                <!-- Custom Dropdown List Box -->
+                <div
+                    id="designDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="designNo" style="display:none;" onchange="loadDesignData()">
+                    <option value="">Select Design</option>
+                </select>
+            </div>
             <div class="form-group"><label>Date</label><input type="date" id="calcDate"></div>
             
             <div class="form-group"><label>Warp 1 (Base)</label><input type="text" id="baseCount" list="countsList"></div>
@@ -232,7 +251,7 @@
         </div>
 
         <!-- WARP TABLE -->
-        <h3 class="section-title">🧵 WARP YARN - GROUND BEAM</h3>
+        <h3 class="section-title">🧵 WARP YARN ( வார்ப்பு நூல் )- GROUND BEAM</h3>
         <div class="table-container">
             <table>
                 <thead>
@@ -258,7 +277,7 @@
         </div>
 
         <!-- WEFT TABLE -->
-        <h3 class="section-title">🧶 WEFT YARN CALCULATION</h3>
+        <h3 class="section-title">🧶 WEFT YARN ( ஊடை நூல் )CALCULATION</h3>
         <div class="table-container">
             <table>
                 <thead>
@@ -290,7 +309,8 @@
 
     <!-- 2. PRODUCTION COSTING & PRICING -->
     <div class="form-section-box">
-        <div class="section-badge-bottom">2. Production Costing & Pricing (Bottom)</div>
+        <div class="section-badge-bottom">2. Production Costing & Pricing (Bottom) 
+          (1 மீட்டர் இன் மதிப்பு ) </div>
         
         <div class="input-grid">
             <div class="form-group"><label>Warp Kora Cost / Mtr</label><input type="number" id="costWarpKora" readonly></div>
@@ -342,6 +362,7 @@
     let manualOnloomReed = false;
     let manualOnloomPick = false;
     let manualTotalDyeing = false;
+    let allCombinedDesigns = [];
 
     function checkUserPermission() {
         let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -387,7 +408,15 @@
             window.location.href = "dashboard.html";
             return;
         }
-        initDropdowns();
+        await initDropdowns();
+
+        document.addEventListener("click", function(e){
+            let container = document.getElementById("designSearchInput");
+            let list = document.getElementById("designDropdownList");
+            if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+                list.style.display = "none";
+            }
+        });
     });
 
     function populateMillsDatalist() {
@@ -435,7 +464,7 @@
         return '';
     }
 
-    function initDropdowns() {
+    async function initDropdowns() {
         populateMillsDatalist(); 
         
         let preDesigns = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
@@ -448,18 +477,80 @@
         Object.keys(designSpecs).forEach(k => allDesigns.add(k));
         if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
 
+        allCombinedDesigns = Array.from(allDesigns).filter(Boolean).sort(
+            (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+        );
+
         let select = document.getElementById('designNo');
-        let html = '<option value="">Select Design</option>';
-        Array.from(allDesigns).filter(Boolean).forEach(d => {
-            html += `<option value="${d}">${d}</option>`;
-        });
-        select.innerHTML = html;
+        if(select) {
+            let html = '<option value="">Select Design</option>';
+            allCombinedDesigns.forEach(d => {
+                html += `<option value="${d}">${d}</option>`;
+            });
+            select.innerHTML = html;
+        }
 
         let activeDesign = window.StorageDB.getItem('selected_design_number');
-        if(activeDesign && allDesigns.has(activeDesign)) {
-            select.value = activeDesign;
+        if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
+            if(select) select.value = activeDesign;
+            let searchInput = document.getElementById("designSearchInput");
+            if(searchInput) searchInput.value = activeDesign;
             loadDesignData();
         }
+    }
+
+    function openDesignDropdownList(){
+        renderDesignDropdownItems(allCombinedDesigns);
+    }
+
+    function filterDesignDropdown(){
+        let input = document.getElementById("designSearchInput");
+        let filter = input.value.toLowerCase().trim();
+        
+        let matched = allCombinedDesigns.filter(function(d){
+            return String(d).toLowerCase().includes(filter);
+        });
+
+        matched.sort(function(a, b){
+            let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+            let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+            return aMatch - bMatch;
+        });
+
+        renderDesignDropdownItems(matched);
+    }
+
+    function renderDesignDropdownItems(items){
+        let list = document.getElementById("designDropdownList");
+        if(!list) return;
+
+        if(!items || items.length === 0){
+            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+            list.style.display = "block";
+            return;
+        }
+
+        let html = "";
+        items.forEach(function(d){
+            let safeVal = String(d).replace(/'/g, "\\'");
+            html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+        });
+
+        list.innerHTML = html;
+        list.style.display = "block";
+    }
+
+    function selectDesignItem(val){
+        let input = document.getElementById("designSearchInput");
+        let hiddenSelect = document.getElementById("designNo");
+        let list = document.getElementById("designDropdownList");
+
+        if(input) input.value = val;
+        if(hiddenSelect){
+            hiddenSelect.value = val;
+            loadDesignData();
+        }
+        if(list) list.style.display = "none";
     }
 
     function updateOnloomReedDefault() {
@@ -469,7 +560,6 @@
         }
     }
 
-    // Finish Pick / Pick Less changed => Onloom Pick recalculated (manual value is replaced; user can still edit Onloom Pick)
     function forceOnloomPick() {
         manualOnloomPick = false;
         updateOnloomPickDefault();
@@ -519,7 +609,6 @@
         }
     }
 
-    // Bottom (costing) Warp Crimp / Dyeing Waste / Washing Shortage always follow the top entries by default
     function syncBottomFromTop() {
         [['warpCrimpTop', 'costWarpCrimpPct'], ['dyeingLoss', 'costDyeingWastePct'], ['washingShortTop', 'costWashingShortPct']]
             .forEach(([topId, bottomId]) => {
@@ -556,13 +645,11 @@
         let cb = document.getElementById('top_completed_status');
         if(cb) cb.checked = (specStatus === 'completed');
 
-        // Main Values
         document.getElementById('baseCount').value = foundMaster.warp1 || foundMaster.baseCount || sp.baseBeamCount || sp.warp || matchedOrder.baseBeamCount || '40 ccc';
         document.getElementById('topBeamCount').value = foundMaster.warp2 || sp.topBeamCount || sp.warp2 || matchedOrder.topBeamCount || '';
         document.getElementById('weftCount').value = foundMaster.weftCount || foundMaster.weft || sp.weftCount || sp.weft || matchedOrder.weftCount || '40 ccc';
         document.getElementById('weftCount2').value = foundMaster.weft2 || sp.weft2 || matchedOrder.weft2 || '';
 
-        // Finish Specs
         document.getElementById('finishReed').value = foundMaster.reed || sp.reed || sp.finishReed || matchedOrder.reed || '80';
         document.getElementById('finishPick').value = foundMaster.pick || sp.pick || sp.finishPick || matchedOrder.pick || '74';
         document.getElementById('finishWidth').value = foundMaster.width || sp.width || sp.finishWidth || matchedOrder.width || matchedOrder.finishWidth || '67.44';
@@ -570,7 +657,6 @@
         let orderMtr = parseFloat(matchedOrder.orderMtr || matchedOrder.productionMeter || sp.yarnOrderMtr || sp.orderMtr || foundMaster.orderMtr) || 1000;
         document.getElementById('orderMtr').value = orderMtr;
 
-        // Onloom Specs
         let savedOnloomReed = foundMaster.onloomReed || sp.onloomReed || matchedOrder.onloomReed;
         let savedOnloomPick = foundMaster.onloomPick || sp.onloomPick || matchedOrder.onloomPick;
         
@@ -601,8 +687,6 @@
         calculateTopData();
     }
 
-    /* வரிசை வாரியாக முழு செட் + மீதி இழைகளை சரியாக பிரிக்கும் அல்காரிதம் (Warp மற்றும் Weft இரண்டிற்கும்) */
-    /* Set (rpt) ranges: a line inside a set range counts ends x set. e.g. lines 5-6 x2 => both lines doubled */
     function effectiveLineValues(lines, ranges, type) {
         const base = lines.map(l => parseFloat(type === 'warp' ? (l.ends || l.amount || l.end || l.qty) : (l.picks || l.amount || l.pick || l.qty)) || 0);
         const mult = lines.map(() => 1);
@@ -620,7 +704,6 @@
         let defaultCount = (type === 'warp' ? document.getElementById('baseCount').value : document.getElementById('weftCount').value) || '40 ccc';
         const effVals = effectiveLineValues(lines, ranges, type);
 
-        // 1. ஒரு ரிப்பீட்டின் மொத்த இழைகள் மற்றும் நிற வாரியான rpt கணக்கீடு
         let patternTotal = 0;
         let colorRptMap = new Map();
 
@@ -642,16 +725,13 @@
 
         if (patternTotal <= 0) patternTotal = 1;
 
-        // 2. முழு செட்கள் மற்றும் மீதி இழைகள்
         let fullRepeats = Math.floor(targetTotal / patternTotal);
         let remainder = Math.round(targetTotal % patternTotal);
 
-        // முழு செட்களுக்கான மொத்தத்தை சேர்த்தல்
         colorRptMap.forEach(item => {
             item.total = item.rpt * fullRepeats;
         });
 
-        // 3. மீதி இழைகளை டிசைன் லைன் வாரியாக (Line 1, 2, 3...) பிரித்துக் கொடுத்தல்
         let remLeft = remainder;
         for (let i = 0; i < lines.length && remLeft > 0; i++) {
             let l = lines[i];
@@ -681,7 +761,6 @@
         return result;
     }
 
-    // Kora rate: rows with same Mill + Count get the same rate. Dyeing rate: rows with same Colour get the same rate. Warp + Weft both.
     function syncKoraRates(element) {
         const isDye = element.classList.contains('w-dye-rate') || element.classList.contains('weft-dye-rate');
         const row = element.closest('tr');
@@ -851,7 +930,6 @@
         window._lastWeftTarget = target;
         let rows = Array.from(document.querySelectorAll('#weftTableBody tr'));
         if (!rows.length) return;
-        // rpt values already include set multipliers, so no ranges here
         let lines = rows.map(r => ({
             colourName: r.querySelector('.weft-color').value,
             count: r.querySelector('.weft-count').value,
@@ -942,12 +1020,11 @@
         document.getElementById('weftTotalWeight').innerText = weftTotWt.toFixed(3) + ' kg';
         document.getElementById('weftTotalCost').innerText = weftTotCost.toFixed(2);
 
-        // --- GSM Calculation Fix: Proportional Thread Density Method ---
         let fReed = parseFloat(document.getElementById('finishReed').value) || 0;
         let fPick = parseFloat(document.getElementById('finishPick').value) || 0;
         let warpCrimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 6;
         let wCrimp = 1 + (warpCrimpPct / 100);
-        let fCrimp = 1.05; // Standard 5% crimp for weft
+        let fCrimp = 1.05; 
         
         let totalWarpEnds = 0;
         document.querySelectorAll('#warpTableBody .w-ends').forEach(inp => totalWarpEnds += (parseFloat(inp.value) || 0));
@@ -981,7 +1058,6 @@
         
         let gsmVal = Math.round(gsmCalc);
         document.getElementById('displayGsmBadge').innerText = "GSM: " + gsmVal;
-        // -------------------------------------------------------------
 
         let warpKoraPerMtr = totalWarpKoraCost / totalDyeMtr;
         let weftKoraPerMtr = totalWeftKoraCost / weftMtrs;
@@ -1080,7 +1156,6 @@
                     <tr style="background:#EAF0EA;"><th>Type</th><th>Count</th><th>Colour</th><th>Ends/Picks</th><th>Weight (Kg)</th></tr>
             `;
 
-            // Colour-wise grouping: one row per colour (mills collected for reference)
             let colours = {};
             let order = [];
             let getColour = (colour) => {
@@ -1129,7 +1204,6 @@
             });
             html += `</table>`;
 
-            // Colour-wise table: Warp + Weft = Total for each colour
             html += `
                 <h4 style="margin-bottom:5px; color:#2F4F38; font-size:12px;">Colour-wise Yarn Weight</h4>
                 <div style="width:100%; overflow-x:auto;">
@@ -1363,21 +1437,22 @@
         btn.innerText = origText;
         alert(`✅ Design ${dName} Costing Saved to Cloud Successfully!`);
     }
-  function printModalBody(btn) {
-    var modal = btn.closest('.overlay-modal') || btn.closest('.modal-content');
-    var body = modal ? modal.querySelector('.modal-body') : null;
 
-    if (!body) {
-        alert('Print செய்ய content கிடைக்கல.');
-        return;
-    }
+    function printModalBody(btn) {
+        var modal = btn.closest('.overlay-modal') || btn.closest('.modal-content');
+        var body = modal ? modal.querySelector('.modal-body') : null;
 
-    if (window.appPrint) {
-        window.appPrint(body.innerHTML);
-    } else {
-        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        if (!body) {
+            alert('Print செய்ய content கிடைக்கல.');
+            return;
+        }
+
+        if (window.appPrint) {
+            window.appPrint(body.innerHTML);
+        } else {
+            alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        }
     }
-  }
 </script>
 </body>
 </html>

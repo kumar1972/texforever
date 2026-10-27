@@ -27,7 +27,7 @@
         }
         .back-btn:hover { background: #000000; transform: translateY(-2px); }
 
-        .page-title { font-size: 15px; font-weight: 800; color: #2F4F38; margin-bottom: 10px; border-bottom: 2px solid #EAF0EA; padding-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .page-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 10px; border-bottom: 2px solid #EAF0EA; padding-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         
         .form-section { background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 12px; padding: 14px 10px 10px 10px; margin-bottom: 10px; position: relative; }
         .section-badge {
@@ -35,7 +35,7 @@
             font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; text-transform: uppercase;
         }
 
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
         .form-group { display: flex; flex-direction: column; gap: 3px; }
         .form-group label { font-size: 10px; font-weight: 700; color: #4A554A; line-height: 1.2; }
         
@@ -106,23 +106,47 @@
         <a href="dashboard.html" class="back-btn">← Back to Menu</a>
     </div>
     
- <div class="color: #ffffff; /* Inga unga color-a change pannikalam */">🏭 Weaving Fabric Receive   (துணி வரவு)</div>
-   ````````````````````````````````````````````````````````````````````````````````
+    <div class="page-title">🏭 Weaving Fabric Receive (துணி வரவு)</div>
     
-   
     <!-- 1. Selection Header -->
     <div class="form-section">
         <div class="section-badge">1. Select Order</div>
         <div class="form-grid">
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Weaver Name</label>
-                <select id="weaverSelect" onchange="onWeaverChange()">
+                <!-- Searchable Weaver Input -->
+                <input
+                    type="text"
+                    id="weaverSearchInput"
+                    placeholder="Weaver பெயரை டைப் செய்யவும்..."
+                    oninput="filterWeaverDropdown()"
+                    onfocus="openWeaverDropdownList()"
+                    style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="weaverDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="weaverSelect" style="display:none;" onchange="onWeaverChange()">
                     <option value="">All Weavers</option>
                 </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Design Number</label>
-                <select id="designSelect" onchange="onDesignChange()">
+                <!-- Searchable Design Input -->
+                <input
+                    type="text"
+                    id="designSearchInput"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterDesignDropdown()"
+                    onfocus="openDesignDropdownList()"
+                    style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="designDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="designSelect" style="display:none;" onchange="onDesignChange()">
                     <option value="">Select Design</option>
                 </select>
             </div>
@@ -258,6 +282,8 @@
 <script>
     let weavingMasterData = [];
     let receiveRecords = [];
+    let allCombinedWeavers = [];
+    let allCombinedDesigns = [];
 
     function checkUserPermission() {
         let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -277,6 +303,20 @@
         
         document.getElementById('entDate').valueAsDate = new Date();
         initDropdowns();
+
+        document.addEventListener("click", function(e){
+            let container = document.getElementById("designSearchInput");
+            let list = document.getElementById("designDropdownList");
+            if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+                list.style.display = "none";
+            }
+
+            let wContainer = document.getElementById("weaverSearchInput");
+            let wList = document.getElementById("weaverDropdownList");
+            if(wContainer && wList && !wContainer.contains(e.target) && !wList.contains(e.target)){
+                wList.style.display = "none";
+            }
+        });
     });
 
     function cleanDesignName(str) {
@@ -289,12 +329,29 @@
     }
 
     function initDropdowns() {
-        let weaverSelect = document.getElementById('weaverSelect');
-        let designSelect = document.getElementById('designSelect');
-        
         let weavers = [...new Set(weavingMasterData.map(item => item.weaverName))].filter(Boolean);
-        weaverSelect.innerHTML = '<option value="">All Weavers</option>';
-        weavers.forEach(w => { weaverSelect.innerHTML += `<option value="${w}">${w}</option>`; });
+        let masterWeavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
+        let warpingIssues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
+        
+        let weaverSet = new Set(['', ...weavers, ...masterWeavers]);
+        warpingIssues.forEach(w => { if(w.weaverTo) weaverSet.add(w.weaverTo.trim()); });
+
+        allCombinedWeavers = Array.from(weaverSet).sort(
+            (a,b)=> {
+                if(a === "") return -1;
+                if(b === "") return 1;
+                return String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'});
+            }
+        );
+
+        let weaverSelect = document.getElementById('weaverSelect');
+        if(weaverSelect) {
+            let html = '<option value="">All Weavers</option>';
+            allCombinedWeavers.filter(w => w !== "").forEach(w => { 
+                html += `<option value="${w}">${w}</option>`; 
+            });
+            weaverSelect.innerHTML = html;
+        }
 
         let allDesigns = new Set();
         weavingMasterData.forEach(d => { if(d.designNo && d.status !== 'completed') allDesigns.add(d.designNo); });
@@ -305,17 +362,142 @@
         let orders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
         orders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
 
-        designSelect.innerHTML = '<option value="">Select Design</option>';
-        Array.from(allDesigns).filter(Boolean).filter(d => !isCompletedWeaving(d)).forEach(d => {
-            designSelect.innerHTML += `<option value="${d}">${d}</option>`;
+        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
+        Object.keys(designSpecs).forEach(d => allDesigns.add(d));
+
+        allCombinedDesigns = Array.from(allDesigns).filter(Boolean).filter(d => !isCompletedWeaving(d)).sort(
+            (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+        );
+
+        let designSelect = document.getElementById('designSelect');
+        if(designSelect) {
+            let html = '<option value="">Select Design</option>';
+            allCombinedDesigns.forEach(d => { 
+                html += `<option value="${d}">${d}</option>`; 
+            });
+            designSelect.innerHTML = html;
+        }
+    }
+
+    function openWeaverDropdownList(){
+        renderWeaverDropdownItems(allCombinedWeavers);
+    }
+
+    function filterWeaverDropdown(){
+        let input = document.getElementById("weaverSearchInput");
+        let filter = input.value.toLowerCase().trim();
+        
+        let matched = allCombinedWeavers.filter(function(d){
+            if(d === "") return "all weavers".includes(filter) || filter === "";
+            return String(d).toLowerCase().includes(filter);
         });
+
+        matched.sort(function(a, b){
+            if(a === "") return -1;
+            if(b === "") return 1;
+            let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+            let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+            return aMatch - bMatch;
+        });
+
+        renderWeaverDropdownItems(matched);
+    }
+
+    function renderWeaverDropdownItems(items){
+        let list = document.getElementById("weaverDropdownList");
+        if(!list) return;
+
+        if(!items || items.length === 0){
+            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">Weaver கிடைக்கவில்லை</div>`;
+            list.style.display = "block";
+            return;
+        }
+
+        let html = "";
+        items.forEach(function(d){
+            let label = d === "" ? "All Weavers" : d;
+            let safeVal = String(d).replace(/'/g, "\\'");
+            html += `<div onclick="selectWeaverItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${label}</div>`;
+        });
+
+        list.innerHTML = html;
+        list.style.display = "block";
+    }
+
+    function selectWeaverItem(val){
+        let input = document.getElementById("weaverSearchInput");
+        let hiddenSelect = document.getElementById("weaverSelect");
+        let list = document.getElementById("weaverDropdownList");
+
+        if(input) input.value = val === "" ? "" : val;
+        if(hiddenSelect){
+            hiddenSelect.value = val;
+            onWeaverChange();
+        }
+        if(list) list.style.display = "none";
+    }
+
+    function openDesignDropdownList(){
+        renderDesignDropdownItems(allCombinedDesigns);
+    }
+
+    function filterDesignDropdown(){
+        let input = document.getElementById("designSearchInput");
+        let filter = input.value.toLowerCase().trim();
+        
+        let matched = allCombinedDesigns.filter(function(d){
+            return String(d).toLowerCase().includes(filter);
+        });
+
+        matched.sort(function(a, b){
+            let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+            let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+            return aMatch - bMatch;
+        });
+
+        renderDesignDropdownItems(matched);
+    }
+
+    function renderDesignDropdownItems(items){
+        let list = document.getElementById("designDropdownList");
+        if(!list) return;
+
+        if(!items || items.length === 0){
+            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+            list.style.display = "block";
+            return;
+        }
+
+        let html = "";
+        items.forEach(function(d){
+            let safeVal = String(d).replace(/'/g, "\\'");
+            html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+        });
+
+        list.innerHTML = html;
+        list.style.display = "block";
+    }
+
+    function selectDesignItem(val){
+        let input = document.getElementById("designSearchInput");
+        let hiddenSelect = document.getElementById("designSelect");
+        let list = document.getElementById("designDropdownList");
+
+        if(input) input.value = val;
+        if(hiddenSelect){
+            hiddenSelect.value = val;
+            onDesignChange();
+        }
+        if(list) list.style.display = "none";
     }
 
     function onWeaverChange() {
         let weaver = document.getElementById('weaverSelect').value;
         let designSelect = document.getElementById('designSelect');
+        let designSearchInput = document.getElementById('designSearchInput');
         
         designSelect.innerHTML = '<option value="">Select Design</option>';
+        if(designSearchInput) designSearchInput.value = '';
         hideSections();
 
         let filteredDesigns = new Set();
@@ -325,9 +507,13 @@
             weavingMasterData.filter(d => d.status !== 'completed').forEach(d => filteredDesigns.add(d.designNo));
         }
         
-        Array.from(filteredDesigns).filter(Boolean).filter(d => !isCompletedWeaving(d)).forEach(d => {
-            designSelect.innerHTML += `<option value="${d}">${d}</option>`;
+        let validDesigns = Array.from(filteredDesigns).filter(Boolean).filter(d => !isCompletedWeaving(d));
+        let html = '<option value="">Select Design</option>';
+        validDesigns.forEach(d => {
+            html += `<option value="${d}">${d}</option>`;
         });
+        designSelect.innerHTML = html;
+        allCombinedDesigns = validDesigns.sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'}));
     }
 
     function onDesignChange() {
@@ -349,6 +535,8 @@
 
             if(order && order.weaverName) { 
                 document.getElementById('weaverSelect').value = order.weaverName; 
+                let wInput = document.getElementById('weaverSearchInput');
+                if(wInput) wInput.value = order.weaverName;
             }
 
             document.getElementById('headerStatsSection').style.display = 'block';
@@ -441,24 +629,20 @@
         calculateEntry(); 
     }
 
-    // 🟢 UPDATED LOGIC FOR CALCULATION 🟢
     function calculateEntry() {
         let fabricMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
         let recMtrs = parseFloat(document.getElementById('entRecMtrs').value) || 0;
         let pinPct = parseFloat(document.getElementById('entPinPct').value) || 0;
-        let pending = parseFloat(document.getElementById('entPending').value) || 0; // Manual entry
+        let pending = parseFloat(document.getElementById('entPending').value) || 0;
 
-        // 1. OK Mtrs = Received - pin % less - pending
         let pinMtrs = (recMtrs * pinPct) / 100;
         let okMtrs = (recMtrs - pinMtrs) - pending;
         if (okMtrs < 0) okMtrs = 0;
         document.getElementById('entOkMtrs').value = okMtrs.toFixed(2);
 
-        // 2. Balance Mtrs = (Fabric Mtrs - OK Mtrs)
         let balanceMtrs = fabricMtrs - okMtrs;
         document.getElementById('entBalance').value = balanceMtrs.toFixed(2);
 
-        // 3. Shortage % = ((Fabric Mtrs - OK Mtrs) / Fabric Mtrs) * 100
         let shortagePct = 0;
         if (fabricMtrs > 0) {
             shortagePct = ((fabricMtrs - okMtrs) / fabricMtrs) * 100;
@@ -612,7 +796,7 @@
         document.getElementById('entSlipNo').value = '';
         document.getElementById('entRecMtrs').value = '';
         document.getElementById('entPinPct').value = '';
-        document.getElementById('entPending').value = ''; // Reset to empty
+        document.getElementById('entPending').value = '';
         document.getElementById('entOkMtrs').value = '';
         document.getElementById('entBalance').value = '';
         document.getElementById('entShortage').value = '';
@@ -721,14 +905,15 @@
         </tr>`;
         openModal('reportModal');
     }
-  function printWeavingReceive() {
-    var content = document.getElementById('printContent');
-    if (window.appPrint) {
-        window.appPrint(content ? content.innerHTML : undefined);
-    } else {
-        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+
+    function printWeavingReceive() {
+        var content = document.getElementById('printContent');
+        if (window.appPrint) {
+            window.appPrint(content ? content.innerHTML : undefined);
+        } else {
+            alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        }
     }
-  }
 </script>
 </body>
 </html>

@@ -399,18 +399,44 @@
                 <label>Order Date</label>
                 <input type="date" id="topDate">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Washing Unit Name</label>
-                <div class="input-group-btn">
-                    <select id="topUnit">
+                <!-- Searchable Unit Input -->
+                <input
+                    type="text"
+                    id="unitSearchInput"
+                    placeholder="Washing Unit பெயரை டைப் செய்யவும்..."
+                    oninput="filterUnitDropdown()"
+                    onfocus="openUnitDropdownList()"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="unitDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <div class="input-group-btn" style="margin-top: 4px;">
+                    <select id="topUnit" style="display:none;">
                         <option value="">Select Washing Unit</option>
                     </select>
                     <button type="button" class="btn-add-inline" onclick="addWashingUnit()">+ Add</button>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Design Number</label>
-                <select id="topDesignNo" onchange="onDesignSelect(this.value)">
+                <!-- Searchable Design Input -->
+                <input
+                    type="text"
+                    id="designSearchInput"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterDesignDropdown()"
+                    onfocus="openDesignDropdownList()"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="designDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="topDesignNo" style="display:none;" onchange="onDesignSelect(this.value)">
                     <option value="">Select Design No</option>
                 </select>
             </div>
@@ -575,6 +601,8 @@ function checkUserPermission() {
 }
 
 let washingHistory = [];
+let allCombinedUnits = [];
+let allCombinedDesigns = [];
 
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
@@ -590,6 +618,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadWashingUnitDropdown();
     loadDesignDropdowns();
     renderTable();
+
+    document.addEventListener("click", function(e){
+        let container = document.getElementById("designSearchInput");
+        let list = document.getElementById("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+
+        let uContainer = document.getElementById("unitSearchInput");
+        let uList = document.getElementById("unitDropdownList");
+        if(uContainer && uList && !uContainer.contains(e.target) && !uList.contains(e.target)){
+            uList.style.display = "none";
+        }
+    });
 });
 
 function renderWashingHistory() {
@@ -670,15 +712,73 @@ function loadWashingUnitDropdown() {
     let unitSet = new Set([...masterUnits]);
     issues.forEach(i => { if(i.unit) unitSet.add(i.unit.trim()); });
 
+    allCombinedUnits = Array.from(unitSet).filter(Boolean).sort(
+        (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+    );
+
     let select = document.getElementById('topUnit');
-    let currentVal = select.value;
-    let html = '<option value="">Select Washing Unit</option>';
-    Array.from(unitSet).sort().forEach(u => {
-        let sel = (currentVal && u.toLowerCase() === currentVal.toLowerCase()) ? 'selected' : '';
-        html += `<option value="${u}" ${sel}>${u}</option>`;
+    if(select) {
+        let currentVal = select.value;
+        let html = '<option value="">Select Washing Unit</option>';
+        allCombinedUnits.forEach(u => {
+            html += `<option value="${u}">${u}</option>`;
+        });
+        select.innerHTML = html;
+        if(currentVal) select.value = currentVal;
+    }
+}
+
+function openUnitDropdownList(){
+    renderUnitDropdownItems(allCombinedUnits);
+}
+
+function filterUnitDropdown(){
+    let input = document.getElementById("unitSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedUnits.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
     });
-    select.innerHTML = html;
-    if(currentVal) select.value = currentVal;
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderUnitDropdownItems(matched);
+}
+
+function renderUnitDropdownItems(items){
+    let list = document.getElementById("unitDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">Unit கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectUnitItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectUnitItem(val){
+    let input = document.getElementById("unitSearchInput");
+    let hiddenSelect = document.getElementById("topUnit");
+    let list = document.getElementById("unitDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+    }
+    if(list) list.style.display = "none";
 }
 
 function addWashingUnit() {
@@ -695,6 +795,8 @@ function addWashingUnit() {
             alert(`Washing Unit '${name}' added successfully! ✅`);
         }
         document.getElementById('topUnit').value = name;
+        let uInput = document.getElementById('unitSearchInput');
+        if(uInput) uInput.value = name;
     }
 }
 
@@ -758,18 +860,80 @@ function loadDesignDropdowns() {
     Object.keys(designSpecs).forEach(k => allDesigns.add(k));
     if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
 
+    allCombinedDesigns = Array.from(allDesigns).filter(Boolean).sort(
+        (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+    );
+
     let topSelect = document.getElementById('topDesignNo');
-    let topHtml = '<option value="">Select Design No</option>';
-    Array.from(allDesigns).filter(Boolean).forEach(d => { topHtml += `<option value="${d}">${d}</option>`; });
-    topSelect.innerHTML = topHtml;
+    if(topSelect) {
+        let topHtml = '<option value="">Select Design No</option>';
+        allCombinedDesigns.forEach(d => { topHtml += `<option value="${d}">${d}</option>`; });
+        topSelect.innerHTML = topHtml;
+    }
 
     let activeDesign = window.StorageDB.getItem('selected_design_number');
-    if(activeDesign && allDesigns.has(activeDesign)) {
-        topSelect.value = activeDesign;
+    if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
+        if(topSelect) topSelect.value = activeDesign;
+        let searchInput = document.getElementById("designSearchInput");
+        if(searchInput) searchInput.value = activeDesign;
         onDesignSelect(activeDesign);
     } else {
         loadBitmapImage();
     }
+}
+
+function openDesignDropdownList(){
+    renderDesignDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDesignDropdownItems(matched);
+}
+
+function renderDesignDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("topDesignNo");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        onDesignSelect(val);
+    }
+    if(list) list.style.display = "none";
 }
 
 function onDesignSelect(val) {
@@ -974,7 +1138,11 @@ async function saveTopOrder() {
             </div>
         `;
         document.getElementById('topDesignNo').value = '';
+        let designInput = document.getElementById('designSearchInput');
+        if(designInput) designInput.value = '';
         document.getElementById('topUnit').value = '';
+        let unitInput = document.getElementById('unitSearchInput');
+        if(unitInput) unitInput.value = '';
         document.getElementById('top_completed_status').checked = false;
         
         renderTable();
@@ -1236,7 +1404,13 @@ async function editWashingRecord(issueId, isReceived) {
             
             document.getElementById('topDate').value = issRecord.date;
             document.getElementById('topUnit').value = issRecord.unit;
+            let uInput = document.getElementById('unitSearchInput');
+            if(uInput) uInput.value = issRecord.unit;
+            
             document.getElementById('topDesignNo').value = issRecord.designNo;
+            let dInput = document.getElementById('designSearchInput');
+            if(dInput) dInput.value = issRecord.designNo;
+            
             document.getElementById('top_completed_status').checked = (issRecord.status === 'completed');
             
             let container = document.getElementById('topLinesContainer');
@@ -1404,7 +1578,8 @@ function printReport() {
         window.print();
     }, 300);
 }
-  function printModalBody(btn) {
+
+function printModalBody(btn) {
     var modal = btn.closest('.overlay-modal') || btn.closest('.modal-content');
     var body = modal ? modal.querySelector('.modal-body') : null;
 
@@ -1416,9 +1591,9 @@ function printReport() {
     if (window.appPrint) {
         window.appPrint(body.innerHTML);
     } else {
-        alert('Print module load ஆகல. printer.js script இருக்கاன்னு பாருங்க.');
+        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
     }
-  }
+}
 </script>
 </body>
 </html>
