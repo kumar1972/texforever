@@ -2616,8 +2616,12 @@ body::before,
 
     function getSystemUsers() {
 
-        const rawUsers =
-            safeGetItem("erp_system_users");
+        let rawUsers = null;
+        try {
+            if (window.StorageDB) rawUsers = window.StorageDB.getItem("erp_system_users");
+        } catch (e) {}
+        if (rawUsers === null || rawUsers === undefined || rawUsers === "")
+            rawUsers = safeGetItem("erp_system_users");
 
         const parsedUsers =
             safeParseJSON(
@@ -2753,10 +2757,16 @@ body::before,
                     "🟢 Online mode: Connecting to Supabase (Mock Call)..."
                 );
 
-                await new Promise(
-                    resolve =>
-                        setTimeout(resolve, 500)
-                );
+                if (window.StorageDB && window.StorageDB.ready) {
+                    await window.StorageDB.ready;
+                }
+
+                if (typeof window.supabaseLoadCloud === "function") {
+                    await Promise.race([
+                        window.supabaseLoadCloud("erp_system_users", []),
+                        new Promise(function (r) { setTimeout(r, 8000); })
+                    ]);
+                }
 
             } catch (error) {
 
