@@ -2219,6 +2219,33 @@ body::before,
 
     </button>
 
+    <!-- DATABASE SETUP (first time on a new device) -->
+    <div style="text-align:center;margin-top:14px;">
+        <a href="#" id="dbSetupLink"
+           onclick="toggleDbSetup();return false;"
+           style="font-size:12px;color:#cbd5e1;text-decoration:underline;">
+            ⚙ Database Setup (first time on this device)
+        </a>
+    </div>
+
+    <div id="dbSetupBox" style="display:none;margin-top:12px;">
+        <input type="text" id="dbSetupUrl" placeholder="Supabase Project URL"
+               autocomplete="off" autocapitalize="off" spellcheck="false"
+               style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #94a3b8;margin-bottom:8px;font-size:13px;">
+        <input type="password" id="dbSetupKey" placeholder="API Key (anon public)"
+               autocomplete="off" autocapitalize="off" spellcheck="false"
+               style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #94a3b8;margin-bottom:8px;font-size:13px;">
+        <button type="button" onclick="saveDbSetup()"
+                style="width:100%;padding:12px;border:none;border-radius:10px;background:#2563EB;color:#fff;font-weight:700;font-size:13px;">
+            Connect &amp; Load Users
+        </button>
+        <button type="button" onclick="skipDbSetup()"
+                style="width:100%;margin-top:8px;padding:11px;border:1px solid #94a3b8;border-radius:10px;background:transparent;color:#e2e8f0;font-weight:600;font-size:13px;">
+            Later / பிறகு சேமிக்கிறேன்
+        </button>
+        <div id="dbSetupMsg" style="margin-top:8px;font-size:12px;color:#e2e8f0;text-align:center;"></div>
+    </div>
+
 </div>
 
 <script>
@@ -2737,6 +2764,8 @@ body::before,
         }
 
 
+        safeRemoveItem("erp_guest_mode");
+
         const cleanUsername = username.toLowerCase();
 
         // "kumar" மற்றும் "1972" என்பதை மறைமுகமாக சரிபார்க்கும் முறை
@@ -2882,6 +2911,22 @@ body::before,
 
         }
 
+
+        /* OFFLINE / FIRST-TIME MODE:
+           indha device-la user list innum download aagala (cloud key illa / offline).
+           Appo User tab login-a thadukkaama, limited "Standard User" aaga ulle anumadhikkum.
+           Cloud key save panni users sync aanaa, adhukku appuram normal password check velai seiyum. */
+        if (systemUsers.length === 0 && !masterAdmin) {
+
+            safeSetItem("erp_logged_role", "Standard User");
+            safeSetItem("user_role", "Standard User");
+            safeSetItem("erp_logged_user", username);
+            safeSetItem("username", username);
+            safeSetItem("erp_guest_mode", "1");
+
+            window.location.href = "dashboard.html";
+            return;
+        }
 
         const validUser =
             systemUsers.find(
@@ -3129,5 +3174,106 @@ setTimeout(function () {
 
 </script>
 
+
+<script>
+(function () {
+    function el(id){ return document.getElementById(id); }
+
+    function hasDbConfig(){
+        var c = window.TEXFOREVER_SUPABASE_CONFIG || {};
+        return !!(c.url && c.key);
+    }
+
+    window.toggleDbSetup = function (forceOpen) {
+        var b = el("dbSetupBox");
+        if (!b) return;
+        b.style.display = (forceOpen === true || b.style.display === "none") ? "block" : "none";
+    };
+
+    window.skipDbSetup = function () {
+        try { sessionStorage.setItem("erp_db_setup_skipped", "1"); } catch (e) {}
+        var b = el("dbSetupBox");
+        if (b) b.style.display = "none";
+        var m = el("dbSetupMsg");
+        if (m) m.textContent = "";
+    };
+
+    window.saveDbSetup = async function () {
+        var url = (el("dbSetupUrl").value || "").trim().replace(/\/+$/, "");
+        var key = (el("dbSetupKey").value || "").trim();
+        var msg = el("dbSetupMsg");
+
+        if (!/^https:\/\/.+/i.test(url) || key.length < 20) {
+            msg.textContent = "⚠️ Sariyaana URL (https://...) and API Key podunga";
+            return;
+        }
+
+        msg.textContent = "⏳ Connecting...";
+
+        try {
+            if (window.StorageDB && window.StorageDB.ready) { await window.StorageDB.ready; }
+
+            /* skipCloud = true  ->  key cloud-ku upload aagaadhu, indha device-la mattum irukkum */
+            function put(k, v) {
+                var str = JSON.stringify(v);
+                if (window.StorageDB) window.StorageDB.setItem(k, str, true);
+                else localStorage.setItem(k, str);
+            }
+            put("database_provider", "supabase");
+            put("database_server_url", url);
+            put("database_api_key", key);
+            put("custom_supabase_url", url);
+            put("custom_supabase_key", key);
+
+            window.refreshSupabaseConfig();
+            window.supabaseClient = null;
+            window.supabaseInitStarted = false;
+            window.cloudSyncPromise = null;
+            window.__cloudFullSyncStarted = false;
+
+            var ok = await Promise.race([
+                window.initializeSupabase(true),
+                new Promise(function (r) { setTimeout(function () { r("timeout"); }, 20000); })
+            ]);
+
+            var users = window.localLoad("erp_system_users", []);
+            var n = Array.isArray(users) ? users.length : 0;
+
+            if (ok === true && n > 0) {
+                msg.textContent = "✅ Connected. " + n + " user(s) loaded. Ippo login pannalaam.";
+                el("dbSetupKey").value = "";
+            } else if (ok === true) {
+                msg.textContent = "⚠️ Connected, aana cloud-la users illa.";
+            } else if (ok === "timeout") {
+                msg.textContent = "⚠️ Network slow. Thirumba try pannunga.";
+            } else {
+                msg.textContent = "❌ Connect aagala. URL / Key check pannunga.";
+            }
+        } catch (e) {
+            console.error("saveDbSetup error:", e);
+            msg.textContent = "❌ Error: " + e.message;
+        }
+    };
+
+    /* Login fail aagumbodhu indha device-la key illana, setup box thaanaaga thirakkum */
+    var origValidate = window.validateLogin;
+    if (typeof origValidate === "function") {
+        window.validateLogin = async function () {
+            await origValidate.apply(this, arguments);
+            try {
+                var err = el("errorMsg");
+                var failed = err && err.style.display !== "none";
+                var skipped = false;
+                try { skipped = sessionStorage.getItem("erp_db_setup_skipped") === "1"; } catch (e) {}
+                if (failed && !hasDbConfig() && !skipped) {
+                    window.toggleDbSetup(true);
+                    el("dbSetupMsg").textContent =
+                        "ℹ️ Indha device-la database connect aagala. URL & Key ezhudhi 'Connect' click pannunga.";
+                }
+            } catch (e) {}
+        };
+    }
+})();
+</script>
 </body>
 </html>
