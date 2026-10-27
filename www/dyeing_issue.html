@@ -1139,10 +1139,6 @@ tfoot td{
                             <th>Date</th>
                             <th>Dyeing Unit</th>
                             <th>Design No</th>
-                            <th>Type</th>
-                            <th>Count</th>
-                            <th>Mill Name</th>
-                            <th>Colour</th>
                             <th>Ord Wt</th>
                             <th>Iss Wt</th>
                             <th>Status</th>
@@ -4486,328 +4482,221 @@ async function deleteIssuedRecord(id){
 
 function renderIssuedList(){
 
-    const body =
-        document.getElementById(
-            'issuedListBody'
-        );
+    const body = document.getElementById('issuedListBody');
+    const foot = document.getElementById('issuedListFoot');
 
-    const foot =
-        document.getElementById(
-            'issuedListFoot'
-        );
+    if(!body || !foot) return;
 
-    if(!body || !foot)
-        return;
-
-
-    let records =
-        safeArray(
-            'dyeing_issue_records'
-        );
-
+    let records = safeArray('dyeing_issue_records');
 
     const selectedDesign =
-        document.getElementById(
-            'designNumber'
-        )?.value.trim() || '';
-
+        document.getElementById('designNumber')?.value.trim() || '';
 
     if(selectedDesign){
-
-        records =
-            records.filter(
-                r =>
-                cleanDesignName(
-                    r.designNo ||
-                    r.designNumber
-                ) ===
-                cleanDesignName(
-                    selectedDesign
-                )
-            );
-
+        records = records.filter(r =>
+            cleanDesignName(r.designNo || r.designNumber) ===
+            cleanDesignName(selectedDesign)
+        );
     }
-
 
     body.innerHTML='';
     foot.innerHTML='';
-
+    window._issuedGroups = [];
 
     if(records.length===0){
-
         body.innerHTML=`
             <tr>
-                <td
-                    colspan="11"
-                    style="
-                    padding:20px;
-                    color:#64748B;
-                    "
-                >
-                    No Dyeing Orders Issued
-                    for this design yet.
+                <td colspan="7" style="padding:20px;color:#64748B;">
+                    No Dyeing Orders Issued for this design yet.
                 </td>
             </tr>
         `;
-
         return;
     }
 
+    // ---- group records design-wise (one line per design) ----
+    const groupMap = new Map();
+
+    records.slice().reverse().forEach(record=>{
+
+        const name = record.designNo || record.designNumber || '-';
+        const key = cleanDesignName(name);
+
+        if(!groupMap.has(key)){
+            groupMap.set(key,{
+                designNo:name,
+                units:[],
+                latestDate:'',
+                ordWt:0,
+                issWt:0,
+                count:0,
+                allCompleted:true
+            });
+        }
+
+        const g = groupMap.get(key);
+
+        g.count++;
+        g.ordWt += safeNumber(record.orderWt,0);
+        g.issWt += safeNumber(record.issueWt,0);
+
+        const unit = String(record.unit || '').trim();
+        if(unit && !g.units.includes(unit)) g.units.push(unit);
+
+        if(record.date && String(record.date) > g.latestDate){
+            g.latestDate = String(record.date);
+        }
+
+        if(normalizeText(record.status) !== 'completed'){
+            g.allCompleted = false;
+        }
+    });
+
+    const groups = Array.from(groupMap.values());
+    window._issuedGroups = groups;
 
     let grandOrdWt=0;
     let grandIssWt=0;
+    let rowsHtml='';
 
+    groups.forEach((g,idx)=>{
 
-    records
-    .slice()
-    .reverse()
-    .forEach(record=>{
-
-        const rawDate =
-            record.date
-            ? new Date(record.date)
-            : null;
+        grandOrdWt += g.ordWt;
+        grandIssWt += g.issWt;
 
         let dateStr='-';
-
-        if(
-            rawDate &&
-            !isNaN(
-                rawDate.getTime()
-            )
-        ){
-
+        const rawDate = g.latestDate ? new Date(g.latestDate) : null;
+        if(rawDate && !isNaN(rawDate.getTime())){
             dateStr =
-                String(
-                    rawDate.getDate()
-                ).padStart(2,'0') +
-                '/' +
-                String(
-                    rawDate.getMonth()+1
-                ).padStart(2,'0') +
-                '/' +
+                String(rawDate.getDate()).padStart(2,'0') + '/' +
+                String(rawDate.getMonth()+1).padStart(2,'0') + '/' +
                 rawDate.getFullYear();
-
         }
 
+        const status = g.allCompleted ? 'completed' : 'running';
+        const statusColor = g.allCompleted ? '#10B981' : '#D97706';
 
-        const oWt =
-            safeNumber(
-                record.orderWt,
-                0
-            );
+        const statusBtn = g.allCompleted
+            ? `<button class="action-running" onclick="toggleDesignStatus(${idx},'running')">Running</button>`
+            : `<button class="action-complete" onclick="toggleDesignStatus(${idx},'completed')">Complete</button>`;
 
-        const iWt =
-            safeNumber(
-                record.issueWt,
-                0
-            );
-
-
-        grandOrdWt += oWt;
-        grandIssWt += iWt;
-
-
-        const status =
-            normalizeText(
-                record.status
-            ) === 'completed'
-            ? 'completed'
-            : 'running';
-
-
-        const statusColor =
-            status === 'running'
-            ? '#D97706'
-            : '#10B981';
-
-
-        const statusBtn =
-            status === 'running'
-            ? `
-                <button
-                    class="action-complete"
-                    onclick="
-                    toggleStatus(
-                        '${escapeHTML(record.id)}',
-                        'completed'
-                    )
-                    "
-                >
-                    Complete
-                </button>
-            `
-            : `
-                <button
-                    class="action-running"
-                    onclick="
-                    toggleStatus(
-                        '${escapeHTML(record.id)}',
-                        'running'
-                    )
-                >
-                    Running
-                </button>
-            `;
-
-
-        body.innerHTML += `
-
+        rowsHtml += `
             <tr>
-
-                <td>
-                    ${escapeHTML(dateStr)}
-                </td>
-
-                <td>
-                    <b>
-                        ${escapeHTML(
-                            record.unit || '-'
-                        )}
-                    </b>
-                </td>
-
-                <td>
-                    <b>
-                        ${escapeHTML(
-                            record.designNo || '-'
-                        )}
-                    </b>
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        record.yarnType ||
-                        'Combined'
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        record.count || '-'
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        record.millName || '-'
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        record.color || '-'
-                    )}
-                </td>
-
-                <td>
-                    ${oWt.toFixed(3)}
-                </td>
-
-                <td
-                    style="
-                    color:#10B981;
-                    font-weight:bold;
-                    "
-                >
-                    ${iWt.toFixed(3)}
-                </td>
-
-                <td
-                    style="
-                    color:${statusColor};
-                    font-weight:bold;
-                    text-transform:uppercase;
-                    "
-                >
-                    ${status}
-                </td>
-
-                <td
-                    style="white-space:nowrap;"
-                >
-
-                    <div
-                        style="
-                        display:flex;
-                        gap:4px;
-                        justify-content:center;
-                        "
-                    >
-
+                <td>${escapeHTML(dateStr)}</td>
+                <td><b>${escapeHTML(g.units.join(', ') || '-')}</b></td>
+                <td><b>${escapeHTML(g.designNo)}</b></td>
+                <td>${g.ordWt.toFixed(3)}</td>
+                <td style="color:#10B981;font-weight:bold;">${g.issWt.toFixed(3)}</td>
+                <td style="color:${statusColor};font-weight:bold;text-transform:uppercase;">${status}</td>
+                <td style="white-space:nowrap;">
+                    <div style="display:flex;gap:4px;justify-content:center;">
                         ${statusBtn}
-
-                        <button
-                            class="edit-action-btn"
-                            onclick="
-                            editIssuedRecord(
-                                '${escapeHTML(record.id)}'
-                            )
-                            "
-                            title="Edit"
-                        >
-                            ✏️
-                        </button>
-
-                        <button
-                            class="del-action-btn"
-                            onclick="
-                            deleteIssuedRecord(
-                                '${escapeHTML(record.id)}'
-                            )
-                            "
-                            title="Delete"
-                        >
-                            🗑️
-                        </button>
-
+                        <button class="edit-action-btn" onclick="editDesignFromRegistry(${idx})" title="Edit">✏️</button>
+                        <button class="del-action-btn" onclick="deleteDesignIssues(${idx})" title="Delete">🗑️</button>
                     </div>
-
                 </td>
-
             </tr>
-
         `;
-
     });
 
+    body.innerHTML = rowsHtml;
 
     foot.innerHTML=`
-
         <tr>
-
-            <td
-                colspan="7"
-                style="
-                text-align:right;
-                padding:12px;
-                "
-            >
-                Grand Total:
-            </td>
-
-            <td>
-                <b>
-                    ${grandOrdWt.toFixed(3)}
-                </b>
-            </td>
-
-            <td>
-                <b
-                    style="
-                    color:#10B981;
-                    "
-                >
-                    ${grandIssWt.toFixed(3)}
-                </b>
-            </td>
-
+            <td colspan="3" style="text-align:right;padding:12px;">Grand Total:</td>
+            <td><b>${grandOrdWt.toFixed(3)}</b></td>
+            <td><b style="color:#10B981;">${grandIssWt.toFixed(3)}</b></td>
             <td colspan="2"></td>
-
         </tr>
-
     `;
+}
 
+
+/* ---------- design-wise actions for the registry ---------- */
+function editDesignFromRegistry(idx){
+    const g = (window._issuedGroups || [])[idx];
+    if(!g) return;
+    closeModal('issuedListModal');
+    editDesignIssues(g.designNo);
+}
+
+async function toggleDesignStatus(idx,newStatus){
+
+    const g = (window._issuedGroups || [])[idx];
+    if(!g) return;
+
+    if(!checkUserPermission()){
+        alert('Access Denied! You do not have permission to change status. ❌');
+        return;
+    }
+
+    const msg = newStatus === 'completed'
+        ? 'Change this design to Completed?'
+        : 'Change this design to Running?';
+
+    if(!confirm(msg)) return;
+
+    const clean = cleanDesignName(g.designNo);
+    const records = safeArray('dyeing_issue_records');
+
+    records.forEach(r=>{
+        if(cleanDesignName(r.designNo || r.designNumber) === clean){
+            r.status = newStatus;
+        }
+    });
+
+    window.StorageDB.setItem('dyeing_issue_records', JSON.stringify(records));
+
+    const designSpecs = safeObject('design_specs');
+    const specKey =
+        Object.keys(designSpecs).find(k => cleanDesignName(k) === clean) ||
+        g.designNo;
+
+    if(!designSpecs[specKey]) designSpecs[specKey]={};
+    designSpecs[specKey].status = newStatus;
+
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
+
+    try{
+        if(typeof window.supabaseSave === 'function'){
+            await window.supabaseSave('design_specs', designSpecs);
+            await window.supabaseSave('dyeing_issue_records', records);
+        }
+    }catch(error){
+        console.error('Status sync error:', error);
+    }
+
+    renderIssuedList();
+}
+
+async function deleteDesignIssues(idx){
+
+    const g = (window._issuedGroups || [])[idx];
+    if(!g) return;
+
+    if(!checkUserPermission()){
+        alert('Access Denied! You do not have permission to delete entries. ❌');
+        return;
+    }
+
+    if(!confirm('Delete ALL ' + g.count + ' issue entries of this design?')) return;
+
+    const clean = cleanDesignName(g.designNo);
+    const records = safeArray('dyeing_issue_records').filter(r =>
+        cleanDesignName(r.designNo || r.designNumber) !== clean
+    );
+
+    window.StorageDB.setItem('dyeing_issue_records', JSON.stringify(records));
+
+    try{
+        if(typeof window.supabaseSave === 'function'){
+            await window.supabaseSave('dyeing_issue_records', records);
+        }
+    }catch(error){
+        console.error('Delete cloud sync error:', error);
+    }
+
+    renderIssuedList();
 }
 
 
