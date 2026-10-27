@@ -10,6 +10,7 @@
 
     <script src="config.js"></script>
     <script src="translator.js"></script>
+    <script src="printer.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -144,7 +145,7 @@
             color: #4A554A;
         }
 
-        select {
+        input, select {
             width: 100%;
             padding: 10px 12px;
             border-radius: 8px;
@@ -154,7 +155,6 @@
             font-size: 11px;
             font-weight: 700;
             outline: none;
-            cursor: pointer;
         }
 
         .report-tabs {
@@ -434,7 +434,6 @@
             .action-btn { flex: unset; }
         }
 
-        /* 🟢 PRINT STYLES FOR CLEAR & FULL WIDTH A4 OUTPUT 🟢 */
         @media print {
             @page {
                 size: A4 portrait;
@@ -509,13 +508,27 @@
         <div id="bitmapDisplayContainer"></div>
     </div>
 
-    <h2 class="color: #ffffff; /* Inga unga color-a change pannikalam */" id="pageMainHeader">Management Reports & Analytics</h2>
+    <h2 class="color: #ffffff;" id="pageMainHeader">All Reports( ரிப்போர்ட்ஸ் )</h2>
 
     <div class="form-section" id="filterSection">
         <div class="section-badge">Filter Records</div>
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
             <label for="designFilter">🔍 Select Design Number:</label>
-            <select id="designFilter" onchange="switchTab(currentTab)">
+            <!-- Searchable Design Input -->
+            <input
+                type="text"
+                id="designSearchInput"
+                placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                oninput="filterDesignDropdown()"
+                onfocus="openDesignDropdownList()"
+                style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:700; outline:none;"
+            />
+            <!-- Custom Dropdown List Box -->
+            <div
+                id="designDropdownList"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+            </div>
+            <select id="designFilter" style="display:none;" onchange="switchTab(currentTab)">
                 <option value="All">All Designs (மொத்தம்)</option>
             </select>
         </div>
@@ -570,6 +583,7 @@
 (function () {
     "use strict";
     window.currentTab = "KoraDyeing";
+    let allCombinedDesigns = [];
 
     function safeGetItem(key) {
         try { return localStorage.getItem(key); } catch (e) { return null; }
@@ -636,23 +650,101 @@
         const orders = safeJSON("party_orders_data", []);
         if (Array.isArray(orders)) orders.forEach(o => { if (o && (o.designNumber || o.designNo)) allDesigns.add(str(o.designNumber || o.designNo).trim()); });
 
+        allCombinedDesigns = Array.from(allDesigns).filter(Boolean).sort();
+
         const select = el("designFilter");
         if (!select) return;
         const oldValue = select.value;
         select.innerHTML = '<option value="All">All Designs (மொத்தம்)</option>';
-        Array.from(allDesigns).filter(Boolean).sort().forEach(design => {
+        allCombinedDesigns.forEach(design => {
             const option = document.createElement("option");
             option.value = design; option.textContent = design;
             select.appendChild(option);
         });
-        if (oldValue && Array.from(select.options).some(o => o.value === oldValue)) {
+
+        const searchInput = el("designSearchInput");
+        if (oldValue && (oldValue === "All" || Array.from(select.options).some(o => o.value === oldValue))) {
             select.value = oldValue;
+            if(searchInput) searchInput.value = oldValue === "All" ? " " : oldValue;
         } else {
             const activeDesign = safeGetItem("selected_design_number");
-            if (activeDesign && Array.from(select.options).some(o => o.value === activeDesign)) select.value = activeDesign;
+            if (activeDesign && Array.from(select.options).some(o => o.value === activeDesign)) {
+                select.value = activeDesign;
+                if(searchInput) searchInput.value = activeDesign;
+            } else {
+                select.value = "All";
+                if(searchInput) searchInput.value = " ";
+            }
         }
         loadBitmapImage();
     }
+
+    window.openDesignDropdownList = function() {
+        renderDesignDropdownItems(["All", ...allCombinedDesigns]);
+    };
+
+    window.filterDesignDropdown = function() {
+        let input = el("designSearchInput");
+        let filter = input.value.toLowerCase().trim();
+        
+        let listWithAll = ["All", ...allCombinedDesigns];
+        let matched = listWithAll.filter(function(d){
+            if (d === "All") return " ".includes(filter) || filter === "";
+            return String(d).toLowerCase().includes(filter);
+        });
+
+        matched.sort(function(a, b){
+            if(a === "All") return -1;
+            if(b === "All") return 1;
+            let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+            let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+            return aMatch - bMatch;
+        });
+
+        renderDesignDropdownItems(matched);
+    };
+
+    function renderDesignDropdownItems(items){
+        let list = el("designDropdownList");
+        if(!list) return;
+
+        if(!items || items.length === 0){
+            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+            list.style.display = "block";
+            return;
+        }
+
+        let html = "";
+        items.forEach(function(d){
+            let label = d === "All" ? " " : d;
+            let safeVal = String(d).replace(/'/g, "\\'");
+            html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 700; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${label}</div>`;
+        });
+
+        list.innerHTML = html;
+        list.style.display = "block";
+    }
+
+    window.selectDesignItem = function(val){
+        let input = el("designSearchInput");
+        let hiddenSelect = el("designFilter");
+        let list = el("designDropdownList");
+
+        if(input) input.value = val === "All" ? "All Designs (மொத்தம்)" : val;
+        if(hiddenSelect){
+            hiddenSelect.value = val;
+            switchTab(window.currentTab);
+        }
+        if(list) list.style.display = "none";
+    };
+
+    document.addEventListener("click", function(e){
+        let container = el("designSearchInput");
+        let list = el("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+    });
 
     window.switchTab = function (tabName) {
         const validTabs = ["KoraDyeing", "KoraStock", "Dyeing", "Analytics360", "Invoice"];

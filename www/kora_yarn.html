@@ -303,10 +303,11 @@
         </div>
     </div>
 
-    <div class="color: #ffffff; /* Inga unga color-a change pannikalam */">🧵 Kora Yarn ( வரவு / செலவு )</div>
+    <div class="page-title">🧵 Kora Yarn ( வரவு / செலவு )</div>
 
     <div class="form-section" style="margin-top: 10px;">
-        <div class="section-badge">📥 Inward ( வரவு ) Stock</div>
+       
+      <div class="section-badge">📥 Inward ( வரவு ) Stock</div>
         
         <div class="form-row">
             <div class="form-group">
@@ -338,7 +339,7 @@
     </div>
 
     <div class="form-section">
-        <div class="section-badge issue">📤 Outward ( செலவு ) Issue</div>
+        <div class="section-badge issue">📤 Outward ( செலவு )Issue</div>
         
         <div class="form-row">
             <div class="form-group">
@@ -365,10 +366,22 @@
         </div>
 
         <div class="form-row full">
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Design Number</label>
-                <select id="designNo" onchange="onDesignSelect(this.value)">
-                    <option value="">Select Design</option>
+                <input
+                    type="text"
+                    id="designSearchInput"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterDesignDropdown()"
+                    onfocus="openDesignDropdownList()"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="designDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="designNo" style="display:none;" onchange="onDesignSelect(this.value)">
+                    <option value="">Select Design No</option>
                 </select>
             </div>
         </div>
@@ -462,6 +475,7 @@
 <script>
 let editingInwardId = null;
 let editingIssueId = null;
+let allCombinedDesigns = [];
 
 function checkUserPermission() {
     let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -475,7 +489,7 @@ function checkUserPermission() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     if (!checkUserPermission()) {
         alert("Access Denied! You do not have permission to access this page. ❌");
         window.location.href = "dashboard.html";
@@ -488,9 +502,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadMillSuggestions();
     loadUnitSuggestions();
     loadCountSuggestions();
-    loadDesignDropdown();
+    await loadDesignDropdown();
     refreshAllTables();
+
+    document.addEventListener("click", function(e){
+        let container = document.getElementById("designSearchInput");
+        let list = document.getElementById("designDropdownList");
+        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
+            list.style.display = "none";
+        }
+    });
 });
+
+function storeRaw(key){
+    if(window.StorageDB && typeof window.StorageDB.getItem === "function"){
+        return window.StorageDB.getItem(key);
+    }
+    return localStorage.getItem(key);
+}
 
 async function syncDataToCloud(key, data) {
     window.StorageDB.setItem(key, JSON.stringify(data));
@@ -603,7 +632,6 @@ function loadCountSuggestions() {
     let inwards = JSON.parse(window.StorageDB.getItem('kora_stock_records')) || [];
     let masters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
 
-    // Count list = Design Master count list + Design Master counts + Inward (stock) counts
     let countSet = new Set();
     (JSON.parse(window.StorageDB.getItem('tex_master_counts')) || []).forEach(c => { if (c && c !== '-') countSet.add(String(c).trim()); });
     if (Array.isArray(masters)) {
@@ -671,28 +699,109 @@ function loadBitmapImage() {
     if(wasChecked) document.getElementById('top_completed_status').checked = true;
 }
 
-function loadDesignDropdown() {
-    let preDesigns = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
-    let designMasters = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
-    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
-    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
+async function loadDesignDropdown() {
+    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
 
-    let allDesigns = new Set();
-    preDesigns.forEach(d => allDesigns.add(d));
-    if (Array.isArray(designMasters)) designMasters.forEach(d => { if(d.name || d.designNo) allDesigns.add(d.name || d.designNo); });
-    Object.keys(designSpecs).forEach(d => allDesigns.add(d));
-    if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
+    let preDesignList = [];
+    let designMastersList = [];
+    let specs = {};
+    let partyOrders = [];
+
+    try { preDesignList = JSON.parse(storeRaw("pre_design_numbers") || "[]") || []; } catch(e){}
+    try { designMastersList = JSON.parse(storeRaw("design_masters_data") || "[]") || []; } catch(e){}
+    try { specs = JSON.parse(storeRaw("design_specs") || "{}") || {}; } catch(e){}
+    try { partyOrders = JSON.parse(storeRaw("party_orders_data") || "[]") || []; } catch(e){}
+
+    let masterNames = Array.isArray(designMastersList)
+        ? designMastersList.map(d => d.name || d.designNo).filter(Boolean)
+        : [];
+
+    let allDesigns = new Set([
+        ...preDesignList,
+        ...masterNames,
+        ...(specs && typeof specs === 'object' ? Object.keys(specs) : [])
+    ]);
+
+    if (Array.isArray(partyOrders)) {
+        partyOrders.forEach(o => {
+            if (o && o.designNumber) allDesigns.add(o.designNumber);
+            if (o && o.designNo) allDesigns.add(o.designNo);
+        });
+    }
+
+    allCombinedDesigns = Array.from(allDesigns).filter(Boolean);
 
     let select = document.getElementById('designNo');
-    let html = '<option value="">Select Design No</option>';
-    Array.from(allDesigns).filter(Boolean).forEach(d => { html += `<option value="${d}">${d}</option>`; });
-    select.innerHTML = html;
+    if(select) {
+        let html = '<option value="">Select Design No</option>';
+        allCombinedDesigns.forEach(d => { html += `<option value="${d}">${d}</option>`; });
+        select.innerHTML = html;
+    }
 
-    let activeDesign = window.StorageDB.getItem('selected_design_number');
-    if(activeDesign && allDesigns.has(activeDesign)) {
-        select.value = activeDesign;
+    let activeDesign = storeRaw("selected_design_number");
+    if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
+        if(select) select.value = activeDesign;
+        let searchInput = document.getElementById("designSearchInput");
+        if(searchInput) searchInput.value = activeDesign;
         onDesignSelect(activeDesign);
-    } else { loadBitmapImage(); }
+    } else { 
+        if(typeof loadBitmapImage === "function") loadBitmapImage(); 
+    }
+}
+
+function openDesignDropdownList(){
+    // Open panra podhu, ellathayum kaatta venum, so allCombinedDesigns-ai pass pannuvom
+    renderDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDropdownItems(matched);
+}
+
+function renderDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("designNo");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        onDesignSelect(val);
+    }
+    if(list) list.style.display = "none";
 }
 
 function onDesignSelect(val) {
@@ -720,7 +829,6 @@ function onDesignSelect(val) {
         if(cb) cb.checked = true;
     } else { if(cb) cb.checked = false; }
 
-    // Design Master is the single source: Warp 1 (base) count becomes the Issue default
     let resolvedCount = foundMaster.warp1 ? String(foundMaster.warp1).trim() : '';
     document.getElementById('issueCount').value = resolvedCount;
 }
@@ -875,7 +983,7 @@ async function saveIssue() {
     syncDataToCloud('kora_issue_records', issues);
 
     document.getElementById('dyeingName').value = ''; document.getElementById('issueMillName').value = ''; 
-    document.getElementById('designNo').value = ''; document.getElementById('issueCount').value = ''; document.getElementById('issueWt').value = '';
+    document.getElementById('designNo').value = ''; document.getElementById('designSearchInput').value = ''; document.getElementById('issueCount').value = ''; document.getElementById('issueWt').value = '';
     if(cb) cb.checked = false; 
     
     loadUnitSuggestions(); loadMillSuggestions(); loadCountSuggestions(); refreshAllTables();
@@ -969,7 +1077,10 @@ function editIssue(id) {
     let records = JSON.parse(window.StorageDB.getItem('kora_issue_records')) || []; let rec = records.find(r => r.id == id);
     if(rec) {
         editingIssueId = id; document.getElementById('issueDate').value = rec.date; document.getElementById('dyeingName').value = rec.dyeingName;
-        document.getElementById('issueMillName').value = rec.millName || ''; document.getElementById('designNo').value = rec.designNo;
+        document.getElementById('issueMillName').value = rec.millName || ''; 
+        document.getElementById('designNo').value = rec.designNo;
+        let searchInput = document.getElementById('designSearchInput');
+        if(searchInput) searchInput.value = rec.designNo;
         document.getElementById('issueCount').value = rec.count; document.getElementById('issueWt').value = rec.issueWt;
         let cb = document.getElementById('top_completed_status'); if(cb) cb.checked = (rec.status === 'completed');
         onDesignSelect(rec.designNo); document.getElementById('saveIssueBtn').innerText = "🔄 Update Issue"; document.getElementById('dyeingName').scrollIntoView({behavior: 'smooth'});
@@ -983,7 +1094,8 @@ async function deleteIssue(id) {
     syncDataToCloud('kora_issue_records', records);
     loadUnitSuggestions(); loadCountSuggestions(); refreshAllTables();
 }
-  var KORA_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
+
+var KORA_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
 
 function escKora(v) {
     return (v === null || v === undefined ? '' : String(v))

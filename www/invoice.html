@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Invoice - TEXF FOR EVER </title>
+    <title>Invoice - TEX FOR EVER </title>
     <!-- IMPORTANT: config.js must load first -->
     <script src="config.js"></script>
     <script src="translator.js"></script>
@@ -355,9 +355,22 @@
                 <label>Company Address (From)</label>
                 <textarea id="comp_address" placeholder="Enter Company Full Address..."></textarea>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label>Party Address (To)</label>
-                <textarea id="party_address" placeholder="Enter Party Full Address..."></textarea>
+                <!-- Searchable Party Address Input -->
+                <input
+                    type="text"
+                    id="partySearchInput"
+                    placeholder="பார்ட்டி அட்ரஸ் பெயரை டைப் செய்யவும்..."
+                    oninput="filterPartyDropdown()"
+                    onfocus="openPartyDropdownList()"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none; margin-bottom: 4px;"
+                />
+                <div
+                    id="partyDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <textarea id="party_address" placeholder="Enter Party Full Address..." style="margin-top: 4px;"></textarea>
             </div>
         </div>
     </div>
@@ -381,9 +394,22 @@
     <div class="form-section">
         <div class="section-badge">Design Specs</div>
         <div class="form-grid">
-            <div class="form-group" style="grid-column: span 2;">
+            <div class="form-group" style="grid-column: span 2; position: relative;">
                 <label>Design Number</label>
-                <select id="global_design" onchange="applyGlobalDesign(this.value)">
+                <!-- Searchable Design Input -->
+                <input
+                    type="text"
+                    id="designSearchInput"
+                    placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
+                    oninput="filterDesignDropdown()"
+                    onfocus="openDesignDropdownList()"
+                    style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
+                />
+                <div
+                    id="designDropdownList"
+                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                </div>
+                <select id="global_design" style="display:none;" onchange="applyGlobalDesign(this.value)">
                     <option value="">Select Design</option>
                 </select>
             </div>
@@ -480,6 +506,8 @@
 <script>
 let editingInvoiceId = null;
 let savedInvoices = JSON.parse(localStorage.getItem('saved_invoices_data')) || [];
+let allCombinedDesigns = [];
+let allCombinedParties = [];
 
 function checkUserPermission() {
     let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -505,7 +533,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     loadDesignDropdowns();
+    loadPartyDropdowns();
     updateInvoicesTable();
+
+    document.addEventListener("click", function(e){
+        let dContainer = document.getElementById("designSearchInput");
+        let dList = document.getElementById("designDropdownList");
+        if(dContainer && dList && !dContainer.contains(e.target) && !dList.contains(e.target)){
+            dList.style.display = "none";
+        }
+
+        let pContainer = document.getElementById("partySearchInput");
+        let pList = document.getElementById("partyDropdownList");
+        if(pContainer && pList && !pContainer.contains(e.target) && !pList.contains(e.target)){
+            pList.style.display = "none";
+        }
+    });
 });
 
 function openModal(modalId) {
@@ -571,21 +614,149 @@ function loadDesignDropdowns() {
     Object.keys(designSpecs).forEach(d => allDesigns.add(d));
     if(Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesigns.add(o.designNumber || o.designNo); });
 
+    allCombinedDesigns = Array.from(allDesigns).filter(Boolean).sort(
+        (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+    );
+
     let select = document.getElementById('global_design');
-    let current = select.value;
-    let html = '<option value="">Select Design</option>';
-    Array.from(allDesigns).filter(Boolean).forEach(d => {
-        html += '<option value="' + d + '">' + d + '</option>';
-    });
-    select.innerHTML = html;
-    select.value = current;
+    if(select) {
+        let html = '<option value="">Select Design</option>';
+        allCombinedDesigns.forEach(d => {
+            html += '<option value="' + d + '">' + d + '</option>';
+        });
+        select.innerHTML = html;
+    }
 
     let activeDesign = localStorage.getItem('selected_design_number');
-    if(activeDesign && !select.value) {
-        select.value = activeDesign;
+    if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
+        if(select) select.value = activeDesign;
+        let searchInput = document.getElementById("designSearchInput");
+        if(searchInput) searchInput.value = activeDesign;
         applyGlobalDesign(activeDesign);
+    } else {
+        loadBitmapImage();
     }
-    loadBitmapImage();
+}
+
+function openDesignDropdownList(){
+    renderDesignDropdownItems(allCombinedDesigns);
+}
+
+function filterDesignDropdown(){
+    let input = document.getElementById("designSearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedDesigns.filter(function(d){
+        return String(d).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderDesignDropdownItems(matched);
+}
+
+function renderDesignDropdownItems(items){
+    let list = document.getElementById("designDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(d){
+        let safeVal = String(d).replace(/'/g, "\\'");
+        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectDesignItem(val){
+    let input = document.getElementById("designSearchInput");
+    let hiddenSelect = document.getElementById("global_design");
+    let list = document.getElementById("designDropdownList");
+
+    if(input) input.value = val;
+    if(hiddenSelect){
+        hiddenSelect.value = val;
+        applyGlobalDesign(val);
+    }
+    if(list) list.style.display = "none";
+}
+
+function loadPartyDropdowns() {
+    let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+    let savedInv = JSON.parse(localStorage.getItem('saved_invoices_data')) || [];
+    let masterParties = JSON.parse(localStorage.getItem('tex_master_parties') || localStorage.getItem('master_parties') || '[]');
+
+    let partySet = new Set();
+    partyOrders.forEach(o => { if(o.partyName) partySet.add(o.partyName.trim()); });
+    savedInv.forEach(i => { if(i.partyAddress) partySet.add(i.partyAddress.trim()); });
+    if(Array.isArray(masterParties)) masterParties.forEach(p => { if(p) partySet.add(String(p).trim()); });
+
+    allCombinedParties = Array.from(partySet).filter(Boolean).sort(
+        (a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'})
+    );
+}
+
+function openPartyDropdownList(){
+    loadPartyDropdowns();
+    renderPartyDropdownItems(allCombinedParties);
+}
+
+function filterPartyDropdown(){
+    let input = document.getElementById("partySearchInput");
+    let filter = input.value.toLowerCase().trim();
+    
+    let matched = allCombinedParties.filter(function(p){
+        return String(p).toLowerCase().includes(filter);
+    });
+
+    matched.sort(function(a, b){
+        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
+        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
+        return aMatch - bMatch;
+    });
+
+    renderPartyDropdownItems(matched);
+}
+
+function renderPartyDropdownItems(items){
+    let list = document.getElementById("partyDropdownList");
+    if(!list) return;
+
+    if(!items || items.length === 0){
+        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">பார்ட்டி அட்ரஸ் கிடைக்கவில்லை</div>`;
+        list.style.display = "block";
+        return;
+    }
+
+    let html = "";
+    items.forEach(function(p){
+        let safeVal = String(p).replace(/'/g, "\\'");
+        html += `<div onclick="selectPartyItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${p}</div>`;
+    });
+
+    list.innerHTML = html;
+    list.style.display = "block";
+}
+
+function selectPartyItem(val){
+    let input = document.getElementById("partySearchInput");
+    let textarea = document.getElementById("party_address");
+    let list = document.getElementById("partyDropdownList");
+
+    if(input) input.value = val;
+    if(textarea) textarea.value = val;
+    if(list) list.style.display = "none";
 }
 
 function applyGlobalDesign(designNo) {
@@ -618,9 +789,10 @@ function applyGlobalDesign(designNo) {
 
     if(matchedOrder.partyName && !document.getElementById('party_address').value) {
         document.getElementById('party_address').value = matchedOrder.partyName;
+        let pInput = document.getElementById('partySearchInput');
+        if(pInput) pInput.value = matchedOrder.partyName;
     }
 
-    // Resolved Multi-beam and Weft Count
     let baseCount = matchedOrder.baseBeamCount || sp.baseBeamCount || foundMaster.warp1 || sp.warp || sp.baseCount || '';
     let topBeam = matchedOrder.topBeamCount || sp.topBeamCount || foundMaster.warp2 || '';
     let combinedWarp = (topBeam && topBeam !== '-') ? `${baseCount} / ${topBeam}` : baseCount;
@@ -864,6 +1036,14 @@ async function saveInvoice() {
     document.getElementById('inv_no').value = '';
     document.getElementById('inv_transport').value = '';
     document.getElementById('inv_lr').value = '';
+    document.getElementById('party_address').value = '';
+    let pInput = document.getElementById('partySearchInput');
+    if(pInput) pInput.value = '';
+
+    document.getElementById('global_design').value = '';
+    let dInput = document.getElementById('designSearchInput');
+    if(dInput) dInput.value = '';
+
     if(document.getElementById('top_completed_status')) {
         document.getElementById('top_completed_status').checked = false;
     }
@@ -981,11 +1161,17 @@ function editInvoice(id) {
     document.getElementById('inv_date').value = inv.invDate;
     document.getElementById('comp_address').value = inv.compAddress;
     document.getElementById('party_address').value = inv.partyAddress;
+    let pInput = document.getElementById('partySearchInput');
+    if(pInput) pInput.value = inv.partyAddress || '';
+
     document.getElementById('inv_transport').value = inv.transport || '';
     document.getElementById('inv_lr').value = inv.lr || '';
     document.getElementById('gst_type').value = inv.gstType || 'none';
 
     document.getElementById('global_design').value = inv.design || '';
+    let dInput = document.getElementById('designSearchInput');
+    if(dInput) dInput.value = inv.design || '';
+
     document.getElementById('global_count').value = inv.countVal || '';
     document.getElementById('global_reed').value = inv.reed || '';
     document.getElementById('global_pick').value = inv.pick || '';
@@ -1036,7 +1222,7 @@ function editInvoice(id) {
                     <label>Date</label>
                     <input type="date" class="i-date">
                 </div>
-                <div class="item-col-group">
+                .item-col-group">
                     <label>Pcs</label>
                     <input type="number" class="i-pcs" placeholder="No. of Pcs">
                 </div>
