@@ -1457,6 +1457,15 @@ window.addEventListener("DOMContentLoaded", function () {
             .menu-btn { border-color: #818CF8 !important; }
             input, select, textarea { background: #FFFFFF !important; color: #172554 !important; border-color: #6366F1 !important; }
             `;
+        } else if (savedMode === "softgreen") {
+            css += `
+            html, body { background: #E8F5E9 !important; color: #1E2B23 !important; }
+            .top-header-container, .container, .main-card, .form-container, .card { background: #F1F8F2 !important; color: #1E2B23 !important; border-color: #66BB6A !important; }
+            .stats-banner, .stat-box { background: #DCEFDD !important; color: #1E2B23 !important; border-color: #66BB6A !important; }
+            .stat-value, .live-clock { color: #2E7D32 !important; }
+            .menu-btn { border-color: #66BB6A !important; }
+            input, select, textarea { background: #FFFFFF !important; color: #1B5E20 !important; border-color: #66BB6A !important; }
+            `;
         }
 
         const style = document.createElement("style");
