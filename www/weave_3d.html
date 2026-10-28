@@ -91,7 +91,7 @@ function $(id) {
 
 /* ================= GLOBAL STYLES ================= */
 :root {
-    --bg: #aaa;
+    --bg: #e0e0e0;
     --card: #ffffff;
     --card2: #f7f7fc;
     --line: #dcdcf0;
@@ -492,7 +492,7 @@ input, select {
 .graph-axis { font-size: 10px !important; color: #6b7280 !important; border: none !important; }
 
 /* SMART COLOR STUDIO POPUP */
-.colour-popup { display: none; position: fixed; inset: 0; z-index: 9999999; background: #e8ebef; flex-direction: column; padding: 10px; overflow: hidden; }
+.colour-popup { display: none; position: fixed; inset: 0; z-index: 9999999; background: #c5ccd6; flex-direction: column; padding: 10px; overflow: hidden; }
 .colour-popup.active { display: flex !important; }
 .colour-popup-box { width: 100vw !important; max-width: none !important; height: 100vh !important; max-height: none !important; background: #e8ebef !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 .colour-popup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-shrink: 0; padding: 10px; padding-bottom: 0;}
@@ -500,22 +500,22 @@ input, select {
 .colour-popup-close { background: #ef4444; border: 0; color: #fff; border-radius: 50%; width: 28px; height: 28px; font-weight: 900; font-size:0.85rem; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .search-box { width: calc(100% - 20px); padding: 8px; border-radius: 8px; border: 1px solid #c5ccd6; background: #dfe3e8; color: #fff; font-size: .8rem; margin: 10px; margin-top: 0; flex-shrink: 0; }
 .tone-filters { display: flex; gap: 6px; padding: 0 10px 8px; overflow-x: auto; flex-shrink: 0; }
-.tone-chip { background: #e8ebef; border: 1px solid #c5ccd6; color: #374151; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.tone-chip { background: #e8ebef; border: 1px solid #f59e0b; color: #374151; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .tone-chip.active { background: #2563eb; color: #fff; border-color: #3b82f6; }
 .search-result-count { padding: 0 10px 6px; font-size: 0.65rem; color: #374151; font-weight: 800; }
 .colour-master-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin: 0 10px 8px; flex-shrink: 0; scrollbar-width: none; }
 .colour-master-tabs::-webkit-scrollbar { display: none; }
 .colour-master-tab { flex: 0 0 auto; border: 1px solid #c5ccd6; background: #dfe3e8; color: #374151; border-radius: 6px; padding: 8px 14px; font-size: .7rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
-.colour-master-tab.active { background: #f59e0b; color: #e8ebef; border-color: #f59e0b; font-weight: 900; }
+.colour-master-tab.active { background: #f59e0b; color: #c5ccd6; border-color: #f59e0b; font-weight: 900; }
 .colour-popup-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 10px; align-content: start; }
-.swatch-card { background: #e8ebef; border: 1px solid #c5ccd6; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; }
+.swatch-card { background: #c5ccd6; border: 1px solid #17231d; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; }
 .swatch-card.selected { border-color: #f59e0b; box-shadow: 0 0 0 2px #f59e0b; background: #dfe3e8; }
 .swatch-color { height: 34px; width: 34px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 6px rgba(0,0,0,0.4); flex-shrink: 0; margin-bottom: 4px; }
 .swatch-details { text-align: center; width: 100%; }
-.swatch-name { font-size: 0.68rem; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.swatch-name { font-size: 0.68rem; font-weight: 900; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .swatch-sub { font-size: 0.54rem; color: #374151; margin-top: 1px; }
 .colour-popup-footer { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-top: 1px solid #c5ccd6; flex-shrink: 0; background: #e8ebef; }
-.colour-use-btn { background: #10b981; border: 0; border-radius: 8px; padding: 12px; color: #fff; font-weight: 900; font-size: .85rem; cursor: pointer; width: 100%; text-align: center; }
+.colour-use-btn { background: #10b981; border: 0; border-radius: 8px; padding: 12px; color: #c5ccd6; font-weight: 900; font-size: .85rem; cursor: pointer; width: 100%; text-align: center; }
 
 /* SEARCHABLE DESIGN DROPDOWN */
 .sd-wrap { position: relative; width: 100%; }
