@@ -20,18 +20,20 @@
 
 html,body{width:100%;min-height:100vh;background:#030712;color:#1E2B23;}
 
-body{padding:12px;display:flex;flex-direction:column;align-items:center;}
+html,body{width:100%;min-height:100vh;background:#fff;color:#1E2B23;}
+
+body{padding:0;display:flex;flex-direction:column;align-items:center;}
 
 .container{
-    width:100%;max-width:900px;background:#fff;padding:20px;border-radius:20px;
-    box-shadow:0 10px 35px rgba(30,43,35,.06);border:1px solid rgba(82,110,81,.15);
-    display:flex;flex-direction:column;gap:16px;transition:0.3s;
-flex: 1; /* இதை இங்கே சேர்க்கவும் */
+    width:100%;max-width:900px;min-height:100vh;
+    border-radius:0;border:none;box-shadow:none;
+    background:#fff;padding:20px;
+    display:flex;flex-direction:column;gap:16px;
 }
 
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
 .header h1{
-    font-size:18px;margin-bottom:5px;font-weight:800;color:#D1DED1;text-align:center;
+    font-size:18px;margin-bottom:5px;font-weight:800;color:#030712;text-align:center;
     text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #EAF0EA;padding-bottom:12px;margin:0 auto;
 }
 .back-btn{
