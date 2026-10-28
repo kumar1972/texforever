@@ -254,25 +254,6 @@ input[type=file]::file-selector-button{
     <button type="button" class="btn-action btn-warning" style="width:100%" onclick="saveSupabaseConfig()">💾 Save Database Connection</button>
 </div>
 
-<!-- DESIGN ASSETS -->
-<div class="form-section">
-    <div class="section-badge blue">Design Assets</div>
-    <div class="form-grid">
-        <div class="form-group">
-            <label>Select Design No</label>
-            <select id="settingDesignSelect" onchange="loadDesignBitmap(this.value)">
-                <option value="">Select Design Number</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Upload Bitmap Image for Design</label>
-            <input type="file" id="designBitmapFile" accept="image/png,image/jpeg,image/webp,image/jpg" onchange="previewDesignBitmap(this)">
-            <div id="designBitmapPreviewBox" class="preview-box">
-                <img id="designBitmapImgTag" src="" alt="Design Bitmap" onerror="handleDesignImageError(this)">
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- PARTY DIRECTORY -->
 <div class="form-section">
