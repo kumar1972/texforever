@@ -1307,17 +1307,21 @@ body.dashboard-modern .advanced-control-center{display:grid}
 #appHeaderTitle{ cursor:pointer; }
 #pageFrame{
     display:none;
-    position:fixed !important;
-    left:0 !important;
-    right:0 !important;
-    top:0 !important;
-    bottom:0 !important;
-    width:100%;
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    top:auto !important;
+    bottom:auto !important;
+    width:calc(100% + 24px);
+    margin:-12px;
     height:100vh;
     height:100dvh;
     border:0;
     background:#fff;
-    z-index:9500 !important;
+    z-index:auto !important;
+}
+@media(max-width:768px){
+    #pageFrame{ width:calc(100% + 16px); margin:-8px; }
 }
 
 
