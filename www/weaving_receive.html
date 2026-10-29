@@ -7,7 +7,7 @@
     <!-- IMPORTANT: config.js must load first -->
     <script src="config.js"></script>
     <script src="translator.js"></script>
-  <script src="printer.js"></script>
+    <script src="printer.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
@@ -15,8 +15,9 @@
         body { padding: 8px; display: flex; flex-direction: column; align-items: center; }
 
         .container {
-            width: 100%; max-width: 1050px; background: #fff; border-radius: 16px;
-            padding: 12px; box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06); border: 1px solid #E2E8E2;
+            width: 100%; max-width: 1200px; background: #f9f8f0; border-radius: 16px;
+            padding: 14px; box-shadow: 0 10px 35px rgba(30, 43, 35, 0.06); border: 1px solid #E2E8E2;
+            overflow: visible !important;
         }
         
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -29,14 +30,14 @@
 
         .page-title { font-size: 15px; font-weight: 800; color: #030712; margin-bottom: 10px; border-bottom: 2px solid #EAF0EA; padding-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         
-        .form-section { background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 12px; padding: 14px 10px 10px 10px; margin-bottom: 10px; position: relative; }
+        .form-section { background: #F8FAF8; border: 1px solid #E2E8E2; border-radius: 12px; padding: 16px 12px 12px 12px; margin-bottom: 12px; position: relative; overflow: visible !important; }
         .section-badge {
             position: absolute; top: -10px; left: 12px; background: #4A7C59; color: #FFF;
             font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; text-transform: uppercase;
         }
 
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-        .form-group { display: flex; flex-direction: column; gap: 3px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; position: relative; overflow: visible !important; }
         .form-group label { font-size: 10px; font-weight: 700; color: #4A554A; line-height: 1.2; }
         
         input, select { padding: 8px 10px; border: 1px solid #D1DED1; border-radius: 8px; font-size: 11px; font-weight: 600; background: #FFF; transition: all 0.2s; width: 100%; }
@@ -44,6 +45,14 @@
         input[readonly] { background: #EAF0EA; color: #2F4F38; cursor: not-allowed; border: 1px dashed #A0AFA0; }
         
         .editable-highlight { border-color: #3B82F6; background: #F0F9FF; }
+
+        .dropdown-list-box {
+            display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; 
+            background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999999; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25); margin-top: 4px;
+        }
+        .dropdown-item-row { padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9; }
+        .dropdown-item-row:hover { background: #F8FAF8; }
 
         .btn-main {
             padding: 10px 14px; border: none; border-radius: 8px; color: white;
@@ -54,8 +63,8 @@
         .btn-add:hover { transform: translateY(-2px); }
         
         .action-row { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-print { background: linear-gradient(135deg, #3BF6, #1D4ED8); flex: 1; }
-        .btn-report { background: linear-gradient(135deg, #F59B, #D97706); flex: 1; }
+        .btn-print { background: linear-gradient(135deg, #3B82F6, #1D4ED8); flex: 1; }
+        .btn-report { background: linear-gradient(135deg, #F59E0B, #D97706); flex: 1; }
 
         .table-container { margin-top: 10px; border: 1px solid #E2E8E2; border-radius: 8px; overflow-x: auto; background: #FFF; }
         table { width: 100%; border-collapse: collapse; font-size: 10px; white-space: nowrap; }
@@ -85,7 +94,7 @@
         .modal-actions { display: flex; gap: 6px; }
         .close-btn { background: #FEE2E2; color: #DC2626; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
         .print-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
-        .modal-body { padding: 12px; overflow-y: auto; flex: 1; background: #FAFCFA; width: 100%; max-width: 1000px; margin: 0 auto; }
+        .modal-body { padding: 12px; overflow-y: auto; flex: 1; background: #FAFCFA; width: 100%; max-width: 1100px; margin: 0 auto; }
 
         @media print {
             body * { visibility: hidden; }
@@ -112,40 +121,30 @@
     <div class="form-section">
         <div class="section-badge">1. Select Order</div>
         <div class="form-grid">
-            <div class="form-group" style="position: relative;">
+            <div class="form-group">
                 <label>Weaver Name</label>
-                <!-- Searchable Weaver Input -->
                 <input
                     type="text"
                     id="weaverSearchInput"
                     placeholder="Weaver பெயரை டைப் செய்யவும்..."
                     oninput="filterWeaverDropdown()"
                     onfocus="openWeaverDropdownList()"
-                    style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
                 />
-                <div
-                    id="weaverDropdownList"
-                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
-                </div>
+                <div id="weaverDropdownList" class="dropdown-list-box"></div>
                 <select id="weaverSelect" style="display:none;" onchange="onWeaverChange()">
                     <option value="">All Weavers</option>
                 </select>
             </div>
-            <div class="form-group" style="position: relative;">
+            <div class="form-group">
                 <label>Design Number</label>
-                <!-- Searchable Design Input -->
                 <input
                     type="text"
                     id="designSearchInput"
                     placeholder="டிசைன் எண்ணை டைப் செய்யவும்..."
                     oninput="filterDesignDropdown()"
                     onfocus="openDesignDropdownList()"
-                    style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
                 />
-                <div
-                    id="designDropdownList"
-                    style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
-                </div>
+                <div id="designDropdownList" class="dropdown-list-box"></div>
                 <select id="designSelect" style="display:none;" onchange="onDesignChange()">
                     <option value="">Select Design</option>
                 </select>
@@ -154,7 +153,7 @@
     </div>
 
     <!-- 2. Header Stats -->
-    <div class="form-section" id="headerStatsSection" style="display: none; background: #F0F5F0; border-color: #A3C2A4;">
+    <div class="form-section" id="headerStatsSection" style="background: #F0F5F0; border-color: #A3C2A4;">
         <div class="section-badge" style="background: #2F4F38;">2. Order Details</div>
         
         <div class="form-grid">
@@ -182,7 +181,7 @@
     </div>
 
     <!-- 3. Entry Form -->
-    <div class="form-section" id="entrySection" style="display: none;">
+    <div class="form-section" id="entrySection">
         <div class="section-badge" style="background: #3B82F6;">3. Receive Entry</div>
         
         <input type="hidden" id="editEntryId" value="">
@@ -204,7 +203,7 @@
     </div>
 
     <!-- 4. Records Table -->
-    <div id="tableWrapper" style="display: none;">
+    <div id="tableWrapper">
         <div class="table-container">
             <table>
                 <thead>
@@ -228,6 +227,44 @@
             <button class="btn-main btn-print" onclick="openPrintPreview()">🖨️ Print Preview</button>
             <button class="btn-main btn-report" onclick="openReportTab()">📊 Full Report Tab</button>
         </div>
+    </div>
+
+    <!-- 5. WEAVER ACCOUNT LEDGER (BOTTOM MENU) -->
+    <div class="form-section" id="ledgerSection" style="background: #FAF5FF; border-color: #D8B4FE; margin-top: 16px;">
+        <div class="section-badge" style="background: #7C3AED;">4. Weaver Account Ledger & Wages</div>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Onloom Reed</label>
+                <input type="number" step="0.01" id="ledgerReed" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Onloom Pick</label>
+                <input type="number" step="0.01" id="ledgerPick" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Pick Per Wages (₹)</label>
+                <input type="number" step="0.001" id="ledgerPickWages" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.000">
+            </div>
+            <div class="form-group">
+                <label>Total Weaving Wages (₹)</label>
+                <input type="text" id="ledgerTotalWages" readonly style="font-weight:900; color:#7C3AED;">
+            </div>
+            <div class="form-group">
+                <label>Advance Paid (₹)</label>
+                <input type="number" step="0.01" id="ledgerAdvance" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Payment Made (₹)</label>
+                <input type="number" step="0.01" id="ledgerPayment" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Net Balance Payable (₹)</label>
+                <input type="text" id="ledgerNetBalance" readonly style="font-weight:900; color:#059669;">
+            </div>
+        </div>
+        
+        <button class="btn-main" style="background: linear-gradient(135deg, #7C3AED, #6D28D9); margin-top: 12px;" onclick="saveLedgerAccountData()">💾 Save Ledger Details</button>
     </div>
 </div>
 
@@ -282,6 +319,7 @@
 <script>
     let weavingMasterData = [];
     let receiveRecords = [];
+    let weaverLedgerData = {};
     let allCombinedWeavers = [];
     let allCombinedDesigns = [];
 
@@ -300,9 +338,20 @@
         
         weavingMasterData = JSON.parse(window.StorageDB.getItem('weaving_master_data')) || [];
         receiveRecords = JSON.parse(window.StorageDB.getItem('weaving_receive_records')) || [];
+        weaverLedgerData = JSON.parse(window.StorageDB.getItem('weaving_ledger_data')) || {};
         
         document.getElementById('entDate').valueAsDate = new Date();
         initDropdowns();
+
+        // Default load first design if available
+        if(allCombinedDesigns.length > 0) {
+            let defaultDesign = allCombinedDesigns[0];
+            let dSelect = document.getElementById('designSelect');
+            let dInput = document.getElementById('designSearchInput');
+            if(dSelect) dSelect.value = defaultDesign;
+            if(dInput) dInput.value = defaultDesign;
+            onDesignChange();
+        }
 
         document.addEventListener("click", function(e){
             let container = document.getElementById("designSearchInput");
@@ -408,7 +457,7 @@
         if(!list) return;
 
         if(!items || items.length === 0){
-            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">Weaver கிடைக்கவில்லை</div>`;
+            list.innerHTML = `<div class="dropdown-item-row" style="color: #888;">Weaver கிடைக்கவில்லை</div>`;
             list.style.display = "block";
             return;
         }
@@ -417,7 +466,7 @@
         items.forEach(function(d){
             let label = d === "" ? "All Weavers" : d;
             let safeVal = String(d).replace(/'/g, "\\'");
-            html += `<div onclick="selectWeaverItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${label}</div>`;
+            html += `<div class="dropdown-item-row" onclick="selectWeaverItem('${safeVal}')">${label}</div>`;
         });
 
         list.innerHTML = html;
@@ -463,7 +512,7 @@
         if(!list) return;
 
         if(!items || items.length === 0){
-            list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
+            list.innerHTML = `<div class="dropdown-item-row" style="color: #888;">டிசைன் கிடைக்கவில்லை</div>`;
             list.style.display = "block";
             return;
         }
@@ -471,7 +520,7 @@
         let html = "";
         items.forEach(function(d){
             let safeVal = String(d).replace(/'/g, "\\'");
-            html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
+            html += `<div class="dropdown-item-row" onclick="selectDesignItem('${safeVal}')">${d}</div>`;
         });
 
         list.innerHTML = html;
@@ -498,7 +547,6 @@
         
         designSelect.innerHTML = '<option value="">Select Design</option>';
         if(designSearchInput) designSearchInput.value = '';
-        hideSections();
 
         let filteredDesigns = new Set();
         if(weaver) {
@@ -514,12 +562,18 @@
         });
         designSelect.innerHTML = html;
         allCombinedDesigns = validDesigns.sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true,sensitivity:'base'}));
+        
+        if(validDesigns.length > 0) {
+            designSelect.value = validDesigns[0];
+            if(designSearchInput) designSearchInput.value = validDesigns[0];
+            onDesignChange();
+        }
     }
 
     function onDesignChange() {
         try {
             let design = document.getElementById('designSelect').value;
-            if(!design) { hideSections(); return; }
+            if(!design) return;
 
             let cleanDNo = cleanDesignName(design);
             let order = weavingMasterData.slice().reverse().find(d => cleanDesignName(d.designNo || d.designNumber) === cleanDNo);
@@ -539,10 +593,6 @@
                 if(wInput) wInput.value = order.weaverName;
             }
 
-            document.getElementById('headerStatsSection').style.display = 'block';
-            document.getElementById('entrySection').style.display = 'block';
-            document.getElementById('tableWrapper').style.display = 'block';
-
             let warpIssuedMtrs = 0;
             let crimp = 5;
             let fabricMtrs = 0;
@@ -550,7 +600,7 @@
             if (order) {
                 warpIssuedMtrs = parseFloat(order.weavingMts) || 0;
                 crimp = parseFloat(order.crimpPerc) !== undefined && order.crimpPerc !== '' ? parseFloat(order.crimpPerc) : 5;
-                fabricMtrs = parseFloat(order.fabricMts) || (warpIssuedMtrs - (warpIssuedMtrs * (crimp / 100)));
+                fabricMtrs = parseFloat(order.fabricMtrs) || (warpIssuedMtrs - (warpIssuedMtrs * (crimp / 100)));
             } else if (matchedWarping && parseFloat(matchedWarping.warpingMts) > 0) {
                 warpIssuedMtrs = parseFloat(matchedWarping.warpingMts);
                 crimp = 5;
@@ -566,10 +616,18 @@
             document.getElementById('statCrimp').value = crimp;
             document.getElementById('statFabricMtrs').value = fabricMtrs > 0 ? fabricMtrs.toFixed(2) : '0.00';
 
+            let ledgerKey = `${cleanDNo}_${document.getElementById('weaverSelect').value}`;
+            let savedLedger = weaverLedgerData[ledgerKey] || {};
+            document.getElementById('ledgerReed').value = savedLedger.reed || sp.onloomReed || sp.reed || '';
+            document.getElementById('ledgerPick').value = savedLedger.pick || sp.onloomPick || sp.pick || '';
+            document.getElementById('ledgerPickWages').value = savedLedger.pickWages || '';
+            document.getElementById('ledgerAdvance').value = savedLedger.advance || '';
+            document.getElementById('ledgerPayment').value = savedLedger.payment || '';
+
             let weaver = document.getElementById('weaverSelect').value;
             calculatePendingStats(weaver, design, fabricMtrs);
             renderReceiveTable(weaver, design);
-            clearEntryForm();
+            calcLedgerWages();
 
         } catch (e) {
             console.error(e);
@@ -648,6 +706,45 @@
             shortagePct = ((fabricMtrs - okMtrs) / fabricMtrs) * 100;
         }
         document.getElementById('entShortage').value = shortagePct.toFixed(2) + '%';
+    }
+
+    function calcLedgerWages() {
+        let pick = parseFloat(document.getElementById('ledgerPick').value) || 0;
+        let pickWages = parseFloat(document.getElementById('ledgerPickWages').value) || 0;
+        let fabricMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
+        let advance = parseFloat(document.getElementById('ledgerAdvance').value) || 0;
+        let payment = parseFloat(document.getElementById('ledgerPayment').value) || 0;
+
+        let totalWages = pick * pickWages * fabricMtrs;
+        document.getElementById('ledgerTotalWages').value = '₹ ' + totalWages.toFixed(2);
+
+        let netBalance = totalWages - (advance + payment);
+        document.getElementById('ledgerNetBalance').value = '₹ ' + netBalance.toFixed(2);
+    }
+
+    async function saveLedgerAccountData() {
+        let design = document.getElementById('designSelect').value;
+        let weaver = document.getElementById('weaverSelect').value;
+        if(!design) { alert("Please select a design!"); return; }
+
+        let cleanDNo = cleanDesignName(design);
+        let ledgerKey = `${cleanDNo}_${weaver}`;
+
+        let ledgerObj = {
+            reed: document.getElementById('ledgerReed').value,
+            pick: document.getElementById('ledgerPick').value,
+            pickWages: document.getElementById('ledgerPickWages').value,
+            advance: document.getElementById('ledgerAdvance').value,
+            payment: document.getElementById('ledgerPayment').value,
+            totalWages: document.getElementById('ledgerTotalWages').value,
+            netBalance: document.getElementById('ledgerNetBalance').value
+        };
+
+        weaverLedgerData[ledgerKey] = ledgerObj;
+        window.StorageDB.setItem('weaving_ledger_data', JSON.stringify(weaverLedgerData));
+        if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_ledger_data', weaverLedgerData);
+
+        alert("Weaver Ledger Details Saved Successfully! ✅");
     }
 
     async function saveReceiveEntry() {
@@ -808,12 +905,6 @@
 
         document.getElementById('saveEntryBtn').innerHTML = "➕ Add / Save Entry";
         document.getElementById('saveEntryBtn').style.background = "linear-gradient(135deg, #10B981, #059669)";
-    }
-
-    function hideSections() {
-        document.getElementById('headerStatsSection').style.display = 'none';
-        document.getElementById('entrySection').style.display = 'none';
-        document.getElementById('tableWrapper').style.display = 'none';
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; setTimeout(() => document.getElementById(id).classList.add('show'), 10); }
