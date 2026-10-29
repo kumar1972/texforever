@@ -627,7 +627,7 @@ input, select {
             <!-- No. of Repeat Menu Tab Added Here -->
             <div style="display:inline-flex; align-items:center; gap:2px; background:#dfe3e8; border:1px solid #c5ccd6; border-radius:6px; padding:2px 4px;">
                 <span style="font-size:0.55rem; color:#374151; font-weight:bold;">🔁 Rep:</span>
-                <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#dfe3e8; color:#fff; border:0; padding:2px; font-size:0.65rem; border-radius:3px; width:auto; min-height:auto; height:22px;">
+                <select id="fsRepeatSelect" onchange="changeSimulationRepeats(this.value)" style="background:#ffffff; color:#1f2937; border:1px solid #94a3b8; padding:2px 4px; font-size:0.8rem; font-weight:bold; border-radius:3px; width:auto; min-height:auto; height:26px;">
                     <option value="1"selected>1x</option>
                     <option value="2">2x</option>
                     <option value="3">3x</option>
@@ -638,11 +638,11 @@ input, select {
 
             <div style="display:inline-flex; align-items:center; gap:2px; background:#dfe3e8; border:1px solid #c5ccd6; border-radius:6px; padding:2px 4px;">
                 <span style="font-size:0.55rem; color:#374151; font-weight:bold;">📏:</span>
-                <button style="background:#dfe3e8; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(-0.05)" title="Scale Down">-</button>
+                <button style="background:#ffffff; color:#1f2937; border:1px solid #94a3b8; padding:2px 6px; font-size:0.85rem; font-weight:bold; border-radius:3px;" onclick="adjustRulerDpi(-0.05)" title="Scale Down">-</button>
                 <span id="rulerCalDisplay" style="font-size:0.6rem; color:#f59e0b; min-width:22px; text-align:center;">100%</span>
-                <button style="background:#dfe3e8; color:#fff; border:0; padding:2px 4px; font-size:0.7rem; border-radius:3px;" onclick="adjustRulerDpi(0.05)" title="Scale Up">+</button>
+                <button style="background:#ffffff; color:#1f2937; border:1px solid #94a3b8; padding:2px 6px; font-size:0.85rem; font-weight:bold; border-radius:3px;" onclick="adjustRulerDpi(0.05)" title="Scale Up">+</button>
             </div>
-            <button style="background:#dfe3e8;border:1px solid #c5ccd6;" onclick="refreshFullscreen3D()">↺</button>
+            <button style="background:#ffffff; color:#1f2937; border:1px solid #94a3b8; font-size:0.9rem; font-weight:bold;" onclick="refreshFullscreen3D()">↺</button>
             <button style="background:#217eaf;font-size:0.7rem;padding:4px 8px;" onclick="openCadPrintModal()">🖨️ CAD</button>
             <button style="background:#ef4444;font-size:0.7rem;padding:4px 8px;" onclick="closeFullscreen()">✖</button>
         </div>
@@ -2520,11 +2520,11 @@ function draw3DWeave(){
         const line2 = `Original Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
 
         ctx.save();
-        ctx.font = "bold 11px Arial, sans-serif";
+        ctx.font = "bold 12px Arial, sans-serif";
         const boxPadX = 10;
         const boxPadY = 8;
         const boxWidth = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2);
-        const boxHeight = 44;
+        const boxHeight = 48;
 
         const boxLeft = right - boxWidth - 8;
         const boxTop = top + 8;
@@ -2535,11 +2535,11 @@ function draw3DWeave(){
         ctx.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
         ctx.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
 
-        ctx.fillStyle = "#374151";
+        ctx.fillStyle = "#ffffff";
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
         ctx.fillText(line1, boxLeft + boxPadX, boxTop + boxPadY);
-        ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 18);
+        ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 19);
         ctx.restore();
 
         ctx.restore();
