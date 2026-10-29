@@ -1582,7 +1582,10 @@ function loadSelectedDesign(){
         // 1. Check 3D specific local edits cache first (highest priority for 3D view simulations)
         try {
             let editsCache = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}");
-            let edKey = Object.keys(editsCache).find(k => k.trim() === selectedVal || cleanDesignName(k) === selectedClean || k.replace(/\D/g, '') === rawDigits);
+            // Prefer exact design-name matches first; digit-only matching can select a different
+            // design that happens to share the same number (e.g. "JT 82455" vs "JT 82455 FLEX").
+            let edKey = Object.keys(editsCache).find(k => k.trim() === selectedVal || cleanDesignName(k) === selectedClean);
+            if (!edKey && rawDigits) edKey = Object.keys(editsCache).find(k => k.replace(/\D/g, '') === rawDigits);
             if(edKey && editsCache[edKey]) {
                 let ed = editsCache[edKey];
                 if(ed.warpLines && ed.warpLines.length) warpLinesData = clone(ed.warpLines);
@@ -1594,12 +1597,15 @@ function loadSelectedDesign(){
 
         // 2. If not in edits cache, find master design from allCloudDesigns
         if (!foundMaster || !warpLinesData.length || !weftLinesData.length) {
+            // First match the selected design name exactly. Only use digits as a fallback,
+            // otherwise a similarly numbered design can be loaded before the exact FLEX record.
             foundMaster = allCloudDesigns.find(d => {
-                let dN = designName(d).trim();
-                let cleanDN = cleanDesignName(dN);
-                let dDigits = dN.replace(/\D/g, '');
-                return dN === selectedVal || cleanDN === selectedClean || (rawDigits && dDigits === rawDigits);
+                const dN = designName(d).trim();
+                return dN === selectedVal || cleanDesignName(dN) === selectedClean;
             });
+            if (!foundMaster && rawDigits) {
+                foundMaster = allCloudDesigns.find(d => designName(d).trim().replace(/\D/g, '') === rawDigits);
+            }
             if(foundMaster) {
                 if(!warpLinesData.length) warpLinesData = extractLinesFromObj(foundMaster, "warp");
                 if(!weftLinesData.length) weftLinesData = extractLinesFromObj(foundMaster, "weft");
@@ -1612,12 +1618,23 @@ function loadSelectedDesign(){
                 collectLocalDesigns().forEach(item => {
                     const iname = designName(item).trim();
                     const iDigits = iname.replace(/\D/g, '');
-                    const ok = iname === selectedVal || cleanDesignName(iname) === selectedClean || (rawDigits && iDigits === rawDigits);
+                    // Exact name matching first; numeric fallback is handled only if no exact
+                    // local record was found below.
+                    const ok = iname === selectedVal || cleanDesignName(iname) === selectedClean;
                     if (!ok) return;
                     if (!foundMaster) foundMaster = item;
                     if (!warpLinesData.length) warpLinesData = extractLinesFromObj(item, "warp");
                     if (!weftLinesData.length) weftLinesData = extractLinesFromObj(item, "weft");
                 });
+                if ((!warpLinesData.length || !weftLinesData.length) && rawDigits) {
+                    collectLocalDesigns().forEach(item => {
+                        const iname = designName(item).trim();
+                        if (iname.replace(/\D/g, '') !== rawDigits) return;
+                        if (!foundMaster) foundMaster = item;
+                        if (!warpLinesData.length) warpLinesData = extractLinesFromObj(item, "warp");
+                        if (!weftLinesData.length) weftLinesData = extractLinesFromObj(item, "weft");
+                    });
+                }
             } catch(e) { console.log("Fallback scan error", e); }
         }
 
@@ -1649,12 +1666,16 @@ function loadSelectedDesign(){
         try {
             let ddArr = JSON.parse(dbGet("denting_drawing_data") || "[]");
             if(Array.isArray(ddArr)) {
-                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === selectedClean || designName(d).replace(/\D/g,'') === rawDigits);
+                dentDrawMatch = ddArr.find(d => cleanDesignName(designName(d)) === selectedClean);
+                if (!dentDrawMatch && rawDigits) dentDrawMatch = ddArr.find(d => designName(d).replace(/\D/g,'') === rawDigits);
             }
         } catch(e) {}
 
         let dMasters = safeJSON("design_masters_data", []);
-        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === selectedClean || m.designNo?.toString().replace(/\D/g,'') === rawDigits) : null;
+        let masterMatch = Array.isArray(dMasters) ? dMasters.find(m => cleanDesignName(designName(m)) === selectedClean) : null;
+        if (!masterMatch && Array.isArray(dMasters) && rawDigits) {
+            masterMatch = dMasters.find(m => m.designNo?.toString().replace(/\D/g,'') === rawDigits);
+        }
 
         let sourceObj = {
             ...activeDesignObj,
