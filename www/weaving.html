@@ -1066,8 +1066,11 @@
                 let matchedWarping = warpingIssues.slice().reverse().find(w => cleanDesignName(w.designNo) === cleanDNo);
                 
                 let warpingMtrsFound = 0;
+                let hasWarpingIssued = false;
+
                 if (matchedWarping && parseFloat(matchedWarping.warpingMts) > 0) {
                     warpingMtrsFound = parseFloat(matchedWarping.warpingMts);
+                    hasWarpingIssued = true; // Warping il issue seiyappattullathu
                     if (matchedWarping.unit) document.getElementById('warpingUnitName').value = matchedWarping.unit;
                     if (matchedWarping.weaverTo) {
                         document.getElementById('topWeaverName').value = matchedWarping.weaverTo;
@@ -1111,7 +1114,9 @@
                 let totalWarpEnds = Math.round(uiReed * baseWidth);
                 
                 let warpData = resolvePattern(found.warpLines || [], found.warpRanges || [], 'warp', defaultWarpCount);
-                if (warpData.totalPatternVal > 0) {
+                
+                // 🟢 Warping-il issue seithirunthal, Warp Yarn Header-il auto-fill seyyathu (Empty-ah or default row mattum irukum)
+                if (!hasWarpingIssued && warpData.totalPatternVal > 0) {
                     let repeats = Math.floor(totalWarpEnds / warpData.totalPatternVal);
                     let rem = totalWarpEnds % warpData.totalPatternVal;
                     
@@ -1142,7 +1147,20 @@
                 }
 
                 renderWeightsByMeters(val);
+                
+                // Warping issue seithiruntha warp table-ai empty seithurom
+                if (hasWarpingIssued) {
+                    document.querySelector('#warpRowsTable tbody').innerHTML = `<tr>
+                        <td><input type="text" placeholder="Count" class="w-count" required></td>
+                        <td><input type="text" placeholder="Colour" class="w-colour" required></td>
+                        <td><input type="number" step="0.001" placeholder="0.000" class="w-weight" onblur="formatDecimal(this)" required></td>
+                        <td><input type="number" step="0.001" placeholder="0.000" class="w-issued" onblur="formatDecimal(this)" required></td>
+                        <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
+                    </tr>`;
+                }
+
             } else {
+                // Reset fields...
                 document.getElementById('warpCount').value = '';
                 document.getElementById('warpCount2').value = '';
                 document.getElementById('weftCount').value = '';
@@ -1152,21 +1170,6 @@
                 document.getElementById('warpingUnitName').value = '';
                 document.getElementById('noOfBeams').value = '';
                 document.getElementById('beamMtrs').value = '';
-                
-                document.querySelector('#warpRowsTable tbody').innerHTML = `<tr>
-                    <td><input type="text" placeholder="Count" class="w-count" required></td>
-                    <td><input type="text" placeholder="Colour" class="w-colour" required></td>
-                    <td><input type="number" step="0.001" placeholder="0.000" class="w-weight" onblur="formatDecimal(this)" required></td>
-                    <td><input type="number" step="0.001" placeholder="0.000" class="w-issued" onblur="formatDecimal(this)" required></td>
-                    <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
-                </tr>`;
-                document.querySelector('#weftRowsTable tbody').innerHTML = `<tr>
-                    <td><input type="text" placeholder="Count" class="wf-count" required></td>
-                    <td><input type="text" placeholder="Colour" class="wf-colour" required></td>
-                    <td><input type="number" step="0.001" placeholder="0.000" class="wf-weight" onblur="formatDecimal(this)" required></td>
-                    <td><input type="number" step="0.001" placeholder="0.000" class="wf-issued" onblur="formatDecimal(this)" required></td>
-                    <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
-                </tr>`;
             }
         }
 
