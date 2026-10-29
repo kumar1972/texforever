@@ -1191,7 +1191,7 @@
                 const weftTbody = document.querySelector('#weftRowsTable tbody');
                 weftTbody.innerHTML = '';
                 baseWeftWeights[val].forEach(r => {
-                    let weightKg = (r.tPick * weftMtrs) / (1693.33 * r.calcCount);
+                    let weightKg = (r.tPick * weftMtrs) / (1692.00 * r.calcCount);
                     let calculatedWt = weightKg.toFixed(3);
                     let dyeingRcvWt = getDyeingReceivedWt(val, r.colour, 'Weft');
                     let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
