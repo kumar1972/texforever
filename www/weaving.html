@@ -353,7 +353,7 @@
                         style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
                     </div>
                     <div class="input-group-btn" style="margin-top: 4px;">
-                        <select id="topWeaverName" style="display:none;" required><option value="">Select Weaver</option></select>
+                        <select id="topWeaverName" style="display:none;"><option value="">Select Weaver</option></select>
                         <button type="button" class="btn-add-inline" onclick="addWeaver()">+ Add</button>
                     </div>
                 </div>
@@ -371,7 +371,7 @@
                         id="designDropdownList"
                         style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
                     </div>
-                    <select id="topDesignNo" style="display:none;" onchange="onDesignSelect(this.value)" required>
+                    <select id="topDesignNo" style="display:none;" onchange="onDesignSelect(this.value)">
                         <option value="">Select Design</option>
                     </select>
                 </div>
@@ -381,7 +381,7 @@
                 <!-- 🟢 AUTO FILL FROM WARPING MTRS 🟢 -->
                 <div class="form-group">
                     <label>Order Mtrs (Warping Mtrs)</label>
-                    <input type="number" step="0.01" id="weavingMts" placeholder="Meters" oninput="calcFabricMts()" required>
+                    <input type="number" step="0.01" id="weavingMts" placeholder="Meters" oninput="calcFabricMts()">
                 </div>
                 <div class="form-group">
                     <label>Crimp %</label>
@@ -778,16 +778,14 @@
             );
 
             let select = document.getElementById('topWeaverName');
-            let currentVal = select.value;
+            let currentVal = select ? select.value : '';
             let html = '<option value="">Select Weaver</option>';
             allCombinedWeavers.forEach(w => {
                 html += `<option value="${w}">${w}</option>`;
             });
-            select.innerHTML = html;
-            if(currentVal) {
-                select.value = currentVal;
-                let wInput = document.getElementById('weaverSearchInput');
-                if(wInput) wInput.value = currentVal;
+            if(select) {
+                select.innerHTML = html;
+                if(currentVal) select.value = currentVal;
             }
         }
 
@@ -857,7 +855,8 @@
                     loadWeaverDropdown();
                     alert(`Weaver '${name}' added successfully! ✅`);
                 }
-                document.getElementById('topWeaverName').value = name;
+                let hiddenSelect = document.getElementById('topWeaverName');
+                if(hiddenSelect) hiddenSelect.value = name;
                 let wInput = document.getElementById('weaverSearchInput');
                 if(wInput) wInput.value = name;
             }
@@ -870,6 +869,7 @@
             issues.forEach(i => { if(i.unit) unitSet.add(i.unit.trim()); });
 
             let select = document.getElementById('warpingUnitName');
+            if(!select) return;
             let currentVal = select.value;
             let html = '<option value="">Select Unit</option>';
             Array.from(unitSet).sort().forEach(u => {
@@ -892,7 +892,8 @@
                     loadWarpingUnitDropdown();
                     alert(`Warping Unit '${name}' added successfully! ✅`);
                 }
-                document.getElementById('warpingUnitName').value = name;
+                let uSelect = document.getElementById('warpingUnitName');
+                if(uSelect) uSelect.value = name;
             }
         }
 
@@ -990,6 +991,7 @@
 
         function loadBottomOrderDropdown() {
             let select = document.getElementById('botActiveOrderSelect');
+            if(!select) return;
             let html = '<option value="">Select Active Order</option>';
             
             let added = new Set();
@@ -1052,10 +1054,12 @@
             let crimp = parseFloat(document.getElementById('crimpPerc').value) || 0;
             if (orderMtrs > 0) {
                 let result = orderMtrs - (orderMtrs * (crimp / 100));
-                document.getElementById('fabricMts').value = result.toFixed(2);
+                let fMtsInput = document.getElementById('fabricMts');
+                if(fMtsInput) fMtsInput.value = result.toFixed(2);
                 recalculateWeights();
             } else {
-                document.getElementById('fabricMts').value = '';
+                let fMtsInput = document.getElementById('fabricMts');
+                if(fMtsInput) fMtsInput.value = '';
             }
         }
 
@@ -1106,7 +1110,6 @@
                 window.StorageDB.setItem('selected_design_number', val);
                 let cleanDNo = cleanDesignName(val);
                 
-                // Check Warping Intimation Box
                 checkWarpingIntimation(cleanDNo);
 
                 let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
@@ -1128,9 +1131,11 @@
                 if (matchedWarping && parseFloat(matchedWarping.warpingMts) > 0) {
                     warpingMtrsFound = parseFloat(matchedWarping.warpingMts);
                     hasWarpingIssued = true;
-                    if (matchedWarping.unit) document.getElementById('warpingUnitName').value = matchedWarping.unit;
+                    let uInput = document.getElementById('warpingUnitName');
+                    if (matchedWarping.unit && uInput) uInput.value = matchedWarping.unit;
                     if (matchedWarping.weaverTo) {
-                        document.getElementById('topWeaverName').value = matchedWarping.weaverTo;
+                        let twInput = document.getElementById('topWeaverName');
+                        if(twInput) twInput.value = matchedWarping.weaverTo;
                         let wInput = document.getElementById('weaverSearchInput');
                         if(wInput) wInput.value = matchedWarping.weaverTo;
                     }
@@ -1144,21 +1149,30 @@
                 let specStatus = (specs.status || matchedOrder.status || '').toLowerCase();
                 let rec = weavingMasterData.find(r => cleanDesignName(r.designNo || r.designNumber) === cleanDNo);
 
-                if(specStatus === 'completed' || (rec && rec.status && rec.status.toLowerCase() === 'completed')) {
-                    document.getElementById('top_completed_status').checked = true;
-                } else {
-                    document.getElementById('top_completed_status').checked = false;
+                let topCompCb = document.getElementById('top_completed_status');
+                if(topCompCb) {
+                    if(specStatus === 'completed' || (rec && rec.status && rec.status.toLowerCase() === 'completed')) {
+                        topCompCb.checked = true;
+                    } else {
+                        topCompCb.checked = false;
+                    }
                 }
 
-                document.getElementById('warpCount').value = matchedOrder.baseBeamCount || specs.baseBeamCount || found.warp1 || specs.warp || specs.count1 || '';
-                document.getElementById('warpCount2').value = matchedOrder.topBeamCount || specs.topBeamCount || found.warp2 || specs.warp2 || specs.count2 || ''; 
-                document.getElementById('weftCount').value = matchedOrder.weftCount || specs.weftCount || found.weftCount || specs.weft || '';
+                let wc1 = document.getElementById('warpCount');
+                if(wc1) wc1.value = matchedOrder.baseBeamCount || specs.baseBeamCount || found.warp1 || specs.warp || specs.count1 || '';
+                let wc2 = document.getElementById('warpCount2');
+                if(wc2) wc2.value = matchedOrder.topBeamCount || specs.topBeamCount || found.warp2 || specs.warp2 || specs.count2 || ''; 
+                let wfCount = document.getElementById('weftCount');
+                if(wfCount) wfCount.value = matchedOrder.weftCount || specs.weftCount || found.weftCount || specs.weft || '';
 
-                document.getElementById('weavingMts').value = warpingMtrsFound > 0 ? warpingMtrsFound.toFixed(2) : '';
-                document.getElementById('crimpPerc').value = "5";
+                let wmInput = document.getElementById('weavingMts');
+                if(wmInput) wmInput.value = warpingMtrsFound > 0 ? warpingMtrsFound.toFixed(2) : '';
+                let cpInput = document.getElementById('crimpPerc');
+                if(cpInput) cpInput.value = "5";
                 
                 let fabricMtrs = warpingMtrsFound > 0 ? warpingMtrsFound - (warpingMtrsFound * 0.05) : 0;
-                document.getElementById('fabricMts').value = fabricMtrs > 0 ? fabricMtrs.toFixed(2) : '';
+                let fmInput = document.getElementById('fabricMts');
+                if(fmInput) fmInput.value = fabricMtrs > 0 ? fabricMtrs.toFixed(2) : '';
 
                 let defaultWarpCount = matchedOrder.baseBeamCount || found.warp1 || specs.baseBeamCount || found.count1 || specs.warp || '20';
                 let defaultWeftCount = matchedOrder.weftCount || found.weftCount || specs.weftCount || specs.weft || '40';
@@ -1193,7 +1207,7 @@
                 let weftWidth = parseFloat(found.weftWidth || specs.weftWidth) || (baseWidth + 3);
                 let totalFabricPick = weftWidth * uiPick;
 
-                let weftData = resolvePattern(found.weftLines || [], found.weftRanges || [], 'weft', defaultWeftCount);
+                let weftData = resolvePattern(found.weftLines || [], found.weftRanges || [], 'weft', defaultWarpCount);
                 if (weftData.totalPatternVal > 0) {
                     weftData.summary.forEach(obj => {
                         let calcCount = parseYarnCount(obj.count) || parseYarnCount(defaultWeftCount) || 40;
@@ -1210,15 +1224,15 @@
                 }
 
             } else {
-                document.getElementById('warpCount').value = '';
-                document.getElementById('warpCount2').value = '';
-                document.getElementById('weftCount').value = '';
-                document.getElementById('weavingMts').value = '';
-                document.getElementById('fabricMts').value = '';
-                document.getElementById('crimpPerc').value = '5';
-                document.getElementById('warpingUnitName').value = '';
-                document.getElementById('noOfBeams').value = '';
-                document.getElementById('beamMtrs').value = '';
+                let wc1 = document.getElementById('warpCount'); if(wc1) wc1.value = '';
+                let wc2 = document.getElementById('warpCount2'); if(wc2) wc2.value = '';
+                let wfCount = document.getElementById('weftCount'); if(wfCount) wfCount.value = '';
+                let wmInput = document.getElementById('weavingMts'); if(wmInput) wmInput.value = '';
+                let fmInput = document.getElementById('fabricMts'); if(fmInput) fmInput.value = '';
+                let cpInput = document.getElementById('crimpPerc'); if(cpInput) cpInput.value = '5';
+                let uInput = document.getElementById('warpingUnitName'); if(uInput) uInput.value = '';
+                let nbInput = document.getElementById('noOfBeams'); if(nbInput) nbInput.value = '';
+                let bmInput = document.getElementById('beamMtrs'); if(bmInput) bmInput.value = '';
                 let box = document.getElementById('warpingIntimationBox');
                 if(box) box.style.display = 'none';
             }
@@ -1236,14 +1250,16 @@
 
             if(baseWarpWeights[val] && baseWarpWeights[val].length > 0) {
                 const warpTbody = document.querySelector('#warpRowsTable tbody');
-                warpTbody.innerHTML = '';
-                baseWarpWeights[val].forEach(r => {
-                    let weightKg = (r.ends * currentOrderMts) / (1692.00 * r.calcCount);
-                    let calculatedWt = weightKg.toFixed(3);
-                    let dyeingRcvWt = getDyeingReceivedWt(val, r.colour, 'Warp');
-                    let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
-                    addWarpRow(r.count, r.colour, calculatedWt, issWgt);
-                });
+                if(warpTbody) {
+                    warpTbody.innerHTML = '';
+                    baseWarpWeights[val].forEach(r => {
+                        let weightKg = (r.ends * currentOrderMts) / (1692.00 * r.calcCount);
+                        let calculatedWt = weightKg.toFixed(3);
+                        let dyeingRcvWt = getDyeingReceivedWt(val, r.colour, 'Warp');
+                        let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
+                        addWarpRow(r.count, r.colour, calculatedWt, issWgt);
+                    });
+                }
             } else {
                 const warpTbody = document.querySelector('#warpRowsTable tbody');
                 if(warpTbody && warpTbody.children.length === 0) {
@@ -1259,14 +1275,16 @@
 
             if(baseWeftWeights[val] && baseWeftWeights[val].length > 0) {
                 const weftTbody = document.querySelector('#weftRowsTable tbody');
-                weftTbody.innerHTML = '';
-                baseWeftWeights[val].forEach(r => {
-                    let weightKg = (r.tPick * weftMtrs) / (1692.00 * r.calcCount);
-                    let calculatedWt = weightKg.toFixed(3);
-                    let dyeingRcvWt = getDyeingReceivedWt(val, r.colour, 'Weft');
-                    let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
-                    addWeftRow(r.count, r.colour, calculatedWt, issWgt);
-                });
+                if(weftTbody) {
+                    weftTbody.innerHTML = '';
+                    baseWeftWeights[val].forEach(r => {
+                        let weightKg = (r.tPick * weftMtrs) / (1692.00 * r.calcCount);
+                        let calculatedWt = weightKg.toFixed(3);
+                        let dyeingRcvWt = getDyeingReceivedWt(val, r.colour, 'Weft');
+                        let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
+                        addWeftRow(r.count, r.colour, calculatedWt, issWgt);
+                    });
+                }
             }
         }
 
@@ -1277,6 +1295,7 @@
 
         function addWarpRow(count, color, orderWt, issuedWt) {
             const tbody = document.querySelector('#warpRowsTable tbody');
+            if(!tbody) return;
             let row = tbody.insertRow();
             row.innerHTML = `
                 <td><input type="text" value="${count}" class="w-count" readonly></td>
@@ -1289,6 +1308,7 @@
 
         function addWeftRow(count, color, orderWt, issuedWt) {
             const tbody = document.querySelector('#weftRowsTable tbody');
+            if(!tbody) return;
             let row = tbody.insertRow();
             row.innerHTML = `
                 <td><input type="text" value="${count}" class="wf-count" readonly></td>
@@ -1305,9 +1325,8 @@
 
             let dateVal = document.getElementById('topDate').value;
             let weaverName = document.getElementById('topWeaverName').value || document.getElementById('weaverSearchInput').value;
-            let designNo = document.getElementById('topDesignNo').value;
+            let designNo = document.getElementById('topDesignNo').value || document.getElementById('designSearchInput').value;
             let weavingMts = document.getElementById('weavingMts').value;
-            let crimpPerc = document.getElementById('crimpPerc').value;
             let fabricMts = document.getElementById('fabricMts').value;
             let warpingUnitName = document.getElementById('warpingUnitName').value;
             let isCompleted = document.getElementById('top_completed_status').checked;
@@ -1318,49 +1337,53 @@
             }
 
             let btn = document.getElementById('saveTopBtnTxt');
-            let origText = btn.innerText;
-            btn.innerText = "⏳ Saving...";
+            let origText = btn ? btn.innerText : 'Save';
+            if(btn) btn.innerText = "⏳ Saving...";
 
             let warpRows = document.querySelectorAll('#warpRowsTable tbody tr');
             let newWarpTrans = [];
             warpRows.forEach(tr => {
-                let count = tr.querySelector('.w-count').value;
-                let colour = tr.querySelector('.w-colour').value;
-                let orderWt = tr.querySelector('.w-weight').value;
-                let issuedWt = tr.querySelector('.w-issued').value;
-                newWarpTrans.push({
-                    id: Date.now() + Math.random(),
-                    date: dateVal,
-                    designNo: designNo,
-                    weaverName: weaverName,
-                    count: count,
-                    colour: colour,
-                    orderWt: orderWt,
-                    issuedWt: issuedWt,
-                    returnWt: '',
-                    status: isCompleted ? 'completed' : 'running'
-                });
+                let countEl = tr.querySelector('.w-count');
+                let colourEl = tr.querySelector('.w-colour');
+                let orderWtEl = tr.querySelector('.w-weight');
+                let issuedWtEl = tr.querySelector('.w-issued');
+                if(countEl && colourEl && orderWtEl && issuedWtEl) {
+                    newWarpTrans.push({
+                        id: Date.now() + Math.random(),
+                        date: dateVal,
+                        designNo: designNo,
+                        weaverName: weaverName,
+                        count: countEl.value,
+                        colour: colourEl.value,
+                        orderWt: orderWtEl.value,
+                        issuedWt: issuedWtEl.value,
+                        returnWt: '',
+                        status: isCompleted ? 'completed' : 'running'
+                    });
+                }
             });
 
             let weftRows = document.querySelectorAll('#weftRowsTable tbody tr');
             let newWeftTrans = [];
             weftRows.forEach(tr => {
-                let count = tr.querySelector('.wf-count').value;
-                let colour = tr.querySelector('.wf-colour').value;
-                let orderWt = tr.querySelector('.wf-weight').value;
-                let issuedWt = tr.querySelector('.wf-issued').value;
-                newWeftTrans.push({
-                    id: Date.now() + Math.random(),
-                    date: dateVal,
-                    designNo: designNo,
-                    weaverName: weaverName,
-                    count: count,
-                    colour: colour,
-                    orderWt: orderWt,
-                    issuedWt: issuedWt,
-                    returnWt: '',
-                    status: isCompleted ? 'completed' : 'running'
-                });
+                let countEl = tr.querySelector('.wf-count');
+                let colourEl = tr.querySelector('.wf-colour');
+                let orderWtEl = tr.querySelector('.wf-weight');
+                let issuedWtEl = tr.querySelector('.wf-issued');
+                if(countEl && colourEl && orderWtEl && issuedWtEl) {
+                    newWeftTrans.push({
+                        id: Date.now() + Math.random(),
+                        date: dateVal,
+                        designNo: designNo,
+                        weaverName: weaverName,
+                        count: countEl.value,
+                        colour: colourEl.value,
+                        orderWt: orderWtEl.value,
+                        issuedWt: issuedWtEl.value,
+                        returnWt: '',
+                        status: isCompleted ? 'completed' : 'running'
+                    });
+                }
             });
 
             warpTransactions = warpTransactions.filter(x => !(cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName));
@@ -1393,7 +1416,7 @@
             updateTables();
             loadBottomOrderDropdown();
             alert("Weaving Order Saved Successfully! ✅");
-            btn.innerText = origText;
+            if(btn) btn.innerText = origText;
         }
 
         async function saveBottomData(e) {
@@ -1410,18 +1433,24 @@
 
             let warpRows = document.querySelectorAll('#botWarpTable tr:not(:first-child)');
             warpRows.forEach((tr, ri) => {
-                const returnWtStr = tr.querySelector('.bw-return').value.trim();
-                let returnWt = returnWtStr !== '' ? parseFloat(returnWtStr) || 0 : '';
-                let matching = warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName);
-                if(matching[ri]) matching[ri].returnWt = returnWt;
+                let retInput = tr.querySelector('.bw-return');
+                if(retInput) {
+                    const returnWtStr = retInput.value.trim();
+                    let returnWt = returnWtStr !== '' ? parseFloat(returnWtStr) || 0 : '';
+                    let matching = warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName);
+                    if(matching[ri]) matching[ri].returnWt = returnWt;
+                }
             });
 
             let weftRows = document.querySelectorAll('#botWeftTable tr:not(:first-child)');
             weftRows.forEach((tr, ri) => {
-                const returnWtStr = tr.querySelector('.bft-return').value.trim();
-                let returnWt = returnWtStr !== '' ? parseFloat(returnWtStr) || 0 : '';
-                let matching = weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName);
-                if(matching[ri]) matching[ri].returnWt = returnWt;
+                let retInput = tr.querySelector('.bft-return');
+                if(retInput) {
+                    const returnWtStr = retInput.value.trim();
+                    let returnWt = returnWtStr !== '' ? parseFloat(returnWtStr) || 0 : '';
+                    let matching = weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(designNo) && x.weaverName === weaverName);
+                    if(matching[ri]) matching[ri].returnWt = returnWt;
+                }
             });
 
             window.StorageDB.setItem('weaving_warp_trans', JSON.stringify(warpTransactions));
@@ -1434,11 +1463,11 @@
 
             updateTables();
             alert("Bottom Entry Saved Successfully! ✅");
-            document.getElementById('botActiveOrderSelect').value = '';
-            document.getElementById('botDesignNo').value = '';
-            document.getElementById('botWeaverName').value = '';
-            document.getElementById('botWarpTable').innerHTML = '';
-            document.getElementById('botWeftTable').innerHTML = '';
+            let botSel = document.getElementById('botActiveOrderSelect'); if(botSel) botSel.value = '';
+            let botDNo = document.getElementById('botDesignNo'); if(botDNo) botDNo.value = '';
+            let botWName = document.getElementById('botWeaverName'); if(botWName) botWName.value = '';
+            let botWarp = document.getElementById('botWarpTable'); if(botWarp) botWarp.innerHTML = '';
+            let botWeft = document.getElementById('botWeftTable'); if(botWeft) botWeft.innerHTML = '';
         }
 
         async function toggleWarpStatus(id, newStatus) {
@@ -1457,54 +1486,56 @@
 
         function updateTables() {
             const warpTbody = document.querySelector('#warpTable tbody');
-            if(!warpTbody) return;
-            warpTbody.innerHTML = '';
-            warpTransactions.slice().reverse().forEach((item) => {
-                if(!item.status) item.status = "running";
-                let statusColor = item.status == 'running' ? '#D97706' : '#526E51';
-                let statusBtn = item.status == 'running' 
-                    ? `<button class="action-complete" onclick="toggleWarpStatus('${item.id}', 'completed')">Complete</button>` 
-                    : `<button class="action-running" onclick="toggleWarpStatus('${item.id}', 'running')">Running</button>`;
+            if(warpTbody) {
+                warpTbody.innerHTML = '';
+                warpTransactions.slice().reverse().forEach((item) => {
+                    if(!item.status) item.status = "running";
+                    let statusColor = item.status == 'running' ? '#D97706' : '#526E51';
+                    let statusBtn = item.status == 'running' 
+                        ? `<button class="action-complete" onclick="toggleWarpStatus('${item.id}', 'completed')">Complete</button>` 
+                        : `<button class="action-running" onclick="toggleWarpStatus('${item.id}', 'running')">Running</button>`;
 
-                let row = warpTbody.insertRow();
-                row.innerHTML = `
-                    <td><b>${item.designNo}</b></td>
-                    <td style="color:#D97706; font-weight:700;">${item.weaverName || '-'}</td>
-                    <td>${item.count}</td>
-                    <td>${item.colour}</td>
-                    <td>${Number(item.orderWt).toFixed(3)}</td>
-                    <td>${item.issuedWt !== '' ? Number(item.issuedWt).toFixed(3) : '-'}</td>
-                    <td>${item.returnWt !== '' && item.returnWt !== undefined ? Number(item.returnWt).toFixed(3) : '-'}</td>
-                    <td>-</td>
-                    <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${item.status}</td>
-                    <td>${statusBtn} <button class="action-del" onclick="deleteWarp('${item.id}')">🗑️</button></td>
-                `;
-            });
+                    let row = warpTbody.insertRow();
+                    row.innerHTML = `
+                        <td><b>${item.designNo}</b></td>
+                        <td style="color:#D97706; font-weight:700;">${item.weaverName || '-'}</td>
+                        <td>${item.count}</td>
+                        <td>${item.colour}</td>
+                        <td>${Number(item.orderWt).toFixed(3)}</td>
+                        <td>${item.issuedWt !== '' ? Number(item.issuedWt).toFixed(3) : '-'}</td>
+                        <td>${item.returnWt !== '' && item.returnWt !== undefined ? Number(item.returnWt).toFixed(3) : '-'}</td>
+                        <td>-</td>
+                        <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${item.status}</td>
+                        <td>${statusBtn} <button class="action-del" onclick="deleteWarp('${item.id}')">🗑️</button></td>
+                    `;
+                });
+            }
 
             const weftTbody = document.querySelector('#weftTable tbody');
-            if(!weftTbody) return;
-            weftTbody.innerHTML = '';
-            weftTransactions.slice().reverse().forEach((item) => {
-                if(!item.status) item.status = "running";
-                let statusColor = item.status == 'running' ? '#D97706' : '#526E51';
-                let statusBtn = item.status == 'running' 
-                    ? `<button class="action-complete" onclick="toggleWeftStatus('${item.id}', 'completed')">Complete</button>` 
-                    : `<button class="action-running" onclick="toggleWeftStatus('${item.id}', 'running')">Running</button>`;
+            if(weftTbody) {
+                weftTbody.innerHTML = '';
+                weftTransactions.slice().reverse().forEach((item) => {
+                    if(!item.status) item.status = "running";
+                    let statusColor = item.status == 'running' ? '#D97706' : '#526E51';
+                    let statusBtn = item.status == 'running' 
+                        ? `<button class="action-complete" onclick="toggleWeftStatus('${item.id}', 'completed')">Complete</button>` 
+                        : `<button class="action-running" onclick="toggleWeftStatus('${item.id}', 'running')">Running</button>`;
 
-                let row = weftTbody.insertRow();
-                row.innerHTML = `
-                    <td><b>${item.designNo}</b></td>
-                    <td style="color:#D97706; font-weight:700;">${item.weaverName || '-'}</td>
-                    <td>${item.count}</td>
-                    <td>${item.colour}</td>
-                    <td>${Number(item.orderWt).toFixed(3)}</td>
-                    <td>${item.issuedWt !== '' ? Number(item.issuedWt).toFixed(3) : '-'}</td>
-                    <td>${item.returnWt !== '' && item.returnWt !== undefined ? Number(item.returnWt).toFixed(3) : '-'}</td>
-                    <td>-</td>
-                    <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${item.status}</td>
-                    <td>${statusBtn} <button class="action-del" onclick="deleteWeft('${item.id}')">🗑️</button></td>
-                `;
-            });
+                    let row = weftTbody.insertRow();
+                    row.innerHTML = `
+                        <td><b>${item.designNo}</b></td>
+                        <td style="color:#D97706; font-weight:700;">${item.weaverName || '-'}</td>
+                        <td>${item.count}</td>
+                        <td>${item.colour}</td>
+                        <td>${Number(item.orderWt).toFixed(3)}</td>
+                        <td>${item.issuedWt !== '' ? Number(item.issuedWt).toFixed(3) : '-'}</td>
+                        <td>${item.returnWt !== '' && item.returnWt !== undefined ? Number(item.returnWt).toFixed(3) : '-'}</td>
+                        <td>-</td>
+                        <td style="color:${statusColor}; font-weight:bold; text-transform:uppercase;">${item.status}</td>
+                        <td>${statusBtn} <button class="action-del" onclick="deleteWeft('${item.id}')">🗑️</button></td>
+                    `;
+                });
+            }
         }
 
         async function deleteWarp(id) {
@@ -1524,10 +1555,12 @@
         function openPreview(type) {
             let tableId = type === 'warp' ? 'warpTable' : 'weftTable';
             let titleText = type === 'warp' ? '👁️ Warp Order Full Screen Preview' : '👁️ Weft Order Full Screen Preview';
-            document.getElementById('previewModalTitle').innerText = titleText;
+            let titleEl = document.getElementById('previewModalTitle');
+            if(titleEl) titleEl.innerText = titleText;
             let table = document.getElementById(tableId);
             if(!table) return;
-            document.getElementById('previewContent').innerHTML = table.outerHTML;
+            let pContent = document.getElementById('previewContent');
+            if(pContent) pContent.innerHTML = table.outerHTML;
             openModal('previewModal');
         }
 
@@ -1546,23 +1579,27 @@
             let parts = val.split('_');
             let dNo = parts[0];
             let weaver = parts.slice(1).join('_');
-            document.getElementById('botDesignNo').value = dNo;
-            document.getElementById('botWeaverName').value = weaver;
+            let bDNo = document.getElementById('botDesignNo'); if(bDNo) bDNo.value = dNo;
+            let bWName = document.getElementById('botWeaverName'); if(bWName) bWName.value = weaver;
 
             const warpTable = document.getElementById('botWarpTable');
             const weftTable = document.getElementById('botWeftTable');
-            warpTable.innerHTML = '<th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th>';
-            weftTable.innerHTML = '<th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th>';
+            if(warpTable) warpTable.innerHTML = '<th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th>';
+            if(weftTable) weftTable.innerHTML = '<th>Count</th><th>Colour</th><th>Order Wt</th><th>Issued Wt</th><th>Return Wt</th>';
 
-            warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(dNo) && x.weaverName === weaver).forEach(r => {
-                let row = warpTable.insertRow();
-                row.innerHTML = `<td><input type="text" value="${r.count}" readonly></td><td><input type="text" value="${r.colour}" readonly></td><td><input type="text" value="${r.orderWt}" readonly></td><td><input type="text" value="${r.issuedWt}" readonly></td><td><input type="number" step="0.001" class="bw-return" value="${r.returnWt || ''}"></td>`;
-            });
+            if(warpTable) {
+                warpTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(dNo) && x.weaverName === weaver).forEach(r => {
+                    let row = warpTable.insertRow();
+                    row.innerHTML = `<td><input type="text" value="${r.count}" readonly></td><td><input type="text" value="${r.colour}" readonly></td><td><input type="text" value="${r.orderWt}" readonly></td><td><input type="text" value="${r.issuedWt}" readonly></td><td><input type="number" step="0.001" class="bw-return" value="${r.returnWt || ''}"></td>`;
+                });
+            }
 
-            weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(dNo) && x.weaverName === weaver).forEach(r => {
-                let row = weftTable.insertRow();
-                row.innerHTML = `<td><input type="text" value="${r.count}" readonly></td><td><input type="text" value="${r.colour}" readonly></td><td><input type="text" value="${r.orderWt}" readonly></td><td><input type="text" value="${r.issuedWt}" readonly></td><td><input type="number" step="0.001" class="bft-return" value="${r.returnWt || ''}"></td>`;
-            });
+            if(weftTable) {
+                weftTransactions.filter(x => cleanDesignName(x.designNo) === cleanDesignName(dNo) && x.weaverName === weaver).forEach(r => {
+                    let row = weftTable.insertRow();
+                    row.innerHTML = `<td><input type="text" value="${r.count}" readonly></td><td><input type="text" value="${r.colour}" readonly></td><td><input type="text" value="${r.orderWt}" readonly></td><td><input type="text" value="${r.issuedWt}" readonly></td><td><input type="number" step="0.001" class="bft-return" value="${r.returnWt || ''}"></td>`;
+                });
+            }
         }
     </script>
 </body>
