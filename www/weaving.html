@@ -1179,7 +1179,7 @@
                 const warpTbody = document.querySelector('#warpRowsTable tbody');
                 warpTbody.innerHTML = '';
                 baseWarpWeights[val].forEach(r => {
-                    let weightKg = (r.ends * currentOrderMts) / (1693.33 * r.calcCount);
+                    let weightKg = (r.ends * currentOrderMts) / (1692.00 * r.calcCount);
                     let calculatedWt = weightKg.toFixed(3);
                     let dyeingRcvWt = getDyeingReceivedWt(val, r.colour, 'Warp');
                     let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
