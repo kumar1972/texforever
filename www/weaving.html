@@ -429,6 +429,17 @@
                 </div>
             </div>
 
+            <!-- 🟢 WARPING INTIMATION / ACCEPT BOX 🟢 -->
+            <div id="warpingIntimationBox" style="background: #F0FDF4; border: 1px solid #10B981; border-radius: 8px; padding: 10px; margin-bottom: 10px; display: none;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; font-weight: 700; color: #047857;">
+                        <input type="checkbox" id="acceptWarpingDataCheckbox" onchange="toggleAcceptWarpingData(this.checked)" style="width: 14px; height: 14px; cursor: pointer;">
+                        📥 Accept Warp Details from Warping Unit (Warping-il irunthu edukkavum)
+                    </label>
+                    <span id="warpingInfoText" style="font-size: 10px; color: #059669; font-weight: 600;"></span>
+                </div>
+            </div>
+
             <div class="section-sub-title">Warp Yarn Header</div>
             <div class="form-group">
                 <div style="overflow-x: auto;">
@@ -613,6 +624,7 @@
         let weavingHistory = [];
         let allCombinedDesigns = [];
         let allCombinedWeavers = [];
+        let savedWarpingRecordsCache = [];
 
         function checkUserPermission() {
             let userRole = localStorage.getItem('erp_logged_role') || localStorage.getItem('user_role');
@@ -1047,11 +1059,56 @@
             }
         }
 
+        function checkWarpingIntimation(cleanDNo) {
+            let warpingIssues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
+            let matchedIssues = warpingIssues.filter(w => cleanDesignName(w.designNo) === cleanDNo);
+            
+            let box = document.getElementById('warpingIntimationBox');
+            let infoTxt = document.getElementById('warpingInfoText');
+            let cb = document.getElementById('acceptWarpingDataCheckbox');
+            
+            if (matchedIssues.length > 0) {
+                savedWarpingRecordsCache = matchedIssues;
+                if(infoTxt) infoTxt.innerText = `(${matchedIssues.length} items found from Warping)`;
+                if(box) box.style.display = 'block';
+            } else {
+                savedWarpingRecordsCache = [];
+                if(box) box.style.display = 'none';
+                if(cb) cb.checked = false;
+            }
+        }
+
+        function toggleAcceptWarpingData(isAccepted) {
+            const warpTbody = document.querySelector('#warpRowsTable tbody');
+            if (!warpTbody) return;
+
+            if (isAccepted && savedWarpingRecordsCache.length > 0) {
+                warpTbody.innerHTML = '';
+                savedWarpingRecordsCache.forEach(item => {
+                    let row = warpTbody.insertRow();
+                    row.innerHTML = `
+                        <td><input type="text" value="${item.count || ''}" class="w-count" readonly></td>
+                        <td><input type="text" value="${item.color || ''}" class="w-colour" readonly></td>
+                        <td><input type="number" step="0.001" value="${item.orderWt || '0.000'}" class="w-weight" readonly></td>
+                        <td><input type="number" step="0.001" value="${item.issueWt || '0.000'}" class="w-issued" onblur="formatDecimal(this)" required></td>
+                        <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
+                    `;
+                });
+            } else {
+                let val = document.getElementById('topDesignNo').value;
+                if(val) renderWeightsByMeters(val);
+            }
+        }
+
         function onDesignSelect(val) {
             loadBitmapImage(val);
             if(val) {
                 window.StorageDB.setItem('selected_design_number', val);
                 let cleanDNo = cleanDesignName(val);
+                
+                // Check Warping Intimation Box
+                checkWarpingIntimation(cleanDNo);
+
                 let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
                 let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || val;
                 let specs = designSpecs[specKey] || {};
@@ -1070,7 +1127,7 @@
 
                 if (matchedWarping && parseFloat(matchedWarping.warpingMts) > 0) {
                     warpingMtrsFound = parseFloat(matchedWarping.warpingMts);
-                    hasWarpingIssued = true; // Warping il issue seiyappattullathu
+                    hasWarpingIssued = true;
                     if (matchedWarping.unit) document.getElementById('warpingUnitName').value = matchedWarping.unit;
                     if (matchedWarping.weaverTo) {
                         document.getElementById('topWeaverName').value = matchedWarping.weaverTo;
@@ -1115,7 +1172,6 @@
                 
                 let warpData = resolvePattern(found.warpLines || [], found.warpRanges || [], 'warp', defaultWarpCount);
                 
-                // 🟢 Warping-il issue seithirunthal, Warp Yarn Header-il auto-fill seyyathu (Empty-ah or default row mattum irukum)
                 if (!hasWarpingIssued && warpData.totalPatternVal > 0) {
                     let repeats = Math.floor(totalWarpEnds / warpData.totalPatternVal);
                     let rem = totalWarpEnds % warpData.totalPatternVal;
@@ -1148,19 +1204,12 @@
 
                 renderWeightsByMeters(val);
                 
-                // Warping issue seithiruntha warp table-ai empty seithurom
                 if (hasWarpingIssued) {
-                    document.querySelector('#warpRowsTable tbody').innerHTML = `<tr>
-                        <td><input type="text" placeholder="Count" class="w-count" required></td>
-                        <td><input type="text" placeholder="Colour" class="w-colour" required></td>
-                        <td><input type="number" step="0.001" placeholder="0.000" class="w-weight" onblur="formatDecimal(this)" required></td>
-                        <td><input type="number" step="0.001" placeholder="0.000" class="w-issued" onblur="formatDecimal(this)" required></td>
-                        <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
-                    </tr>`;
+                    let cbAccept = document.getElementById('acceptWarpingDataCheckbox');
+                    if(cbAccept) cbAccept.checked = false;
                 }
 
             } else {
-                // Reset fields...
                 document.getElementById('warpCount').value = '';
                 document.getElementById('warpCount2').value = '';
                 document.getElementById('weftCount').value = '';
@@ -1170,10 +1219,17 @@
                 document.getElementById('warpingUnitName').value = '';
                 document.getElementById('noOfBeams').value = '';
                 document.getElementById('beamMtrs').value = '';
+                let box = document.getElementById('warpingIntimationBox');
+                if(box) box.style.display = 'none';
             }
         }
 
         function renderWeightsByMeters(val) {
+            let cbAccept = document.getElementById('acceptWarpingDataCheckbox');
+            if (cbAccept && cbAccept.checked && savedWarpingRecordsCache.length > 0) {
+                return; 
+            }
+
             let currentOrderMts = parseFloat(document.getElementById('weavingMts').value) || 100;
             let currentFabricMts = parseFloat(document.getElementById('fabricMts').value) || currentOrderMts;
             let weftMtrs = currentFabricMts * (0.94 / 0.95);
@@ -1188,6 +1244,17 @@
                     let issWgt = dyeingRcvWt !== null ? dyeingRcvWt.toFixed(3) : calculatedWt;
                     addWarpRow(r.count, r.colour, calculatedWt, issWgt);
                 });
+            } else {
+                const warpTbody = document.querySelector('#warpRowsTable tbody');
+                if(warpTbody && warpTbody.children.length === 0) {
+                    warpTbody.innerHTML = `<tr>
+                        <td><input type="text" placeholder="Count" class="w-count" required></td>
+                        <td><input type="text" placeholder="Colour" class="w-colour" required></td>
+                        <td><input type="number" step="0.001" placeholder="0.000" class="w-weight" onblur="formatDecimal(this)" required></td>
+                        <td><input type="number" step="0.001" placeholder="0.000" class="w-issued" onblur="formatDecimal(this)" required></td>
+                        <td style="width: 30px;"><button type="button" class="action-del" onclick="this.closest('tr').remove()">✕</button></td>
+                    </tr>`;
+                }
             }
 
             if(baseWeftWeights[val] && baseWeftWeights[val].length > 0) {
@@ -1242,12 +1309,7 @@
             let weavingMts = document.getElementById('weavingMts').value;
             let crimpPerc = document.getElementById('crimpPerc').value;
             let fabricMts = document.getElementById('fabricMts').value;
-            let warpCount = document.getElementById('warpCount').value;
-            let warpCount2 = document.getElementById('warpCount2').value;
-            let weftCount = document.getElementById('weftCount').value;
             let warpingUnitName = document.getElementById('warpingUnitName').value;
-            let noOfBeams = document.getElementById('noOfBeams').value;
-            let beamMtrs = document.getElementById('beamMtrs').value;
             let isCompleted = document.getElementById('top_completed_status').checked;
 
             if(!designNo || !weaverName) {
