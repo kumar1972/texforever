@@ -7,7 +7,7 @@
 <!-- IMPORTANT: config.js must load first -->
 <script src="config.js"></script>
 <script src="translator.js"></script>
-  <script src="printer.js"></script>
+<script src="printer.js"></script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
@@ -32,7 +32,7 @@
         width: 100%;
         max-width: 900px;
         margin: 0;
-        background: #FFFFFF;
+        background: #f9f8f0;
         border: 1px solid rgba(82, 110, 81, 0.15);
         border-radius: 16px;
         padding: 16px;
@@ -112,7 +112,7 @@
         font-size: 16px;
         margin-bottom: 2px;
         font-weight: 700;
-        color: #FFFF;
+        color: #030712;
         text-align: left;
         position: relative;
         padding-left: 10px;
@@ -287,24 +287,6 @@
     .saved-warp-top {
         display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #E2E8E2; padding-bottom: 6px;
     }
-    .warp-card-img {
-        width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #4A7C59; cursor: zoom-in;
-    }
-    
-    .table-container {
-        width: 100%; border-radius: 6px; overflow-x: auto; border: 1px solid #E2E8E2; background: #FFFFFF;
-    }
-    .warp-sub-table {
-        width: 100%; border-collapse: collapse; font-size: 10px; table-layout: auto;
-    }
-    .warp-sub-table th, .warp-sub-table td {
-        padding: 7px 6px; border: 1px solid #E2E8E2; text-align: center; white-space: nowrap;
-    }
-    .warp-sub-table th {
-        background: #EAF0EA; color: #2F4F38; font-weight: 700; font-size: 9px; text-transform: uppercase;
-    }
-    .warp-sub-table td { color: #1E2B23; }
-
     .action-row {
         display: flex; gap: 6px; justify-content: flex-end; margin-top: 2px; border-top: 1px solid #F4F7F4; padding-top: 6px;
     }
@@ -315,9 +297,6 @@
     .btn-card-del { background: #EF4444; color: white; }
     .btn-card-complete { background: #526E51; color: white; }
     .btn-card-running { background: #D97706; color: white; }
-
-    .excess-text { color: #DC2626; font-weight: 800; background: #FEE2E2; padding: 2px 4px; border-radius: 4px; }
-    .status-pending { color: #D97706; font-weight: 800; font-size: 9px; background: rgba(245, 158, 11, 0.1); padding: 3px 6px; border-radius: 10px; text-transform: uppercase;}
 
     .fullscreen-modal {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -332,19 +311,6 @@
         position: absolute; top: 15px; right: 15px; background: #EF4444; color: white;
         border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 12px;
         cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-  /* Saved Warping modal - முழுத்திரை overlay */
-    #savedListModal {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        z-index: 99999 !important;
-        align-items: center;
-        justify-content: center;
-        background: rgba(18, 25, 20, 0.85);
-        padding: 10px;
     }
 </style>
 </head>
@@ -368,7 +334,6 @@
     <div class="form-section" id="sectionTop">
         <div class="section-badge">1. Warping Order Details (Top)</div>
         
-        <!-- 🟢 Separate Row 1: Date & Design No 🟢 -->
         <div class="form-grid-2">
             <div class="form-group">
                 <label>Date</label>
@@ -376,7 +341,6 @@
             </div>
             <div class="form-group" style="position: relative;">
                 <label>Design No</label>
-                <!-- Searchable Text Input -->
                 <input
                     type="text"
                     id="designSearchInput"
@@ -385,7 +349,6 @@
                     onfocus="openDesignDropdownList()"
                     style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
                 />
-                <!-- Custom Dropdown List Box -->
                 <div
                     id="designDropdownList"
                     style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
@@ -396,7 +359,6 @@
             </div>
         </div>
 
-        <!-- 🟢 Separate Row 2: Warping Name (Unit) 🟢 -->
         <div class="form-group">
             <label>Warping Name (Unit)</label>
             <div class="input-group-btn">
@@ -438,7 +400,6 @@
 
         <div class="form-group" style="position: relative;">
             <label>Weaver To</label>
-            <!-- Searchable Text Input for Weaver -->
             <input
                 type="text"
                 id="weaverSearchInput"
@@ -447,7 +408,6 @@
                 onfocus="openWeaverDropdownList()"
                 style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #D1DED1; background:#FFFFFF; color:#1E2B23; font-size:11px; font-weight:600; outline:none;"
             />
-            <!-- Custom Dropdown List Box for Weaver -->
             <div
                 id="weaverDropdownList"
                 style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
@@ -518,18 +478,12 @@
         <div class="modal-header" style="flex-wrap:wrap; gap:8px;">
             <h3 style="flex:1; min-width:150px;">Saved Warping Data</h3>
             <div style="display:flex; gap:6px; flex-shrink:0;">
-                <button type="button" class="popup-trigger-btn" data-print-bound="true" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background:#3B82F6; position:relative; z-index:2;" onclick="printWarpingList()">🖨️ Print</button>
-                <button type="button" class="close-btn" style="position:relative; z-index:2;" onclick="closeModal('savedListModal')">Close ✕</button>
+                <button type="button" class="popup-trigger-btn" data-print-bound="true" style="width:auto; margin:0; padding:6px 12px; font-size:11px; background:#3B82F6;" onclick="printWarpingList()">🖨️ Print</button>
+                <button type="button" class="close-btn" onclick="closeModal('savedListModal')">Close ✕</button>
             </div>
         </div>
         <div class="modal-body" id="savedCardsContainer"></div>
     </div>
-</div>
-
-<!-- Fullscreen Image Modal -->
-<div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
-    <button class="close-fullscreen">Close ✕</button>
-    <img id="fullscreenImg" src="" alt="Fullscreen Preview">
 </div>
 
 <script>
@@ -551,7 +505,7 @@ function checkUserPermission() {
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
     if (!checkUserPermission()) {
-        alert("Access Denied! You do not have permission to access this page. ❌");
+        alert("Access Denied! ❌");
         window.location.href = "dashboard.html";
         return;
     }
@@ -562,61 +516,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadWeaverSuggestions();
     await loadTopDesignDropdown();
     loadBottomOrderDropdown();
-
-    document.addEventListener("click", function(e){
-        let container = document.getElementById("designSearchInput");
-        let list = document.getElementById("designDropdownList");
-        if(container && list && !container.contains(e.target) && !list.contains(e.target)){
-            list.style.display = "none";
-        }
-
-        let wContainer = document.getElementById("weaverSearchInput");
-        let wList = document.getElementById("weaverDropdownList");
-        if(wContainer && wList && !wContainer.contains(e.target) && !wList.contains(e.target)){
-            wList.style.display = "none";
-        }
-    });
 });
 
 function openModal(modalId) {
     let modal = document.getElementById(modalId);
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('show'), 10);
-    if(modalId === 'savedListModal') {
-        renderCards(); 
-    }
+    if(modalId === 'savedListModal') renderCards();
 }
 
 function closeModal(modalId) {
     let modal = document.getElementById(modalId);
     modal.classList.remove('show');
     setTimeout(() => modal.style.display = 'none', 300);
-}
-
-window.openFullscreenImage = function(src) {
-    if(!src || src === '' || src === 'null') return;
-    document.getElementById('fullscreenImg').src = src;
-    document.getElementById('fullscreenModal').style.display = 'flex';
-};
-window.closeFullscreenImage = function() {
-    document.getElementById('fullscreenModal').style.display = 'none';
-};
-
-function loadBitmapImage() {
-    let activeDesign = document.getElementById('topDesignNo').value || window.StorageDB.getItem('selected_design_number');
-    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs') || '{}');
-    let bitmapContainer = document.getElementById('bitmapDisplayContainer');
-    
-    let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
-    let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
-
-    let imgHtml = '';
-    if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
-        let b64 = designSpecs[specKey].bitmap;
-        imgHtml = `<img src="${b64}" alt="Design Bitmap" onclick="openFullscreenImage('${b64}')" title="Click to view full screen">`;
-    }
-    
-    bitmapContainer.innerHTML = imgHtml;
 }
 
 function cleanDesignName(str) {
@@ -629,9 +541,7 @@ function parseYarnCount(countStr) {
     if (str.includes('/')) {
         let parts = str.split('/');
         if (parts.length === 2) {
-            let ply = parseFloat(parts[0]) || 1;
-            let singleCount = parseFloat(parts[1]) || 1;
-            return singleCount / ply; 
+            return (parseFloat(parts[1]) || 1) / (parseFloat(parts[0]) || 1); 
         }
     }
     return parseFloat(str) || 0;
@@ -678,192 +588,30 @@ function resolvePattern(lines, ranges, type, defaultCount) {
     return order.map(k => summaryMap.get(k));
 }
 
-function addWarpingUnit() {
-    let val = prompt("புதிய Warping Unit பெயரை உள்ளிடவும்:");
-    if(val) {
-        val = val.trim();
-        if(!val) return;
-        let masterUnits = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
-        if(!masterUnits.includes(val)) {
-            masterUnits.push(val);
-            window.StorageDB.setItem('tex_master_warping_units', JSON.stringify(masterUnits));
-            if (window.supabaseSave) window.supabaseSave('tex_master_warping_units', masterUnits);
-            loadWarpingUnitSuggestions();
-            alert(`Unit '${val}' added successfully! ✅`);
-        } else {
-            alert("This Unit Name is already in the Master List!");
-        }
-        document.getElementById('topUnit').value = val;
-    }
-}
-
-function deleteWarpingUnit() {
-    let masterList = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
-    if(masterList.length === 0) { alert(`No manually added Units found to delete.`); return; }
-    let listStr = masterList.map((m, i) => `${i + 1}. ${m}`).join('\n');
-    let idxStr = prompt(`எந்த Unit பெயரை நீக்க வேண்டும்? அதற்கான எண்ணை டைப் செய்யவும்:\n\n${listStr}`);
-    if(idxStr) {
-        let idx = parseInt(idxStr) - 1;
-        if(idx >= 0 && idx < masterList.length) {
-            let deleted = masterList.splice(idx, 1);
-            window.StorageDB.setItem('tex_master_warping_units', JSON.stringify(masterList));
-            if (window.supabaseSave) window.supabaseSave('tex_master_warping_units', masterList);
-            loadWarpingUnitSuggestions();
-            alert(`'${deleted[0]}' நீக்கப்பட்டது! ✅`);
-        } else {
-            alert("தவறான எண் (Invalid Number)!");
-        }
-    }
-}
-
 function loadWarpingUnitSuggestions() {
     let masterUnits = JSON.parse(window.StorageDB.getItem('tex_master_warping_units')) || [];
     let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    
     let unitSet = new Set([...masterUnits]);
     issues.forEach(item => { if(item.unit) unitSet.add(item.unit.trim()); });
 
     let currentVal = document.getElementById('topUnit').value;
     let html = '<option value="">Select Unit</option>';
     Array.from(unitSet).sort().forEach(u => { 
-        let sel = (currentVal && u.toLowerCase() === currentVal.toLowerCase()) ? 'selected' : '';
-        html += `<option value="${u}" ${sel}>${u}</option>`; 
+        html += `<option value="${u}">${u}</option>`; 
     });
     document.getElementById('topUnit').innerHTML = html;
     if(currentVal) document.getElementById('topUnit').value = currentVal;
 }
 
-function addWeaver() {
-    let val = prompt("புதிய Weaver / Party பெயரை உள்ளிடவும்:");
-    if(val) {
-        val = val.trim();
-        if(!val) return;
-        let masterWeavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
-        if(!masterWeavers.includes(val)) {
-            masterWeavers.push(val);
-            window.StorageDB.setItem('tex_master_weavers', JSON.stringify(masterWeavers));
-            if (window.supabaseSave) window.supabaseSave('tex_master_weavers', masterWeavers);
-            loadWeaverSuggestions();
-            alert(`Weaver '${val}' added successfully! ✅`);
-        } else {
-            alert("This Weaver Name is already in the Master List!");
-        }
-        document.getElementById('topWeaverTo').value = val;
-        let wInput = document.getElementById('weaverSearchInput');
-        if(wInput) wInput.value = val;
-    }
-}
-
-function deleteWeaver() {
-    let masterList = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
-    if(masterList.length === 0) { alert(`No manually added Weavers found to delete.`); return; }
-    let listStr = masterList.map((m, i) => `${i + 1}. ${m}`).join('\n');
-    let idxStr = prompt(`எந்த Weaver பெயரை நீக்க வேண்டும்? அதற்கான எண்ணை டைப் செய்யவும்:\n\n${listStr}`);
-    if(idxStr) {
-        let idx = parseInt(idxStr) - 1;
-        if(idx >= 0 && idx < masterList.length) {
-            let deleted = masterList.splice(idx, 1);
-            window.StorageDB.setItem('tex_master_weavers', JSON.stringify(masterList));
-            if (window.supabaseSave) window.supabaseSave('tex_master_weavers', masterList);
-            loadWeaverSuggestions();
-            alert(`'${deleted[0]}' நீக்கப்பட்டது! ✅`);
-        } else {
-            alert("தவறான எண் (Invalid Number)!");
-        }
-    }
-}
-
 function loadWeaverSuggestions() {
     let masterWeavers = JSON.parse(window.StorageDB.getItem('tex_master_weavers')) || [];
     let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    
     let weaverSet = new Set([...masterWeavers]);
     issues.forEach(item => { if(item.weaverTo) weaverSet.add(item.weaverTo.trim()); });
-
-    allCombinedWeavers = Array.from(weaverSet).filter(Boolean).sort(
-        (a,b)=>
-        String(a).localeCompare(
-            String(b),
-            undefined,
-            {numeric:true,sensitivity:'base'}
-        )
-    );
-
-    let currentVal = document.getElementById('topWeaverTo') ? document.getElementById('topWeaverTo').value : '';
-    let html = '<option value="">Select Weaver / Party</option>';
-    allCombinedWeavers.forEach(u => { 
-        let sel = (currentVal && u.toLowerCase() === currentVal.toLowerCase()) ? 'selected' : '';
-        html += `<option value="${u}" ${sel}>${u}</option>`; 
-    });
-    
-    let hiddenSelect = document.getElementById('topWeaverTo');
-    if (hiddenSelect) {
-        hiddenSelect.innerHTML = html;
-        if(currentVal) hiddenSelect.value = currentVal;
-    }
-
-    let wInput = document.getElementById('weaverSearchInput');
-    if(wInput && currentVal) {
-        wInput.value = currentVal;
-    }
-}
-
-function openWeaverDropdownList(){
-    renderWeaverDropdownItems(allCombinedWeavers);
-}
-
-function filterWeaverDropdown(){
-    let input = document.getElementById("weaverSearchInput");
-    let filter = input.value.toLowerCase().trim();
-    
-    let matched = allCombinedWeavers.filter(function(d){
-        return String(d).toLowerCase().includes(filter);
-    });
-
-    matched.sort(function(a, b){
-        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
-        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
-        return aMatch - bMatch;
-    });
-
-    renderWeaverDropdownItems(matched);
-}
-
-function renderWeaverDropdownItems(items){
-    let list = document.getElementById("weaverDropdownList");
-    if(!list) return;
-
-    if(!items || items.length === 0){
-        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">Weaver கிடைக்கவில்லை</div>`;
-        list.style.display = "block";
-        return;
-    }
-
-    let html = "";
-    items.forEach(function(d){
-        let safeVal = String(d).replace(/'/g, "\\'");
-        html += `<div onclick="selectWeaverItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
-    });
-
-    list.innerHTML = html;
-    list.style.display = "block";
-}
-
-function selectWeaverItem(val){
-    let input = document.getElementById("weaverSearchInput");
-    let hiddenSelect = document.getElementById("topWeaverTo");
-    let list = document.getElementById("weaverDropdownList");
-
-    if(input) input.value = val;
-    if(hiddenSelect){
-        hiddenSelect.value = val;
-    }
-    if(list) list.style.display = "none";
+    allCombinedWeavers = Array.from(weaverSet).filter(Boolean).sort();
 }
 
 async function loadTopDesignDropdown() {
-    if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
-
     let allDesignSet = new Set();
     let preDesignList = JSON.parse(window.StorageDB.getItem('pre_design_numbers')) || [];
     preDesignList.forEach(d => allDesignSet.add(d));
@@ -874,108 +622,18 @@ async function loadTopDesignDropdown() {
     let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
     Object.keys(designSpecs).forEach(d => allDesignSet.add(d));
 
-    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
-    if (Array.isArray(partyOrders)) partyOrders.forEach(o => { if(o.designNumber || o.designNo) allDesignSet.add(o.designNumber || o.designNo); });
-
-    allCombinedDesigns = Array.from(allDesignSet).filter(Boolean).sort(
-        (a,b)=>
-        String(a).localeCompare(
-            String(b),
-            undefined,
-            {numeric:true,sensitivity:'base'}
-        )
-    );
-
+    allCombinedDesigns = Array.from(allDesignSet).filter(Boolean).sort();
     let select = document.getElementById('topDesignNo');
     if(select) {
         let html = '<option value="">Select Design</option>';
         allCombinedDesigns.forEach(d => { html += `<option value="${d}">${d}</option>`; });
         select.innerHTML = html;
     }
-
-    let activeDesign = window.StorageDB.getItem('selected_design_number');
-    if(activeDesign && allCombinedDesigns.includes(activeDesign)) {
-        if(select) select.value = activeDesign;
-        let searchInput = document.getElementById("designSearchInput");
-        if(searchInput) searchInput.value = activeDesign;
-        loadTopDesignSpecs(activeDesign);
-    }
-}
-
-function openDesignDropdownList(){
-    renderDropdownItems(allCombinedDesigns);
-}
-
-function filterDesignDropdown(){
-    let input = document.getElementById("designSearchInput");
-    let filter = input.value.toLowerCase().trim();
-    
-    let matched = allCombinedDesigns.filter(function(d){
-        return String(d).toLowerCase().includes(filter);
-    });
-
-    matched.sort(function(a, b){
-        let aMatch = String(a).toLowerCase().startsWith(filter) ? 0 : 1;
-        let bMatch = String(b).toLowerCase().startsWith(filter) ? 0 : 1;
-        return aMatch - bMatch;
-    });
-
-    renderDropdownItems(matched);
-}
-
-function renderDropdownItems(items){
-    let list = document.getElementById("designDropdownList");
-    if(!list) return;
-
-    if(!items || items.length === 0){
-        list.innerHTML = `<div style="padding: 10px 14px; color: #888; font-size: 11px; background: #FFFFFF;">டிசைன் கிடைக்கவில்லை</div>`;
-        list.style.display = "block";
-        return;
-    }
-
-    let html = "";
-    items.forEach(function(d){
-        let safeVal = String(d).replace(/'/g, "\\'");
-        html += `<div onclick="selectDesignItem('${safeVal}')" style="padding: 10px 14px; cursor: pointer; font-size: 11px; font-weight: 600; color: #1E2B23; background: #FFFFFF; border-bottom: 1px solid #F1F5F9;" onmouseover="this.style.background='#F8FAF8'" onmouseout="this.style.background='#FFFFFF'">${d}</div>`;
-    });
-
-    list.innerHTML = html;
-    list.style.display = "block";
-}
-
-function selectDesignItem(val){
-    let input = document.getElementById("designSearchInput");
-    let hiddenSelect = document.getElementById('topDesignNo');
-    let list = document.getElementById("designDropdownList");
-
-    if(input) input.value = val;
-    if(hiddenSelect){
-        hiddenSelect.value = val;
-        loadTopDesignSpecs(val);
-    }
-    if(list) list.style.display = "none";
 }
 
 function loadTopDesignSpecs(dNo) {
-    loadBitmapImage();
-    if(!dNo) {
-        document.getElementById('topLinesContainer').innerHTML = '';
-        document.getElementById('topDesignNo').value = '';
-        document.getElementById('topUnit').value = '';
-        if(document.getElementById('topWeaverTo')) document.getElementById('topWeaverTo').value = '';
-        let wInput = document.getElementById('weaverSearchInput');
-        if(wInput) wInput.value = '';
-        document.getElementById('topOnloomReed').value = '';
-        document.getElementById('topOnloomWidth').value = '';
-        document.getElementById('topCount1').value = '';
-        document.getElementById('topCount2').value = '';
-        document.getElementById('topOrderMtrs').value = '';
-        document.getElementById('topWarpingMts').value = '';
-        return;
-    }
-    
+    if(!dNo) return;
     window.StorageDB.setItem('selected_design_number', dNo);
-    
     let cleanDNo = cleanDesignName(dNo);
     let designMastersList = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
     let found = Array.isArray(designMastersList) ? designMastersList.find(d => cleanDesignName(d.name || d.designNo) === cleanDNo) || {} : {};
@@ -983,53 +641,23 @@ function loadTopDesignSpecs(dNo) {
     let specKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
     let sp = specs[specKey] || {};
 
-    let partyOrders = JSON.parse(window.StorageDB.getItem('party_orders_data')) || [];
-    let matchedOrder = Array.isArray(partyOrders) ? partyOrders.find(o => cleanDesignName(o.designNumber || o.designNo) === cleanDNo) || {} : {};
-
-    let specStatus = (sp.status || matchedOrder.status || '').toLowerCase();
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let rec = issues.find(r => cleanDesignName(r.designNo || r.designNumber) === cleanDNo);
-
-    let cb = document.getElementById('top_completed_status');
-    if(specStatus === 'completed' || (rec && (rec.status || '').toLowerCase() === 'completed')) {
-        if(cb) cb.checked = true;
-    } else {
-        if(cb) cb.checked = false;
-    }
-
-    let baseReed = parseFloat(found.reed || sp.reed || matchedOrder.reed) || 0;
-    let baseWidth = parseFloat(found.width || sp.width || sp.finishWidth || matchedOrder.width) || 0;
-    
-    let savedOnloomReed = sp.onloomReed || found.onloomReed || matchedOrder.onloomReed;
-    let savedOnloomWidth = sp.onloomWidth || found.onloomWidth || matchedOrder.onloomWidth;
-
-    let finalOnloomReed = savedOnloomReed ? parseFloat(savedOnloomReed) : (baseReed > 0 ? baseReed - 8 : 0);
-    let finalOnloomWidth = savedOnloomWidth ? parseFloat(savedOnloomWidth) : (baseWidth > 0 && baseReed > 0 && finalOnloomReed > 0 ? (baseReed * baseWidth) / finalOnloomReed : baseWidth);
+    let baseReed = parseFloat(found.reed || sp.reed) || 0;
+    let baseWidth = parseFloat(found.width || sp.width) || 0;
+    let finalOnloomReed = baseReed > 0 ? baseReed - 8 : 0;
+    let finalOnloomWidth = baseWidth > 0 ? baseWidth : 0;
 
     document.getElementById('topOnloomReed').value = finalOnloomReed || '';
     document.getElementById('topOnloomWidth').value = finalOnloomWidth ? parseFloat(finalOnloomWidth).toFixed(2) : '';
+    document.getElementById('topCount1').value = found.warp1 || sp.baseBeamCount || '';
+    document.getElementById('topCount2').value = found.warp2 || sp.topBeamCount || '';
 
-    document.getElementById('topCount1').value = found.warp1 || sp.baseBeamCount || matchedOrder.baseBeamCount || sp.warp || found.count1 || '';
-    document.getElementById('topCount2').value = found.warp2 || sp.topBeamCount || matchedOrder.topBeamCount || sp.warp2 || found.count2 || '';
-
-    let totalDyeingMtr = parseFloat(sp.totalDyeingMtr) || parseFloat(matchedOrder.orderMtr || matchedOrder.productionMeter || matchedOrder.prodMtr || sp.yarnOrderMtr || sp.orderMtr || found.orderMtr) || 0;
+    let totalDyeingMtr = parseFloat(sp.totalDyeingMtr) || 0;
     let orderMtrsCalc = totalDyeingMtr > 0 ? (totalDyeingMtr * 0.95) : 0;
     document.getElementById('topOrderMtrs').value = orderMtrsCalc > 0 ? orderMtrsCalc.toFixed(2) : '';
-
-    if (!editingWarpId) {
-        document.getElementById('topWarpingMts').value = '';
-        document.getElementById('topUnit').value = '';
-        if(document.getElementById('topWeaverTo')) document.getElementById('topWeaverTo').value = '';
-        let wInput = document.getElementById('weaverSearchInput');
-        if(wInput) wInput.value = '';
-    }
-
     loadTopYarnLines();
 }
 
 function loadTopYarnLines() {
-    if(editingWarpId) return; 
-    
     let dNo = document.getElementById('topDesignNo').value;
     let container = document.getElementById('topLinesContainer');
     container.innerHTML = '';
@@ -1038,22 +666,13 @@ function loadTopYarnLines() {
     let cleanDNo = cleanDesignName(dNo);
     let designMastersList = JSON.parse(window.StorageDB.getItem('design_masters_data')) || [];
     let found = Array.isArray(designMastersList) ? designMastersList.find(d => cleanDesignName(d.name || d.designNo) === cleanDNo) || {} : {};
-    let specs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
-    let specKey = Object.keys(specs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
-    let sp = specs[specKey] || {};
-
     let oReed = parseFloat(document.getElementById('topOnloomReed').value) || 0;
     let oWidth = parseFloat(document.getElementById('topOnloomWidth').value) || 0;
     let totalWarpEnds = Math.round(oReed * oWidth);
-    
     let warpingMts = parseFloat(document.getElementById('topWarpingMts').value) || 0;
     let defaultWarpCount = document.getElementById('topCount1').value || '20';
 
     let warpList = resolvePattern(found.warpLines || [], found.warpRanges || [], 'warp', defaultWarpCount);
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let existingIssues = issues.filter(i => cleanDesignName(i.designNo) === cleanDNo);
-    let dyeingReceives = JSON.parse(window.StorageDB.getItem('dyeing_receive_records')) || [];
-
     if(warpList.length > 0) {
         let totalPatternVal = warpList.reduce((a, b) => a + b.patternVal, 0) || 1;
         warpList.forEach(item => {
@@ -1061,22 +680,13 @@ function loadTopYarnLines() {
             let totalEndsForColor = item.patternVal * Math.floor(totalWarpEnds / totalPatternVal);
             let weightKg = (totalEndsForColor * warpingMts) / (1693.33 * calcCount);
 
-            let matchedExisting = existingIssues.find(i => 
-                i.count && item.count && i.count.trim().toLowerCase() === item.count.trim().toLowerCase() &&
-                i.color && item.color && i.color.trim().toLowerCase() === item.color.trim().toLowerCase()
-            );
-
-            let matchedDyeRec = dyeingReceives.find(r => cleanDesignName(r.designNo) === cleanDNo && r.color && item.color && r.color.trim().toLowerCase() === item.color.trim().toLowerCase());
-
-            let initialWt = matchedExisting ? parseFloat(matchedExisting.issueWt) : (matchedDyeRec ? parseFloat(matchedDyeRec.receivedWt || matchedDyeRec.netWt) : weightKg);
-
             let row = document.createElement('div');
             row.className = 'line-row';
             row.innerHTML = `
                 <input type="text" class="t-count" value="${item.count}" readonly>
                 <input type="text" class="t-color" value="${item.color}" readonly>
                 <input type="number" class="t-orderwt" value="${weightKg.toFixed(3)}" step="0.001" readonly>
-                <input type="number" class="t-isswt" value="${initialWt.toFixed(3)}" step="0.001">
+                <input type="number" class="t-isswt" value="${weightKg.toFixed(3)}" step="0.001">
                 <button class="del-btn" onclick="this.parentElement.remove()">×</button>
             `;
             container.appendChild(row);
@@ -1084,250 +694,45 @@ function loadTopYarnLines() {
     }
 }
 
-async function quickCompleteToggle() {
-    let dNo = document.getElementById('topDesignNo').value;
-    let cb = document.getElementById('top_completed_status');
-    let isCompleted = cb ? cb.checked : false;
-
-    if(!dNo) {
-        alert("Mudhala Design Number select pannunga bro");
-        if(cb) cb.checked = false;
-        return;
-    }
-
-    let statusText = isCompleted ? 'completed' : 'running';
-    let cleanKey = cleanDesignName(dNo);
-
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    issues.forEach(r => {
-        if(cleanDesignName(r.designNo) === cleanKey) r.status = statusText;
-    });
-    window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
-
-    let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
-    let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanKey) || dNo;
-    if(!designSpecs[specKey]) designSpecs[specKey] = {};
-    designSpecs[specKey].status = statusText;
-    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
-
-    if (window.supabaseSave) {
-        await window.supabaseSave('warping_issue_records', issues);
-        await window.supabaseSave('design_specs', designSpecs);
-    }
-    renderCards();
-    alert(`Design ${dNo} status '${statusText.toUpperCase()}' ah update aagiduchu ✅`);
-}
-
 async function saveTopOrder() {
     let dateVal = document.getElementById('topDate').value;
     let unit = document.getElementById('topUnit').value.trim();
     let dNo = document.getElementById('topDesignNo').value;
-    let weaverTo = document.getElementById('topWeaverTo') ? document.getElementById('topWeaverTo').value.trim() : '';
-    let warpingMts = document.getElementById('topWarpingMts') ? document.getElementById('topWarpingMts').value : '';
-    
+    let weaverTo = document.getElementById('topWeaverTo').value.trim();
+    let warpingMts = document.getElementById('topWarpingMts').value;
     let isCompleted = document.getElementById('top_completed_status').checked;
 
-    if(!dNo || !unit) { alert("Please fill Warping Unit and Design Number!"); return; }
+    if(!dNo || !unit) { alert("Please fill Unit and Design No!"); return; }
 
     let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let cleanDNo = cleanDesignName(dNo);
-
-    let oldGroup = [];
-    if(editingWarpId) {
-        let og = window.editingOriginal || { designNo: dNo, unit: unit };
-        oldGroup = issues.filter(i => cleanDesignName(i.designNo) === cleanDesignName(og.designNo) && i.unit === og.unit);
-        issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDesignName(og.designNo) && i.unit === og.unit));
-    } else {
-        let alreadyExists = issues.some(i => cleanDesignName(i.designNo) === cleanDNo && i.unit === unit);
-        if(alreadyExists) {
-            if(!confirm("இந்த Design + Unit ஏற்கனவே இருக்கு. மேல எழுதவா? (Overwrite?)")) return;
-            issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDNo && i.unit === unit));
-        }
-    }
-
-    let btn = document.getElementById('saveTopBtnTxt');
-    let origText = btn.innerText;
-    btn.innerText = "⏳ Saving...";
+    issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unit));
 
     let rows = document.querySelectorAll('#topLinesContainer .line-row');
-    let savedCount = 0;
-
     rows.forEach(row => {
         let count = row.querySelector('.t-count').value.trim();
         let color = row.querySelector('.t-color').value.trim();
         let orderWt = parseFloat(row.querySelector('.t-orderwt').value) || 0;
         let issWt = parseFloat(row.querySelector('.t-isswt').value) || 0;
 
-        if(count && issWt > 0) {
-            issues.push({
-                id: (function() { let re = oldGroup.find(o => !o._used && o.count === count && o.color === color); if (re) { re._used = true; return re.id; } return Date.now() + Math.random(); })(),
-                date: dateVal,
-                unit: unit,
-                designNo: dNo,
-                weaverTo: weaverTo,
-                warpingMts: warpingMts,
-                count: count,
-                color: color,
-                orderWt: orderWt.toFixed(3),
-                issueWt: issWt.toFixed(3),
-                status: isCompleted ? 'completed' : 'running'
-            });
-            savedCount++;
-        }
+        issues.push({
+            id: Date.now() + Math.random(),
+            date: dateVal,
+            unit: unit,
+            designNo: dNo,
+            weaverTo: weaverTo,
+            warpingMts: warpingMts,
+            count: count,
+            color: color,
+            orderWt: orderWt.toFixed(3),
+            issueWt: issWt.toFixed(3),
+            status: isCompleted ? 'completed' : 'running'
+        });
     });
 
-    if(savedCount > 0) {
-        let designSpecs = JSON.parse(window.StorageDB.getItem('design_specs')) || {};
-        let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === cleanDNo) || dNo;
-        if(!designSpecs[specKey]) designSpecs[specKey] = {};
-        designSpecs[specKey].status = isCompleted ? 'completed' : 'running';
-        
-        window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
-        window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
-        
-        if (window.supabaseSave) {
-            await window.supabaseSave('warping_issue_records', issues);
-            await window.supabaseSave('design_specs', designSpecs);
-        }
-        
-        alert(editingWarpId ? "Warping Order Updated Successfully! ✅" : "Warping Order Saved Successfully! ✅");
-        
-        editingWarpId = specKey = null;
-        window.editingOriginal = null;
-        document.getElementById('topDesignNo').value = '';
-        let searchInput = document.getElementById('designSearchInput');
-        if(searchInput) searchInput.value = '';
-        document.getElementById('topUnit').value = '';
-        document.getElementById('topWarpingMts').value = '';
-        document.getElementById('topWeaverTo').value = '';
-        let wInput = document.getElementById('weaverSearchInput');
-        if(wInput) wInput.value = '';
-        document.getElementById('topLinesContainer').innerHTML = '';
-        document.getElementById('top_completed_status').checked = false;
-        renderCards();
-    } else {
-        alert("Please enter Issued Weight.");
-    }
-    btn.innerText = origText;
-}
-
-function remainingW(issue, receives) {
-    let got = receives.filter(r => String(r.issueId) === String(issue.id)).reduce((a, r) => a + (parseFloat(r.receivedWt) || 0), 0);
-    return Math.max(0, (parseFloat(issue.issueWt) || 0) - got);
-}
-
-function loadBottomOrderDropdown() {
-    let select = document.getElementById('botActiveOrderSelect');
-    let html = '<option value="">Select Pending Order</option>';
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let receives = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
-
-    let pendingItems = issues.filter(issue => {
-        return remainingW(issue, receives) > 0.005; 
-    });
-
-    let uniqueMap = new Map();
-    pendingItems.forEach(item => {
-        let key = `${item.designNo}_${item.unit}`;
-        if(!uniqueMap.has(key)) uniqueMap.set(key, { designNo: item.designNo, unit: item.unit });
-    });
-
-    uniqueMap.forEach((val) => {
-        html += `<option value="${val.designNo}_${val.unit}">${val.designNo} - ${val.unit}</option>`;
-    });
-    select.innerHTML = html;
-}
-
-function onBottomOrderSelect(val) {
-    if(!val) {
-        document.getElementById('botDesignNo').value = '';
-        document.getElementById('botUnitName').value = '';
-        document.getElementById('botGridWrapper').style.display = 'none';
-        return;
-    }
-    let lastUnderscore = val.lastIndexOf('_');
-    document.getElementById('botDesignNo').value = val.substring(0, lastUnderscore);
-    document.getElementById('botUnitName').value = val.substring(lastUnderscore + 1);
-    loadBottomRows();
-}
-
-function loadBottomRows() {
-    let dNo = document.getElementById('botDesignNo').value;
-    let uName = document.getElementById('botUnitName').value;
-    let wrapper = document.getElementById('botGridWrapper');
-    let container = document.getElementById('botLinesContainer');
-    container.innerHTML = '';
-    
-    if(!dNo || !uName) { wrapper.style.display = 'none'; return; }
-    wrapper.style.display = 'block';
-
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let receives = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
-
-    let pendingItems = issues.filter(issue => {
-        return remainingW(issue, receives) > 0.005 && issue.designNo === dNo && issue.unit === uName; 
-    });
-
-    pendingItems.forEach(item => {
-        let row = document.createElement('div');
-        row.className = 'line-row-bot';
-        row.setAttribute('data-id', item.id);
-        row.innerHTML = `
-            <input type="text" class="b-count" value="${item.count}" readonly>
-            <input type="text" class="b-color" value="${item.color}" readonly>
-            <input type="text" class="b-orderwt" value="${item.orderWt}" readonly>
-            <input type="text" class="b-isswt" value="${remainingW(item, receives).toFixed(3)}" readonly>
-            <input type="number" class="b-received" placeholder="Rcvd Wt" step="0.001">
-        `;
-        container.appendChild(row);
-    });
-}
-
-async function saveBottomEntry() {
-    let dateVal = document.getElementById('botDate').value;
-    let dNo = document.getElementById('botDesignNo').value;
-    let uName = document.getElementById('botUnitName').value;
-
-    if(!dNo || !uName) { alert("Please select a Pending Warping Order!"); return; }
-
-    let btn = document.getElementById('saveBotBtnTxt');
-    btn.innerText = "⏳ Saving...";
-
-    let rows = document.querySelectorAll('#botLinesContainer .line-row-bot');
-    let overErr = Array.from(rows).some(row => (parseFloat(row.querySelector('.b-received').value) || 0) > (parseFloat(row.querySelector('.b-isswt').value) || 0) + 0.0005);
-    if (overErr) { alert("Received Wt Pending Wt-ஐ விட அதிகமா இருக்கு! ❌"); btn.innerText = "Save Bottom Entry"; return; }
-    let receives = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
-    let savedCount = 0;
-
-    rows.forEach(row => {
-        let rcvWt = parseFloat(row.querySelector('.b-received').value);
-        let recId = row.getAttribute('data-id');
-        if(rcvWt > 0) {
-            receives.push({
-                id: Date.now() + Math.random(),
-                issueId: recId,
-                botDate: dateVal,
-                designNo: dNo,
-                unit: uName,
-                receivedWt: rcvWt.toFixed(3)
-            });
-            savedCount++;
-        }
-    });
-
-    if(savedCount > 0) {
-        window.StorageDB.setItem('warping_receive_records', JSON.stringify(receives));
-        if (window.supabaseSave) await window.supabaseSave('warping_receive_records', receives);
-
-        alert("Bottom Entry Saved Successfully! ✅");
-        document.getElementById('botActiveOrderSelect').value = '';
-        document.getElementById('botGridWrapper').style.display = 'none';
-        loadBottomOrderDropdown();
-        renderCards();
-    } else {
-        alert("Please enter Received Weight.");
-    }
-    btn.innerText = "Save Bottom Entry";
+    window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
+    if (window.supabaseSave) await window.supabaseSave('warping_issue_records', issues);
+    alert("Warping Order Saved Successfully! ✅");
+    renderCards();
 }
 
 function renderCards() {
@@ -1339,158 +744,21 @@ function renderCards() {
     issues.forEach(issue => {
         let groupKey = `${cleanDesignName(issue.designNo)}_${issue.unit}`;
         if(!groupMap.has(groupKey)) {
-            groupMap.set(groupKey, { date: issue.date, unit: issue.unit, designNo: issue.designNo, weaverTo: issue.weaverTo, warpingMts: issue.warpingMts, status: issue.status || 'running', items: [] });
+            groupMap.set(groupKey, { date: issue.date, unit: issue.unit, designNo: issue.designNo, status: issue.status || 'running' });
         }
-        groupMap.get(groupKey).items.push(issue);
     });
 
     groupMap.forEach((group) => {
         let card = document.createElement('div');
         card.className = "saved-warp-card";
-        let statusBtnClass = group.status === 'running' ? 'btn-card-complete' : 'btn-card-running';
-        let statusBtnText = group.status === 'running' ? 'Complete' : 'Running';
-        let nextStatus = group.status === 'running' ? 'completed' : 'running';
-
         card.innerHTML = `
             <div class="saved-warp-top">
-                <div>
-                    <b style="font-size:13px; color:#2F4F38;">${group.designNo}</b><br>
-                    <small style="color:#64748B;">Date: ${group.date} | Unit: ${group.unit}</small>
-                </div>
-                <span style="font-size:9px; font-weight:700; text-transform:uppercase; background:${group.status === 'completed' ? '#ECFDF5' : '#FFFBEB'}; color:${group.status === 'completed' ? '#059669' : '#D97706'}; padding:3px 6px; border-radius:6px; border:1px solid currentColor;">${group.status}</span>
-            </div>
-            <div style="font-size:10px; color:#4A554A;">Weaver: <b>${group.weaverTo || '-'}</b> | Warping Mts: <b>${group.warpingMts || '-'}</b></div>
-            <div class="action-row">
-                <button class="${statusBtnClass}" onclick="toggleStatusForGroup('${group.designNo}', '${group.unit}', '${nextStatus}')">${statusBtnText}</button>
-                <button class="btn-card-edit" onclick="editWarpingGroup('${group.designNo}', '${group.unit}')">Edit</button>
-                <button class="btn-card-del" onclick="deleteWarpingGroup('${group.designNo}', '${group.unit}')">Delete</button>
+                <div><b>${group.designNo}</b><br><small>Unit: ${group.unit} | Date: ${group.date}</small></div>
+                <span>${group.status}</span>
             </div>
         `;
         container.appendChild(card);
     });
-}
-
-async function toggleStatusForGroup(dNo, unitName, newStatus) {
-    if(confirm(`Change status to ${newStatus}?`)) {
-        let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-        issues.forEach(r => { if(cleanDesignName(r.designNo) === cleanDesignName(dNo) && r.unit === unitName) r.status = newStatus; });
-        window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
-        if(window.supabaseSave) await window.supabaseSave('warping_issue_records', issues);
-        renderCards();
-    }
-}
-
-function editWarpingGroup(dNo, unitName) {
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let targetIssues = issues.filter(i => cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unitName);
-    
-    if(targetIssues.length > 0) {
-        let targetIssue = targetIssues[0];
-        editingWarpId = targetIssue.id;
-        window.editingOriginal = { designNo: targetIssue.designNo, unit: targetIssue.unit };
-
-        document.getElementById('topDate').value = targetIssue.date;
-        document.getElementById('topUnit').value = targetIssue.unit;
-        document.getElementById('topDesignNo').value = targetIssue.designNo;
-        let searchInput = document.getElementById('designSearchInput');
-        if(searchInput) searchInput.value = targetIssue.designNo;
-        if(targetIssue.weaverTo) {
-            document.getElementById('topWeaverTo').value = targetIssue.weaverTo;
-            let wInput = document.getElementById('weaverSearchInput');
-            if(wInput) wInput.value = targetIssue.weaverTo;
-        }
-        if(targetIssue.warpingMts) document.getElementById('topWarpingMts').value = targetIssue.warpingMts;
-        
-        document.getElementById('top_completed_status').checked = (targetIssue.status === 'completed');
-        loadTopDesignSpecs(targetIssue.designNo);
-
-        let container = document.getElementById('topLinesContainer');
-        container.innerHTML = '';
-        targetIssues.forEach(item => {
-            let row = document.createElement('div');
-            row.className = 'line-row';
-            row.innerHTML = `
-                <input type="text" class="t-count" value="${item.count}" readonly>
-                <input type="text" class="t-color" value="${item.color}" readonly>
-                <input type="number" class="t-orderwt" value="${item.orderWt}" step="0.001" readonly>
-                <input type="number" class="t-isswt" value="${item.issueWt}" step="0.001">
-                <button class="del-btn" onclick="this.parentElement.remove()">×</button>
-            `;
-            container.appendChild(row);
-        });
-
-        closeModal('savedListModal');
-        document.getElementById('saveTopBtnTxt').innerText = "🔄 Update Top Order";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}
-
-async function deleteWarpingGroup(dNo, unitName) {
-    if(!confirm("Are you sure you want to delete this entry?")) return;
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    let delIds = issues.filter(i => cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unitName).map(i => String(i.id));
-    issues = issues.filter(i => !(cleanDesignName(i.designNo) === cleanDesignName(dNo) && i.unit === unitName));
-    window.StorageDB.setItem('warping_issue_records', JSON.stringify(issues));
-    if (window.supabaseSave) await window.supabaseSave('warping_issue_records', issues);
-    let recs = JSON.parse(window.StorageDB.getItem('warping_receive_records')) || [];
-    recs = recs.filter(r => !delIds.includes(String(r.issueId)));
-    window.StorageDB.setItem('warping_receive_records', JSON.stringify(recs));
-    if (window.supabaseSave) await window.supabaseSave('warping_receive_records', recs);
-    renderCards();
-}
-
-// Masters helpers
-var WARP_PRINT_CELL = 'border:1px solid #999; padding:4px; text-align:center;';
-
-function escWarp(v) {
-    return (v === null || v === undefined ? '' : String(v))
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function printWarpingList() {
-    let issues = JSON.parse(window.StorageDB.getItem('warping_issue_records')) || [];
-    if (issues.length === 0) {
-        alert('Print செய்ய Warping தரவுகள் எதுவும் இல்லை!');
-        return;
-    }
-    if (!window.appPrint) {
-        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
-        return;
-    }
-
-    let total = 0;
-    let rows = '';
-    issues.slice().reverse().forEach(function (r) {
-        total += parseFloat(r.issueWt) || 0;
-        rows += '<tr>' +
-            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.date) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + ' font-weight:bold;">' + escWarp(r.designNo) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.unit) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.weaverTo || '-') + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.count) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + ' text-align:left;">' + escWarp(r.color) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + '">' + escWarp(r.orderWt) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + ' font-weight:bold;">' + escWarp(r.issueWt) + '</td>' +
-            '<td style="' + WARP_PRINT_CELL + ' text-transform:uppercase;">' + escWarp(r.status || 'running') + '</td>' +
-            '</tr>';
-    });
-
-    let headers = ['Date', 'Design', 'Unit', 'Weaver', 'Count', 'Colour', 'Order Wt', 'Issued Wt', 'Status'];
-    let headHtml = headers.map(function (h) {
-        return '<th style="' + WARP_PRINT_CELL + ' background:#EAF0EA; font-weight:bold;">' + h + '</th>';
-    }).join('');
-
-    let html =
-        '<div style="background:#ffffff; color:#000000; width:100%;">' +
-        '<h2 style="text-align:center; font-size:16px; margin-bottom:8px;">Warping Details</h2>' +
-        '<table style="width:100%; border-collapse:collapse; font-size:10px;">' +
-        '<thead><tr>' + headHtml + '</tr></thead>' +
-        '<tbody>' + rows + '</tbody>' +
-        '</table>' +
-        '<p style="margin-top:8px; font-size:11px; font-weight:bold;">Total Issued Wt: ' + total.toFixed(3) + ' KG</p>' +
-        '</div>';
-
-    window.appPrint(html);
 }
 </script>
 </body>
