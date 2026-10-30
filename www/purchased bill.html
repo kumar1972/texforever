@@ -82,7 +82,9 @@ th{color:var(--mut);background:var(--gh)}
   <div style="margin-top:10px;display:flex;gap:8px">
     <button class="btn g" onclick="save()">💾 Save</button>
     <button class="btn r" onclick="closeForm()">Cancel</button>
+    <button class="btn o" onclick="pickEdit()">✏️ Edit</button>
   </div>
+  <select id="editPick" style="display:none;margin-top:8px;width:100%" onchange="editPicked()"></select>
 </div>
 
 <div class="panel grid">
@@ -107,6 +109,14 @@ const f=v=>"₹ "+n(v).toLocaleString("en-IN",{maximumFractionDigits:2});
 const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 $("cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
 
+/* design numbers - design_master.html-la save pannadhu */
+function designNames(){
+  const l=[];
+  sArr("pre_design_numbers").forEach(x=>l.push(x));
+  sArr("design_masters_data").forEach(m=>l.push(m&&(m.name||m.designNo)));
+  try{const sp=JSON.parse(window.StorageDB.getItem("design_specs")||"{}");Object.keys(sp||{}).forEach(k=>l.push(k))}catch(e){}
+  return l.map(x=>String(x||"").trim()).filter(Boolean);
+}
 /* party names - andha andha page-la save pannadhu */
 const MANUAL_CATS=["Sizing","Others"];
 function sArr(key){try{const d=JSON.parse(window.StorageDB.getItem(key)||"[]");return Array.isArray(d)?d:[]}catch(e){return[]}}
@@ -136,7 +146,7 @@ function partyNames(cat){
 function comboOpts(k){
   let l=[];
   if(k==="party")l=partyNames($("cat").value);
-  if(k==="design")l=bills.map(b=>b.design);
+  if(k==="design")l=designNames();
   if(k==="desc")l=(PRESET[$("cat").value]||[]).concat(bills.filter(b=>b.cat===$("cat").value).map(b=>b.desc));
   return [...new Set(l.filter(Boolean))].sort();
 }
@@ -186,6 +196,18 @@ async function save(){
 }
 async function del(id){if(!confirm("Indha bill delete pannalama?"))return;const b=bills.find(x=>x.id===id);if(b){upsertRow({...b,_del:1,updated:new Date().toISOString()});await saveAll()}render()}
 function edit(id){openForm(bills.find(b=>b.id===id))}
+function pickEdit(){
+  const sel=$("editPick"),c=$("cat").value;
+  const l=bills.filter(b=>b.cat===c).sort((x,y)=>(y.date||"").localeCompare(x.date||""));
+  if(!l.length){alert(c+" bill illai");return}
+  sel.innerHTML=`<option value="">-- Edit panna bill select pannu --</option>`+l.map(b=>`<option value="${esc(b.id)}">${esc((b.date||"")+" · "+b.party+" · "+(b.billno||"-")+" · "+f(b.total))}</option>`).join("");
+  sel.style.display=sel.style.display==="none"?"block":"none";
+}
+function editPicked(){
+  const sel=$("editPick"),b=bills.find(x=>x.id===sel.value);
+  sel.style.display="none";
+  if(b)openForm(b);
+}
 
 function filtered(){
   const q=$("q").value.toLowerCase(),s=$("fs").value,p=$("fp").value,fd=$("fd").value,td=$("td").value;
