@@ -61,11 +61,12 @@ th{color:var(--mut);background:var(--gh)}
     <div><label>Bill Date</label><input type="date" id="date"></div>
     <div class="full"><label>Party / Supplier Name</label><select id="party_s" onchange="pick('party')"></select><input class="newin" id="party" placeholder="Pudhu party name"></div>
     <div><label>Bill No</label><input id="billno"></div>
-    <div><label>Design No (optional)</label><select id="design_s" onchange="pick('design')"></select><input class="newin" id="design" placeholder="Pudhu design no"></div>
+    <div id="designW"><label>Design No (optional)</label><select id="design_s" onchange="pick('design')"></select><input class="newin" id="design" placeholder="Pudhu design no"></div>
     <div class="full"><label>Description</label><select id="desc_s" onchange="pick('desc')"></select><input class="newin" id="desc" placeholder="Description"></div>
-    <div><label>Quantity</label><input type="number" id="qty" step="any" oninput="calc()"></div>
+    <div class="full" id="clrBox" style="display:none"><label>Design / Colour wise Qty / Rate</label><div id="clrLines"></div><button type="button" class="btn s g" style="margin-top:6px" onclick="addClr()">➕ Colour add</button></div>
+    <div id="qtyW"><label>Quantity</label><input type="number" id="qty" step="any" oninput="calc()"></div>
     <div><label>Unit</label><select id="unit"><option>Kg</option><option>Mtr</option><option>Nos</option><option>Beam</option><option>Bag</option><option>Lot</option></select></div>
-    <div><label>Rate (₹)</label><input type="number" id="rate" step="any" oninput="calc()"></div>
+    <div id="rateW"><label>Rate (₹)</label><input type="number" id="rate" step="any" oninput="calc()"></div>
     <div><label>Basic Amount (₹)</label><input id="basic" readonly></div>
     <div><label>GST %</label><select id="gst" onchange="calc()"><option>0</option><option>5</option><option>12</option><option>18</option></select></div>
     <div><label>GST Amount (₹)</label><input id="gstamt" readonly></div>
@@ -161,10 +162,40 @@ function pick(k){
   if(s==="__new"){$(k).value="";$(k).style.display="block";$(k).focus()}
   else{$(k).value=s;$(k).style.display="none"}
 }
-function fillCombos(){["party","design","desc"].forEach(k=>fillCombo(k,$(k).value))}
+function fillCombos(){["party","design","desc"].forEach(k=>fillCombo(k,$(k).value));clrShow()}
+
+/* Dyeing - colour wise lines */
+let clr=[];
+const isDye=()=>$("cat").value==="Dyeing";
+const isLines=()=>$("cat").value!=="Kora Yarn";
+const dOpts=v=>{const o=[...new Set(designNames())].sort();if(v&&!o.includes(v))o.push(v);return `<option value="">-- Design --</option>`+o.map(x=>`<option value="${esc(x)}"${x===v?" selected":""}>${esc(x)}</option>`).join("")};
+function clrShow(){
+  const d=isLines();
+  $("clrBox").style.display=d?"block":"none";
+  $("qtyW").style.display=d?"none":"";$("rateW").style.display=d?"none":"";$("designW").style.display=d?"none":"";
+  if(d){if(!clr.length)clr.push({d:$("design").value,c:"",q:"",r:""});clrRender()}
+}
+function clrRender(){
+  $("clrLines").innerHTML=clr.map((x,i)=>`<div style="border:1px solid #cbd5e1;border-radius:8px;padding:6px;margin-bottom:6px">
+    <select onchange="clr[${i}].d=this.value" style="width:100%;margin-bottom:4px">${dOpts(x.d||"")}</select>
+    ${isDye()?`<input placeholder="Colour" value="${esc(x.c)}" oninput="clr[${i}].c=this.value" style="width:100%;margin-bottom:4px">`:""}
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="number" step="any" placeholder="Qty" value="${esc(x.q)}" oninput="clr[${i}].q=this.value;calc()" style="flex:1;min-width:0">
+      <input type="number" step="any" placeholder="Rate" value="${esc(x.r)}" oninput="clr[${i}].r=this.value;calc()" style="flex:1;min-width:0">
+      <input id="clrAmt${i}" readonly value="${(n(x.q)*n(x.r)).toFixed(2)}" style="flex:1;min-width:0">
+      <button type="button" class="btn s r" onclick="delClr(${i})">🗑</button>
+    </div></div>`).join("");
+}
+function addClr(){clr.push({d:"",c:"",q:"",r:""});clrRender()}
+function delClr(i){clr.splice(i,1);if(!clr.length)clr.push({d:"",c:"",q:"",r:""});clrRender();calc()}
 
 function calc(){
-  const basic=n($("qty").value)*n($("rate").value);
+  let basic;
+  if(isLines()){
+    const tq=clr.reduce((a,x)=>a+n(x.q),0);basic=clr.reduce((a,x)=>a+n(x.q)*n(x.r),0);
+    $("qty").value=tq?+tq.toFixed(3):"";$("rate").value=tq?+(basic/tq).toFixed(2):"";
+    clr.forEach((x,i)=>{const e=$("clrAmt"+i);if(e)e.value=(n(x.q)*n(x.r)).toFixed(2)});
+  }else basic=n($("qty").value)*n($("rate").value);
   const g=basic*n($("gst").value)/100;
   const tot=basic+g+n($("other").value);
   const bal=tot-n($("paid").value);
@@ -179,6 +210,7 @@ function openForm(b){
   const d=b||{cat:curTab!=="All"?curTab:CATS[0],date:new Date().toISOString().slice(0,10),unit:"Kg",gst:0,other:0,paid:0,mode:"Cash"};
   ["cat","date","billno","qty","unit","rate","gst","other","paid","mode","due","pdate","rem"].forEach(k=>$(k).value=d[k]??"");
   ["party","design","desc"].forEach(k=>{$(k).value=d[k]??""});
+  clr=b&&Array.isArray(b.colors)&&b.colors.length?b.colors.map(x=>({...x})):(b&&b.cat!=="Kora Yarn"&&b.qty?[{d:b.design||"",c:"",q:b.qty,r:b.rate}]:[]);
   fillCombos();calc();$("formBox").scrollIntoView({behavior:"smooth"});
 }
 function closeForm(){$("formBox").style.display="none";editId=null}
@@ -189,6 +221,10 @@ async function save(){
   const o={id:editId||Date.now()+"",updated:new Date().toISOString()};
   ["cat","date","party","billno","design","desc","qty","unit","rate","gst","other","paid","mode","due","pdate","rem","basic","gstamt","total","bal","status"].forEach(k=>o[k]=$(k).value.trim());
   o.party=o.party.toUpperCase();
+  if(o.cat!=="Kora Yarn"){
+    o.colors=clr.filter(x=>x.d||String(x.c||"").trim()||n(x.q)||n(x.r)).map(x=>({d:x.d||"",c:String(x.c||"").trim(),q:x.q,r:x.r}));
+    o.design=[...new Set(o.colors.map(x=>x.d).filter(Boolean))].join(", ");
+  }
   const dup=bills.find(b=>b.id!==o.id&&b.party===o.party&&b.billno===o.billno&&b.cat===o.cat);
   if(dup&&!confirm("Same Party + Bill No already iruku. Thirumba save pannanuma?"))return;
   upsertRow(o);
@@ -236,7 +272,7 @@ function render(){
         ${open[k]?`<div class="wrap"><table><tr><th>Date</th><th>Bill No</th><th>Design</th><th>Qty</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>
         ${g.map(b=>`<tr><td>${b.date}</td><td>${esc(b.billno)}</td><td>${esc(b.design)||"-"}</td><td>${b.qty||""} ${b.qty?b.unit:""}</td><td>${f(b.total)}</td><td>${f(b.paid)}</td><td>${f(b.bal)}</td><td><span class="st ${b.status}">${b.status}</span></td>
         <td style="white-space:nowrap"><button class="btn s" onclick="edit('${b.id}')">✏️</button> <button class="btn s r" onclick="del('${b.id}')">🗑</button></td></tr>
-        ${b.desc||b.rem?`<tr><td colspan="9" style="color:var(--mut)">${esc(b.desc)} ${b.rem?"· "+esc(b.rem):""} ${b.due?"· Due: "+b.due:""}</td></tr>`:""}`).join("")}</table></div>`:""}`}).join(""):`<div class="empty">Bill illai</div>`}</div>`}).join("");
+        ${b.desc||b.rem||(b.colors&&b.colors.length)?`<tr><td colspan="9" style="color:var(--mut)">${esc(b.desc)} ${(b.colors||[]).map(x=>" · "+esc([x.d,x.c].filter(Boolean).join(" ")||"-")+": "+x.q+" × "+x.r).join("")} ${b.rem?"· "+esc(b.rem):""} ${b.due?"· Due: "+b.due:""}</td></tr>`:""}`).join("")}</table></div>`:""}`}).join(""):`<div class="empty">Bill illai</div>`}</div>`}).join("");
 }
 function tog(k){k=decodeURIComponent(k);open[k]=!open[k];render()}
 function setAll(ci,v){
