@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Purchased Bills</title>
+<script src="config.js" defer></script>
+<script src="translator.js"></script>
+<script src="printer.js"></script>
+<style>
+:root{--bg:#faf7f0;--card:#fffdf8;--line:#e6dfd0;--txt:#3a3326;--mut:#8a7f6b;--acc:#0f766e;--warn:#d97706;--bad:#dc2626;--ok:#16a34a;--gh:#f3ecdc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:Roboto,Arial,sans-serif;font-size:14px;padding:10px;padding-top:0}
+h1{margin:0;font-size:20px;color:var(--acc)}
+.hd{position:sticky;top:0;z-index:20;background:var(--bg);margin:0 -10px 10px;padding:10px 10px 6px;border-bottom:1px solid var(--line);box-shadow:0 2px 6px rgba(120,100,60,.08)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.btn{background:#1e40af;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.g{background:#0f766e}.btn.r{background:#b91c1c}.btn.o{background:#b45309}.btn.s{padding:5px 8px;font-size:12px}.btn.k{background:#6b7280}
+.sum{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+.sum small{color:var(--mut);display:block}.sum b{font-size:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.grid .full{grid-column:1/-1}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:2px}
+input,select,textarea{width:100%;background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px}
+input[readonly]{color:var(--acc);font-weight:bold;background:#f6f2e8}
+.newin{margin-top:4px;display:none}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tab{white-space:nowrap;background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px}
+.tab.on{background:var(--acc);color:#fff;font-weight:bold;border-color:var(--acc)}
+.sec{margin-bottom:14px}
+.sech{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.sech h2{margin:0;font-size:16px}
+.gh{display:flex;justify-content:space-between;align-items:center;background:var(--gh);border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-top:6px;cursor:pointer;font-weight:bold}
+.gh span.m{color:var(--mut);font-weight:normal;font-size:12px}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+th,td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);background:var(--gh)}
+.st{padding:2px 7px;border-radius:10px;font-size:11px;color:#fff}
+.Paid{background:var(--ok)}.Pending{background:var(--bad)}.Partial{background:var(--warn)}
+.empty{color:var(--mut);padding:8px}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="top">
+    <div style="display:flex;align-items:center;gap:8px"><a class="btn k" href="dashboard.html" onclick="return goMenu()">👈 Menu</a><h1>🧾 Purchased Bill</h1></div><span id="syncSt" onclick="sync(true)" style="font-size:11px;color:#fff;background:#6b7280;border-radius:12px;padding:4px 8px;white-space:nowrap;cursor:pointer">⏳ Loading</span>
+  </div>
+  <button class="btn g" style="font-size:17px;font-weight:bold;padding:11px 18px;margin-bottom:8px" onclick="openForm()">👉 NEW BILLS</button>
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="sum" id="sum"></div>
+
+<div class="panel" id="formBox" style="display:none">
+  <b id="ftitle">New Bill</b>
+  <div class="grid" style="margin-top:8px">
+    <div><label>Bill Type</label><select id="cat" onchange="fillCombos()"></select></div>
+    <div><label>Bill Date</label><input type="date" id="date"></div>
+    <div class="full"><label>Party / Supplier Name</label><select id="party_s" onchange="pick('party')"></select><input class="newin" id="party" placeholder="Pudhu party name"></div>
+    <div><label>Bill No</label><input id="billno"></div>
+    <div><label>Design No (optional)</label><select id="design_s" onchange="pick('design')"></select><input class="newin" id="design" placeholder="Pudhu design no"></div>
+    <div class="full"><label>Description</label><select id="desc_s" onchange="pick('desc')"></select><input class="newin" id="desc" placeholder="Description"></div>
+    <div><label>Quantity</label><input type="number" id="qty" step="any" oninput="calc()"></div>
+    <div><label>Unit</label><select id="unit"><option>Kg</option><option>Mtr</option><option>Nos</option><option>Beam</option><option>Bag</option><option>Lot</option></select></div>
+    <div><label>Rate (₹)</label><input type="number" id="rate" step="any" oninput="calc()"></div>
+    <div><label>Basic Amount (₹)</label><input id="basic" readonly></div>
+    <div><label>GST %</label><select id="gst" onchange="calc()"><option>0</option><option>5</option><option>12</option><option>18</option></select></div>
+    <div><label>GST Amount (₹)</label><input id="gstamt" readonly></div>
+    <div><label>Other Charges (₹)</label><input type="number" id="other" step="any" value="0" oninput="calc()"></div>
+    <div><label>Total Bill Amount (₹)</label><input id="total" readonly></div>
+    <div><label>Paid Amount (₹)</label><input type="number" id="paid" step="any" value="0" oninput="calc()"></div>
+    <div><label>Balance (₹)</label><input id="bal" readonly></div>
+    <div><label>Payment Status</label><input id="status" readonly></div>
+    <div><label>Payment Mode</label><select id="mode"><option>Cash</option><option>Bank / NEFT</option><option>UPI</option><option>Cheque</option><option>Credit</option></select></div>
+    <div><label>Due Date</label><input type="date" id="due"></div>
+    <div><label>Paid Date</label><input type="date" id="pdate"></div>
+    <div class="full"><label>Remarks</label><textarea id="rem" rows="2"></textarea></div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:8px">
+    <button class="btn g" onclick="save()">💾 Save</button>
+    <button class="btn r" onclick="closeForm()">Cancel</button>
+  </div>
+</div>
+
+<div class="panel grid">
+  <div><label>Party</label><select id="fp" onchange="render()"></select></div>
+  <div><label>Status</label><select id="fs" onchange="render()"><option value="">All</option><option>Pending</option><option>Partial</option><option>Paid</option></select></div>
+  <div class="full"><label>Search (bill no / design)</label><input id="q" oninput="render()"></div>
+  <div><label>From Date</label><input type="date" id="fd" onchange="render()"></div>
+  <div><label>To Date</label><input type="date" id="td" onchange="render()"></div>
+</div>
+
+<div id="list"></div>
+
+<script>
+const CATS=["Kora Yarn","Dyeing","Warping","Sizing","Weavers","Washing","Others"];
+const PRESET={"Kora Yarn":["Kora Yarn Purchase"],"Dyeing":["Yarn Dyeing Charges"],"Warping":["Warping Charges"],"Sizing":["Sizing Charges"],"Weavers":["Weaving Charges"],"Washing":["Washing Charges"],"Others":["Transport","Packing","Others"]};
+const KEY="purchased_bills_v1";
+let bills=[],editId=null,curTab="All";
+const open={};
+const $=id=>document.getElementById(id);
+const n=v=>parseFloat(v)||0;
+const f=v=>"₹ "+n(v).toLocaleString("en-IN",{maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+$("cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+
+/* dropdown + "new" combo */
+function comboOpts(k){
+  let l=[];
+  if(k==="party")l=bills.map(b=>b.party);
+  if(k==="design")l=bills.map(b=>b.design);
+  if(k==="desc")l=(PRESET[$("cat").value]||[]).concat(bills.filter(b=>b.cat===$("cat").value).map(b=>b.desc));
+  return [...new Set(l.filter(Boolean))].sort();
+}
+function fillCombo(k,val){
+  const o=comboOpts(k);if(val&&!o.includes(val))o.push(val);
+  $(k+"_s").innerHTML=`<option value="">-- Select --</option>`+o.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")+`<option value="__new">➕ Pudhusa add pannu</option>`;
+  $(k+"_s").value=val||"";$(k).value=val||"";$(k).style.display="none";
+}
+function pick(k){
+  const s=$(k+"_s").value;
+  if(s==="__new"){$(k).value="";$(k).style.display="block";$(k).focus()}
+  else{$(k).value=s;$(k).style.display="none"}
+}
+function fillCombos(){["party","design","desc"].forEach(k=>fillCombo(k,$(k).value))}
+
+function calc(){
+  const basic=n($("qty").value)*n($("rate").value);
+  const g=basic*n($("gst").value)/100;
+  const tot=basic+g+n($("other").value);
+  const bal=tot-n($("paid").value);
+  $("basic").value=basic.toFixed(2);$("gstamt").value=g.toFixed(2);
+  $("total").value=tot.toFixed(2);$("bal").value=bal.toFixed(2);
+  $("status").value=tot<=0?"Pending":(bal<=0.005?"Paid":(n($("paid").value)>0?"Partial":"Pending"));
+}
+function openForm(b){
+  editId=b?b.id:null;
+  $("formBox").style.display="block";
+  $("ftitle").textContent=b?"Edit Bill":"New Bill";
+  const d=b||{cat:curTab!=="All"?curTab:CATS[0],date:new Date().toISOString().slice(0,10),unit:"Kg",gst:0,other:0,paid:0,mode:"Cash"};
+  ["cat","date","billno","qty","unit","rate","gst","other","paid","mode","due","pdate","rem"].forEach(k=>$(k).value=d[k]??"");
+  ["party","design","desc"].forEach(k=>{$(k).value=d[k]??""});
+  fillCombos();calc();$("formBox").scrollIntoView({behavior:"smooth"});
+}
+function closeForm(){$("formBox").style.display="none";editId=null}
+async function save(){
+  if(!$("party").value.trim()){alert("Party name select / add pannunga");return}
+  if(!$("billno").value.trim()){alert("Bill No podunga");return}
+  calc();
+  const o={id:editId||Date.now()+"",updated:new Date().toISOString()};
+  ["cat","date","party","billno","design","desc","qty","unit","rate","gst","other","paid","mode","due","pdate","rem","basic","gstamt","total","bal","status"].forEach(k=>o[k]=$(k).value.trim());
+  o.party=o.party.toUpperCase();
+  const dup=bills.find(b=>b.id!==o.id&&b.party===o.party&&b.billno===o.billno&&b.cat===o.cat);
+  if(dup&&!confirm("Same Party + Bill No already iruku. Thirumba save pannanuma?"))return;
+  upsertRow(o);
+  await saveAll();closeForm();render();
+}
+async function del(id){if(!confirm("Indha bill delete pannalama?"))return;const b=bills.find(x=>x.id===id);if(b){upsertRow({...b,_del:1,updated:new Date().toISOString()});await saveAll()}render()}
+function edit(id){openForm(bills.find(b=>b.id===id))}
+
+function filtered(){
+  const q=$("q").value.toLowerCase(),s=$("fs").value,p=$("fp").value,fd=$("fd").value,td=$("td").value;
+  return bills.filter(b=>(!s||b.status===s)&&(!p||b.party===p)&&(!fd||b.date>=fd)&&(!td||b.date<=td)&&
+    (!q||(b.billno+" "+b.design+" "+b.desc).toLowerCase().includes(q)));
+}
+function render(){
+  const fpv=$("fp").value,pl=[...new Set(bills.map(b=>b.party))].sort();
+  $("fp").innerHTML=`<option value="">All Parties</option>`+pl.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join("");
+  $("fp").value=pl.includes(fpv)?fpv:"";
+  const all=filtered();
+  const T=a=>a.reduce((s,b)=>s+n(b.total),0),P=a=>a.reduce((s,b)=>s+n(b.paid),0);
+  $("sum").innerHTML=`<div><small>Total Bills</small><b>${all.length}</b></div><div><small>Total Amount</small><b>${f(T(all))}</b></div><div><small>Paid</small><b style="color:var(--ok)">${f(P(all))}</b></div><div><small>Balance</small><b style="color:var(--bad)">${f(T(all)-P(all))}</b></div>`;
+  $("tabs").innerHTML=["All",...CATS].map(c=>{const k=c==="All"?all.length:all.filter(b=>b.cat===c).length;
+    return `<div class="tab ${c===curTab?"on":""}" onclick="curTab='${c}';render()">${c} (${k})</div>`}).join("");
+  const cats=curTab==="All"?CATS:[curTab];
+  $("list").innerHTML=cats.map((c,ci)=>{
+    const rows=all.filter(b=>b.cat===c);
+    const groups={};rows.forEach(b=>(groups[b.party]=groups[b.party]||[]).push(b));
+    const names=Object.keys(groups).sort();
+    return `<div class="sec"><div class="sech"><h2>${c} Bills — ${rows.length} · ${f(T(rows))}</h2>
+      <div><button class="btn s g" onclick="setAll(${ci},true)">Expand All</button> <button class="btn s o" onclick="setAll(${ci},false)">Collapse All</button></div></div>
+      ${names.length?names.map(p=>{
+        const g=groups[p].sort((a,b)=>b.date.localeCompare(a.date)),k=c+"|"+p,bal=T(g)-P(g);
+        return `<div class="gh" onclick="tog('${encodeURIComponent(k).replace(/'/g,"%27")}')"><span>${open[k]?"▼":"▶"} ${esc(p)}</span><span class="m">${g.length} bills · ${f(T(g))} · Bal ${f(bal)}</span></div>
+        ${open[k]?`<div class="wrap"><table><tr><th>Date</th><th>Bill No</th><th>Design</th><th>Qty</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>
+        ${g.map(b=>`<tr><td>${b.date}</td><td>${esc(b.billno)}</td><td>${esc(b.design)||"-"}</td><td>${b.qty||""} ${b.qty?b.unit:""}</td><td>${f(b.total)}</td><td>${f(b.paid)}</td><td>${f(b.bal)}</td><td><span class="st ${b.status}">${b.status}</span></td>
+        <td style="white-space:nowrap"><button class="btn s" onclick="edit('${b.id}')">✏️</button> <button class="btn s r" onclick="del('${b.id}')">🗑</button></td></tr>
+        ${b.desc||b.rem?`<tr><td colspan="9" style="color:var(--mut)">${esc(b.desc)} ${b.rem?"· "+esc(b.rem):""} ${b.due?"· Due: "+b.due:""}</td></tr>`:""}`).join("")}</table></div>`:""}`}).join(""):`<div class="empty">Bill illai</div>`}</div>`}).join("");
+}
+function tog(k){k=decodeURIComponent(k);open[k]=!open[k];render()}
+function setAll(ci,v){
+  const c=(curTab==="All"?CATS:[curTab])[ci];
+  filtered().filter(b=>b.cat===c).forEach(b=>open[c+"|"+b.party]=v);render();
+}
+/* ===== OFFLINE-FIRST: config.js (StorageDB IndexedDB -> Supabase erp_sync_data) ===== */
+const KEYB="purchased_bills_data";
+let rows=[]; // tombstones (_del) kuda
+function loadBills(){const a=window.localLoad?window.localLoad(KEYB,[]):[];rows=Array.isArray(a)?a:[];bills=rows.filter(r=>!r._del)}
+function upsertRow(o){const i=rows.findIndex(r=>r.id===o.id);if(i>=0)rows[i]=o;else rows.push(o);bills=rows.filter(r=>!r._del)}
+async function saveAll(){try{await window.firebaseSave(KEYB,rows)}catch(e){alert("Save error: "+e.message)}setTimeout(pill,1500)}
+function setSt(t,c){const e=$("syncSt");e.textContent=t;e.style.background=c}
+function pill(){
+  const q=window.offlineSyncQueue&&window.offlineSyncQueue[KEYB]!==undefined;
+  if(window.isCloudSyncActive&&!window.isCloudSyncActive())setSt("💾 Local (Cloud OFF)","#6b7280");
+  else if(!navigator.onLine)setSt("⚠️ Offline"+(q?" · pending":""),"#d97706");
+  else if(q)setSt("⏳ Cloud pending","#2563eb");
+  else if(window.supabaseClient)setSt("☁️ Synced","#16a34a");
+  else setSt("💾 Local","#6b7280");
+}
+async function sync(manual){
+  if(!navigator.onLine){pill();if(manual)alert("Internet illai. Data phone-la safe, online vandhadhum auto sync aagum.");return}
+  setSt("⏳ Syncing...","#2563eb");
+  try{
+    if(window.initializeSupabase)await window.initializeSupabase(false);
+    if(window.syncOfflineQueue)await window.syncOfflineQueue();
+    if(window.syncERPFromCloud)await window.syncERPFromCloud();
+  }catch(e){console.warn(e)}
+  loadBills();render();pill();
+}
+function goMenu(){try{if(window.parent!==window&&window.parent.showDashboardHome){window.parent.showDashboardHome();return false}}catch(e){}return true}
+function oldIDB(){return new Promise(res=>{try{const r=indexedDB.open("purchased_db");let fresh=false;r.onupgradeneeded=()=>{fresh=true};r.onerror=()=>res([]);
+  r.onsuccess=()=>{const d=r.result;if(fresh||!d.objectStoreNames.contains("bills")){d.close();if(fresh)indexedDB.deleteDatabase("purchased_db");return res([])}
+  const q=d.transaction("bills").objectStore("bills").getAll();q.onsuccess=()=>{d.close();res(q.result||[])};q.onerror=()=>{d.close();res([])}}}catch(e){res([])}})}
+async function init(){
+  try{if(window.StorageDB&&window.StorageDB.ready)await window.StorageDB.ready}catch(e){}
+  loadBills();
+  try{ // pazhaya version data -> one time move
+    if(!window.localLoad("__purchased_migrated",0)){
+      const old=[].concat(window.localLoad("purchased_bills_v1",[])||[],await oldIDB());
+      let ch=false;
+      old.forEach(b=>{if(b&&b.id&&!rows.find(r=>r.id===b.id)){const {_dirty,...c}=b;rows.push(c);ch=true}});
+      if(ch){bills=rows.filter(r=>!r._del);await saveAll()}
+      window.localSave("__purchased_migrated",1);
+    }
+  }catch(e){console.warn(e)}
+  render();pill();
+  setTimeout(()=>{loadBills();render();pill()},4000);
+}
+window.addEventListener("erp-cloud-synced",()=>{loadBills();render();pill()});
+window.addEventListener("online",()=>{pill();setTimeout(pill,3000)});
+window.addEventListener("offline",pill);
+window.addEventListener("DOMContentLoaded",init);
+</script>
+</body>
+</html>

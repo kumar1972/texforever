@@ -19,7 +19,7 @@
 // ============================================================
 // VERSION (Updated to v10 so Chrome detects changes)
 // ============================================================
-const CACHE_VERSION = "v14"; 
+const CACHE_VERSION = "v15"; 
 const CACHE_NAME = "texforever-erp-" + CACHE_VERSION;
 const APP_SHELL_CACHE = "texforever-shell-" + CACHE_VERSION;
 
@@ -64,6 +64,7 @@ const APP_SHELL = [
     "./invoice.html",
     "./report.html",
     "./settings.html",
+    "./purchased.html",
     "./pre_stock.js",
     "./pre_stock_graph.html",
     "./folder.js",

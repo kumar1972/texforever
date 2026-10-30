@@ -365,7 +365,8 @@ window.erpCloudKeys = [
     "party_master_db",
     "user_permissions",
     "erp_system_users",
-    "master_settings"
+    "master_settings",
+    "purchased_bills_data"
 ];
 
 // ============================================================
@@ -927,6 +928,20 @@ function mergeDesignArrays(local, cloud) {
     return Array.from(map.values()).concat(extras);
 }
 
+// Purchased Bill: id wise merge (newer "updated" wins, deleted tombstones kept)
+function mergePurchasedBills(local, cloud) {
+    const map = new Map();
+    cloud.forEach(function (r) { if (r && r.id) map.set(r.id, r); });
+    local.forEach(function (l) {
+        if (!l || !l.id) return;
+        const r = map.get(l.id);
+        if (!r) { map.set(l.id, l); return; }
+        const tl = Date.parse(l.updated || ""), tr = Date.parse(r.updated || "");
+        if ((isNaN(tl) ? 0 : tl) >= (isNaN(tr) ? 0 : tr)) map.set(l.id, l);
+    });
+    return Array.from(map.values());
+}
+
 // ============================================================
 // INITIAL CLOUD → LOCAL SYNC (GUARDED)
 // ============================================================
@@ -938,6 +953,21 @@ async function syncAllCloudData() {
     let synced = 0;
     for (const key of window.erpCloudKeys) {
         try {
+            if (key === "purchased_bills_data") {
+                const pcd = await cloudLoad(key, null);
+                const pld = window.localLoad(key, null);
+                if (Array.isArray(pcd) && Array.isArray(pld)) {
+                    window.localSave(key, mergePurchasedBills(pld, pcd));
+                    synced++;
+                    continue;
+                }
+                if (pcd !== null && pcd !== undefined && !isLocalDirty(key)) {
+                    window.localSave(key, pcd);
+                    synced++;
+                }
+                continue;
+            }
+
             // FIX: design lists are MERGED (local-only records are kept), never blindly overwritten by an older cloud copy
             if (window.ERP_MERGE_KEYS.indexOf(key) !== -1) {
                 const cd = await cloudLoad(key, null);

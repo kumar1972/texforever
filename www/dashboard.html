@@ -1361,6 +1361,56 @@ body.dashboard-modern .advanced-control-center{display:grid}
 
 body.dashboard-modern .menu-btn.modern-only{ display:none !important; }
 body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !important; }
+
+/* =========================================================
+   COMPACT FULL-WIDTH CARDS (13 - 17)
+========================================================= */
+.menu-grid{ gap:12px; }
+.full-span,
+.btn-m-all,
+.btn-matrix{
+    min-height:78px;
+    padding:10px 18px;
+    gap:14px;
+    font-size:17px;
+}
+.full-span .tab-icon,
+.btn-m-all .tab-icon,
+.btn-matrix .tab-icon{
+    width:60px;
+    min-width:60px;
+    height:60px;
+}
+.full-span .tab-icon img,
+.btn-m-all .tab-icon img,
+.btn-matrix .tab-icon img{
+    width:52px !important;
+    height:52px !important;
+}
+.full-span .tab-icon span{ font-size:40px !important; }
+
+/* 13,14,15 = one row (3 cards) | 16,17 = one row (2 cards) */
+@media(min-width:769px){
+    .menu-grid{ grid-template-columns:repeat(6,1fr); }
+    .menu-btn{ grid-column:span 2; }
+    .full-span,
+    .btn-m-all,
+    .btn-matrix{ grid-column:span 2; }
+    .menu-grid > .menu-btn.full-span:nth-last-child(1),
+    .menu-grid > .menu-btn.full-span:nth-last-child(2){ grid-column:span 3; }
+    .btn-m-all .tab-icon,
+    .btn-matrix .tab-icon,
+    .full-span:nth-last-child(3) .tab-icon{ width:44px; min-width:44px; height:44px; }
+    .btn-m-all .tab-icon img,
+    .btn-matrix .tab-icon img,
+    .full-span:nth-last-child(3) .tab-icon img{ width:40px !important; height:40px !important; }
+    .full-span:nth-last-child(3) .tab-icon span{ font-size:32px !important; }
+    .btn-m-all,
+    .btn-matrix,
+    .full-span:nth-last-child(3){ font-size:14px; gap:10px; padding:10px 12px; }
+}
+
+
 </style>
 
 </head>
@@ -1368,235 +1418,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
 
 <body>
 
-<!-- =========================================================
-     SIDEBAR NAVIGATION MENU DRAWER
-========================================================= -->
 
-<div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-<aside id="sidebarContainer" class="sidebar-container">
-    <div class="sidebar-header">
-        <div class="sidebar-header-top">
-            <div class="sidebar-brand-box">
-                <div class="sidebar-brand-emblem">🖥️</div>
-                <div class="sidebar-brand-text">
-                    <h4>TEXFOREVER HUB</h4>
-                    <span>16 Production Modules</span>
-                </div>
-            </div>
-            <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
-        </div>
-
-        <div class="sidebar-search-box">
-            <span class="sidebar-search-icon">🔍</span>
-            <input type="text" id="sidebarSearchInput" placeholder="Quick search menu..." oninput="filterSidebarCards(this.value)">
-        </div>
-    </div>
-
-    <div class="sidebar-menu-items" id="sidebarCardsList">
-
-        <!-- 1st Heading -->
-        <div class="sidebar-dropdown-group active" id="group-1">
-            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-1')">
-                <span>📋 Orders & Design Entry</span>
-                <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="sidebar-dropdown-content">
-                <button class="luxury-side-card side-theme-1" onclick="navigateToPage('Party_Orders.html')">
-                    <div class="luxury-card-icon"><img src="./icon/Party_Orders.png" alt="Party Orders"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">PARTY ORDER Ledger</div>
-                        <div class="luxury-card-sub">Customer Bookings</div>
-                    </div>
-                    <div class="luxury-card-num">01</div>
-                </button>
-                <button class="luxury-side-card side-theme-2" onclick="navigateToPage('warp_entry.html')">
-                    <div class="luxury-card-icon"><img src="./icon/warp_entry.png" alt="Warp Entry"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">WARP DESIGN Entry</div>
-                        <div class="luxury-card-sub">Warp Pattern & Ends</div>
-                    </div>
-                    <div class="luxury-card-num">02</div>
-                </button>
-                <button class="luxury-side-card side-theme-3" onclick="navigateToPage('weft_entry.html')">
-                    <div class="luxury-card-icon"><img src="./icon/weft_entry.png" alt="Weft Entry"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">WEFT DESIGN Entry</div>
-                        <div class="luxury-card-sub">Pick Pattern & Ratio</div>
-                    </div>
-                    <div class="luxury-card-num">2-1</div>
-                </button>
-            </div>
-        </div>
-
-        <!-- 2nd Heading -->
-        <div class="sidebar-dropdown-group" id="group-2">
-            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-2')">
-                <span>🎨 Yarn & Dyeing Control</span>
-                <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="sidebar-dropdown-content">
-                <button class="luxury-side-card side-theme-4" onclick="navigateToPage('kora_yarn.html')">
-                    <div class="luxury-card-icon"><img src="./icon/kora_yarn.png" alt="Kora"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">KORA PURCHASE Entry</div>
-                        <div class="luxury-card-sub">Raw Yarn Inward</div>
-                    </div>
-                    <div class="luxury-card-num">03</div>
-                </button>
-                <button class="luxury-side-card side-theme-5" onclick="navigateToPage('dyeing_issue.html')">
-                    <div class="luxury-card-icon"><img src="./icon/dyeing_issue.png" alt="Dyeing"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">DYEING ORDER Issue</div>
-                        <div class="luxury-card-sub">Send to Dyeing House</div>
-                    </div>
-                    <div class="luxury-card-num">04</div>
-                </button>
-                <button class="luxury-side-card side-theme-6" onclick="navigateToPage('dyeing_receive.html')">
-                    <div class="luxury-card-icon"><img src="./icon/dyeing_receive.png" alt="Receive"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">DYED COLOURS Receive</div>
-                        <div class="luxury-card-sub">Inward Dyed Cones</div>
-                    </div>
-                    <div class="luxury-card-num">4-1</div>
-                </button>
-            </div>
-        </div>
-
-        <!-- 3rd Heading -->
-        <div class="sidebar-dropdown-group" id="group-3">
-            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-3')">
-                <span>⚙️ Production & Looms</span>
-                <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="sidebar-dropdown-content">
-                <button class="luxury-side-card side-theme-7" onclick="navigateToPage('warping.html')">
-                    <div class="luxury-card-icon"><img src="./icon/warping.png" alt="Warping"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">WARPING ISSUE Program</div>
-                        <div class="luxury-card-sub">Beam Preparation</div>
-                    </div>
-                    <div class="luxury-card-num">05</div>
-                </button>
-                <button class="luxury-side-card side-theme-8" onclick="navigateToPage('weaving.html')">
-                    <div class="luxury-card-icon"><img src="./icon/weaving.png" alt="Weaving"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">WEAVING ISSUE Program</div>
-                        <div class="luxury-card-sub">Loom Allocation</div>
-                    </div>
-                    <div class="luxury-card-num">06</div>
-                </button>
-                <button class="luxury-side-card side-theme-6" onclick="navigateToPage('weaving_receive.html')">
-                    <div class="luxury-card-icon"><img src="./icon/weaving_receive.png" alt="Receive"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">WEAVED FABRICS Receive</div>
-                        <div class="luxury-card-sub">Grey Cloth Inward</div>
-                    </div>
-                    <div class="luxury-card-num">6-1</div>
-                </button>
-            </div>
-        </div>
-
-        <!-- 4th Heading -->
-        <div class="sidebar-dropdown-group" id="group-4">
-            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-4')">
-                <span>🚚 Finishing & Despatch</span>
-                <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="sidebar-dropdown-content">
-                <button class="luxury-side-card side-theme-9" onclick="navigateToPage('washing.html')">
-                    <div class="luxury-card-icon"><img src="./icon/washing.png" alt="Washing"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">WASHING ISSUE Program</div>
-                        <div class="luxury-card-sub">Fabric Finishing</div>
-                    </div>
-                    <div class="luxury-card-num">07</div>
-                </button>
-                <button class="luxury-side-card side-theme-10" onclick="navigateToPage('Despatch.html')">
-                    <div class="luxury-card-icon"><img src="./icon/Despatch.png" alt="Despatch"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">FABRICS DESPATCHED Program</div>
-                        <div class="luxury-card-sub">Bale Packing & Delivery</div>
-                    </div>
-                    <div class="luxury-card-num">08</div>
-                </button>
-            </div>
-        </div>
-
-        <!-- 5th Heading -->
-        <div class="sidebar-dropdown-group" id="group-5">
-            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-5')">
-                <span>🔴 Reports & Billing</span>
-                <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="sidebar-dropdown-content">
-                <button class="luxury-side-card side-theme-11" onclick="navigateToPage('report.html')">
-                    <div class="luxury-card-icon"><img src="./icon/report.png" alt="Reports"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">ALL Reports</div>
-                        <div class="luxury-card-sub">Mill Analytics</div>
-                    </div>
-                    <div class="luxury-card-num">1</div>
-                </button>
-                <button class="luxury-side-card side-theme-print" onclick="navigateToPage('design_sheet_print.html')">
-                    <div class="luxury-card-icon"><img src="./icon/design_sheet_print.png" alt="Print"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">DESIGN Sheet Print out</div>
-                        <div class="luxury-card-sub">Export Job Card</div>
-                    </div>
-                    <div class="luxury-card-num">3</div>
-                </button>
-                <button class="luxury-side-card side-theme-12" onclick="navigateToPage('invoice.html')">
-                    <div class="luxury-card-icon"><img src="./icon/invoice.png" alt="Invoice"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">INVOICE / BILL Entry</div>
-                        <div class="luxury-card-sub">GST Billing</div>
-                    </div>
-                    <div class="luxury-card-num">12</div>
-                </button>
-            </div>
-        </div>
-
-        <!-- 6th Heading (Calculation, Simulation & Denting - Red Round Header) -->
-        <div class="sidebar-dropdown-group red-round-header" id="group-6">
-            <button class="sidebar-dropdown-btn" onclick="toggleAccordion('group-6')">
-                <span>🔴 Calculation, Sim & Denting</span>
-                <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="sidebar-dropdown-content">
-                <button class="luxury-side-card side-theme-calc" onclick="navigateToPage('yarn_calc.html')">
-                    <div class="luxury-card-icon"><img src="./icon/yarn_calc.png" alt="Calc"></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">YARN WEIGHT Calculation</div>
-                        <div class="luxury-card-sub">Count & GSM Calculator</div>
-                    </div>
-                    <div class="luxury-card-num">2</div>
-                </button>
-                <button class="luxury-side-card side-theme-sim" onclick="navigateToPage('weave_3d.html')">
-                    <div class="luxury-card-icon"><span style="font-size:16px;">👕</span></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">3D FABRIC Simulation</div>
-                        <div class="luxury-card-sub">Interactive Preview</div>
-                    </div>
-                    <div class="luxury-card-num">15</div>
-                </button>
-                <button class="luxury-side-card side-theme-dent" onclick="navigateToPage('denting_editor.html')">
-                    <div class="luxury-card-icon"><span style="font-size:16px;">📐</span></div>
-                    <div class="luxury-card-info">
-                        <div class="luxury-card-title">Denting & Drawing Editor</div>
-                        <div class="luxury-card-sub">Advanced Reed Plan</div>
-                    </div>
-                    <div class="luxury-card-num">16</div>
-                </button>
-            </div>
-        </div>
-
-    </div>
-    <div class="sidebar-footer">
-        <span style="color:#FBBF24;"> 👉TEXFOREVER</span>
-        <span style="color:#FBBF24;">★ ROYAL EDITION</span>
-    </div>
-</aside>
 
 
 <!-- =========================================================
@@ -1606,11 +1428,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
 <div class="top-header-container">
 
     <div class="header-left-group">
-        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </button>
+        
         <h3 id="appHeaderTitle" onclick="showDashboardHome()" title="Dashboard Home">
             TEX FOR EVER 
         </h3>
@@ -1622,14 +1440,6 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
     </div>
 
     <div class="header-right-actions">
-
-        <div class="dashboard-ui-wrapper">
-            <button class="dashboard-ui-btn" onclick="toggleDashboardUIMenu(event)" title="Choose Dashboard Design">✨ Dashboard UI ▾</button>
-            <div id="dashboardUIMenu" class="dashboard-ui-menu">
-                <button onclick="setDashboardUI('classic')">🔷 Classic Dashboard</button>
-                <button onclick="setDashboardUI('modern')">✨ Modern Glass Dashboard</button>
-            </div>
-        </div>
 
         <div class="live-clock-box">
             <div id="liveClock" class="live-clock">12:00:00 AM</div>
@@ -1901,7 +1711,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
             </span>
 
             <span>
-                5 ~ WARPING ISSUE Program
+                5 ~ WARPING Program
             </span>
 
         </button>
@@ -1918,7 +1728,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
             </span>
 
             <span>
-                6 ~ WEAVING ISSUE Program
+                6 ~ WEAVING Program
             </span>
 
         </button>
@@ -1935,7 +1745,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
             </span>
 
             <span>
-                6.1 ~ WEAVED FABRICS Receive
+                6.1 ~ WEAVERS FABRICS Receive
             </span>
 
         </button>
@@ -1952,7 +1762,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
             </span>
 
             <span>
-                7 ~ WASHING ISSUE Program
+                7 ~ WASHING Program
             </span>
 
         </button>
@@ -1969,7 +1779,7 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
             </span>
 
             <span>
-                8 ~FABRICS DESPATCHED Program
+                8 ~ DESPATCH Program
             </span>
 
         </button>
@@ -2168,6 +1978,49 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
 
         </button>
 
+        <!-- 17 -->
+
+        <button
+            class="menu-btn full-span"
+            onclick="navigateToPage('purchased bill.html')"
+            style="
+                background:linear-gradient(
+                    135deg,
+                    #7c2d12,
+                    #c2410c,
+                    #f59e0b
+                );
+                border:2px solid #fbbf24;
+                box-shadow:0 0 15px rgba(251,191,36,.4);
+            ">
+
+            <span class="tab-icon">
+
+                <span
+                    style="
+                        font-size:55px;
+                        filter:drop-shadow(
+                            0 5px 8px rgba(0,0,0,.5)
+                        );
+                    ">
+                    🧾
+                </span>
+
+            </span>
+
+            <span
+                style="
+                    color:#fef3c7;
+                    text-shadow:0 2px 4px rgba(0,0,0,.5);
+                ">
+
+                17 ~ PURCHASED BILL
+
+            </span>
+
+        </button>
+
+
     </div>
 
 
@@ -2302,34 +2155,6 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
 // @ts-nocheck
 
 
-/* =========================================================
-   SIDEBAR TOGGLE & ACCORDION FUNCTIONS
-========================================================= */
-
-function toggleSidebar() {
-    const sidebar = document.getElementById("sidebarContainer");
-    const overlay = document.getElementById("sidebarOverlay");
-    if (sidebar && overlay) {
-        sidebar.classList.toggle("active");
-        overlay.classList.toggle("active");
-    }
-}
-
-function toggleAccordion(groupId) {
-    const group = document.getElementById(groupId);
-    if (group) {
-        group.classList.toggle("active");
-    }
-}
-
-function filterSidebarCards(query) {
-    const term = String(query || "").trim().toLowerCase();
-    const cards = document.querySelectorAll("#sidebarCardsList .luxury-side-card");
-    cards.forEach(card => {
-        const text = card.textContent.toLowerCase();
-        card.style.display = text.includes(term) ? "flex" : "none";
-    });
-}
 
 
 /* =========================================================
@@ -4043,27 +3868,6 @@ function waitForCloudSync(timeout){
 
 
 /* =========================================================
-   DASHBOARD UI SELECTION (Classic + Modern Glass)
-========================================================= */
-function toggleDashboardUIMenu(event){
-    if(event) event.stopPropagation();
-    const menu=document.getElementById("dashboardUIMenu");
-    if(menu) menu.style.display=menu.style.display==="block"?"none":"block";
-}
-function setDashboardUI(mode){
-    mode = (mode==="modern") ? "modern" : "classic";
-    document.body.classList.toggle("dashboard-modern",mode==="modern");
-    try{localStorage.setItem("erp_dashboard_ui",mode);}catch(e){}
-    const menu=document.getElementById("dashboardUIMenu");
-    if(menu){
-        menu.style.display="none";
-        menu.querySelectorAll("button").forEach(function(b){
-            b.classList.toggle("active", b.getAttribute("onclick").indexOf("'"+mode+"'")>-1);
-        });
-    }
-}
-
-/* =========================================================
    INITIALIZATION
 ========================================================= */
 
@@ -4072,8 +3876,6 @@ window.addEventListener(
     async function(){
 
         try{
-
-            setDashboardUI(localStorage.getItem("erp_dashboard_ui") || "classic");
 
             const savedTheme = localStorage.getItem("erp_theme_mode") || "dark";
             const themeBgs = {
