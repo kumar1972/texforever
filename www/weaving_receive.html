@@ -291,7 +291,11 @@
             </div>
         </div>
         
-        <button class="btn-main" style="background: linear-gradient(135deg, #7C3AED, #6D28D9); margin-top: 12px;" onclick="saveLedgerAccountData()">💾 Save Ledger Details</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+            <button class="btn-main" style="background: linear-gradient(135deg, #7C3AED, #6D28D9);" onclick="saveLedgerAccountData()">💾 Save Ledger Details</button>
+            <button class="btn-main" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);" onclick="viewLedgerStatement()">👁️ View</button>
+            <button class="btn-main" style="background: linear-gradient(135deg, #F59E0B, #D97706);" onclick="printLedgerStatement()">🖨️ Print</button>
+        </div>
     </div>
 </div>
 
@@ -768,8 +772,9 @@
         }
         let okMtrs = parseFloat(okEl.value) || 0;
         let pickWages = parseFloat(document.getElementById('ledgerPickWages').value) || 0;
+        let pick = parseFloat(document.getElementById('ledgerPick').value) || 0;
 
-        if (totEl.dataset.manual !== '1') totEl.value = (pickWages * okMtrs).toFixed(2);
+        if (totEl.dataset.manual !== '1') totEl.value = (pick * pickWages * okMtrs).toFixed(2);
         let totalWages = parseFloat(totEl.value) || 0;
 
         let darning = parseFloat(document.getElementById('ledgerDarning').value) || 0;
@@ -1060,6 +1065,102 @@
             <td colspan="2">-</td>
         </tr>`;
         openModal('reportModal');
+    }
+
+    function buildLedgerStatementHtml() {
+        let g = id => document.getElementById(id).value;
+        let weaver = g('weaverSelect') || '-';
+        let design = g('designSelect') || '-';
+        let mode = g('ledgerPayMode');
+        let det = '-';
+        if (mode === 'Cash') det = `Date: ${g('payCashDate') || '-'} | Remarks: ${g('payCashRemarks') || '-'}`;
+        if (mode === 'Cheque') det = `Cheque No: ${g('payChequeNo') || '-'} | Bank: ${g('payChequeBank') || '-'} | Date: ${g('payChequeDate') || '-'}`;
+        if (mode === 'RTGS') det = `UTR/Ref: ${g('payRtgsRef') || '-'} | Bank: ${g('payRtgsBank') || '-'} | Date: ${g('payRtgsDate') || '-'}`;
+        let row = (k, v) => `<tr><td style="border:1px solid #ccc; padding:6px; text-align:left; font-weight:bold;">${k}</td><td style="border:1px solid #ccc; padding:6px; text-align:right;">${v}</td></tr>`;
+        let secHead = t => `<h3 style="font-family:sans-serif; font-size:13px; margin:16px 0 6px; padding:4px 8px; background:#eee; border-left:4px solid #7C3AED;">${t}</h3>`;
+
+        let cleanD = cleanDesignName(g('designSelect'));
+        let records = receiveRecords.filter(r => (g('weaverSelect') ? r.weaver === g('weaverSelect') : true) && cleanDesignName(r.designNo) === cleanD);
+        let th = 'border:1px solid #333; padding:5px;';
+        let td = 'border:1px solid #ccc; padding:5px;';
+        let totRec = 0, totOk = 0;
+        let recRows = records.map(r => {
+            totRec += parseFloat(r.receivedMtrs || 0); totOk += parseFloat(r.okMtrs || 0);
+            return `<tr>
+                <td style="${td}">${r.date}</td>
+                <td style="${td}">${r.slipNo || '-'}</td>
+                <td style="${td}">${parseFloat(r.receivedMtrs || 0).toFixed(2)}</td>
+                <td style="${td}">${r.pinPct || 0}%</td>
+                <td style="${td}">${parseFloat(r.pendingMtrs || 0).toFixed(2)}</td>
+                <td style="${td}">${parseFloat(r.okMtrs || 0).toFixed(2)}</td>
+                <td style="${td}">${parseFloat(r.balanceMtrs || 0).toFixed(2)}</td>
+                <td style="${td} color:red;">${r.shortageMtrs || '0.00%'}</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="8" style="${td}">No receive entries</td></tr>`;
+
+        return `
+            <div style="text-align:center; margin-bottom: 10px;">
+                <h2 style="margin:0; font-family:sans-serif; font-size:16px;">WEAVER ACCOUNT STATEMENT</h2>
+                <p style="margin:4px 0; font-family:sans-serif; font-size:12px;"><b>Weaver:</b> ${weaver} &nbsp;|&nbsp; <b>Design No:</b> ${design}</p>
+                <p style="margin:0; font-family:sans-serif; font-size:11px;">Print Date: ${new Date().toLocaleDateString('en-GB')}</p>
+            </div>
+
+            ${secHead('1. Order Details')}
+            <table style="width:100%; border-collapse:collapse; font-family:sans-serif; font-size:12px;">
+                ${row('Warping Issued Mtrs', g('statWarpMtrs') || '0.00')}
+                ${row('Crimp %', g('statCrimp') || '0')}
+                ${row('Fabric Order Mtrs', g('statFabricMtrs') || '0.00')}
+                ${row('Total Received (OK) Mtrs', g('statTotalReceived') || '0.00')}
+                ${row('Pending Mtrs', g('statPendingMtrs') || '0.00')}
+            </table>
+
+            ${secHead('2. Fabric Receive Entries')}
+            <table style="width:100%; border-collapse:collapse; font-family:sans-serif; font-size:11px; text-align:center;">
+                <thead><tr style="background:#f2f2f2;">
+                    <th style="${th}">Date</th><th style="${th}">Slip No</th><th style="${th}">Rcvd Mtrs</th><th style="${th}">Pin %</th>
+                    <th style="${th}">Pending Mtrs</th><th style="${th}">OK Mtrs</th><th style="${th}">Balance Mtrs</th><th style="${th}">% Shortage</th>
+                </tr></thead>
+                <tbody>
+                    ${recRows}
+                    <tr style="font-weight:bold; background:#e8e8e8;">
+                        <td colspan="2" style="${th} text-align:right;">TOTAL:</td>
+                        <td style="${th}">${totRec.toFixed(2)}</td>
+                        <td colspan="2" style="${th}">-</td>
+                        <td style="${th}">${totOk.toFixed(2)}</td>
+                        <td colspan="2" style="${th}">-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            ${secHead('3. Wages Calculation')}
+            <table style="width:100%; border-collapse:collapse; font-family:sans-serif; font-size:12px;">
+                ${row('Onloom Reed', g('ledgerReed') || '-')}
+                ${row('Onloom Pick', g('ledgerPick') || '-')}
+                ${row('Pick Per Wages (₹)', g('ledgerPickWages') || '-')}
+                ${row('OK Mtrs', g('ledgerOkMtrs') || '0.00')}
+                ${row('Total Weaving Wages (₹)', g('ledgerTotalWages') || '0.00')}
+                ${row('Darning Cooli (₹)', g('ledgerDarning') || '0.00')}
+                ${row('Net Balance Payable (₹)', '<b>' + (g('ledgerNetBalance') || '0.00') + '</b>')}
+            </table>
+
+            ${secHead('4. Payment Details')}
+            <table style="width:100%; border-collapse:collapse; font-family:sans-serif; font-size:12px;">
+                ${row('Payment Made (₹)', g('ledgerPayment') || '0.00')}
+                ${row('Payment Mode', mode || '-')}
+                ${row('Payment Details', det)}
+            </table>`;
+    }
+
+    function viewLedgerStatement() {
+        if(!document.getElementById('designSelect').value) { alert("Please select a design!"); return; }
+        document.getElementById('printContent').innerHTML = buildLedgerStatementHtml();
+        openModal('printModal');
+    }
+
+    function printLedgerStatement() {
+        if(!document.getElementById('designSelect').value) { alert("Please select a design!"); return; }
+        document.getElementById('printContent').innerHTML = buildLedgerStatementHtml();
+        printWeavingReceive();
     }
 
     function printWeavingReceive() {
