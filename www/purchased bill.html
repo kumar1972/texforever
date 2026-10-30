@@ -107,10 +107,35 @@ const f=v=>"₹ "+n(v).toLocaleString("en-IN",{maximumFractionDigits:2});
 const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 $("cat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
 
+/* party names - andha andha page-la save pannadhu */
+const MANUAL_CATS=["Sizing","Others"];
+function sArr(key){try{const d=JSON.parse(window.StorageDB.getItem(key)||"[]");return Array.isArray(d)?d:[]}catch(e){return[]}}
+function partyNames(cat){
+  const l=[];
+  if(cat==="Kora Yarn"){
+    sArr("tex_master_mills").forEach(m=>l.push(m));
+    sArr("kora_stock_records").forEach(r=>{l.push(r.supplier);l.push(r.millName)});
+    sArr("kora_issue_records").forEach(r=>l.push(r.millName));
+  }else if(cat==="Dyeing"){
+    sArr("tex_master_units").forEach(m=>l.push(m));
+    sArr("kora_issue_records").forEach(r=>{l.push(r.dyeingName);l.push(r.unit)});
+    sArr("dyeing_issue_records").forEach(r=>l.push(r.unit));
+  }else if(cat==="Warping"){
+    sArr("tex_master_warping_units").forEach(m=>l.push(m));
+    sArr("warping_issue_records").forEach(r=>l.push(r.unit));
+  }else if(cat==="Weavers"){
+    sArr("tex_master_weavers").forEach(m=>l.push(m));
+    sArr("weaving_master_data").forEach(r=>l.push(r.weaverName));
+  }else if(cat==="Washing"){
+    sArr("tex_master_washing_units").forEach(m=>l.push(m));
+    sArr("washing_issue_records").forEach(r=>l.push(r.unit));
+  }
+  return l.map(x=>String(x||"").trim()).filter(Boolean);
+}
 /* dropdown + "new" combo */
 function comboOpts(k){
   let l=[];
-  if(k==="party")l=bills.map(b=>b.party);
+  if(k==="party")l=partyNames($("cat").value);
   if(k==="design")l=bills.map(b=>b.design);
   if(k==="desc")l=(PRESET[$("cat").value]||[]).concat(bills.filter(b=>b.cat===$("cat").value).map(b=>b.desc));
   return [...new Set(l.filter(Boolean))].sort();
@@ -119,6 +144,7 @@ function fillCombo(k,val){
   const o=comboOpts(k);if(val&&!o.includes(val))o.push(val);
   $(k+"_s").innerHTML=`<option value="">-- Select --</option>`+o.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")+`<option value="__new">➕ Pudhusa add pannu</option>`;
   $(k+"_s").value=val||"";$(k).value=val||"";$(k).style.display="none";
+  if(k==="party"){const man=MANUAL_CATS.includes($("cat").value);$("party_s").style.display=man?"none":"";if(man)$("party").style.display="block"}
 }
 function pick(k){
   const s=$(k+"_s").value;
