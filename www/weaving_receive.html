@@ -247,20 +247,47 @@
                 <input type="number" step="0.001" id="ledgerPickWages" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.000">
             </div>
             <div class="form-group">
+                <label>OK Mtrs (Auto)</label>
+                <input type="number" step="0.01" id="ledgerOkMtrs" class="editable-highlight" oninput="markManual(this)" placeholder="0.00">
+            </div>
+            <div class="form-group">
                 <label>Total Weaving Wages (₹)</label>
-                <input type="text" id="ledgerTotalWages" readonly style="font-weight:900; color:#7C3AED;">
+                <input type="number" step="0.01" id="ledgerTotalWages" class="editable-highlight" oninput="markManual(this)" style="font-weight:900; color:#7C3AED;" placeholder="0.00">
             </div>
             <div class="form-group">
-                <label>Advance Paid (₹)</label>
-                <input type="number" step="0.01" id="ledgerAdvance" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label>Payment Made (₹)</label>
-                <input type="number" step="0.01" id="ledgerPayment" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
+                <label>Darning Cooli (₹)</label>
+                <input type="number" step="0.01" id="ledgerDarning" class="editable-highlight" oninput="calcLedgerWages()" placeholder="0.00">
             </div>
             <div class="form-group">
                 <label>Net Balance Payable (₹)</label>
-                <input type="text" id="ledgerNetBalance" readonly style="font-weight:900; color:#059669;">
+                <input type="number" step="0.01" id="ledgerNetBalance" class="editable-highlight" oninput="markManual(this)" style="font-weight:900; color:#059669;" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Payment Made (₹)</label>
+                <input type="number" step="0.01" id="ledgerPayment" class="editable-highlight" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Payment Mode</label>
+                <select id="ledgerPayMode" onchange="onPayModeChange()">
+                    <option value="">Select Mode</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="RTGS">RTGS</option>
+                </select>
+            </div>
+            <div id="payBoxCash" style="display:none;">
+                <div class="form-group"><label>Cash Date</label><input type="date" id="payCashDate"></div>
+                <div class="form-group"><label>Remarks</label><input type="text" id="payCashRemarks" placeholder="Remarks"></div>
+            </div>
+            <div id="payBoxCheque" style="display:none;">
+                <div class="form-group"><label>Cheque No</label><input type="text" id="payChequeNo" placeholder="Cheque No"></div>
+                <div class="form-group"><label>Bank Name</label><input type="text" id="payChequeBank" placeholder="Bank"></div>
+                <div class="form-group"><label>Cheque Date</label><input type="date" id="payChequeDate"></div>
+            </div>
+            <div id="payBoxRtgs" style="display:none;">
+                <div class="form-group"><label>UTR / Ref No</label><input type="text" id="payRtgsRef" placeholder="UTR / Ref No"></div>
+                <div class="form-group"><label>Bank Name</label><input type="text" id="payRtgsBank" placeholder="Bank"></div>
+                <div class="form-group"><label>RTGS Date</label><input type="date" id="payRtgsDate"></div>
             </div>
         </div>
         
@@ -621,8 +648,17 @@
             document.getElementById('ledgerReed').value = savedLedger.reed || sp.onloomReed || sp.reed || '';
             document.getElementById('ledgerPick').value = savedLedger.pick || sp.onloomPick || sp.pick || '';
             document.getElementById('ledgerPickWages').value = savedLedger.pickWages || '';
-            document.getElementById('ledgerAdvance').value = savedLedger.advance || '';
+            document.getElementById('ledgerDarning').value = savedLedger.darning || '';
             document.getElementById('ledgerPayment').value = savedLedger.payment || '';
+            ['ledgerOkMtrs','ledgerTotalWages','ledgerNetBalance'].forEach(id => {
+                let el = document.getElementById(id);
+                el.dataset.manual = '';
+                if (savedLedger.manual && savedLedger.manual[id]) { el.value = savedLedger[id]; el.dataset.manual = '1'; } else { el.value = ''; }
+            });
+            document.getElementById('ledgerPayMode').value = savedLedger.payMode || '';
+            let pd = savedLedger.payDetails || {};
+            ['payCashDate','payCashRemarks','payChequeNo','payChequeBank','payChequeDate','payRtgsRef','payRtgsBank','payRtgsDate'].forEach(id => { document.getElementById(id).value = pd[id] || ''; });
+            onPayModeChange();
 
             let weaver = document.getElementById('weaverSelect').value;
             calculatePendingStats(weaver, design, fabricMtrs);
@@ -685,6 +721,7 @@
         document.getElementById('statPendingMtrs').value = currentPending.toFixed(2);
         
         calculateEntry(); 
+        calcLedgerWages();
     }
 
     function calculateEntry() {
@@ -708,18 +745,35 @@
         document.getElementById('entShortage').value = shortagePct.toFixed(2) + '%';
     }
 
+    function markManual(el) {
+        el.dataset.manual = el.value === '' ? '' : '1';
+        calcLedgerWages();
+    }
+
+    function onPayModeChange() {
+        let m = document.getElementById('ledgerPayMode').value;
+        document.getElementById('payBoxCash').style.display = m === 'Cash' ? 'block' : 'none';
+        document.getElementById('payBoxCheque').style.display = m === 'Cheque' ? 'block' : 'none';
+        document.getElementById('payBoxRtgs').style.display = m === 'RTGS' ? 'block' : 'none';
+    }
+
     function calcLedgerWages() {
-        let pick = parseFloat(document.getElementById('ledgerPick').value) || 0;
+        let okEl = document.getElementById('ledgerOkMtrs');
+        let totEl = document.getElementById('ledgerTotalWages');
+        let netEl = document.getElementById('ledgerNetBalance');
+
+        if (okEl.dataset.manual !== '1') {
+            let autoOk = parseFloat(document.getElementById('statTotalReceived').value) || 0;
+            okEl.value = autoOk > 0 ? autoOk.toFixed(2) : '';
+        }
+        let okMtrs = parseFloat(okEl.value) || 0;
         let pickWages = parseFloat(document.getElementById('ledgerPickWages').value) || 0;
-        let fabricMtrs = parseFloat(document.getElementById('statFabricMtrs').value) || 0;
-        let advance = parseFloat(document.getElementById('ledgerAdvance').value) || 0;
-        let payment = parseFloat(document.getElementById('ledgerPayment').value) || 0;
 
-        let totalWages = pick * pickWages * fabricMtrs;
-        document.getElementById('ledgerTotalWages').value = '₹ ' + totalWages.toFixed(2);
+        if (totEl.dataset.manual !== '1') totEl.value = (pickWages * okMtrs).toFixed(2);
+        let totalWages = parseFloat(totEl.value) || 0;
 
-        let netBalance = totalWages - (advance + payment);
-        document.getElementById('ledgerNetBalance').value = '₹ ' + netBalance.toFixed(2);
+        let darning = parseFloat(document.getElementById('ledgerDarning').value) || 0;
+        if (netEl.dataset.manual !== '1') netEl.value = (totalWages - darning).toFixed(2);
     }
 
     async function saveLedgerAccountData() {
@@ -734,12 +788,23 @@
             reed: document.getElementById('ledgerReed').value,
             pick: document.getElementById('ledgerPick').value,
             pickWages: document.getElementById('ledgerPickWages').value,
-            advance: document.getElementById('ledgerAdvance').value,
+            darning: document.getElementById('ledgerDarning').value,
             payment: document.getElementById('ledgerPayment').value,
+            ledgerOkMtrs: document.getElementById('ledgerOkMtrs').value,
+            ledgerTotalWages: document.getElementById('ledgerTotalWages').value,
+            ledgerNetBalance: document.getElementById('ledgerNetBalance').value,
             totalWages: document.getElementById('ledgerTotalWages').value,
-            netBalance: document.getElementById('ledgerNetBalance').value
+            netBalance: document.getElementById('ledgerNetBalance').value,
+            manual: {
+                ledgerOkMtrs: document.getElementById('ledgerOkMtrs').dataset.manual === '1',
+                ledgerTotalWages: document.getElementById('ledgerTotalWages').dataset.manual === '1',
+                ledgerNetBalance: document.getElementById('ledgerNetBalance').dataset.manual === '1'
+            },
+            payMode: document.getElementById('ledgerPayMode').value,
+            payDetails: {}
         };
 
+        ['payCashDate','payCashRemarks','payChequeNo','payChequeBank','payChequeDate','payRtgsRef','payRtgsBank','payRtgsDate'].forEach(id => { ledgerObj.payDetails[id] = document.getElementById(id).value; });
         weaverLedgerData[ledgerKey] = ledgerObj;
         window.StorageDB.setItem('weaving_ledger_data', JSON.stringify(weaverLedgerData));
         if(typeof window.supabaseSave === 'function') await window.supabaseSave('weaving_ledger_data', weaverLedgerData);
