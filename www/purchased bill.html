@@ -184,8 +184,9 @@ function clrRender(){
       <input type="number" step="any" placeholder="Rate" value="${esc(x.r)}" oninput="clr[${i}].r=this.value;calc()" style="flex:1;min-width:0">
       <input id="clrAmt${i}" readonly value="${(n(x.q)*n(x.r)).toFixed(2)}" style="flex:1;min-width:0">
       <button type="button" class="btn s r" onclick="delClr(${i})">🗑</button>
-    </div></div>`).join("");
+    </div>${isDye()?`<button type="button" class="btn s g" style="margin-top:6px" onclick="addClrAt(${i})">➕ Colour add</button>`:""}</div>`).join("");
 }
+function addClrAt(i){clr.splice(i+1,0,{d:clr[i].d||"",c:"",q:"",r:""});clrRender()}
 function addClr(){clr.push({d:"",c:"",q:"",r:""});clrRender()}
 function delClr(i){clr.splice(i,1);if(!clr.length)clr.push({d:"",c:"",q:"",r:""});clrRender();calc()}
 
