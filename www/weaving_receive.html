@@ -630,7 +630,7 @@
 
             if (order) {
                 warpIssuedMtrs = parseFloat(order.weavingMts) || 0;
-                crimp = parseFloat(order.crimpPerc) !== undefined && order.crimpPerc !== '' ? parseFloat(order.crimpPerc) : 5;
+                crimp = isNaN(parseFloat(order.crimpPerc)) ? 5 : parseFloat(order.crimpPerc);
                 fabricMtrs = parseFloat(order.fabricMtrs) || (warpIssuedMtrs - (warpIssuedMtrs * (crimp / 100)));
             } else if (matchedWarping && parseFloat(matchedWarping.warpingMts) > 0) {
                 warpIssuedMtrs = parseFloat(matchedWarping.warpingMts);
@@ -1077,7 +1077,7 @@
         if (mode === 'Cheque') det = `Cheque No: ${g('payChequeNo') || '-'} | Bank: ${g('payChequeBank') || '-'} | Date: ${g('payChequeDate') || '-'}`;
         if (mode === 'RTGS') det = `UTR/Ref: ${g('payRtgsRef') || '-'} | Bank: ${g('payRtgsBank') || '-'} | Date: ${g('payRtgsDate') || '-'}`;
         let row = (k, v) => `<tr><td style="border:1px solid #ccc; padding:6px; text-align:left; font-weight:bold;">${k}</td><td style="border:1px solid #ccc; padding:6px; text-align:right;">${v}</td></tr>`;
-        let secHead = t => `<h3 style="font-family:sans-serif; font-size:13px; margin:16px 0 6px; padding:4px 8px; background:#eee; border-left:4px solid #7C3AED;">${t}</h3>`;
+        let secHead = t => `<h3 style="font-family:sans-serif; font-size:13px; margin:16px 0 6px; padding:4px 8px;;">${t}</h3>`;
 
         let cleanD = cleanDesignName(g('designSelect'));
         let records = receiveRecords.filter(r => (g('weaverSelect') ? r.weaver === g('weaverSelect') : true) && cleanDesignName(r.designNo) === cleanD);
@@ -1098,10 +1098,11 @@
             </tr>`;
         }).join('') || `<tr><td colspan="8" style="${td}">No receive entries</td></tr>`;
 
-        return `
-            <div style="text-align:center; margin-bottom: 10px;">
-                <h2 style="margin:0; font-family:sans-serif; font-size:16px;">WEAVER ACCOUNT STATEMENT</h2>
-                <p style="margin:4px 0; font-family:sans-serif; font-size:12px;"><b>Weaver:</b> ${weaver} &nbsp;|&nbsp; <b>Design No:</b> ${design}</p>
+        return `<div style="border:2px solid #333; padding:12px;">
+            <div style="text-align:center; margin-bottom: 10px; border-bottom:2px solid #333; padding-bottom:8px;">
+                <h1 style="margin:0; font-family:sans-serif; font-size:22px; font-weight:900; letter-spacing:2px;">TEXFOREVER</h1>
+                <h2 style="margin:6px 0 4px; font-family:sans-serif; font-size:15px; font-weight:800;">WEAVER ACCOUNT STATEMENT</h2>
+                <p style="margin:4px 0; font-family:sans-serif; font-size:13px; font-weight:800;">Weaver: ${weaver} &nbsp;|&nbsp; Design No: ${design}</p>
                 <p style="margin:0; font-family:sans-serif; font-size:11px;">Print Date: ${new Date().toLocaleDateString('en-GB')}</p>
             </div>
 
@@ -1148,7 +1149,8 @@
                 ${row('Payment Made (₹)', g('ledgerPayment') || '0.00')}
                 ${row('Payment Mode', mode || '-')}
                 ${row('Payment Details', det)}
-            </table>`;
+            </table>
+        </div>`;
     }
 
     function viewLedgerStatement() {
