@@ -19,7 +19,7 @@
         body { padding: 12px; display: flex; flex-direction: column; align-items: center; }
 
         .main-card {
-            width: 100%; max-width: 1000px; margin: 0; background: #e6dfd0;
+            width: 100%; max-width: 1000px; margin: 0; background: #f9f8f0;
             display: flex; flex-direction: column; gap: 15px;
         }
 
@@ -192,7 +192,7 @@
 
 <div class="main-card">
     <div class="top-nav">
-        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <a href="dashboard.html" class="back-btn">👈 Back to Menu</a>
         <div class="completed-checkbox">
             <input type="checkbox" id="top_completed_status" onchange="quickCompleteToggle()">
             <label for="top_completed_status">Completed</label>
@@ -1040,8 +1040,14 @@
             let countNum = parseCountNumber(countStr);
             let wInp = row.querySelector('.w-weight');
             let weight;
+            const topBeamCountKey = (document.getElementById('topBeamCount').value || '').trim().toLowerCase();
+            const topBeamMtr = parseFloat(document.getElementById('topBeamDyeingMtr').value) || 0;
+            const rowCountKey = (countStr || '').trim().toLowerCase();
+            const rowDyeMtr = (topBeamCountKey && rowCountKey === topBeamCountKey && topBeamMtr > 0)
+                ? topBeamMtr
+                : totalDyeMtr;
             if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
-            else { weight = (ends * totalDyeMtr) / (1693.33 * countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
+            else { weight = (ends * rowDyeMtr) / (1693.33 * countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
             
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -1113,18 +1119,24 @@
         document.querySelectorAll('#weftTableBody .weft-picks').forEach(inp => totalWeftPicks += (parseFloat(inp.value) || 0));
         
         let gsmCalc = 0;
-        
+        const topBeamCountForGsm = (document.getElementById('topBeamCount').value || '').trim().toLowerCase();
+        const topBeamPctForGsm = Math.max(0, parseFloat(document.getElementById('topBeamPct').value) || 0);
+
         if (totalWarpEnds > 0) {
             document.querySelectorAll('#warpTableBody tr').forEach(row => {
                 let ends = parseFloat(row.querySelector('.w-ends').value) || 0;
-                let countNum = parseCountNumber(row.querySelector('.w-count').value);
+                let countStr = (row.querySelector('.w-count').value || '').trim().toLowerCase();
+                let countNum = parseCountNumber(countStr);
                 if (countNum > 0 && ends > 0) {
                     let proportionalEPI = fReed * (ends / totalWarpEnds);
-                    gsmCalc += (proportionalEPI * 23.25 * wCrimp) / countNum;
+                    let topBeamFactor = (topBeamCountForGsm && countStr === topBeamCountForGsm)
+                        ? (1 + topBeamPctForGsm / 100)
+                        : 1;
+                    gsmCalc += (proportionalEPI * 23.25 * wCrimp * topBeamFactor) / countNum;
                 }
             });
         }
-        
+
         if (totalWeftPicks > 0) {
             document.querySelectorAll('#weftTableBody tr').forEach(row => {
                 let picks = parseFloat(row.querySelector('.weft-picks').value) || 0;
@@ -1135,7 +1147,7 @@
                 }
             });
         }
-        
+
         let gsmVal = Math.round(gsmCalc);
         document.getElementById('displayGsmBadge').innerText = "GSM: " + gsmVal;
 
