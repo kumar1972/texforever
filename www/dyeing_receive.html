@@ -472,7 +472,7 @@ function printPreview() {
     if (window.appPrint) {
         window.appPrint(content ? content.innerHTML : undefined);
     } else {
-        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        window.print();
     }
 }
   </script>

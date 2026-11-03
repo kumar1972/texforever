@@ -776,7 +776,7 @@ tfoot td{
         min-height:auto !important;
     }
 
-    body > *:not(#issuePreviewModal){
+    body > *:not(#issuePreviewModal):not(#previewModal){
         display:none !important;
     }
 
@@ -4928,7 +4928,7 @@ function printIssuePreview() {
     if (window.appPrint) {
         window.appPrint(printHtml);
     } else {
-        alert('Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.');
+        window.print();
     }
 }
 </script>
