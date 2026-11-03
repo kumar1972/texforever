@@ -27,6 +27,19 @@ input,select,textarea{width:100%;background:#fff;color:var(--txt);border:1px sol
 input[readonly]{color:var(--acc);font-weight:bold;background:#f6f2e8}
 .newin{margin-top:4px;display:none}
 .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tabs[hidden]{display:none}
+@media print{
+  body{padding:0;background:#fff;color:#000}
+  .hd,#formBox,.panel.grid,.sech button,.gh{box-shadow:none}
+  .hd{display:none!important}
+  #formBox,.panel.grid{display:none!important}
+  .sech button{display:none!important}
+  .wrap{overflow:visible;border:1px solid #999;break-inside:avoid}
+  table{width:100%;min-width:0;font-size:10px}
+  th,td{padding:5px 4px;color:#000}
+  .sec{break-inside:avoid}
+  .gh{background:#eee!important;color:#000;border:1px solid #999}
+}
 .tab{white-space:nowrap;background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px}
 .tab.on{background:var(--acc);color:#fff;font-weight:bold;border-color:var(--acc)}
 .sec{margin-bottom:14px}
@@ -46,10 +59,15 @@ th{color:var(--mut);background:var(--gh)}
 <body>
 <div class="hd">
   <div class="top">
-    <div style="display:flex;align-items:center;gap:8px"><a class="btn k" href="dashboard.html" onclick="return goMenu()">👈 Menu</a><h1>🧾 Purchased Bill</h1></div><span id="syncSt" onclick="sync(true)" style="font-size:11px;color:#fff;background:#6b7280;border-radius:12px;padding:4px 8px;white-space:nowrap;cursor:pointer">⏳ Loading</span>
+    <div style="display:flex;align-items:center;gap:8px"><a class="btn k" href="dashboard.html" onclick="return goMenu()">👈 Menu</a><h1>🧾 Purchased Bill</h1></div>
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+      <button class="btn g s" id="previewBtn" type="button" onclick="togglePreviewMenus()">👁 Preview</button>
+      <button class="btn o s" type="button" onclick="printBills()">🖨 Print</button>
+      <span id="syncSt" onclick="sync(true)" style="font-size:11px;color:#fff;background:#6b7280;border-radius:12px;padding:4px 8px;white-space:nowrap;cursor:pointer">⏳ Loading</span>
+    </div>
   </div>
   <button class="btn g" style="font-size:17px;font-weight:bold;padding:11px 18px;margin-bottom:8px" onclick="openForm()">👉 NEW BILLS</button>
-  <div class="tabs" id="tabs"></div>
+  <div class="tabs" id="tabs" hidden></div>
 </div>
 
 <div class="sum" id="sum"></div>
@@ -275,6 +293,12 @@ function render(){
         <td style="white-space:nowrap"><button class="btn s" onclick="edit('${b.id}')">✏️</button> <button class="btn s r" onclick="del('${b.id}')">🗑</button></td></tr>
         ${b.desc||b.rem||(b.colors&&b.colors.length)?`<tr><td colspan="9" style="color:var(--mut)">${esc(b.desc)} ${(b.colors||[]).map(x=>" · "+esc([x.d,x.c].filter(Boolean).join(" ")||"-")+": "+x.q+" × "+x.r).join("")} ${b.rem?"· "+esc(b.rem):""} ${b.due?"· Due: "+b.due:""}</td></tr>`:""}`).join("")}</table></div>`:""}`}).join(""):`<div class="empty">Bill illai</div>`}</div>`}).join("");
 }
+function togglePreviewMenus(){
+  const tabs=$("tabs"),btn=$("previewBtn");
+  tabs.hidden=!tabs.hidden;
+  btn.textContent=tabs.hidden?"👁 Preview":"✕ Hide Menu";
+}
+function printBills(){window.print()}
 function tog(k){k=decodeURIComponent(k);open[k]=!open[k];render()}
 function setAll(ci,v){
   const c=(curTab==="All"?CATS:[curTab])[ci];
