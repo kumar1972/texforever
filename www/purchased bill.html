@@ -264,13 +264,17 @@ function editPicked(){
   if(b)openForm(b);
 }
 
-function filtered(){
-  const q=$("q").value.toLowerCase(),s=$("fs").value,p=$("fp").value,fd=$("fd").value,td=$("td").value;
+function filtered(ignoreParty=false){
+  const q=$("q").value.toLowerCase(),s=$("fs").value,p=ignoreParty?"":$("fp").value,fd=$("fd").value,td=$("td").value;
   return bills.filter(b=>(!s||b.status===s)&&(!p||b.party===p)&&(!fd||b.date>=fd)&&(!td||b.date<=td)&&
     (!q||(b.billno+" "+b.design+" "+b.desc).toLowerCase().includes(q)));
 }
 function render(){
-  const fpv=$("fp").value,pl=[...new Set(bills.map(b=>b.party))].sort();
+  const fpv=$("fp").value;
+  // Build the party/mill dropdown from the active category only.
+  // Keep other search filters, but ignore the previous party selection while rebuilding options.
+  const categoryBase=filtered(true).filter(b=>curTab==="All"||b.cat===curTab);
+  const pl=[...new Set(categoryBase.map(b=>b.party).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   $("fp").innerHTML=`<option value="">All Parties</option>`+pl.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join("");
   $("fp").value=pl.includes(fpv)?fpv:"";
   const all=filtered();
