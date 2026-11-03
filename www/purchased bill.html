@@ -274,13 +274,14 @@ function render(){
   $("fp").innerHTML=`<option value="">All Parties</option>`+pl.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join("");
   $("fp").value=pl.includes(fpv)?fpv:"";
   const all=filtered();
+  const visibleBills=curTab==="All"?all:all.filter(b=>b.cat===curTab);
   const T=a=>a.reduce((s,b)=>s+n(b.total),0),P=a=>a.reduce((s,b)=>s+n(b.paid),0);
-  $("sum").innerHTML=`<div><small>Total Bills</small><b>${all.length}</b></div><div><small>Total Amount</small><b>${f(T(all))}</b></div><div><small>Paid</small><b style="color:var(--ok)">${f(P(all))}</b></div><div><small>Balance</small><b style="color:var(--bad)">${f(T(all)-P(all))}</b></div>`;
+  $("sum").innerHTML=`<div><small>Total Bills</small><b>${visibleBills.length}</b></div><div><small>Total Amount</small><b>${f(T(visibleBills))}</b></div><div><small>Paid</small><b style="color:var(--ok)">${f(P(visibleBills))}</b></div><div><small>Balance</small><b style="color:var(--bad)">${f(T(visibleBills)-P(visibleBills))}</b></div>`;
   $("tabs").innerHTML=["All",...CATS].map(c=>{const k=c==="All"?all.length:all.filter(b=>b.cat===c).length;
     return `<div class="tab ${c===curTab?"on":""}" onclick="curTab='${c}';render()">${c} (${k})</div>`}).join("");
   const cats=curTab==="All"?CATS:[curTab];
   $("list").innerHTML=cats.map((c,ci)=>{
-    const rows=all.filter(b=>b.cat===c);
+    const rows=visibleBills.filter(b=>b.cat===c);
     const groups={};rows.forEach(b=>(groups[b.party]=groups[b.party]||[]).push(b));
     const names=Object.keys(groups).sort();
     return `<div class="sec"><div class="sech"><h2>${c} Bills — ${rows.length} · ${f(T(rows))}</h2>
@@ -298,7 +299,10 @@ function togglePreviewMenus(){
   tabs.hidden=!tabs.hidden;
   btn.textContent=tabs.hidden?"👁 Preview":"✕ Hide Menu";
 }
-function printBills(){window.print()}
+function printBills(){
+  render();
+  window.print();
+}
 function tog(k){k=decodeURIComponent(k);open[k]=!open[k];render()}
 function setAll(ci,v){
   const c=(curTab==="All"?CATS:[curTab])[ci];
