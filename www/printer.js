@@ -1,4 +1,4 @@
-});/**
+/**
  * TEXFOREVER - Universal Printer Utility
  * Windows (Electron) / Android APK (Capacitor) / Browser
  */
