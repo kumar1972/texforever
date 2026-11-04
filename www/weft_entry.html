@@ -31,7 +31,7 @@
             width: 100%;
             max-width: 900px;
             margin: 0;
-            background: #e6dfd0;
+            background: #f9f8f0;
             border: 1px solid rgba(82, 110, 81, 0.15);
             border-radius: 20px;
             padding: 20px;
@@ -853,7 +853,7 @@
 <div class="container">
 
     <div class="top-nav">
-        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <a href="dashboard.html" class="back-btn">👈 Back to Menu</a>
         <div id="bitmapDisplayContainer"></div>
     </div>
 
@@ -1774,7 +1774,7 @@ function loadWeftDesignData() {
     ) || 0;
 
     let autoWeftWidth = onloomWidth > 0 ? (onloomWidth + 3).toFixed(2) : '';
-    let autoPick = onloomPick > 0 ? onloomPick : '';
+    let autoPick = onloomPick > 0 ? (onloomPick - 4) : '';
 
     let resolvedWeft1 =
         sp.weftCount ||

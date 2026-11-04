@@ -187,7 +187,7 @@
 <div class="main-card">
 
     <div class="top-nav">
-        <a href="dashboard.html" class="back-btn">← Back to Menu</a>
+        <a href="dashboard.html" class="back-btn">👈 Back to Menu</a>
 
         <div id="bitmapDisplayContainer">
             <div class="completed-checkbox">
@@ -671,8 +671,25 @@ function loadDesignData() {
     let weft1Resolved = (foundWarpEntry && foundWarpEntry.weftCount) || (matchedOrder && matchedOrder.weftCount) || (foundMaster && (foundMaster.weftCount || foundMaster.weft)) || currentBaseSpecs.weftCount || currentBaseSpecs.weft || '';
     let weft2Resolved = (foundWarpEntry && foundWarpEntry.weft2) || (matchedOrder && matchedOrder.weft2) || (foundMaster && foundMaster.weft2) || currentBaseSpecs.weft2 || '';
 
-    let onloomReedResolved = (foundWarpEntry && foundWarpEntry.onloomReed) || (matchedOrder && matchedOrder.onloomReed) || (foundMaster && foundMaster.onloomReed) || currentBaseSpecs.onloomReed || (matchedOrder && matchedOrder.reed) || (foundMaster && foundMaster.reed) || currentBaseSpecs.reed || '';
-    let onloomPickResolved = (foundWarpEntry && foundWarpEntry.onloomPick) || (matchedOrder && matchedOrder.onloomPick) || (foundMaster && foundMaster.onloomPick) || currentBaseSpecs.onloomPick || (matchedOrder && matchedOrder.pick) || (foundMaster && foundMaster.pick) || currentBaseSpecs.pick || '';
+    // Keep any saved Onloom value; otherwise calculate the default from Finish Reed/Pick.
+    // These fields remain editable in the Warp Pattern Entry form.
+    const savedOnloomReed = (foundWarpEntry && foundWarpEntry.onloomReed) || (matchedOrder && matchedOrder.onloomReed) || (foundMaster && foundMaster.onloomReed) || currentBaseSpecs.onloomReed;
+    const finishReedValue = (foundMaster && foundMaster.finishReed)
+        || currentBaseSpecs.finishReed || (matchedOrder && matchedOrder.finishReed)
+        || (foundMaster && (foundMaster.reed || foundMaster.baseReed))
+        || currentBaseSpecs.reed || currentBaseSpecs.baseReed || (matchedOrder && matchedOrder.reed);
+    let onloomReedResolved = savedOnloomReed !== undefined && savedOnloomReed !== null && savedOnloomReed !== ''
+        ? savedOnloomReed
+        : (parseFloat(finishReedValue) ? String(parseFloat(finishReedValue) - 8) : '');
+
+    const savedOnloomPick = (foundWarpEntry && foundWarpEntry.onloomPick) || (matchedOrder && matchedOrder.onloomPick) || (foundMaster && foundMaster.onloomPick) || currentBaseSpecs.onloomPick;
+    const finishPickValue = (foundMaster && foundMaster.finishPick)
+        || currentBaseSpecs.finishPick || (matchedOrder && matchedOrder.finishPick)
+        || (foundMaster && (foundMaster.pick || foundMaster.basePick))
+        || currentBaseSpecs.pick || currentBaseSpecs.basePick || (matchedOrder && matchedOrder.pick);
+    let onloomPickResolved = savedOnloomPick !== undefined && savedOnloomPick !== null && savedOnloomPick !== ''
+        ? savedOnloomPick
+        : (parseFloat(finishPickValue) ? String(parseFloat(finishPickValue) - 4) : '');
     let onloomWidthResolved = (foundWarpEntry && foundWarpEntry.onloomWidth) || (matchedOrder && matchedOrder.onloomWidth) || (foundMaster && foundMaster.onloomWidth) || currentBaseSpecs.onloomWidth || (matchedOrder && matchedOrder.width) || (foundMaster && foundMaster.width) || currentBaseSpecs.width || '';
 
     let matchedProdMtr = 0;
