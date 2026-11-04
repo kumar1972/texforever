@@ -738,30 +738,26 @@
                 border-right: none !important;
             }
 
+            /* PRINT FIX: keep both pattern columns side-by-side on each A4 page */
             .print-flex-row {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                width: 100% !important;
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
                 gap: 8px !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                align-items: flex-start !important;
-                justify-content: space-between !important;
-                background: #FFFFFF !important;
-                page-break-inside: avoid;
-                break-inside: avoid;
+                align-items: start !important;
+                width: 100% !important;
             }
 
-            .print-col-box {
-                flex: 1 1 0 !important;
-                width: 50% !important;
+            .print-flex-row > .print-col-box {
+                display: block !important;
+                width: 100% !important;
                 min-width: 0 !important;
-                max-width: 50% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #FFFFFF !important;
-                page-break-inside: auto;
+                max-width: 100% !important;
+                flex: none !important;
+            }
+
+            .print-flex-row table {
+                width: 100% !important;
+                table-layout: fixed !important;
             }
 
             #previewContent,
