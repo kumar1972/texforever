@@ -264,6 +264,11 @@
             <label>To ➔</label>
             <input type="text" id="bulkNewColor" placeholder="Type New Color">
             <button class="btn-bulk-change" onclick="applyBulkColorChange()">Change Color</button>
+            <label>🔢 Bulk Count Changer:</label>
+            <select id="bulkOldCount"><option value="">Select Old Count</option></select>
+            <label>To ➔</label>
+            <input type="text" id="bulkNewCount" placeholder="Type New Count">
+            <button class="btn-bulk-change" onclick="applyBulkCountChange()">Change Count</button>
         </div>
         <div style="font-size:10px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">(Press Enter in Ends to add new line below)</div>
         <div style="overflow-x:auto;">
@@ -398,6 +403,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
     loadDesignDropdown();
+    refreshBulkCountDropdown();
     toggleSskrSettingsBtn();
     calculateLiveWarpTotals();
 });
@@ -845,6 +851,45 @@ function refreshBulkColorDropdown() {
     });
 }
 
+function refreshBulkCountDropdown() {
+    const countsSet = new Set();
+    document.querySelectorAll('.inp-count').forEach(function (inp) {
+        const val = inp.value.trim();
+        if (val) countsSet.add(val);
+    });
+    const select = document.getElementById('bulkOldCount');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select Old Count</option>';
+    countsSet.forEach(function (c) {
+        const option = document.createElement('option');
+        option.value = c;
+        option.textContent = c;
+        select.appendChild(option);
+    });
+}
+
+function applyBulkCountChange() {
+    const oldCount = document.getElementById('bulkOldCount').value;
+    const newCount = document.getElementById('bulkNewCount').value.trim();
+    if (!oldCount || !newCount) {
+        alert("Please select the Old Count and type the New Count!");
+        return;
+    }
+    if (confirm(`Are you sure you want to change all '${oldCount}' to '${newCount}'?`)) {
+        let changedCount = 0;
+        document.querySelectorAll('.inp-count').forEach(function (inp) {
+            if (inp.value.trim() === oldCount) {
+                inp.value = newCount;
+                changedCount++;
+            }
+        });
+        document.getElementById('bulkOldCount').value = '';
+        document.getElementById('bulkNewCount').value = '';
+        refreshBulkCountDropdown();
+        alert(`${changedCount} rows updated successfully! ✅`);
+    }
+}
+
 function applyBulkColorChange() {
     const oldColor = document.getElementById('bulkOldColor').value;
     const newColor = document.getElementById('bulkNewColor').value.trim();
@@ -880,12 +925,12 @@ function addWarpLine(count = '', color = '', beam = 'Ground', sskr = '', ends = 
         <input type="number" class="inp-ends" placeholder="Ends" value="${escapeHtmlAttribute(ends)}" onkeydown="if(event.key==='Enter'){event.preventDefault(); addWarpLine('','','Ground','','', this.parentElement); setTimeout(()=>{let next = this.parentElement.nextElementSibling?.querySelector('.inp-count'); if(next) next.focus();},50);}">
         <div class="action-cell-row">
             <button class="btn-insert-small" onclick="addWarpLine('','','Ground','','', this.parentElement.parentElement);" title="Insert row below">+</button>
-            <button class="btn-del-small" onclick="this.parentElement.parentElement.remove(); updateLineNumbers(); refreshBulkColorDropdown(); calculateLiveWarpTotals();" title="Delete row">×</button>
+            <button class="btn-del-small" onclick="this.parentElement.parentElement.remove(); updateLineNumbers(); refreshBulkColorDropdown(); refreshBulkCountDropdown(); calculateLiveWarpTotals();" title="Delete row">×</button>
         </div>
     `;
     if (insertAfterElem && insertAfterElem.nextSibling) container.insertBefore(row, insertAfterElem.nextSibling);
     else container.appendChild(row);
-    updateLineNumbers(); refreshBulkColorDropdown(); calculateLiveWarpTotals();
+    updateLineNumbers(); refreshBulkColorDropdown(); refreshBulkCountDropdown(); calculateLiveWarpTotals();
 }
 
 function escapeHtmlAttribute(value) {
