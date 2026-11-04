@@ -957,6 +957,21 @@
                 Change Color
             </button>
 
+            <label>🔢 Bulk Count Changer:</label>
+            <select id="bulkOldCount">
+                <option value="">Select Old Count</option>
+            </select>
+            <label>To ➔</label>
+            <input
+                type="text"
+                id="bulkNewCount"
+                placeholder="Type New Count">
+            <button
+                class="btn-bulk-change"
+                onclick="applyBulkCountChange()">
+                Change Count
+            </button>
+
         </div>
 
         <div style="font-size:10px;color:#10B981;font-weight:600;text-align:right;margin-bottom:5px;">
@@ -1885,6 +1900,7 @@ function loadWeftDesignData() {
     updateLineNumbers();
     calculateWeftValues();
     refreshBulkColorDropdown();
+    refreshBulkCountDropdown();
 }
 
 
@@ -1904,6 +1920,7 @@ function loadDefaultRow() {
     addWeftLine();
 
     refreshBulkColorDropdown();
+    refreshBulkCountDropdown();
 }
 
 
@@ -2214,6 +2231,71 @@ function refreshBulkColorDropdown() {
 }
 
 
+function refreshBulkCountDropdown() {
+
+    const countsSet = new Set();
+
+    document
+        .querySelectorAll('.inp-count')
+        .forEach(inp => {
+            const value = inp.value.trim();
+            if (value) countsSet.add(value);
+        });
+
+    const select = document.getElementById('bulkOldCount');
+    if (!select) return;
+
+    const previousValue = select.value;
+    select.innerHTML = '<option value="">Select Old Count</option>';
+
+    countsSet.forEach(count => {
+        const option = document.createElement('option');
+        option.value = count;
+        option.textContent = count;
+        select.appendChild(option);
+    });
+
+    if (countsSet.has(previousValue)) select.value = previousValue;
+}
+
+
+function applyBulkCountChange() {
+
+    const oldCount = document.getElementById('bulkOldCount').value;
+    const newCount = document.getElementById('bulkNewCount').value.trim();
+
+    if (!oldCount || !newCount) {
+        alert('Please select the Old Count and type the New Count!');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to change all '${oldCount}' counts to '${newCount}'?`)) {
+        return;
+    }
+
+    let changedCount = 0;
+
+    document.querySelectorAll('.inp-count').forEach(inp => {
+        if (inp.value.trim() === oldCount) {
+            inp.value = newCount;
+            changedCount++;
+        }
+    });
+
+    // Keep the default Weft 1 count in sync so newly added rows use the new count.
+    const defaultWeftCount = document.getElementById('infoWeft1');
+    if (defaultWeftCount && defaultWeftCount.value.trim() === oldCount) {
+        defaultWeftCount.value = newCount;
+    }
+
+    document.getElementById('bulkOldCount').value = '';
+    document.getElementById('bulkNewCount').value = '';
+    refreshBulkCountDropdown();
+
+    alert(`${changedCount} rows updated successfully! ✅`);
+}
+
+
 function applyBulkColorChange() {
 
     let oldColor =
@@ -2357,6 +2439,13 @@ function addWeftLine(
     );
 
     row.querySelector(
+        '.inp-count'
+    ).addEventListener(
+        'blur',
+        refreshBulkCountDropdown
+    );
+
+    row.querySelector(
         '.inp-picks'
     ).addEventListener(
         'keydown',
@@ -2451,6 +2540,7 @@ function addWeftLine(
             updateLineNumbers();
             calculateWeftValues();
             refreshBulkColorDropdown();
+            refreshBulkCountDropdown();
         }
     );
 
@@ -2472,6 +2562,7 @@ function addWeftLine(
     updateLineNumbers();
     calculateWeftValues();
     refreshBulkColorDropdown();
+    refreshBulkCountDropdown();
 }
 
 
