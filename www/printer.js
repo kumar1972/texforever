@@ -86,9 +86,26 @@ function buildPrintHtml(jobName, content) {
          '</div></div></div>' +
          '</body></html>';
 }
-// Print/PDF filename: actual printed content heading-ஐ எடுக்கும்.
+// Print/PDF filename: current HTML page filename-ஐ முதலில் பயன்படுத்தும்.
 function getPrintJobName(customContent, fallbackArea) {
 
+  // Dashboard-ல் இருந்து page open ஆனாலும், current page filename மாறாது.
+  const file = (window.location.pathname.split('/').pop() || '')
+    .replace(/\.html?$/i, '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+
+  if (file && !/^index$/i.test(file)) {
+    return file.replace(/\b\w/g, ch => ch.toUpperCase());
+  }
+
+  // index.html போன்ற generic filename இருந்தால் page title பயன்படுத்தும்.
+  const pageTitle = (document.title || '').trim();
+  if (pageTitle && !/^dashboard(?:\s|$)/i.test(pageTitle)) {
+    return pageTitle;
+  }
+
+  // கடைசி fallback: print content heading.
   const selectors = [
     '.preview-title',
     '.card-header',
@@ -99,17 +116,13 @@ function getPrintJobName(customContent, fallbackArea) {
   ];
 
   function readHeading(root) {
-
     if (!root) return '';
 
     for (const selector of selectors) {
-
       const nodes = root.querySelectorAll(selector);
 
       for (const node of nodes) {
-
         if (node.closest('.company-header')) continue;
-
         if (node.closest('.no-print, .hide-on-print')) continue;
 
         const value = (node.innerText || node.textContent || '')
@@ -119,39 +132,17 @@ function getPrintJobName(customContent, fallbackArea) {
         if (value) return value;
       }
     }
-
     return '';
   }
 
-  // Preview button வழியாக வரும் content-ல் heading தேடுகிறது.
   if (typeof customContent === 'string' && customContent.trim()) {
-
-    const parsed = new DOMParser().parseFromString(
-      customContent,
-      'text/html'
-    );
-
+    const parsed = new DOMParser().parseFromString(customContent, 'text/html');
     const heading = readHeading(parsed);
-
     if (heading) return heading;
   }
 
-  // மற்ற pages-ல் page heading தேடுகிறது.
   const heading = readHeading(fallbackArea || document);
-
-  if (heading) return heading;
-
-  // Heading கிடைக்காவிட்டால் HTML filename பயன்படுத்தும்.
-  const file = (window.location.pathname.split('/').pop() || '')
-    .replace(/\.html?$/i, '')
-    .replace(/[_-]+/g, ' ')
-    .trim();
-
-  if (file && !/^index$/i.test(file)) {
-    return file.replace(/\b\w/g, ch => ch.toUpperCase());
-  }
-
-  return (document.title || 'TEXFOREVER Print').trim();
+  return heading || pageTitle || 'TEXFOREVER Print';
 }
 
 window.appPrint = async function (customContent) {
