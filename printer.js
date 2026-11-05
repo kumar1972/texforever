@@ -3,7 +3,7 @@
  * Windows (Electron) / Android APK (Capacitor) / Browser
  */
 
-// பிரிண்ட் CSS (பழைய document.write வரிகளில் இருந்த அதே styles)
+// பிரிண்ட் CSS
 const TEX_PRINT_CSS = `
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
 *{box-sizing:border-box; margin:0; padding:0; font-family:"Poppins",sans-serif;}
@@ -24,7 +24,6 @@ th{background:#EAF0EA !important; color:#2F4F38 !important; font-weight:700; fon
 .page-break{page-break-after:always; break-after:page;}
 `;
 
-// Page-ஓட <style> blocks-ஐ எடுக்கும் (@media print rules அதுல தான் இருக்கு)
 function getPageStyles() {
   let css = '';
   document.querySelectorAll('style').forEach(function (s) {
@@ -32,10 +31,9 @@ function getPageStyles() {
   });
   return css;
 }
+
 function buildPrintHtml(jobName, content) {
 
-  // Print-க்கு மட்டும் தேவையான override
-  // modal, overlay, fixed/absolute positions எல்லாத்தையும் சாதாரண page flow ஆக்குது
   const printFix = `
     html,body{
       background:#ffffff !important;
@@ -66,14 +64,14 @@ function buildPrintHtml(jobName, content) {
       display:none !important;
     }
     .page-break{
-      display:block !important;
-      height:0 !important;
-      margin:0 !important;
-      padding:0 !important;
-      border:0 !important;
-      page-break-before:always !important;
-      break-before:page !important;
-    }
+    display:block !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    page-break-before:auto !important;
+    break-before:auto !important;
+}
   `;
 
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
@@ -88,75 +86,190 @@ function buildPrintHtml(jobName, content) {
          '</div></div></div>' +
          '</body></html>';
 }
+// Print/PDF filename: current HTML page filename-ஐ முதலில் பயன்படுத்தும்.
+function getPrintJobName(customContent, fallbackArea) {
+
+  // Dashboard-ல் இருந்து page open ஆனாலும், current page filename மாறாது.
+  const file = (window.location.pathname.split('/').pop() || '')
+    .replace(/\.html?$/i, '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+
+  if (file && !/^index$/i.test(file)) {
+    return file.replace(/\b\w/g, ch => ch.toUpperCase());
+  }
+
+  // index.html போன்ற generic filename இருந்தால் page title பயன்படுத்தும்.
+  const pageTitle = (document.title || '').trim();
+  if (pageTitle && !/^dashboard(?:\s|$)/i.test(pageTitle)) {
+    return pageTitle;
+  }
+
+  // கடைசி fallback: print content heading.
+  const selectors = [
+    '.preview-title',
+    '.card-header',
+    '.page-title',
+    '.header-title',
+    'h1',
+    'h2'
+  ];
+
+  function readHeading(root) {
+    if (!root) return '';
+
+    for (const selector of selectors) {
+      const nodes = root.querySelectorAll(selector);
+
+      for (const node of nodes) {
+        if (node.closest('.company-header')) continue;
+        if (node.closest('.no-print, .hide-on-print')) continue;
+
+        const value = (node.innerText || node.textContent || '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        if (value) return value;
+      }
+    }
+    return '';
+  }
+
+  if (typeof customContent === 'string' && customContent.trim()) {
+    const parsed = new DOMParser().parseFromString(customContent, 'text/html');
+    const heading = readHeading(parsed);
+    if (heading) return heading;
+  }
+
+  const heading = readHeading(fallbackArea || document);
+  return heading || pageTitle || 'TEXFOREVER Print';
+}
 
 window.appPrint = async function (customContent) {
-  const area = document.querySelector('.main-card, .invoice-container, .print-area, #printable-section') || document.body;
+
+  const area = document.querySelector(
+    '.main-card, .invoice-container, .print-area, #printable-section'
+  ) || document.body;
+
   const content = customContent || area.innerHTML;
-  const jobName = document.title || 'TEXFOREVER Print';
+
+  // முக்கியமான FIX
+  const jobName = getPrintJobName(customContent, area);
+
   const html = buildPrintHtml(jobName, content);
 
   // 1. Windows desktop (Electron)
   if (window.desktopPrint) {
+
     try {
-      await window.desktopPrint.printHtml(html, { silent: false });
+      await window.desktopPrint.printHtml(
+        html,
+        { silent: false }
+      );
+
     } catch (e) {
       alert('Print error: ' + e.message);
     }
+
     return;
   }
-
-  // 2. Android APK (Capacitor) - Android system print dialog
+    // 2. Android APK (Capacitor)
   const cap = window.Capacitor;
-  if (cap && cap.isNativePlatform && cap.isNativePlatform() &&
-      cap.Plugins && cap.Plugins.PrintPlugin) {
+
+  if (
+    cap &&
+    cap.isNativePlatform &&
+    cap.isNativePlatform() &&
+    cap.Plugins &&
+    cap.Plugins.PrintPlugin
+  ) {
+
     try {
-      await cap.Plugins.PrintPlugin.printHtml({ html: html, jobName: jobName });
+
+      await cap.Plugins.PrintPlugin.printHtml({
+        html: html,
+        jobName: jobName
+      });
+
     } catch (e) {
+
       alert('Print error: ' + (e.message || e));
+
     }
+
     return;
   }
 
-  // 3. Browser (Chrome போன்றவை) - window.open இல்லாம hidden iframe
+  // 3. Browser (Chrome)
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+
+  iframe.style.cssText =
+    'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+
   document.body.appendChild(iframe);
+
   const doc = iframe.contentWindow.document;
+
   doc.open();
   doc.write(html);
   doc.close();
 
   setTimeout(() => {
+
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
+
     setTimeout(() => iframe.remove(), 1000);
+
   }, 500);
 };
 
+
 // Print பட்டன்களை தானாக இணைப்பது
-// (பெரிய container-களில் click ஆகாம, button/link மட்டும்)
 document.addEventListener("DOMContentLoaded", () => {
+
   const bindPrintButtons = () => {
-    const buttons = document.querySelectorAll('button, a, input[type="button"], .print-btn, [id*="print"]');
+
+    const buttons = document.querySelectorAll(
+      'button, a, input[type="button"], .print-btn, [id*="print"]'
+    );
 
     buttons.forEach(btn => {
+
       if (btn.getAttribute('data-print-bound')) return;
 
       const text = (btn.innerText || btn.value || "").toLowerCase();
-      const id = (btn.id || "").toLowerCase();
-      const className = (typeof btn.className === 'string' ? btn.className : "").toLowerCase();
 
-      if (text.includes('print') || id.includes('print') || className.includes('print')) {
+      const id = (btn.id || "").toLowerCase();
+
+      const className = (
+        typeof btn.className === 'string'
+          ? btn.className
+          : ""
+      ).toLowerCase();
+
+      if (
+        text.includes('print') ||
+        id.includes('print') ||
+        className.includes('print')
+      ) {
+
         btn.setAttribute('data-print-bound', 'true');
+
         btn.addEventListener('click', (e) => {
+
           e.preventDefault();
           e.stopPropagation();
 
-if (window._isPrintingInProgress) return;
-  window._isPrintingInProgress = true;
-  setTimeout(() => { window._isPrintingInProgress = false;
-                   }, 2000);
-               });
+          if (window._isPrintingInProgress) return;
+
+          window._isPrintingInProgress = true;
+
+          setTimeout(() => {
+            window._isPrintingInProgress = false;
+          }, 2000);
+
+        });
       }
     });
   };
@@ -164,5 +277,10 @@ if (window._isPrintingInProgress) return;
   bindPrintButtons();
 
   const observer = new MutationObserver(() => bindPrintButtons());
-  observer.observe(document.body, { childList: true, subtree: true });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
 });
