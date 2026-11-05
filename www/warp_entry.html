@@ -298,8 +298,8 @@
 
     <!-- 🟢 WARP TOTAL SUMMARY BOX 🟢 -->
     <div style="background:#FFFFFF; border-radius:14px; padding:15px; border:1px solid #D1DED1; margin-bottom:5px; box-shadow:0 4px 10px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:6px;">
-        <div style="font-size:13px; font-weight:700; color:#1E2B23;">Total Pattern Ends: <span id="entryPatternEnds" style="color:#D97706;">0</span></div>
-        <div style="font-size:13px; font-weight:700; color:#059669;">Total Ends: <span id="entryTotalEndsCalc">0 x 0 = 0.00</span></div>
+        <div style="font-size:13px; font-weight:700; color:#1E2B23;">Total Pattern Ends: <span id="entryPatternEnds" style="color:#1E2B23;">0</span></div>
+        <div style="font-size:13px; font-weight:700; color:#1E2B23;">Total Ends: <span id="entryTotalEndsCalc">0 x 0 = 0.00</span></div>
     </div>
 
     <div class="action-btns-row">
@@ -1267,91 +1267,71 @@ function previewPattern() {
         </div>
     `;
 
+    const layout = buildRangeLayout(warpLines.length, ranges);
+    if (layout.ignored.length) {
+        alert("Range overlap thappa irukku (" + layout.ignored.map(function (r) { return r.start + "-" + r.end; }).join(", ") + "). Antha range-ai ignore panni preview kaatturen. Inner range, outer range ullaye muzhusa irukkanum.");
+    }
+
     let col1Html = ''; let col2Html = ''; let currentLinesInCol1 = 0; const MAX_LINES_COL1 = 45;
-    let groundTotal = 0; let topTotal = 0; let flatPattern = []; let i = 0;
+    let groundTotal = 0; let topTotal = 0; let flatPattern = [];
 
     const tdStyle = "padding:6px 8px;text-align:center;color:#1E2B23;font-size:11px;border-bottom:1px solid #E2E8E2;";
     const tdStyleColor = "padding:6px 8px;text-align:left;color:#1E2B23;font-size:11px;white-space:nowrap;border-bottom:1px solid #E2E8E2;";
     const tdStyleLast = "padding:6px 8px;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:11px;border-bottom:1px solid #E2E8E2;";
 
-    while (i < warpLines.length) {
-        const start = i + 1;
-        const range = ranges.find(r => r.start === start);
-        let blockHtml = ''; let blockLineCount = 0;
+    const lineEnds = warpLines.map(function (wl) { return parseFloat(wl.ends) || 0; });
+    warpLines.forEach(function (wl, idx) {
+        const v = lineEnds[idx] * layout.mult[idx];
+        if (wl.beam === 'Top Beam' || wl.beam === 'Seer sucker') topTotal += v; else groundTotal += v;
+    });
+    expandRangeLines(warpLines.length, layout).forEach(function (idx) {
+        const wl = warpLines[idx];
+        flatPattern.push({ lineNo: idx + 1, count: wl.count || '-', color: wl.color || '-', ends: lineEnds[idx], beam: wl.beam });
+    });
 
-        if (range && range.end >= range.start) {
-            const end = range.end; const set = range.set;
-            const blockLines = []; let blockGroundEnds = 0; let blockTopEnds = 0;
-
-            for (let j = start - 1; j < end; j++) {
-                if (warpLines[j]) {
-                    const lineItem = Object.assign({}, warpLines[j]); lineItem.lineNo = j + 1; blockLines.push(lineItem);
-                    if (warpLines[j].beam === 'Top Beam' || warpLines[j].beam === 'Seer sucker') blockTopEnds += parseInt(warpLines[j].ends) || 0;
-                    else blockGroundEnds += parseInt(warpLines[j].ends) || 0;
-
-                    for (let rep = 0; rep < set; rep++) {
-                        flatPattern.push({ lineNo: j + 1, count: lineItem.count || '-', color: lineItem.color || '-', ends: parseFloat(lineItem.ends) || 0, beam: lineItem.beam });
-                    }
-                }
+    const bracketCellsFor = function (idx) {
+        let cells = '';
+        for (let c = 0; c < layout.levels; c++) {
+            const depth = layout.levels - 1 - c;
+            const starting = layout.nodes.find(function (n) { return n.depth === depth && n.start - 1 === idx; });
+            if (starting) {
+                cells += warpBracketCell(starting, starting.end - starting.start + 1, rangeNodeTotal(starting, lineEnds, layout.mult));
+                continue;
             }
-            let total = 0; for (let j = start - 1; j < end; j++) total += parseInt(warpLines[j]?.ends) || 0; total = total * set;
-            groundTotal += blockGroundEnds * set; topTotal += blockTopEnds * set;
-
-            blockLines.forEach(function (item, index) {
-                let endsDisplay = '';
-                if (item.beam === 'Seer sucker') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#8B5CF6;font-weight:bold;" title="SSKR">${item.ends}</span>`;
-                else if (item.beam === 'Top Beam') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#D97706;" title="Dobby">${item.ends}</span>`;
-                else endsDisplay = `<span style="display:inline-block;padding-right:15px;color:#2F4F38;" title="Bottom">${item.ends}</span>`;
-                const colorTamil = typeof translateColorToTamil === 'function' ? translateColorToTamil(item.color) : item.color;
-
-                blockHtml += `
-                    <tr>
-                        <td style="${tdStyle}font-weight:700;color:#4A554A;">${item.lineNo}</td>
-                        <td style="${tdStyle}">${escapeHtmlText(item.count || '-')}</td>
-                        <td style="${tdStyleColor}">${escapeHtmlText(colorTamil)}</td>
-                        <td style="${tdStyle}font-weight:bold;">${endsDisplay}</td>
-                `;
-                if (index === 0) {
-                    blockHtml += `
-                        <td rowspan="${blockLines.length}" style="${tdStyleLast}">
-                            <div style="display:flex;align-items:center;justify-content:flex-start;gap:4px;font-weight:700;font-size:16px;">
-                                <span style="font-size:${blockLines.length * 18}px;font-weight:300;line-height:0.5;display:inline-block;">}</span>
-                                <span>X ${set} = <span style="color:#D97706">${total}</span></span>
-                            </div>
-                        </td>
-                    `;
-                }
-                blockHtml += `</tr>`;
-            });
-            i = end; blockLineCount = blockLines.length;
-
-        } else {
-            const item = Object.assign({}, warpLines[i]); item.lineNo = i + 1;
-            if (item.beam === 'Top Beam' || item.beam === 'Seer sucker') topTotal += parseFloat(item.ends) || 0;
-            else groundTotal += parseFloat(item.ends) || 0;
-
-            flatPattern.push({ lineNo: item.lineNo, count: item.count || '-', color: item.color || '-', ends: parseFloat(item.ends) || 0, beam: item.beam });
-
-            let endsDisplay = '';
-            if (item.beam === 'Seer sucker') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#8B5CF6;font-weight:bold;" title="SSKR">${item.ends}</span>`;
-            else if (item.beam === 'Top Beam') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#D97706;" title="Dobby">${item.ends}</span>`;
-            else endsDisplay = `<span style="display:inline-block;padding-right:15px;color:#2F4F38;" title="Bottom">${item.ends}</span>`;
-            const colorTamil = typeof translateColorToTamil === 'function' ? translateColorToTamil(item.color) : item.color;
-
-            blockHtml += `
-                <tr>
-                    <td style="${tdStyle}font-weight:700;color:#4A554A;">${item.lineNo}</td>
-                    <td style="${tdStyle}">${escapeHtmlText(item.count || '-')}</td>
-                    <td style="${tdStyleColor}">${escapeHtmlText(colorTamil)}</td>
-                    <td style="${tdStyle}font-weight:bold;">${endsDisplay}</td>
-                    <td style="${tdStyleLast}"></td>
-                </tr>
-            `;
-            i++; blockLineCount = 1;
+            const covered = layout.nodes.some(function (n) { return n.depth === depth && n.start - 1 < idx && n.end - 1 >= idx; });
+            if (!covered) cells += `<td style="${tdStyleLast}"></td>`;
         }
+        return cells;
+    };
 
+    const rowHtmlFor = function (idx) {
+        const item = warpLines[idx];
+        let endsDisplay = '';
+        if (item.beam === 'Seer sucker') endsDisplay = `<span style="display:inline-block;padding-left:15px;color:#8B5CF6;font-weight:bold;" title="SSKR">${item.ends}</span>`;
+        else if (item.beam === 'Top Beam') endsDisplay = `<span style="display:inline-block;padding-left:15px;position:relative;left:12px;color:#D97706;" title="Dobby">${item.ends}</span>`;
+        else endsDisplay = `<span style="display:inline-block;padding-right:15px;color:#2F4F38;" title="Bottom">${item.ends}</span>`;
+        const colorTamil = typeof translateColorToTamil === 'function' ? translateColorToTamil(item.color) : item.color;
+        return `
+            <tr>
+                <td style="${tdStyle}font-weight:700;color:#4A554A;">${idx + 1}</td>
+                <td style="${tdStyle}">${escapeHtmlText(item.count || '-')}</td>
+                <td style="${tdStyleColor}">${escapeHtmlText(colorTamil)}</td>
+                <td style="${tdStyle}font-weight:bold;">${endsDisplay}</td>
+                ${bracketCellsFor(idx)}
+            </tr>
+        `;
+    };
+
+    let i = 0;
+    while (i < warpLines.length) {
+        const topNode = layout.nodes.find(function (n) { return !n.parent && n.start - 1 === i; });
+        const endIdx = topNode ? topNode.end - 1 : i;
+        let blockHtml = '';
+        for (let idx = i; idx <= endIdx; idx++) blockHtml += rowHtmlFor(idx);
+        const blockLineCount = endIdx - i + 1;
         if (currentLinesInCol1 < MAX_LINES_COL1) { col1Html += blockHtml; currentLinesInCol1 += blockLineCount; }
         else { col2Html += blockHtml; }
+        i = endIdx + 1;
     }
 
     const finalTotal = groundTotal + topTotal;
@@ -1372,9 +1352,9 @@ function previewPattern() {
         <tr style="background:#EAF0EA;">
             <th style="padding:8px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:10%;">No</th>
             <th style="padding:8px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:15%;">Count</th>
-            <th style="padding:8px;text-align:left;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:25%;">Colour</th>
+            <th style="padding:8px;text-align:left;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:18%;">Colour</th>
             <th style="padding:8px;text-align:center;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;line-height:1.2;width:15%;">Ends<br><span style="font-size:7px;color:#4A554A;">${dynamicBeamHeader}</span></th>
-            <th style="padding:8px;text-align:left;padding-left:10px;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:35%;">Set</th>
+            <th colspan="${layout.levels}" style="padding:8px;text-align:left;padding-left:10px;color:#2F4F38;text-transform:uppercase;font-size:10px;border-bottom:2px solid #4A7C59;width:42%;">Set</th>
         </tr>
     `;
 
@@ -1392,7 +1372,7 @@ function previewPattern() {
         <div style="margin-top:15px;border-top:2px solid #4A7C59;padding-top:10px;page-break-inside:avoid;">
             <table style="width:100%;border-collapse:collapse;font-size:11px;background:#FFF;border:1px solid #D1DED1;border-radius:8px;overflow:hidden;">
                 <tr style="font-weight:700;font-size:12px;background:#F8FAF8;border-bottom:1px solid #E2E8E2;">
-                    <td style="padding:10px;text-align:right;color:#2F4F38;width:60%;">Total Pattern Ends:</td>
+                    <td style="padding:10px;text-align:right;color:#1E2B23;width:60%;">Total Pattern Ends:</td>
                     <td style="padding:10px;font-weight:700;text-align:left;padding-left:15px;white-space:nowrap;color:#1E2B23;">${finalTotalDisplay}</td>
                 </tr>
                 <tr style="background:#FFFFFF;border-bottom:1px solid #E2E8E2;">
@@ -1472,6 +1452,66 @@ function update3DPreviewData() {
     }
 }
 
+/* ===== NESTED RANGE (BRACKET) HELPERS ===== */
+function buildRangeLayout(lineCount, ranges) {
+    const valid = [];
+    (Array.isArray(ranges) ? ranges : []).forEach(function (r) {
+        const s = parseInt(r.start), e = Math.min(parseInt(r.end), lineCount), set = parseFloat(r.set);
+        if (s >= 1 && e >= s && set > 0) valid.push({ start: s, end: e, set: set });
+    });
+    valid.sort(function (a, b) { return a.start - b.start || b.end - a.end; });
+    const nodes = [], stack = [], ignored = [];
+    valid.forEach(function (r) {
+        while (stack.length && r.start > stack[stack.length - 1].end) stack.pop();
+        const top = stack.length ? stack[stack.length - 1] : null;
+        if (top && (r.end > top.end || (r.start === top.start && r.end === top.end))) { ignored.push(r); return; }
+        r.parent = top; r.children = [];
+        r.depth = top ? top.depth + 1 : 0;
+        r.outerMult = top ? top.outerMult * top.set : 1;
+        if (top) top.children.push(r);
+        nodes.push(r); stack.push(r);
+    });
+    const mult = [];
+    for (let i = 0; i < lineCount; i++) mult.push(1);
+    nodes.forEach(function (n) { for (let i = n.start - 1; i <= n.end - 1; i++) mult[i] *= n.set; });
+    let levels = 1;
+    nodes.forEach(function (n) { if (n.depth + 1 > levels) levels = n.depth + 1; });
+    return { nodes: nodes, ignored: ignored, mult: mult, levels: levels };
+}
+
+function rangeNodeTotal(node, base, mult) {
+    let sum = 0;
+    for (let i = node.start - 1; i <= node.end - 1; i++) sum += (base[i] || 0) * mult[i];
+    return Math.round((sum / node.outerMult) * 100) / 100;
+}
+
+function expandRangeLines(lineCount, layout) {
+    const out = [];
+    function walk(from, to, kids) {
+        let i = from;
+        while (i <= to) {
+            const k = kids.find(function (c) { return c.start - 1 === i; });
+            if (k) {
+                const times = Math.max(1, Math.round(k.set));
+                for (let r = 0; r < times; r++) walk(k.start - 1, k.end - 1, k.children);
+                i = k.end;
+            } else { out.push(i); i++; }
+        }
+    }
+    walk(0, lineCount - 1, layout.nodes.filter(function (n) { return !n.parent; }));
+    return out;
+}
+
+function warpBracketCell(node, rowsCount, total) {
+    const label = node.parent
+        ? 'X ' + node.set
+        : 'X ' + node.set + ' = <span style="color:#D97706;">' + total + '</span>';
+    return '<td rowspan="' + rowsCount + '" style="position:relative;vertical-align:middle;text-align:left;white-space:nowrap;font-weight:700;font-size:11px;color:#1E2B23;padding:0 6px 0 0;border-bottom:1px solid #E2E8E2;">'
+        + '<div style="position:absolute;left:4px;top:4px;bottom:4px;width:7px;border:1.5px solid #4A7C59;border-left:none;border-radius:0 7px 7px 0;"></div>'
+        + '<div style="position:absolute;left:11px;top:50%;width:5px;border-top:1.5px solid #4A7C59;"></div>'
+        + '<div style="margin-left:22px;">' + label + '</div></td>';
+}
+
 function calculateLiveWarpTotals() {
     let patternEnds = 0;
     
@@ -1489,21 +1529,8 @@ function calculateLiveWarpTotals() {
         lines.push(val);
     });
 
-    let i = 0;
-    while (i < lines.length) {
-        const lineNo = i + 1;
-        const range = ranges.find(r => r.start === lineNo);
-
-        if (range && range.end >= range.start) {
-            let blockEnds = 0;
-            for (let j = lineNo - 1; j < range.end; j++) { blockEnds += lines[j] || 0; }
-            patternEnds += blockEnds * range.set;
-            i = range.end;
-        } else {
-            patternEnds += lines[i] || 0;
-            i++;
-        }
-    }
+    const layout = buildRangeLayout(lines.length, ranges);
+    lines.forEach(function (v, idx) { patternEnds += v * layout.mult[idx]; });
 
     const reed = parseFloat(document.getElementById('infoReed')?.value) || 0;
     const width = parseFloat(document.getElementById('infoWidth')?.value) || 0;

@@ -752,10 +752,19 @@
     function effectiveLineValues(lines, ranges, type) {
         const base = lines.map(l => parseFloat(type === 'warp' ? (l.ends || l.amount || l.end || l.qty) : (l.picks || l.amount || l.pick || l.qty)) || 0);
         const mult = lines.map(() => 1);
+        const valid = [];
         (Array.isArray(ranges) ? ranges : []).forEach(r => {
-            const s = parseInt(r.start), e = parseInt(r.end), rep = parseInt(r.set);
-            if (!s || !e || !(rep > 1)) return;
-            for (let i = s - 1; i <= e - 1 && i < lines.length; i++) if (i >= 0) mult[i] = rep;
+            const s = parseInt(r.start), e = Math.min(parseInt(r.end), lines.length), rep = parseFloat(r.set);
+            if (s >= 1 && e >= s && rep > 0) valid.push({ start: s, end: e, set: rep });
+        });
+        valid.sort((a, b) => a.start - b.start || b.end - a.end);
+        const stack = [];
+        valid.forEach(r => {
+            while (stack.length && r.start > stack[stack.length - 1].end) stack.pop();
+            const top = stack.length ? stack[stack.length - 1] : null;
+            if (top && (r.end > top.end || (r.start === top.start && r.end === top.end))) return;
+            stack.push(r);
+            for (let i = r.start - 1; i <= r.end - 1; i++) mult[i] *= r.set;
         });
         return base.map((v, i) => v * mult[i]);
     }
@@ -1047,7 +1056,7 @@
                 ? topBeamMtr
                 : totalDyeMtr;
             if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
-            else { weight = (ends * rowDyeMtr) / (1692 * countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
+            else { weight = (ends * rowDyeMtr) / (1692* countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
             
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -1082,7 +1091,7 @@
             let wInp = row.querySelector('.weft-weight');
             let weight;
             if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
-            else { weight = (picks * weftMtrs) / (1692 * countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
+            else { weight = (picks * weftMtrs) / (1692* countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
 
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -1108,7 +1117,7 @@
 
         let fReed = parseFloat(document.getElementById('finishReed').value) || 0;
         let fPick = parseFloat(document.getElementById('finishPick').value) || 0;
-        let warpCrimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 6;
+        let warpCrimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 0;
         let wCrimp = 1 + (warpCrimpPct / 100);
         let fCrimp = 1.05; 
         
