@@ -1514,8 +1514,9 @@ function populateDesignSelect(auto = true) {
     if (targetIndex >= 0 && allCloudDesigns[targetIndex]) {
         select.value = String(targetIndex);
         const targetName = designName(allCloudDesigns[targetIndex]);
-        if (entryName && cleanDesignName(targetName) === cleanDesignName(entryName)) window._entryDefaultApplied = true;
-        if (auto && (!activeDesignObj ||
+        const entryMatched = !!entryName && cleanDesignName(targetName) === cleanDesignName(entryName);
+        if (entryMatched) window._entryDefaultApplied = true;
+        if ((auto || entryMatched) && (!activeDesignObj ||
             cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
             loadSelectedDesign(select);
         }
