@@ -1706,7 +1706,7 @@ function rangeNodeTotal(node, base, mult){
 function printBracketCell(node, rowsCount, total, isFirstCol){
     const label = node.parent
         ? "X " + node.set
-        : "X " + node.set + " = " + total;
+        : (Math.round((total / node.set) * 100) / 100) + " X " + node.set + " = " + total;
     return '<td rowspan="' + rowsCount + '" class="col-set' + (isFirstCol ? '' : ' col-set-n') + '" style="position:relative;vertical-align:middle;text-align:left;white-space:nowrap;width:1%;">'
         + '<div style="position:absolute;left:4px;top:4px;bottom:4px;width:7px;border:1.5px solid #4A7C59;border-left:none;border-radius:0 7px 7px 0;"></div>'
         + '<div style="position:absolute;left:11px;top:50%;width:5px;border-top:1.5px solid #4A7C59;"></div>'
