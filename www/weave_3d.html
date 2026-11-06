@@ -1466,7 +1466,12 @@ function populateDesignSelect(auto = true) {
     const previousName = previousOption?.dataset?.designName || "";
     const lastSaved = localStorage.getItem("w3d_last_design_name") || "";
     const activeName = activeDesignObj ? designName(activeDesignObj) : "";
-    const preferredName = previousName || activeName || lastSaved;
+    // Default = design currently selected in warp_entry / weft_entry page (until it is applied once).
+    let entryName = "";
+    if (!window._entryDefaultApplied) {
+        try { entryName = String(dbGet("selected_design_number") || "").trim(); } catch(e) {}
+    }
+    const preferredName = entryName || previousName || activeName || lastSaved;
 
     const fragment = document.createDocumentFragment();
     const placeholder = document.createElement("option");
@@ -1509,6 +1514,7 @@ function populateDesignSelect(auto = true) {
     if (targetIndex >= 0 && allCloudDesigns[targetIndex]) {
         select.value = String(targetIndex);
         const targetName = designName(allCloudDesigns[targetIndex]);
+        if (entryName && cleanDesignName(targetName) === cleanDesignName(entryName)) window._entryDefaultApplied = true;
         if (auto && (!activeDesignObj ||
             cleanDesignName(designName(activeDesignObj)) !== cleanDesignName(targetName))) {
             loadSelectedDesign(select);
