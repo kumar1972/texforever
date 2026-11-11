@@ -269,7 +269,8 @@
             <div class="form-group"><label>Top Beam %</label><input type="number" id="topBeamPct" list="percentList" placeholder="Entry %" oninput="calculateTopData()"></div>
             <div class="form-group"><label>Top Beam Mtr (Auto)</label><input type="number" id="topBeamDyeingMtr" readonly></div>
             
-            <div class="form-group"><label>Weft Mtrs (Editable)</label><input type="number" id="weftMtrs" oninput="calculateTableRows()"></div>
+            <div class="form-group"><label>Weft Mtrs (Editable)</label><input type="number" id="weftMtrs" oninput="manualWeftMtrs = (this.value !== ''); calculateTableRows()"></div>
+            <div class="form-group"><label>Weft Crimp %</label><input type="number" id="weftCrimpTop" list="percentList" value="5" oninput="calculateTopData()"></div>
         </div>
 
         <!-- WARP TABLE -->
@@ -281,7 +282,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Mill</th><th>Count</th><th>Colours</th>
+                        <th>Mill</th><th>Count</th><th>Colours</th><th>Top Beam</th>
                         <th>Ends / Rpt</th>
                         <th>Total Ends</th>
                         <th>Weight (Kg)</th><th>Kora Rate (₹)</th><th>Dyeing Rate (₹)</th><th>Total Row Cost (₹)</th>
@@ -290,7 +291,7 @@
                 <tbody id="warpTableBody"></tbody>
                 <tfoot>
                     <tr class="total-row">
-                        <td colspan="3" style="text-align:right; padding-right:12px;">Total:</td>
+                        <td colspan="4" style="text-align:right; padding-right:12px;">Total:</td>
                         <td id="warpTotalRpt">0</td>
                         <td id="warpTotalEnds">0</td>
                         <td id="warpTotalWeight">0.000 kg</td>
@@ -408,6 +409,7 @@
     let manualOnloomPick = false;
     let manualTotalDyeing = false;
     let manualSellingRate = false;
+    let manualWeftMtrs = false;
     const manualField = { onloomWidth: false, onloomWeftWidth: false, topBeamDyeingMtr: false };
     const tblEdit = { warp: false, weft: false };
     const TBL = {
@@ -431,17 +433,29 @@
     }
 
     function parseCountNumber(countStr) {
-        if (!countStr) return 40;
-        let str = String(countStr).trim().toLowerCase().replace(/ccc/g, '').replace(/s/g, '').trim(); 
+        if (!countStr) return 0;
+        let str = String(countStr).trim().toLowerCase().replace(/ccc/g, '').replace(/s/g, '').trim();
         if (str.includes('/')) {
             let parts = str.split('/');
             if (parts.length === 2) {
-                let ply = parseFloat(parts[0]) || 1;
-                let singleCount = parseFloat(parts[1]) || 1;
-                return singleCount / ply; 
+                let a = parseFloat(parts[0]), b = parseFloat(parts[1]);
+                if (a > 0 && b > 0) return Math.max(a, b) / Math.min(a, b);
+                return 0;
             }
         }
-        return parseFloat(str) || 40;
+        let n = parseFloat(str);
+        return n > 0 ? n : 0;
+    }
+
+    function isTopRow(row) {
+        const c = row.querySelector('.w-top');
+        return !!(c && c.checked);
+    }
+
+    function isTopBeamCount(countStr) {
+        const top = (document.getElementById('topBeamCount').value || '').trim().toLowerCase();
+        const base = (document.getElementById('baseCount').value || '').trim().toLowerCase();
+        return !!top && top !== base && (countStr || '').trim().toLowerCase() === top;
     }
 
     function getStandardColourName(origName) {
@@ -630,7 +644,7 @@
         const q = (r, sel) => { const el = r.querySelector(sel); return el ? el.value : ''; };
         const warpRows = Array.from(document.querySelectorAll('#warpTableBody tr')).map(r => ({
             mill: q(r, '.w-mill'), count: q(r, '.w-count'), color: q(r, '.w-color'),
-            rpt: q(r, '.w-ends-rpt'), ends: q(r, '.w-ends'), kora: q(r, '.w-kora-rate'), dye: q(r, '.w-dye-rate'),
+            top: !!(r.querySelector('.w-top') && r.querySelector('.w-top').checked), rpt: q(r, '.w-ends-rpt'), ends: q(r, '.w-ends'), kora: q(r, '.w-kora-rate'), dye: q(r, '.w-dye-rate'),
             wt: q(r, '.w-weight'), wtManual: !!(r.querySelector('.w-weight') && r.querySelector('.w-weight').dataset.manual === '1')
         }));
         const weftRows = Array.from(document.querySelectorAll('#weftTableBody tr')).map(r => ({
@@ -640,7 +654,7 @@
         }));
         const top = {};
         ['finishReed','onloomReed','finishPick','pickLess','onloomPick','finishWidth','orderMtr','exPercentage',
-         'warpCrimpTop','washingShortTop','dyeingLoss','totalDyeingMtr','topBeamPct','weftMtrs',
+         'warpCrimpTop','weftCrimpTop','washingShortTop','dyeingLoss','totalDyeingMtr','topBeamPct','weftMtrs',
          'onloomWidth','onloomWeftWidth','topBeamDyeingMtr']
             .forEach(id => top[id] = val(id));
         const costing = {};
@@ -648,7 +662,7 @@
             .forEach(id => costing[id] = val(id));
         return {
             top, costing, warpRows, weftRows,
-            flags: { reed: manualOnloomReed, pick: manualOnloomPick, total: manualTotalDyeing, sell: manualSellingRate, fields: Object.assign({}, manualField) }
+            flags: { reed: manualOnloomReed, pick: manualOnloomPick, total: manualTotalDyeing, sell: manualSellingRate, weftMtrs: manualWeftMtrs, fields: Object.assign({}, manualField) }
         };
     }
 
@@ -663,6 +677,15 @@
             manualTotalDyeing = !!yc.flags.total;
             manualSellingRate = !!yc.flags.sell;
             if (yc.flags.fields) Object.keys(manualField).forEach(k => manualField[k] = !!yc.flags.fields[k]);
+        }
+        if (yc.flags && yc.flags.weftMtrs !== undefined) {
+            manualWeftMtrs = !!yc.flags.weftMtrs;
+        } else {
+            const o = parseFloat(document.getElementById('orderMtr').value) || 0;
+            const e = parseFloat(document.getElementById('exPercentage').value) || 0;
+            const sv = parseFloat(document.getElementById('weftMtrs').value);
+            const td = parseFloat(document.getElementById('totalDyeingMtr').value) || 0;
+            manualWeftMtrs = !isNaN(sv) && sv > 0 && Math.abs(sv - o * (1 + e / 100)) > 0.01 && Math.abs(sv - td * 0.95) > 0.01;
         }
     }
 
@@ -680,6 +703,8 @@
         window.StorageDB.setItem('selected_design_number', dName);
 
         manualTotalDyeing = false;
+        manualWeftMtrs = false;
+        document.getElementById('weftMtrs').value = '';
         manualSellingRate = false;
         Object.keys(manualField).forEach(k => manualField[k] = false);
         tblEdit.warp = false; tblEdit.weft = false;
@@ -908,7 +933,7 @@
         const pickSaved = (arr, item, idx) => {
             if (!fresh) return arr[idx] || {};
             const m = arr.find(x => x && rowKey(x.count, x.color) === rowKey(item.count, item.color));
-            return m ? { mill: m.mill, kora: m.kora, dye: m.dye } : {};
+            return m ? { mill: m.mill, kora: m.kora, dye: m.dye, top: m.top } : {};
         };
         let warpHtml = '';
         const savedWarp = (sp && sp.yarnCalc && sp.yarnCalc.warpRows) || [];
@@ -921,6 +946,7 @@
                     <td><input type="text" list="millsList" class="w-mill" value="${autoMill}" placeholder="Select Mill"></td>
                     <td><input type="text" list="countsList" class="w-count" value="${w.count}"></td>
                     <td><input type="text" list="coloursList" class="w-color" value="${w.color}"></td>
+                    <td style="text-align:center;"><input type="checkbox" class="w-top" ${(sv.top !== undefined ? sv.top : isTopBeamCount(w.count)) ? 'checked' : ''} onchange="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends-rpt" value="${w.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends" value="${w.total}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-weight" readonly oninput="this.dataset.manual='1'; calculateTableRows()" ${sv.wtManual ? `data-manual="1" value="${sv.wt}"` : ''}></td>
@@ -997,8 +1023,8 @@
             document.getElementById('topBeamDyeingMtr').value = '';
         }
 
-        if (!document.getElementById('weftMtrs').value) {
-            let weftMtrs = orderMtr * (1 + exPct/100);
+        if (!manualWeftMtrs || !document.getElementById('weftMtrs').value) {
+            let weftMtrs = currentDyeMtr * 0.95;
             document.getElementById('weftMtrs').value = weftMtrs > 0 ? weftMtrs.toFixed(2) : '';
         }
 
@@ -1049,14 +1075,12 @@
             let countNum = parseCountNumber(countStr);
             let wInp = row.querySelector('.w-weight');
             let weight;
-            const topBeamCountKey = (document.getElementById('topBeamCount').value || '').trim().toLowerCase();
             const topBeamMtr = parseFloat(document.getElementById('topBeamDyeingMtr').value) || 0;
-            const rowCountKey = (countStr || '').trim().toLowerCase();
-            const rowDyeMtr = (topBeamCountKey && rowCountKey === topBeamCountKey && topBeamMtr > 0)
+            const rowDyeMtr = (isTopRow(row) && topBeamMtr > 0)
                 ? topBeamMtr
                 : totalDyeMtr;
             if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
-            else { weight = (ends * rowDyeMtr) / (1692* countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
+            else { weight = countNum > 0 ? (ends * rowDyeMtr) / (1692 * countNum) : 0; wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
             
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -1091,7 +1115,7 @@
             let wInp = row.querySelector('.weft-weight');
             let weight;
             if (wInp.dataset.manual === '1') { weight = parseFloat(wInp.value) || 0; }
-            else { weight = (picks * weftMtrs) / (1692* countNum); wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
+            else { weight = countNum > 0 ? (picks * weftMtrs) / (1692 * countNum) : 0; wInp.value = weight > 0 ? weight.toFixed(3) : ''; }
 
             let rowKoraCost = weight * koraRate;
             let rowDyeCost = weight * dyeRate;
@@ -1119,7 +1143,7 @@
         let fPick = parseFloat(document.getElementById('finishPick').value) || 0;
         let warpCrimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 0;
         let wCrimp = 1 + (warpCrimpPct / 100);
-        let fCrimp = 1.05; 
+        let fCrimp = 1 + ((parseFloat(document.getElementById('weftCrimpTop').value) || 0) / 100);
         
         let totalWarpEnds = 0;
         document.querySelectorAll('#warpTableBody .w-ends').forEach(inp => totalWarpEnds += (parseFloat(inp.value) || 0));
@@ -1128,7 +1152,7 @@
         document.querySelectorAll('#weftTableBody .weft-picks').forEach(inp => totalWeftPicks += (parseFloat(inp.value) || 0));
         
         let gsmCalc = 0;
-        const topBeamCountForGsm = (document.getElementById('topBeamCount').value || '').trim().toLowerCase();
+        let fWidthG = parseFloat(document.getElementById('finishWidth').value) || 0;
         const topBeamPctForGsm = Math.max(0, parseFloat(document.getElementById('topBeamPct').value) || 0);
 
         if (totalWarpEnds > 0) {
@@ -1137,8 +1161,8 @@
                 let countStr = (row.querySelector('.w-count').value || '').trim().toLowerCase();
                 let countNum = parseCountNumber(countStr);
                 if (countNum > 0 && ends > 0) {
-                    let proportionalEPI = fReed * (ends / totalWarpEnds);
-                    let topBeamFactor = (topBeamCountForGsm && countStr === topBeamCountForGsm)
+                    let proportionalEPI = fWidthG > 0 ? (ends / fWidthG) : (fReed * (ends / totalWarpEnds));
+                    let topBeamFactor = isTopRow(row)
                         ? (1 + topBeamPctForGsm / 100)
                         : 1;
                     gsmCalc += (proportionalEPI * 23.25 * wCrimp * topBeamFactor) / countNum;
@@ -1151,7 +1175,8 @@
                 let picks = parseFloat(row.querySelector('.weft-picks').value) || 0;
                 let countNum = parseCountNumber(row.querySelector('.weft-count').value);
                 if (countNum > 0 && picks > 0) {
-                    let proportionalPPI = fPick * (picks / totalWeftPicks);
+                    let gsmPickDen = (fWeftW > 0 && fOnPick > 0) ? (fWeftW * fOnPick) : totalWeftPicks;
+                    let proportionalPPI = fPick * (picks / gsmPickDen);
                     gsmCalc += (proportionalPPI * 23.25 * fCrimp) / countNum;
                 }
             });
