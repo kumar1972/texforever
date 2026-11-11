@@ -685,7 +685,12 @@
             const e = parseFloat(document.getElementById('exPercentage').value) || 0;
             const sv = parseFloat(document.getElementById('weftMtrs').value);
             const td = parseFloat(document.getElementById('totalDyeingMtr').value) || 0;
-            manualWeftMtrs = !isNaN(sv) && sv > 0 && Math.abs(sv - o * (1 + e / 100)) > 0.01 && Math.abs(sv - td * 0.95) > 0.01;
+            const defaultDyeingLoss = 5;
+            const warpCrimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 0;
+            const dyeingLossPct = parseFloat(document.getElementById('dyeingLoss').value);
+            const actualDyeingLoss = isNaN(dyeingLossPct) ? defaultDyeingLoss : dyeingLossPct;
+            const autoWeftMtrs = td * (1 - defaultDyeingLoss / 100 - warpCrimpPct / 100 + actualDyeingLoss / 100);
+            manualWeftMtrs = !isNaN(sv) && sv > 0 && Math.abs(sv - o * (1 + e / 100)) > 0.01 && Math.abs(sv - autoWeftMtrs) > 0.01;
         }
     }
 
@@ -1024,7 +1029,11 @@
         }
 
         if (!manualWeftMtrs || !document.getElementById('weftMtrs').value) {
-            let weftMtrs = currentDyeMtr * 0.95;
+            const defaultDyeingLoss = 5;
+            const warpCrimpPct = parseFloat(document.getElementById('warpCrimpTop').value) || 0;
+            const dyeingLossPct = parseFloat(document.getElementById('dyeingLoss').value);
+            const actualDyeingLoss = isNaN(dyeingLossPct) ? defaultDyeingLoss : dyeingLossPct;
+            let weftMtrs = currentDyeMtr * (1 - defaultDyeingLoss / 100 - warpCrimpPct / 100 + actualDyeingLoss / 100);
             document.getElementById('weftMtrs').value = weftMtrs > 0 ? weftMtrs.toFixed(2) : '';
         }
 
