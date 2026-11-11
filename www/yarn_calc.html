@@ -1162,10 +1162,7 @@
                 let countNum = parseCountNumber(countStr);
                 if (countNum > 0 && ends > 0) {
                     let proportionalEPI = fWidthG > 0 ? (ends / fWidthG) : (fReed * (ends / totalWarpEnds));
-                    let topBeamFactor = isTopRow(row)
-                        ? (1 + topBeamPctForGsm / 100)
-                        : 1;
-                    gsmCalc += (proportionalEPI * 23.25 * wCrimp * topBeamFactor) / countNum;
+                    gsmCalc += (proportionalEPI * 23.25 * wCrimp) / countNum;
                 }
             });
         }
