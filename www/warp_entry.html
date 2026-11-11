@@ -239,10 +239,12 @@
                     <option value="Twill Stripes">Twill Stripes</option>
                 </select>
 
-                <button type="button" id="sskrSettingsBtn" class="btn-sskr-settings" onclick="openSskrSettingsModal()">
-                    🌊 SSKR % Settings
-                </button>
             </div>
+        </div>
+
+        <div id="sskrInlineSettings" style="display:none; width:100%; margin-top:10px; padding:12px; background:#FFFFFF; border:1px solid #D1DED1; border-radius:10px;">
+            <div style="font-size:12px;font-weight:800;color:#2F4F38;margin-bottom:10px;">🌊 SSKR % Settings</div>
+            <div id="sskrInlineBody"></div>
         </div>
 
         <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); background:#FFFFFF; padding:15px; border-radius:10px; border:1px solid #D1DED1; margin-top:5px;">
@@ -341,17 +343,6 @@
     </div>
 </div>
 
-<!-- SSKR % SETTINGS MODAL -->
-<div id="sskrModal" class="overlay-modal">
-    <div class="modal-content" style="max-width:600px;height:85vh;margin:auto;border-radius:16px;">
-        <div class="modal-header">
-            <h3>🌊 SSKR % Settings</h3>
-            <button class="close-btn" onclick="closeModal('sskrModal')">Close ✕</button>
-        </div>
-        <div class="modal-body" id="sskrModalBody"></div>
-    </div>
-</div>
-
 <!-- FULLSCREEN IMAGE -->
 <div id="fullscreenModal" class="fullscreen-modal" onclick="closeFullscreenImage()">
     <button class="close-fullscreen" onclick="event.stopPropagation();closeFullscreenImage()">Close ✕</button>
@@ -406,6 +397,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     refreshBulkCountDropdown();
     toggleSskrSettingsBtn();
     calculateLiveWarpTotals();
+
+    const warpContainer = document.getElementById('warpLinesContainer');
+    if (warpContainer) {
+        warpContainer.addEventListener('input', function (e) {
+            if (e.target.matches('.inp-count, .inp-color')) openSskrSettingsModal();
+        });
+        warpContainer.addEventListener('change', function (e) {
+            if (e.target.matches('.inp-beam')) openSskrSettingsModal();
+        });
+    }
 });
 
 function openModal(modalId) {
@@ -423,25 +424,25 @@ function closeModal(modalId) {
 
 function toggleSskrSettingsBtn() {
     const typeElement = document.getElementById('infoType');
-    const btn = document.getElementById('sskrSettingsBtn');
+    const inlineSettings = document.getElementById('sskrInlineSettings');
     const mainCard = document.querySelector('.main-card');
-    if (!typeElement || !btn) return;
+    if (!typeElement || !inlineSettings) return;
 
     const val = (typeElement.value || '').toLowerCase();
     const isSeersucker = val.indexOf('seersucker') !== -1;
 
-    if (isSeersucker) btn.style.display = 'inline-flex';
-    else btn.style.display = 'none';
+    inlineSettings.style.display = isSeersucker ? 'block' : 'none';
 
     if (mainCard) {
         if (isSeersucker) mainCard.classList.remove('sskr-hidden');
         else mainCard.classList.add('sskr-hidden');
     }
+    if (isSeersucker) openSskrSettingsModal();
 }
 
 let sskrGroupsCache = [];
 function openSskrSettingsModal() {
-    const body = document.getElementById('sskrModalBody');
+    const body = document.getElementById('sskrInlineBody');
     if (!body) return;
 
     const allRows = Array.from(document.querySelectorAll('.line-item'));
@@ -452,7 +453,6 @@ function openSskrSettingsModal() {
 
     if (topBeamRows.length === 0) {
         body.innerHTML = '<p style="text-align:center;color:#D97706;padding:25px;font-size:12px;font-weight:600;">"Top Beam" வகையில் எந்த Line-மும் இல்லை.<br>முதலில் Warp Thread Pattern பிரிவில் Beam Column-ல் "Top Beam" select பண்ணுங்க.</p>';
-        openModal('sskrModal');
         return;
     }
 
@@ -486,7 +486,6 @@ function openSskrSettingsModal() {
             + '</div>';
     });
     body.innerHTML = html;
-    openModal('sskrModal');
 }
 
 function syncSskrGroup(idx, val) {
@@ -886,6 +885,7 @@ function applyBulkCountChange() {
         document.getElementById('bulkOldCount').value = '';
         document.getElementById('bulkNewCount').value = '';
         refreshBulkCountDropdown();
+        openSskrSettingsModal();
         alert(`${changedCount} rows updated successfully! ✅`);
     }
 }
@@ -902,6 +902,7 @@ function applyBulkColorChange() {
         document.getElementById('bulkOldColor').value = '';
         document.getElementById('bulkNewColor').value = '';
         refreshBulkColorDropdown();
+        openSskrSettingsModal();
         alert(`${changedCount} rows updated successfully! ✅`);
     }
 }
@@ -931,6 +932,7 @@ function addWarpLine(count = '', color = '', beam = 'Ground', sskr = '', ends = 
     if (insertAfterElem && insertAfterElem.nextSibling) container.insertBefore(row, insertAfterElem.nextSibling);
     else container.appendChild(row);
     updateLineNumbers(); refreshBulkColorDropdown(); refreshBulkCountDropdown(); calculateLiveWarpTotals();
+    openSskrSettingsModal();
 }
 
 function escapeHtmlAttribute(value) {
