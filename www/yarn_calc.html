@@ -951,7 +951,7 @@
                     <td><input type="text" list="millsList" class="w-mill" value="${autoMill}" placeholder="Select Mill"></td>
                     <td><input type="text" list="countsList" class="w-count" value="${w.count}"></td>
                     <td><input type="text" list="coloursList" class="w-color" value="${w.color}"></td>
-                    <td style="text-align:center;"><input type="checkbox" class="w-top" ${(sv.top !== undefined ? sv.top : isTopBeamCount(w.count)) ? 'checked' : ''} onchange="calculateTableRows()"></td>
+                    <td style="text-align:center;"><input type="checkbox" class="w-top" ${isTopBeamCount(w.count) ? 'checked' : ''} onchange="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends-rpt" value="${w.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends" value="${w.total}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-weight" readonly oninput="this.dataset.manual='1'; calculateTableRows()" ${sv.wtManual ? `data-manual="1" value="${sv.wt}"` : ''}></td>
