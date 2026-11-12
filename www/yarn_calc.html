@@ -238,8 +238,8 @@
             </div>
             <div class="form-group"><label>Date</label><input type="date" id="calcDate"></div>
             
-            <div class="form-group"><label>Warp 1 (Base)</label><input type="text" id="baseCount" list="countsList" oninput="calculateTableRows()"></div>
-            <div class="form-group"><label>Warp 2 (Top)</label><input type="text" id="topBeamCount" list="countsList" oninput="calculateTableRows()"></div>
+            <div class="form-group"><label>Warp 1 (Base)</label><input type="text" id="baseCount" list="countsList" oninput="document.querySelectorAll('#warpTableBody .w-top').forEach(c => delete c.dataset.tm); calculateTableRows()"></div>
+            <div class="form-group"><label>Warp 2 (Top)</label><input type="text" id="topBeamCount" list="countsList" oninput="document.querySelectorAll('#warpTableBody .w-top').forEach(c => delete c.dataset.tm); calculateTableRows()"></div>
             <div class="form-group"><label>Weft 1</label><input type="text" id="weftCount" list="countsList"></div>
             <div class="form-group"><label>Weft 2</label><input type="text" id="weftCount2" list="countsList"></div>
             
@@ -267,7 +267,7 @@
             </div>
             
             <div class="form-group"><label>Top Beam %</label><input type="number" id="topBeamPct" list="percentList" placeholder="Entry %" oninput="calculateTopData()"></div>
-            <div class="form-group"><label>Top Beam Mtr (Auto)</label><input type="number" id="topBeamDyeingMtr" readonly></div>
+            <div class="form-group"><label>Top Beam Mtr (Editable)</label><input type="number" id="topBeamDyeingMtr" step="0.01" oninput="manualField.topBeamDyeingMtr = (this.value !== ''); calculateTopData()"></div>
             
             <div class="form-group"><label>Weft Mtrs (Editable)</label><input type="number" id="weftMtrs" oninput="manualWeftMtrs = (this.value !== ''); calculateTableRows()"></div>
         </div>
@@ -467,7 +467,8 @@
     function isTopBeamCount(countStr) {
         const top = normCount(document.getElementById('topBeamCount').value);
         const base = normCount(document.getElementById('baseCount').value);
-        return !!top && top !== base && normCount(countStr) === top;
+        const tbm = parseFloat(document.getElementById('topBeamDyeingMtr').value) || 0;
+        return !!top && tbm > 0 && top !== base && normCount(countStr) === top;
     }
 
     function syncTopTicks() {
@@ -968,7 +969,7 @@
                     <td><input type="text" list="millsList" class="w-mill" value="${autoMill}" placeholder="Select Mill"></td>
                     <td><input type="text" list="countsList" class="w-count" value="${w.count}"></td>
                     <td><input type="text" list="coloursList" class="w-color" value="${w.color}"></td>
-                    <td style="text-align:center;"><input type="checkbox" class="w-top" ${(sv.topManual ? sv.top : isTopBeamCount(w.count)) ? 'checked' : ''} ${sv.topManual ? 'data-tm="1"' : ''} onchange="this.dataset.tm='1'; calculateTableRows()"></td>
+                    <td style="text-align:center;"><input type="checkbox" class="w-top" ${isTopBeamCount(w.count) ? 'checked' : ''} onchange="this.dataset.tm='1'; calculateTableRows()"></td>
                     <td><input type="number" class="w-ends-rpt" value="${w.rpt}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-ends" value="${w.total}" oninput="calculateTableRows()"></td>
                     <td><input type="number" class="w-weight" readonly oninput="this.dataset.manual='1'; calculateTableRows()" ${sv.wtManual ? `data-manual="1" value="${sv.wt}"` : ''}></td>
