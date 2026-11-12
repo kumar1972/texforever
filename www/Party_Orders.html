@@ -530,6 +530,22 @@
             loadDesignList();
             loadPartySuggestions();
             updatePartyTable();
+
+            function refreshAfterCloud() {
+                partyOrders = pgOrders();
+                const selEl = document.getElementById('designNumber');
+                const cur = selEl ? selEl.value : '';
+                loadDesignList();
+                if (selEl && cur) selEl.value = cur;
+                loadPartySuggestions();
+                updatePartyTable();
+            }
+            window.addEventListener('erp-cloud-synced', refreshAfterCloud);
+            if (navigator.onLine && typeof window.initializeSupabase === 'function') {
+                try {
+                    window._ordersCloudPull = window.initializeSupabase(true).then(refreshAfterCloud).catch(function () {});
+                } catch (e) {}
+            }
         });
 
         function loadPartySuggestions() {
@@ -756,6 +772,7 @@
             if (!designNo) { alert("Mudhala Design Number select pannunga ❌"); return; }
             if (!document.getElementById('partyName').value.trim()) { alert("Party Name enter pannunga ❌"); return; }
             if (!(parseFloat(document.getElementById('orderMtr').value) > 0)) { alert("Order Metres enter pannunga ❌"); return; }
+            if (window._ordersCloudPull) { try { await window._ordersCloudPull; } catch (e) {} }
             partyOrders = pgOrders();
             let baseBeam = document.getElementById('baseBeamCount').value.trim() || '-';
             let topBeam = document.getElementById('topBeamCount').value.trim() || '-';
@@ -813,6 +830,7 @@
             }
 
             let designSpecs = pgJSON('design_specs', {});
+            let cloudSpecKey = null;
             if(designNo) {
                 let clean = designNo.toString().replace(/[#_\s]/g, '').trim().toLowerCase();
                 let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '') === clean) || designNo;
@@ -829,19 +847,24 @@
                 designSpecs[specKey].width = currentWidth;
                 designSpecs[specKey].finishWidth = currentWidth;
                 pgSetJSON('design_specs', designSpecs);
-                
-                if (window.supabaseSave) {
-                    await window.supabaseSave('design_specs', designSpecs);
-                }
-                if (window.supabaseSaveIndividual) {
-                    await window.supabaseSaveIndividual(specKey, designSpecs[specKey]);
-                }
+                cloudSpecKey = specKey;
             }
 
             pgSetJSON('party_orders_data', partyOrders);
-            
-            if (window.supabaseSave) {
-                await window.supabaseSave('party_orders_data', partyOrders);
+
+            // Local (IndexedDB/StorageDB) is already saved above; now push to cloud
+            let cloudOk = true;
+            try {
+                if (window.supabaseSave) {
+                    await window.supabaseSave('party_orders_data', partyOrders);
+                    await window.supabaseSave('design_specs', designSpecs);
+                }
+                if (window.supabaseSaveIndividual && cloudSpecKey) {
+                    await window.supabaseSaveIndividual(cloudSpecKey, designSpecs[cloudSpecKey]);
+                }
+            } catch (e) {
+                cloudOk = false;
+                console.error("supabase Sync Error: ", e);
             }
 
             updatePartyTable();
@@ -854,7 +877,7 @@
             
             loadDesignList();
             btn.innerText = "✅ Save Order Details";
-            alert("Party Order saved successfully! ✅☁️");
+            alert(cloudOk ? "Party Order saved successfully! ✅☁️" : "Phone-la save aachu ✅ aana Cloud-la save aagala ⚠️ (internet check pannitu thirumba save pannunga)");
         }
 
         function editOrder(id) {
