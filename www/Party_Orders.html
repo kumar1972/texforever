@@ -33,8 +33,8 @@
             width: 100% !important;
             max-width: 900px !important;
             margin: 0 auto !important;
-            background: #e6dfd0 !important;
-            background-color: #FFFFFF !important;
+            background: #FFFFFF !important;
+            background-color: #f9f8f0 !important;
             padding: 20px !important;
             border-radius: 20px !important;
             box-shadow: 0 10px 35px rgba(30,43,35,0.06) !important;
@@ -278,7 +278,7 @@
         .sd-arrow { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #4A7C59; pointer-events: none; }
         .sd-list {
             display: none; position: absolute; left: 0; right: 0; top: calc(100% + 2px);
-            max-height: 240px; overflow-y: auto; z-index: 1000;
+            max-height: 580px; overflow-y: auto; z-index: 1000;
             background: #FFFFFF; border: 1px solid #D1DED1; border-radius: 8px;
             box-shadow: 0 6px 18px rgba(0,0,0,.18);
         }
@@ -454,7 +454,7 @@
     </div>
 
     <script>
-        let partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+        let partyOrders = pgOrders();
         let editingId = null;
 
         // Design Master saves through StorageDB; read from the same place (fallback: localStorage)
@@ -463,6 +463,15 @@
             try { if (window.StorageDB && typeof window.StorageDB.getItem === 'function') v = window.StorageDB.getItem(key); } catch (e) {}
             if (v === null || v === undefined) v = localStorage.getItem(key);
             return v;
+        }
+        function pgSetJSON(key, obj) {
+            const str = JSON.stringify(obj);
+            try { if (window.StorageDB && typeof window.StorageDB.setItem === 'function') window.StorageDB.setItem(key, str); } catch (e) {}
+            try { localStorage.setItem(key, str); } catch (e) {}
+        }
+        function pgOrders() {
+            const v = pgJSON('party_orders_data', []);
+            return Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
         }
         function pgJSON(key, fallback) {
             try { let v = JSON.parse(pgGet(key)); return (v === null || v === undefined) ? fallback : v; }
@@ -596,8 +605,8 @@
             let designSpecs = pgJSON('design_specs', {});
             let bitmapContainer = document.getElementById('bitmapDisplayContainer');
             
-            let clean = activeDesign ? activeDesign.toString().replace('#', '').trim().toLowerCase() : '';
-            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || activeDesign;
+            let clean = activeDesign ? activeDesign.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '';
+            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '') === clean) || activeDesign;
 
             if (activeDesign && designSpecs[specKey] && designSpecs[specKey].bitmap) {
                 let b64 = designSpecs[specKey].bitmap;
@@ -611,30 +620,30 @@
             loadBitmapImage();
 
             if(val) {
-                let clean = val.toString().replace('#', '').trim().toLowerCase();
+                let clean = val.toString().replace(/[#_\s]/g, '').trim().toLowerCase();
                 
                 let designMasters = pgJSON('design_masters_data', []);
                 let designSpecs = pgJSON('design_specs', {});
-                let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+                let orders = pgOrders();
 
                 let foundMaster = {};
                 if (Array.isArray(designMasters)) {
                     foundMaster = designMasters.find(d => {
-                        let dName = (d.name || d.designNo || '').toString().replace('#', '').trim().toLowerCase();
+                        let dName = (d.name || d.designNo || '').toString().replace(/[#_\s]/g, '').trim().toLowerCase();
                         return dName === clean;
                     }) || {};
                 }
 
-                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || val;
+                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '') === clean) || val;
                 let specs = designSpecs[specKey] || {};
 
                 let specStatus = (specs.status || foundMaster.status || '').toLowerCase();
                 document.getElementById('orderStatusToggle').checked = (specStatus === 'completed');
 
-                document.getElementById('baseBeamCount').value = foundMaster.warp1 || foundMaster.baseBeamCount || specs.warp || specs.baseBeamCount || '2/60';
+                document.getElementById('baseBeamCount').value = foundMaster.warp1 || foundMaster.baseBeamCount || specs.warp || specs.baseBeamCount || '';
                 document.getElementById('topBeamCount').value = foundMaster.warp2 || foundMaster.topBeamCount || specs.warp2 || specs.topBeamCount || '';
                 
-                document.getElementById('weftCount').value = foundMaster.weftCount || foundMaster.weft || specs.weftCount || specs.weft || '40s';
+                document.getElementById('weftCount').value = foundMaster.weftCount || foundMaster.weft || specs.weftCount || specs.weft || '';
                 document.getElementById('weftCount2').value = foundMaster.weft2 || specs.weft2 || '';
                 
                 document.getElementById('reed').value = foundMaster.reed || specs.reed || '';
@@ -676,10 +685,10 @@
             }
 
             let statusText = isCompleted ? 'completed' : 'running';
-            let clean = designNo.toString().replace('#', '').trim().toLowerCase();
+            let clean = designNo.toString().replace(/[#_\s]/g, '').trim().toLowerCase();
 
-            let orders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
-            let index = orders.findIndex(x => (x.designNumber || x.designNo || '').toString().replace('#','').trim().toLowerCase() === clean);
+            let orders = pgOrders();
+            let index = orders.findIndex(x => (x.designNumber || x.designNo || '').toString().replace(/[#_\s]/g, '').trim().toLowerCase() === clean);
 
             if(index > -1) {
                 orders[index].status = statusText;
@@ -707,17 +716,17 @@
                 };
                 orders.push(newOrder);
             }
-            localStorage.setItem('party_orders_data', JSON.stringify(orders));
+            pgSetJSON('party_orders_data', orders);
 
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
-            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || designNo;
+            let designSpecs = pgJSON('design_specs', {});
+            let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '') === clean) || designNo;
             
             if(!designSpecs[specKey]) {
                 designSpecs[specKey] = {};
             }
             designSpecs[specKey].status = statusText;
             designSpecs[specKey].width = document.getElementById('width').value.trim() || '58';
-            localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+            pgSetJSON('design_specs', designSpecs);
 
             try {
                 if (window.supabaseSave) {
@@ -744,6 +753,10 @@
             }
             
             let designNo = document.getElementById('designNumber').value;
+            if (!designNo) { alert("Mudhala Design Number select pannunga ❌"); return; }
+            if (!document.getElementById('partyName').value.trim()) { alert("Party Name enter pannunga ❌"); return; }
+            if (!(parseFloat(document.getElementById('orderMtr').value) > 0)) { alert("Order Metres enter pannunga ❌"); return; }
+            partyOrders = pgOrders();
             let baseBeam = document.getElementById('baseBeamCount').value.trim() || '-';
             let topBeam = document.getElementById('topBeamCount').value.trim() || '-';
             let combinedWarp = (topBeam && topBeam !== '-') ? `${baseBeam}, ${topBeam}` : baseBeam;
@@ -784,9 +797,12 @@
                 }
                 editingId = null;
             } else {
+                const normD = v => (v || '').toString().replace(/[#_\s]/g, '').trim().toLowerCase();
+                const normT = v => (v || '').toString().trim().toLowerCase();
                 let existingIndex = partyOrders.findIndex(x => {
-                    let d = x.designNumber || x.designNo || '';
-                    return designNo && d.toString().replace('#', '').trim().toLowerCase() === designNo.toString().replace('#', '').trim().toLowerCase();
+                    if (normD(x.designNumber || x.designNo) !== normD(designNo)) return false;
+                    const placeholder = normT(x.partyName) === 'direct order' && !(parseFloat(x.orderMtr) > 0);
+                    return placeholder || (normT(x.partyName) === normT(orderData.partyName) && normT(x.poNo) === normT(orderData.poNo));
                 });
 
                 if(existingIndex > -1) {
@@ -796,10 +812,10 @@
                 }
             }
 
-            let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
+            let designSpecs = pgJSON('design_specs', {});
             if(designNo) {
-                let clean = designNo.toString().replace('#', '').trim().toLowerCase();
-                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || designNo;
+                let clean = designNo.toString().replace(/[#_\s]/g, '').trim().toLowerCase();
+                let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '') === clean) || designNo;
 
                 if(!designSpecs[specKey]) designSpecs[specKey] = {};
                 designSpecs[specKey].status = orderData.status;
@@ -812,7 +828,7 @@
                 
                 designSpecs[specKey].width = currentWidth;
                 designSpecs[specKey].finishWidth = currentWidth;
-                localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                pgSetJSON('design_specs', designSpecs);
                 
                 if (window.supabaseSave) {
                     await window.supabaseSave('design_specs', designSpecs);
@@ -822,7 +838,7 @@
                 }
             }
 
-            localStorage.setItem('party_orders_data', JSON.stringify(partyOrders));
+            pgSetJSON('party_orders_data', partyOrders);
             
             if (window.supabaseSave) {
                 await window.supabaseSave('party_orders_data', partyOrders);
@@ -878,7 +894,7 @@
         }
 
         function updatePartyTable() {
-            partyOrders = JSON.parse(localStorage.getItem('party_orders_data')) || [];
+            partyOrders = pgOrders();
             const tbody = document.querySelector('#partyOrderTable tbody');
             if(!tbody) return;
             tbody.innerHTML = '';
@@ -919,19 +935,19 @@
             let msg = newStatus === 'completed' ? "Indha order-ai Completed-aga maatranuma?" : "Indha order-ai Running-ku maatranuma?";
             if(confirm(msg)) {
                 partyOrders = partyOrders.map(x => x.id === id ? {...x, status: newStatus} : x);
-                localStorage.setItem('party_orders_data', JSON.stringify(partyOrders));
+                pgSetJSON('party_orders_data', partyOrders);
                 
                 let item = partyOrders.find(x => x.id === id);
                 if(item) {
                     let dNo = item.designNumber || item.designNo;
                     if(dNo) {
-                        let clean = dNo.toString().replace('#', '').trim().toLowerCase();
-                        let designSpecs = JSON.parse(localStorage.getItem('design_specs')) || {};
-                        let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace('#', '').trim().toLowerCase() : '') === clean) || dNo;
+                        let clean = dNo.toString().replace(/[#_\s]/g, '').trim().toLowerCase();
+                        let designSpecs = pgJSON('design_specs', {});
+                        let specKey = Object.keys(designSpecs).find(k => (k ? k.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '') === clean) || dNo;
 
                         if(!designSpecs[specKey]) designSpecs[specKey] = {};
                         designSpecs[specKey].status = newStatus;
-                        localStorage.setItem('design_specs', JSON.stringify(designSpecs));
+                        pgSetJSON('design_specs', designSpecs);
                         if (window.supabaseSave) {
                             await window.supabaseSave('design_specs', designSpecs);
                         }
@@ -957,7 +973,7 @@
 
             if(confirm("Indha order-ai delete pannanuma?")){
                 partyOrders = partyOrders.filter(x => x.id !== id);
-                localStorage.setItem('party_orders_data', JSON.stringify(partyOrders));
+                pgSetJSON('party_orders_data', partyOrders);
                 
                 if (window.supabaseSave) {
                     await window.supabaseSave('party_orders_data', partyOrders);
