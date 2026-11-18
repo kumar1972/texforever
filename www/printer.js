@@ -89,6 +89,9 @@ function buildPrintHtml(jobName, content) {
 // Print/PDF filename: current HTML page filename-ஐ முதலில் பயன்படுத்தும்.
 function getPrintJobName(customContent, fallbackArea) {
 
+  // Page thaniya print peyar set panna (example: Design Number) - window.TEX_PRINT_JOB_NAME
+  if (window.TEX_PRINT_JOB_NAME) return String(window.TEX_PRINT_JOB_NAME);
+
   // Dashboard-ல் இருந்து page open ஆனாலும், current page filename மாறாது.
   const file = (window.location.pathname.split('/').pop() || '')
     .replace(/\.html?$/i, '')

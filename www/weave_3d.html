@@ -2523,8 +2523,8 @@ function draw3DWeave(){
         ctx.font = "bold 14px Arial, sans-serif";
         ctx.fillText("cm", left - RULER / 2, bottom + RULER / 2);
 
-        const line1 = `warp : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
-        const line2 = `weft: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
+        const line1 = `Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
+        const line2 = `Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
 
         // Width -> X-axis ruler strip, Height -> Y-axis ruler strip (fit inside ruler)
         ctx.save();
@@ -2922,11 +2922,41 @@ function autoFitToA4() {
     updateCadPrintScale(fitVal);
 }
 function printHtmlSmart(html, jobName) {
+    // PDF save name = page name (Print PDF option maadhiri), "Dashboard - TEXFOREVER" varaama
+    if (typeof getPrintJobName === "function") { try { jobName = getPrintJobName("", document) || jobName; } catch (e) {} }
+    else {
+        // printer.js load aagala / old version na - current page file name use pannum
+        try {
+            const pf = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, "").replace(/[_-]+/g, " ").trim();
+            if (pf && !/^index$/i.test(pf)) jobName = pf.replace(/\b\w/g, function (ch) { return ch.toUpperCase(); });
+        } catch (e) {}
+    }
+    // Print / PDF name = Design Number (Print PDF option maadhiri: <DesignNo>_CAD_Print)
+    try {
+        if (typeof activeDesignObj !== "undefined" && activeDesignObj) {
+            const dn = designName(activeDesignObj).replace(/[\\\/:*?"<>|]+/g, "-").trim();
+            if (dn && dn !== "Unnamed") jobName = dn + "_CAD_Print";
+        }
+    } catch (e) {}
+    let restoreTitles = function () {};
+    if (typeof setPrintTitles === "function") { restoreTitles = setPrintTitles(jobName); }
+    else {
+        // printer.js illaadha podhum dashboard (top) title-ah maathi print-ku munnadi set pannum
+        const savedT = [];
+        [window, window.parent, window.top].forEach(function (w) {
+            try {
+                if (!w || !w.document || savedT.some(function (x) { return x.d === w.document; })) return;
+                savedT.push({ d: w.document, t: w.document.title });
+                w.document.title = jobName;
+            } catch (e) {}
+        });
+        restoreTitles = function () { savedT.forEach(function (x) { try { x.d.title = x.t; } catch (e) {} }); };
+    }
     const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PrintPlugin;
 
     // APK: Android print dialog (printer தேர்வு / Save as PDF)
     if (plugin) {
-        return plugin.printHtml({ html: html, jobName: jobName || " pdf Print" });
+        return Promise.resolve(plugin.printHtml({ html: html, jobName: jobName || " pdf Print" })).then(restoreTitles, function (e) { restoreTitles(); throw e; });
     }
 
     // Browser: window.open இல்லாமல் hidden iframe
@@ -2945,6 +2975,7 @@ function printHtmlSmart(html, jobName) {
                 iframe.contentWindow.print();
             } catch (e) {}
             setTimeout(function () { iframe.remove(); resolve(); }, 2000);
+            setTimeout(restoreTitles, 10000);
         };
 
         const img = doc.querySelector("img");
@@ -3695,6 +3726,18 @@ if (typeof window.appPrint !== "function") {
                     '<style>html,body{background:#fff!important;color:#111!important;margin:0!important;padding:0!important;min-height:auto!important;}</style>' +
                     '</head><body>' + boxHTML + '</body></html>');
                 doc.close();
+                const fbName = window.TEX_PRINT_JOB_NAME || "";
+                const fbSaved = [];
+                if (fbName) {
+                    [window, window.parent, window.top].forEach(function (w) {
+                        try {
+                            if (!w || !w.document || fbSaved.some(function (x) { return x.d === w.document; })) return;
+                            fbSaved.push({ d: w.document, t: w.document.title });
+                            w.document.title = fbName;
+                        } catch (e) {}
+                    });
+                    setTimeout(function () { fbSaved.forEach(function (x) { try { x.d.title = x.t; } catch (e) {} }); }, 10000);
+                }
                 setTimeout(function () {
                     try {
                         frame.contentWindow.focus();
@@ -3722,7 +3765,14 @@ async function triggerRealPrint() {
 
         // outerHTML: container-ஓட style (--gcell, --gfont) உம் சேர்ந்து வரும்
         if (window.appPrint) {
-            await window.appPrint(box.outerHTML);
+            // Print Design name = Design Number (CAD print maadhiri)
+            try {
+                if (typeof activeDesignObj !== "undefined" && activeDesignObj) {
+                    const dn = designName(activeDesignObj).replace(/[\\\/:*?"<>|]+/g, "-").trim();
+                    if (dn && dn !== "Unnamed") window.TEX_PRINT_JOB_NAME = dn + "_Design_Print";
+                }
+            } catch (e) {}
+            try { await window.appPrint(box.outerHTML); } finally { window.TEX_PRINT_JOB_NAME = ""; }
         } else {
             alert("Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.");
         }
