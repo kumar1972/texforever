@@ -794,10 +794,10 @@ let selectedColourForPopup = null;
 let colourPopupTarget = { type: null, index: null };
 let liveDesignDimensions = { widthCm: 0, heightCm: 0 };
 let selectedCadScalePercent = 100;
-let simulationRepeatFactor = 2;
+let simulationRepeatFactor = 1;
 
 function changeSimulationRepeats(val) {
-    simulationRepeatFactor = parseInt(val) || 2;
+    simulationRepeatFactor = parseInt(val) || 1;
     debounce3DRender();
 }
 
@@ -2523,30 +2523,26 @@ function draw3DWeave(){
         ctx.font = "bold 10px Arial, sans-serif";
         ctx.fillText("cm", left - RULER / 2, bottom + RULER / 2);
 
-        const line1 = `Original Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
-        const line2 = `Original Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
+        const line1 = `Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
+        const line2 = `Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
 
+        // Width -> X-axis ruler strip, Height -> Y-axis ruler strip (fit inside ruler)
         ctx.save();
-        ctx.font = "bold 12px Arial, sans-serif";
-        const boxPadX = 10;
-        const boxPadY = 8;
-        const boxWidth = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + (boxPadX * 2);
-        const boxHeight = 48;
+        ctx.fillStyle = "#0f172a";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
 
-        const boxLeft = right - boxWidth - 8;
-        const boxTop = top + 8;
+        let fsW = 8;
+        ctx.font = `bold ${fsW}px Arial, sans-serif`;
+        while (fsW > 4 && ctx.measureText(line1).width > drawW - 8) { fsW -= 0.5; ctx.font = `bold ${fsW}px Arial, sans-serif`; }
+        ctx.fillText(line1, left + drawW / 2, bottom + RULER - 5);
 
-        ctx.fillStyle = "rgba(10, 24, 18, 0.90)";
-        ctx.strokeStyle = "#48bb78";
-        ctx.lineWidth = 1.5;
-        ctx.fillRect(boxLeft, boxTop, boxWidth, boxHeight);
-        ctx.strokeRect(boxLeft, boxTop, boxWidth, boxHeight);
-
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.fillText(line1, boxLeft + boxPadX, boxTop + boxPadY);
-        ctx.fillText(line2, boxLeft + boxPadX, boxTop + boxPadY + 19);
+        let fsH = 8;
+        ctx.font = `bold ${fsH}px Arial, sans-serif`;
+        while (fsH > 4 && ctx.measureText(line2).width > drawH - 8) { fsH -= 0.5; ctx.font = `bold ${fsH}px Arial, sans-serif`; }
+        ctx.translate(left - RULER + 5, top + drawH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(line2, 0, 0);
         ctx.restore();
 
         ctx.restore();
