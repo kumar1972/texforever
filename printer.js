@@ -145,6 +145,22 @@ function getPrintJobName(customContent, fallbackArea) {
   return heading || pageTitle || 'TEXFOREVER Print';
 }
 
+// PDF save filename = print aagura PAGE oda peyar (top window title-um set pannum)
+function setPrintTitles(name) {
+  const saved = [];
+  [window, window.parent, window.top].forEach(function (w) {
+    try {
+      if (!w || !w.document) return;
+      if (saved.some(function (p) { return p.d === w.document; })) return;
+      saved.push({ d: w.document, t: w.document.title });
+      w.document.title = name;
+    } catch (e) {}
+  });
+  return function restoreTitles() {
+    saved.forEach(function (p) { try { p.d.title = p.t; } catch (e) {} });
+  };
+}
+
 window.appPrint = async function (customContent) {
 
   const area = document.querySelector(
@@ -157,6 +173,7 @@ window.appPrint = async function (customContent) {
   const jobName = getPrintJobName(customContent, area);
 
   const html = buildPrintHtml(jobName, content);
+  const restoreTitles = setPrintTitles(jobName);
 
   // 1. Windows desktop (Electron)
   if (window.desktopPrint) {
@@ -171,6 +188,7 @@ window.appPrint = async function (customContent) {
       alert('Print error: ' + e.message);
     }
 
+    restoreTitles();
     return;
   }
     // 2. Android APK (Capacitor)
@@ -197,6 +215,7 @@ window.appPrint = async function (customContent) {
 
     }
 
+    restoreTitles();
     return;
   }
 
@@ -219,7 +238,7 @@ window.appPrint = async function (customContent) {
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
 
-    setTimeout(() => iframe.remove(), 1000);
+    setTimeout(() => { iframe.remove(); restoreTitles(); }, 10000);
 
   }, 500);
 };
@@ -284,3 +303,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
+
+// Page-la irundhu direct window.print() call panna-um page peyar PDF name-ah varum
+(function () {
+  let restore = null;
+  window.addEventListener('beforeprint', function () {
+    if (restore) return;
+    restore = setPrintTitles(getPrintJobName('', document));
+  });
+  window.addEventListener('afterprint', function () {
+    if (restore) { restore(); restore = null; }
+  });
+})();
