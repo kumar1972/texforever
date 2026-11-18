@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ta">
 <head>
@@ -2245,7 +2246,7 @@ function draw3DWeave(){
         }
         if(dentsRequired <= 0) dentsRequired = realWarpLength;
         
-        const RULER = 32; 
+        const RULER = 52; 
 
         const base_steel_ruler_px_per_mm = 6.29; 
         let px_per_mm = base_steel_ruler_px_per_mm * rulerCalibrationMultiplier;
@@ -2519,8 +2520,8 @@ function draw3DWeave(){
 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = "#334155";
-        ctx.font = "bold 10px Arial, sans-serif";
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 14px Arial, sans-serif";
         ctx.fillText("cm", left - RULER / 2, bottom + RULER / 2);
 
         const line1 = `Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
@@ -2532,16 +2533,18 @@ function draw3DWeave(){
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        let fsW = 8;
+        let fsW = 18;
         ctx.font = `bold ${fsW}px Arial, sans-serif`;
         while (fsW > 4 && ctx.measureText(line1).width > drawW - 8) { fsW -= 0.5; ctx.font = `bold ${fsW}px Arial, sans-serif`; }
-        ctx.fillText(line1, left + drawW / 2, bottom + RULER - 5);
+        ctx.textAlign = "left";
+        ctx.fillText(line1, left + 8, bottom + (RULER + 22) / 2);
 
-        let fsH = 8;
+        let fsH = 18;
         ctx.font = `bold ${fsH}px Arial, sans-serif`;
         while (fsH > 4 && ctx.measureText(line2).width > drawH - 8) { fsH -= 0.5; ctx.font = `bold ${fsH}px Arial, sans-serif`; }
-        ctx.translate(left - RULER + 5, top + drawH / 2);
+        ctx.translate(left - (RULER + 22) / 2, bottom - 8);
         ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = "left";
         ctx.fillText(line2, 0, 0);
         ctx.restore();
 
