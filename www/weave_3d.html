@@ -2924,7 +2924,7 @@ function printHtmlSmart(html, jobName) {
 
     // APK: Android print dialog (printer தேர்வு / Save as PDF)
     if (plugin) {
-        return plugin.printHtml({ html: html, jobName: jobName || "TexForever Print" });
+        return plugin.printHtml({ html: html, jobName: jobName || " pdf Print" });
     }
 
     // Browser: window.open இல்லாமல் hidden iframe
