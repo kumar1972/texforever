@@ -2433,20 +2433,26 @@ function draw3DWeave(layerMode = "all"){
             dentIndex++;
         }
 
-        // In each separated cloth view, show only that layer's alternating ends
-        // but compress those selected ends into the full cloth width.
+        // For each separated cloth, retain the original beam-specific end order,
+        // colour, yarn information and weave index, but repack only that beam's
+        // actual ends evenly across the complete cloth width. Do not carry the
+        // other beam's dent slots/empty spaces into this layer: that caused the
+        // visible vertical gaps in 2-Layer View.
         let layerWarpPositions = warpPositions;
         if(renderKey === "top" || renderKey === "bottom"){
             const wantedLayer = renderKey;
             const selected = hasBeamAssignments
-                ? warpPositions.filter(wp => wp.colIndex < 0 || warpBeamMap[wp.colIndex] === wantedLayer)
-                : warpPositions.filter(wp => wp.colIndex < 0 || (wp.colIndex % 2) === (wantedLayer === "top" ? 0 : 1));
-            const firstSelectedX = selected.find(wp => !wp.isEmpty)?.x ?? left;
-            const layerStretch = realWarpLength / Math.max(1, measuredEnds);
-            layerWarpPositions = selected.map(wp=>{
-                if(wp.isEmpty) return {...wp, x: left + (wp.x - firstSelectedX) * layerStretch, w: wp.w * layerStretch};
-                return {...wp, x: left + (wp.x - firstSelectedX) * layerStretch, w: wp.w * layerStretch, baseW: (wp.baseW || wp.w) * layerStretch};
-            });
+                ? warpPositions.filter(wp => !wp.isEmpty && wp.colIndex >= 0 && warpBeamMap[wp.colIndex] === wantedLayer)
+                : warpPositions.filter(wp => !wp.isEmpty && wp.colIndex >= 0 &&
+                    (wp.colIndex % 2) === (wantedLayer === "top" ? 0 : 1));
+            const selectedCount = selected.length;
+            const layerEndWidth = drawW / Math.max(1, selectedCount);
+            layerWarpPositions = selected.map((wp, index) => ({
+                ...wp,
+                x: left + index * layerEndWidth,
+                w: layerEndWidth,
+                baseW: layerEndWidth
+            }));
         }
 
         let type = $("weaveType")?.value || "custom";
