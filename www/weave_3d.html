@@ -1652,6 +1652,8 @@ function loadSelectedDesign(){
 
         let baseObj = foundMaster || { designNo: selectedVal, name: selectedVal };
         activeDesignObj = sanitizeDesignObj(clone(baseObj));
+        // Keep the Warp Entry fabric construction separately; the graph editor may use type="custom".
+        activeDesignObj.fabricType = activeDesignObj.fabricType || activeDesignObj.type || activeDesignObj.weaveType || "Plain";
         
         activeDesignObj.warpLines = warpLinesData;
         activeDesignObj.weftLines = weftLinesData;
@@ -2072,19 +2074,62 @@ function shadeFast(r, g, b, factor) {
     return `rgb(${Math.min(255, Math.max(0, Math.round(r * factor)))}, ${Math.min(255, Math.max(0, Math.round(g * factor)))}, ${Math.min(255, Math.max(0, Math.round(b * factor)))})`;
 }
 
-let drawFramePending = false;
-function draw3DWeave(){
-    if(drawFramePending) return;
-    drawFramePending = true;
+let drawFramePending = new Set();
+
+function isDoubleClothSimulation(){
+    const raw = String(activeDesignObj?.fabricType || activeDesignObj?.type || activeDesignObj?.weaveType || "").trim().toLowerCase();
+    return raw.includes("double cloth") || raw.includes("double-cloth") || raw === "double";
+}
+
+function prepareDoubleClothCanvases(){
+    const host = $("fsContent");
+    if(!host) return;
+    if(!isDoubleClothSimulation()){
+        if(!$("weaveCanvas") || host.children.length !== 1 || host.firstElementChild?.id !== "weaveCanvas"){
+            host.style.overflow = "hidden";
+            host.style.display = "flex";
+            host.style.flexDirection = "row";
+            host.innerHTML = '<canvas id="weaveCanvas"></canvas>';
+        }
+        return;
+    }
+    if($("weaveCanvasTop") && $("weaveCanvasBottom")) return;
+    host.style.overflow = "auto";
+    host.style.display = "flex";
+    host.style.flexDirection = "column";
+    host.style.alignItems = "stretch";
+    host.style.justifyContent = "flex-start";
+    host.innerHTML = `
+      <section style="height:50%;min-height:260px;flex:0 0 50%;width:100%;display:flex;flex-direction:column;background:#f8fafc;border-bottom:3px solid #64748b;">
+        <div style="height:28px;flex:0 0 28px;padding:5px 10px;font:bold 12px Arial;background:#e0f2fe;color:#075985;">TOP CLOTH – 1 END (மேல்துணி)</div>
+        <canvas id="weaveCanvasTop" style="width:100%;height:calc(100% - 28px);flex:1;display:block;"></canvas>
+      </section>
+      <section style="height:50%;min-height:260px;flex:0 0 50%;width:100%;display:flex;flex-direction:column;background:#f8fafc;">
+        <div style="height:28px;flex:0 0 28px;padding:5px 10px;font:bold 12px Arial;background:#dcfce7;color:#166534;">BOTTOM CLOTH – 1 END (கீழ்த்துணி)</div>
+        <canvas id="weaveCanvasBottom" style="width:100%;height:calc(100% - 28px);flex:1;display:block;"></canvas>
+      </section>`;
+}
+
+function draw3DWeave(layerMode = "all"){
+    prepareDoubleClothCanvases();
+    if(layerMode === "all" && isDoubleClothSimulation()){
+        draw3DWeave("top");
+        draw3DWeave("bottom");
+        return;
+    }
+    const renderKey = isDoubleClothSimulation() ? layerMode : "all";
+    if(drawFramePending.has(renderKey)) return;
+    drawFramePending.add(renderKey);
     requestAnimationFrame(()=>{
-        drawFramePending = false;
-        const c = $("weaveCanvas"); 
-        const host = $("fsContent");
+        drawFramePending.delete(renderKey);
+        const c = $(renderKey === "top" ? "weaveCanvasTop" : renderKey === "bottom" ? "weaveCanvasBottom" : "weaveCanvas");
+        const host = (renderKey === "top" || renderKey === "bottom") ? c?.parentElement : $("fsContent");
         if(!c || !host) return;
         
         let rect = host.getBoundingClientRect();
         let W = Math.floor(rect.width) || window.innerWidth || 320; 
         let H = Math.floor(rect.height) || (window.innerHeight - 120) || 240;
+        if(renderKey === "top" || renderKey === "bottom") H = Math.max(120, H - 28);
         const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
         if (c.width !== Math.floor(W * dpr) || c.height !== Math.floor(H * dpr)) {
@@ -2320,6 +2365,8 @@ function draw3DWeave(){
         const effectiveCellH = cellH * scale;
 
         for(let r = realWeftLength - 1; r >= 0; r--){
+            if(renderKey === "top" && (r % 2 !== 0)) continue;
+            if(renderKey === "bottom" && (r % 2 !== 1)) continue;
             const y = bottom - ((r + 1) * cellH);
             if(y + cellH < visibleMinY || y > visibleMaxY) continue;
 
@@ -2328,6 +2375,8 @@ function draw3DWeave(){
 
             for(let wpIdx = 0; wpIdx < warpPositions.length; wpIdx++){
                 const wp = warpPositions[wpIdx];
+                if(renderKey === "top" && wp.colIndex >= 0 && (wp.colIndex % 2 !== 0)) continue;
+                if(renderKey === "bottom" && wp.colIndex >= 0 && (wp.colIndex % 2 !== 1)) continue;
                 if(wp.isEmpty || wp.x + wp.w < visibleMinX || wp.x > visibleMaxX) continue;
 
                 const up = isWarpUp(r, wp.colIndex, type, drawArr, pickSeq);
@@ -2557,19 +2606,19 @@ function openFullscreen() {
     modal.style.display="flex"; 
     document.body.style.overflow = "hidden";
     scale = 1; pointX = 0; pointY = 0; panning = false; 
-    drawFramePending = false;
+    drawFramePending.clear();
     updateRulerCalDisplay();
     setTimeout(() => { draw3DWeave(); }, 50); 
 }
 
-function refreshFullscreen3D() { scale = 1; pointX = 0; pointY = 0; drawFramePending = false; draw3DWeave(); }
+function refreshFullscreen3D() { scale = 1; pointX = 0; pointY = 0; drawFramePending.clear(); draw3DWeave(); }
 
 function closeFullscreen() { 
     const modal = $("fsModal"); if(!modal) return; 
     modal.style.display="none"; 
     document.body.style.overflow = "";
     scale = 1; pointX = 0; pointY = 0; panning = false; lastDist = 0; 
-    drawFramePending = false;
+    drawFramePending.clear();
 }
 
 let wasPinching = false;
@@ -2898,7 +2947,7 @@ function closeCadPrintModal() {
     let modal = $("cadPrintModal");
     if(modal) modal.style.display = "none"; 
     document.body.style.overflow = "";
-    drawFramePending = false;
+    drawFramePending.clear();
 }
 
 function updateCadPrintScale(val) {
@@ -3684,12 +3733,12 @@ function closeGraphPrintPreview() {
         modal.style.display = "none";
     }
     document.body.style.overflow = "";
-    drawFramePending = false;
+    drawFramePending.clear();
 }
 
 window.addEventListener("afterprint", () => {
     document.body.style.overflow = "";
-    drawFramePending = false;
+    drawFramePending.clear();
     let pm = $("printModalBox");
     if (pm && pm.style.display === "flex") {
         pm.style.display = "none";
@@ -3699,7 +3748,7 @@ window.addEventListener("afterprint", () => {
 window.addEventListener("focus", () => {
     setTimeout(() => {
         document.body.style.overflow = "";
-        drawFramePending = false;
+        drawFramePending.clear();
         let cModal = $("cadPrintModal");
         if(cModal) cModal.style.display = "none";
     }, 250);
@@ -3783,7 +3832,7 @@ async function triggerRealPrint() {
 
     setTimeout(() => {
         document.body.style.overflow = wasFsOpen ? "hidden" : "";
-        drawFramePending = false;
+        drawFramePending.clear();
         if (wasFsOpen) {
             fs.style.display = "flex";
             draw3DWeave();
