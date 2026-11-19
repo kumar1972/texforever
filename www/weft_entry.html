@@ -172,7 +172,7 @@
             box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
         }
 
-        /* Keep the native Weave picker tappable in Android offline mode. */
+        /* Keep the native Weave picker tappable on Android, including offline mode. */
         #infoWeave {
             display: block;
             position: relative;
@@ -3262,13 +3262,13 @@ async function saveWeftDesign() {
     } else {
         masters[idx] = { ...masters[idx], ...masterData };
     }
-    window.StorageDB.setItem('design_masters_data', JSON.stringify(masters));
+    window.StorageDB.setItem('design_masters_data', JSON.stringify(masters), true);
 
     let weftEntryList = safeParseJSON(window.StorageDB.getItem('weft_entry_data'), []);
     if (!Array.isArray(weftEntryList)) weftEntryList = [];
     weftEntryList = weftEntryList.filter(w => cleanDesignName(w.name || w.designNo) !== cleanDNo);
     weftEntryList.push(masterData);
-    window.StorageDB.setItem('weft_entry_data', JSON.stringify(weftEntryList));
+    window.StorageDB.setItem('weft_entry_data', JSON.stringify(weftEntryList), true);
 
     let designSpecs = safeParseJSON(window.StorageDB.getItem('design_specs'), {});
     let specKey = Object.keys(designSpecs).find(k => cleanDesignName(k) === cleanDNo) || dNo;
@@ -3281,9 +3281,9 @@ async function saveWeftDesign() {
     designSpecs[specKey].weftWidth = document.getElementById('infoWeftWidth').value.trim();
     designSpecs[specKey].weftPick = document.getElementById('infoPick').value.trim();
     designSpecs[specKey].weaveType = document.getElementById('infoWeave').value.trim();
-    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs));
+    window.StorageDB.setItem('design_specs', JSON.stringify(designSpecs), true);
 
-    window.StorageDB.setItem('last_edit_timestamp', Date.now().toString());
+    window.StorageDB.setItem('last_edit_timestamp', Date.now().toString(), true);
 
     let cloudSuccess = true;
     try {
