@@ -1653,7 +1653,7 @@ function loadSelectedDesign(){
         let baseObj = foundMaster || { designNo: selectedVal, name: selectedVal };
         activeDesignObj = sanitizeDesignObj(clone(baseObj));
         // Keep the Warp Entry fabric construction separately; the graph editor may use type="custom".
-        activeDesignObj.fabricType = activeDesignObj.fabricType || activeDesignObj.type || activeDesignObj.weaveType || "Plain";
+        activeDesignObj.fabricType = activeDesignObj.weaveType || activeDesignObj.fabricType || activeDesignObj.type || "Plain";
         
         activeDesignObj.warpLines = warpLinesData;
         activeDesignObj.weftLines = weftLinesData;
@@ -2094,11 +2094,22 @@ let drawFramePending = new Set();
 let doubleClothView = "layers";
 
 function isDoubleClothSimulation(){
-    // Prefer the saved fabric construction. The graph editor's "custom" type
-    // describes its draft matrix and must not override Double Cloth.
-    const raw = String(activeDesignObj?.fabricType || activeDesignObj?.weaveType ||
-        (activeDesignObj?.type !== "custom" ? activeDesignObj?.type : "") || "").trim().toLowerCase();
-    return raw.includes("double cloth") || raw.includes("double-cloth") || raw === "double";
+    // Detect Double Cloth from any saved construction field. Some older records
+    // store "custom" in fabricType/type while the actual construction is in weaveType.
+    const candidates = [
+        activeDesignObj?.weaveType,
+        activeDesignObj?.fabricType,
+        activeDesignObj?.fabric_type,
+        activeDesignObj?.clothType,
+        activeDesignObj?.cloth_type,
+        activeDesignObj?.construction,
+        activeDesignObj?.type,
+        activeDesignObj?.weave
+    ];
+    return candidates.some(value => {
+        const raw = String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ");
+        return raw.includes("double cloth") || raw === "double";
+    });
 }
 
 function prepareDoubleClothCanvases(){
