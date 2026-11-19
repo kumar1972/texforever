@@ -1692,6 +1692,21 @@ function loadSelectedDesign(){
             ...(dentDrawMatch || {})
         };
 
+        // Keep the fabric construction and finished loom densities separate from
+        // the 3D graph editor's internal type="custom" value.
+        let designSpecStore = safeJSON("design_specs", {});
+        let designSpecKey = Object.keys(designSpecStore || {}).find(k => cleanDesignName(k) === selectedClean);
+        let matchedDesignSpec = designSpecKey ? designSpecStore[designSpecKey] : {};
+        activeDesignObj.weaveType = masterMatch?.weaveType || matchedDesignSpec?.weaveType ||
+            sourceObj?.weaveType || (activeDesignObj.type !== "custom" ? activeDesignObj.type : "");
+        activeDesignObj.fabricType = activeDesignObj.weaveType ||
+            (activeDesignObj.fabricType && activeDesignObj.fabricType !== "custom" ? activeDesignObj.fabricType : "") ||
+            (activeDesignObj.type !== "custom" ? activeDesignObj.type : "Plain");
+        activeDesignObj.finishReed = activeDesignObj.finishReed || masterMatch?.finishReed ||
+            masterMatch?.finishedReed || matchedDesignSpec?.finishReed || matchedDesignSpec?.finishedReed || "";
+        activeDesignObj.finishPick = activeDesignObj.finishPick || masterMatch?.finishPick ||
+            masterMatch?.finishedPick || matchedDesignSpec?.finishPick || matchedDesignSpec?.finishedPick || "";
+
         let matrixToUse = dentDrawMatch?.customMatrix || masterMatch?.customMatrix || sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph || sourceObj.graphGrid || sourceObj.graphMatrix;
         if(matrixToUse && Array.isArray(matrixToUse) && matrixToUse.length > 0) {
             weavePatterns.custom = JSON.parse(JSON.stringify(matrixToUse));
@@ -2079,7 +2094,10 @@ let drawFramePending = new Set();
 let doubleClothView = "layers";
 
 function isDoubleClothSimulation(){
-    const raw = String(activeDesignObj?.fabricType || activeDesignObj?.type || activeDesignObj?.weaveType || "").trim().toLowerCase();
+    // Prefer the saved fabric construction. The graph editor's "custom" type
+    // describes its draft matrix and must not override Double Cloth.
+    const raw = String(activeDesignObj?.fabricType || activeDesignObj?.weaveType ||
+        (activeDesignObj?.type !== "custom" ? activeDesignObj?.type : "") || "").trim().toLowerCase();
     return raw.includes("double cloth") || raw.includes("double-cloth") || raw === "double";
 }
 
@@ -2288,24 +2306,42 @@ function draw3DWeave(layerMode = "all"){
 
         const realWarpLength = warp.length; 
         const realWeftLength = weft.length;
+        const topEnds = Math.ceil(realWarpLength / 2);
+        const bottomEnds = Math.floor(realWarpLength / 2);
+        const topPicks = Math.ceil(realWeftLength / 2);
+        const bottomPicks = Math.floor(realWeftLength / 2);
         if(isDoubleClothSimulation()){
             const topLabel = $("doubleTopPanel")?.firstElementChild;
             const bottomLabel = $("doubleBottomPanel")?.firstElementChild;
-            if(topLabel) topLabel.textContent = `TOP CLOTH – ${Math.ceil(realWarpLength/2)} ENDS / ${Math.ceil(realWeftLength/2)} PICKS (மேல்துணி)`;
-            if(bottomLabel) bottomLabel.textContent = `BOTTOM CLOTH – ${Math.floor(realWarpLength/2)} ENDS / ${Math.floor(realWeftLength/2)} PICKS (கீழ்த்துணி)`;
+            if(topLabel) topLabel.textContent = `TOP CLOTH – ${topEnds} ENDS / ${topPicks} PICKS (மேல்துணி)`;
+            if(bottomLabel) bottomLabel.textContent = `BOTTOM CLOTH – ${bottomEnds} ENDS / ${bottomPicks} PICKS (கீழ்த்துணி)`;
         }
-        
-        let reed = parseFloat(activeDesignObj?.finishedReed || activeDesignObj?.reed || activeDesignObj?.reedCount);
-        let pick = parseFloat(activeDesignObj?.pick || activeDesignObj?.onloomPick || activeDesignObj?.finishedPick || activeDesignObj?.finishPick || activeDesignObj?.weftPick || activeDesignObj?.pickCount);
-        if(!isFinite(reed) || reed <= 0) reed = 80; if(!isFinite(pick) || pick <= 0) pick = 74;
-        
-        const physW_mm = (realWarpLength / reed) * 25.4; 
-        const physH_mm = (realWeftLength / pick) * 25.4;
-        
-        const singleWarpVal = baseWarp.length;
-        const singleWeftVal = baseWeft.length;
-        singleW_mm = (singleWarpVal / reed) * 25.4;
-        singleH_mm = (singleWeftVal / pick) * 25.4;
+
+        // Use FINISHED reed/pick from Warp Entry / Design Specs first.
+        // For each Double Cloth layer, split both the measured ends/picks and
+        // the finished reed/pick density in half before converting to cm.
+        let reed = parseFloat(activeDesignObj?.finishReed || activeDesignObj?.finishedReed ||
+            activeDesignObj?.reed || activeDesignObj?.reedCount || activeDesignObj?.onloomReed);
+        let pick = parseFloat(activeDesignObj?.finishPick || activeDesignObj?.finishedPick ||
+            activeDesignObj?.pick || activeDesignObj?.onloomPick || activeDesignObj?.weftPick || activeDesignObj?.pickCount);
+        if(!isFinite(reed) || reed <= 0) reed = 80;
+        if(!isFinite(pick) || pick <= 0) pick = 74;
+
+        const isSeparateLayer = isDoubleClothSimulation() && (renderKey === "top" || renderKey === "bottom");
+        const measuredEnds = renderKey === "bottom" ? bottomEnds : topEnds;
+        const measuredPicks = renderKey === "bottom" ? bottomPicks : topPicks;
+        const scaleEnds = isSeparateLayer ? measuredEnds : realWarpLength;
+        const scalePicks = isSeparateLayer ? measuredPicks : realWeftLength;
+        const scaleReed = isSeparateLayer ? reed / 2 : reed;
+        const scalePick = isSeparateLayer ? pick / 2 : pick;
+
+        const physW_mm = (scaleEnds / Math.max(scaleReed, 0.0001)) * 25.4;
+        const physH_mm = (scalePicks / Math.max(scalePick, 0.0001)) * 25.4;
+
+        const singleWarpVal = isSeparateLayer ? measuredEnds : baseWarp.length;
+        const singleWeftVal = isSeparateLayer ? measuredPicks : baseWeft.length;
+        singleW_mm = (singleWarpVal / Math.max(scaleReed, 0.0001)) * 25.4;
+        singleH_mm = (singleWeftVal / Math.max(scalePick, 0.0001)) * 25.4;
         singleW_cm = singleW_mm / 10;
         singleH_cm = singleH_mm / 10;
         const physW_cm = physW_mm / 10;
