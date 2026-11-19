@@ -738,26 +738,30 @@
                 border-right: none !important;
             }
 
-            /* PRINT FIX: keep both pattern columns side-by-side on each A4 page */
             .print-flex-row {
-                display: grid !important;
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                width: 100% !important;
                 gap: 8px !important;
-                align-items: start !important;
-                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                align-items: flex-start !important;
+                justify-content: space-between !important;
+                background: #FFFFFF !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
 
-            .print-flex-row > .print-col-box {
-                display: block !important;
-                width: 100% !important;
+            .print-col-box {
+                flex: 1 1 0 !important;
+                width: 50% !important;
                 min-width: 0 !important;
-                max-width: 100% !important;
-                flex: none !important;
-            }
-
-            .print-flex-row table {
-                width: 100% !important;
-                table-layout: fixed !important;
+                max-width: 50% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #FFFFFF !important;
+                page-break-inside: auto;
             }
 
             #previewContent,
@@ -921,6 +925,7 @@
                     <option value="Plain"></option>
                     <option value="Twill"></option>
                     <option value="Dobby"></option>
+                    <option value="Double Cloth"></option>
                     <option value="Seersucker"></option>
                 </datalist>
             </div>
@@ -951,21 +956,6 @@
                 class="btn-bulk-change"
                 onclick="applyBulkColorChange()">
                 Change Color
-            </button>
-
-            <label>🔢 Bulk Count Changer:</label>
-            <select id="bulkOldCount">
-                <option value="">Select Old Count</option>
-            </select>
-            <label>To ➔</label>
-            <input
-                type="text"
-                id="bulkNewCount"
-                placeholder="Type New Count">
-            <button
-                class="btn-bulk-change"
-                onclick="applyBulkCountChange()">
-                Change Count
             </button>
 
         </div>
@@ -1785,7 +1775,7 @@ function loadWeftDesignData() {
     ) || 0;
 
     let autoWeftWidth = onloomWidth > 0 ? (onloomWidth + 3).toFixed(2) : '';
-    let autoPick = onloomPick > 0 ? (onloomPick - 4) : '';
+    let autoPick = onloomPick > 0 ? onloomPick : '';
 
     let resolvedWeft1 =
         sp.weftCount ||
@@ -1896,7 +1886,6 @@ function loadWeftDesignData() {
     updateLineNumbers();
     calculateWeftValues();
     refreshBulkColorDropdown();
-    refreshBulkCountDropdown();
 }
 
 
@@ -1916,7 +1905,6 @@ function loadDefaultRow() {
     addWeftLine();
 
     refreshBulkColorDropdown();
-    refreshBulkCountDropdown();
 }
 
 
@@ -2227,71 +2215,6 @@ function refreshBulkColorDropdown() {
 }
 
 
-function refreshBulkCountDropdown() {
-
-    const countsSet = new Set();
-
-    document
-        .querySelectorAll('.inp-count')
-        .forEach(inp => {
-            const value = inp.value.trim();
-            if (value) countsSet.add(value);
-        });
-
-    const select = document.getElementById('bulkOldCount');
-    if (!select) return;
-
-    const previousValue = select.value;
-    select.innerHTML = '<option value="">Select Old Count</option>';
-
-    countsSet.forEach(count => {
-        const option = document.createElement('option');
-        option.value = count;
-        option.textContent = count;
-        select.appendChild(option);
-    });
-
-    if (countsSet.has(previousValue)) select.value = previousValue;
-}
-
-
-function applyBulkCountChange() {
-
-    const oldCount = document.getElementById('bulkOldCount').value;
-    const newCount = document.getElementById('bulkNewCount').value.trim();
-
-    if (!oldCount || !newCount) {
-        alert('Please select the Old Count and type the New Count!');
-        return;
-    }
-
-    if (!confirm(`Are you sure you want to change all '${oldCount}' counts to '${newCount}'?`)) {
-        return;
-    }
-
-    let changedCount = 0;
-
-    document.querySelectorAll('.inp-count').forEach(inp => {
-        if (inp.value.trim() === oldCount) {
-            inp.value = newCount;
-            changedCount++;
-        }
-    });
-
-    // Keep the default Weft 1 count in sync so newly added rows use the new count.
-    const defaultWeftCount = document.getElementById('infoWeft1');
-    if (defaultWeftCount && defaultWeftCount.value.trim() === oldCount) {
-        defaultWeftCount.value = newCount;
-    }
-
-    document.getElementById('bulkOldCount').value = '';
-    document.getElementById('bulkNewCount').value = '';
-    refreshBulkCountDropdown();
-
-    alert(`${changedCount} rows updated successfully! ✅`);
-}
-
-
 function applyBulkColorChange() {
 
     let oldColor =
@@ -2435,13 +2358,6 @@ function addWeftLine(
     );
 
     row.querySelector(
-        '.inp-count'
-    ).addEventListener(
-        'blur',
-        refreshBulkCountDropdown
-    );
-
-    row.querySelector(
         '.inp-picks'
     ).addEventListener(
         'keydown',
@@ -2536,7 +2452,6 @@ function addWeftLine(
             updateLineNumbers();
             calculateWeftValues();
             refreshBulkColorDropdown();
-            refreshBulkCountDropdown();
         }
     );
 
@@ -2558,7 +2473,6 @@ function addWeftLine(
     updateLineNumbers();
     calculateWeftValues();
     refreshBulkColorDropdown();
-    refreshBulkCountDropdown();
 }
 
 
@@ -2749,49 +2663,6 @@ function reverseWeftEntries() {
    RANGE VALIDATION
 ============================================================ */
 
-/* ===== NESTED RANGE (BRACKET) HELPERS ===== */
-function buildRangeLayout(lineCount, ranges) {
-    const valid = [];
-    (Array.isArray(ranges) ? ranges : []).forEach(function (r) {
-        const st = parseInt(r.start), en = Math.min(parseInt(r.end), lineCount), set = parseFloat(r.set);
-        if (st >= 1 && en >= st && set > 0) valid.push({ start: st, end: en, set: set });
-    });
-    valid.sort(function (a, b) { return a.start - b.start || b.end - a.end; });
-    const nodes = [], stack = [], ignored = [];
-    valid.forEach(function (r) {
-        while (stack.length && r.start > stack[stack.length - 1].end) stack.pop();
-        const top = stack.length ? stack[stack.length - 1] : null;
-        if (top && (r.end > top.end || (r.start === top.start && r.end === top.end))) { ignored.push(r); return; }
-        r.parent = top; r.children = [];
-        r.depth = top ? top.depth + 1 : 0;
-        r.outerMult = top ? top.outerMult * top.set : 1;
-        if (top) top.children.push(r);
-        nodes.push(r); stack.push(r);
-    });
-    const mult = [];
-    for (let i = 0; i < lineCount; i++) mult.push(1);
-    nodes.forEach(function (n) { for (let i = n.start - 1; i <= n.end - 1; i++) mult[i] *= n.set; });
-    let levels = 1;
-    nodes.forEach(function (n) { if (n.depth + 1 > levels) levels = n.depth + 1; });
-    return { nodes: nodes, ignored: ignored, mult: mult, levels: levels };
-}
-
-function rangeNodeTotal(node, base, mult) {
-    let sum = 0;
-    for (let i = node.start - 1; i <= node.end - 1; i++) sum += (base[i] || 0) * mult[i];
-    return Math.round((sum / node.outerMult) * 100) / 100;
-}
-
-function weftBracketCell(node, rowsCount, total) {
-    const label = node.parent
-        ? 'X ' + node.set
-        : 'X ' + node.set + ' = <span style="color:#D97706;">' + total + '</span>';
-    return '<td rowspan="' + rowsCount + '" style="position:relative;vertical-align:middle;text-align:left;white-space:nowrap;font-weight:700;font-size:11px;color:#1E2B23;padding:0 6px 0 0;border-bottom:1px solid #E2E8E2;">'
-        + '<div style="position:absolute;left:4px;top:4px;bottom:4px;width:7px;border:1.5px solid #4A7C59;border-left:none;border-radius:0 7px 7px 0;"></div>'
-        + '<div style="position:absolute;left:11px;top:50%;width:5px;border-top:1.5px solid #4A7C59;"></div>'
-        + '<div style="margin-left:22px;">' + label + '</div></td>';
-}
-
 function getValidRanges() {
 
     let ranges = [];
@@ -2903,18 +2774,55 @@ function calculateWeftValues() {
 
     let totalPatternPicks = 0;
 
-    let calcLayout =
-        buildRangeLayout(
-            lines.length,
-            ranges
-        );
+    let i = 0;
 
-    lines.forEach(
-        (v, idx) => {
+    while (
+        i < lines.length
+    ) {
+
+        let currentLine =
+            i + 1;
+
+        let range =
+            ranges.find(
+                r =>
+                    r.start ===
+                    currentLine
+            );
+
+        if (
+            range &&
+            range.end <= lines.length
+        ) {
+
+            let blockPicks = 0;
+
+            for (
+                let j =
+                    range.start;
+                j <= range.end;
+                j++
+            ) {
+
+                blockPicks +=
+                    lines[j - 1] || 0;
+            }
+
             totalPatternPicks +=
-                v * calcLayout.mult[idx];
+                blockPicks *
+                range.set;
+
+            i =
+                range.end;
+
+        } else {
+
+            totalPatternPicks +=
+                lines[i] || 0;
+
+            i++;
         }
-    );
+    }
 
     document.getElementById(
         'displayTotalPicks'
@@ -3058,21 +2966,33 @@ function validateRanges(
     }
 
 
-    let nestCheck =
-        buildRangeLayout(
-            lineCount,
-            ranges
-        );
+    for (
+        let i = 0;
+        i < ranges.length;
+        i++
+    ) {
 
-    if (nestCheck.ignored.length > 0) {
+        for (
+            let j = i + 1;
+            j < ranges.length;
+            j++
+        ) {
 
-        let bad = nestCheck.ignored[0];
+            let a = ranges[i];
+            let b = ranges[j];
 
-        alert(
-            `Pattern Set overlap detected!\n\nSet: ${bad.start} - ${bad.end}\n\nInner Set, Outer Set-kulle muzhusa irukkanum (partial overlap / same range kudaadhu).`
-        );
+            if (
+                a.start <= b.end &&
+                b.start <= a.end
+            ) {
 
-        return false;
+                alert(
+                    `Pattern Set overlap detected!\n\nSet 1: ${a.start} - ${a.end}\nSet 2: ${b.start} - ${b.end}\n\nOverlap இல்லாமல் Set கொடுக்கவும்.`
+                );
+
+                return false;
+            }
+        }
     }
 
     return true;
@@ -3819,24 +3739,6 @@ function previewWeftPattern() {
 
     let i = 0;
 
-    let layout =
-        buildRangeLayout(
-            weftLines.length,
-            ranges
-        );
-
-    let lineVals =
-        weftLines.map(
-            l => parseFloat(l.picks) || 0
-        );
-
-    lineVals.forEach(
-        (v, idx) => {
-            totalPicksPattern +=
-                v * layout.mult[idx];
-        }
-    );
-
     let tdStyle =
         "padding:6px 8px;border-bottom:1px solid #E2E8E2;text-align:center;color:#1E2B23;font-size:11px;";
 
@@ -3846,105 +3748,242 @@ function previewWeftPattern() {
     let tdStyleLast =
         "padding:6px 8px;border-bottom:1px solid #E2E8E2;vertical-align:middle;color:#1E2B23;text-align:left;padding-left:10px;font-size:16px;";
 
-    function bracketCellsFor(idx) {
-
-        let cells = '';
-
-        for (let c = 0; c < layout.levels; c++) {
-
-            let depth = layout.levels - 1 - c;
-
-            let starting =
-                layout.nodes.find(
-                    n => n.depth === depth && n.start - 1 === idx
-                );
-
-            if (starting) {
-
-                cells +=
-                    weftBracketCell(
-                        starting,
-                        starting.end - starting.start + 1,
-                        rangeNodeTotal(
-                            starting,
-                            lineVals,
-                            layout.mult
-                        )
-                    );
-
-                continue;
-            }
-
-            let covered =
-                layout.nodes.some(
-                    n => n.depth === depth && n.start - 1 < idx && n.end - 1 >= idx
-                );
-
-            if (!covered) {
-                cells += `<td style="${tdStyleLast}"></td>`;
-            }
-        }
-
-        return cells;
-    }
-
-    function rowHtmlFor(idx) {
-
-        let item = weftLines[idx];
-
-        let colorTamil =
-            typeof translateColorToTamil === 'function'
-                ? translateColorToTamil(item.color)
-                : item.color;
-
-        return `
-
-            <tr>
-
-                <td style="${tdStyle}font-weight:700;color:#4A554A;">
-                    ${idx + 1}
-                </td>
-
-                <td style="${tdStyle}">
-                    ${escapeHTML(item.count || '-')}
-                </td>
-
-                <td style="${tdStyleColor}">
-                    ${escapeHTML(colorTamil || '-')}
-                </td>
-
-                <td style="${tdStyle}font-weight:bold;">
-                    ${item.picks}
-                </td>
-
-                ${bracketCellsFor(idx)}
-
-            </tr>
-        `;
-    }
-
     while (
         i < weftLines.length
     ) {
 
-        let topNode =
-            layout.nodes.find(
-                n => !n.parent && n.start - 1 === i
-            );
+        let start =
+            i + 1;
 
-        let endIdx =
-            topNode
-                ? topNode.end - 1
-                : i;
+        let range =
+            ranges.find(
+                r =>
+                    r.start ===
+                    start
+            );
 
         let blockHtml = '';
 
-        for (let idx = i; idx <= endIdx; idx++) {
-            blockHtml += rowHtmlFor(idx);
-        }
+        let blockLineCount = 0;
 
-        let blockLineCount =
-            endIdx - i + 1;
+        if (
+            range &&
+            range.end >=
+            range.start
+        ) {
+
+            let end =
+                Math.min(
+                    range.end,
+                    weftLines.length
+                );
+
+            let set =
+                range.set;
+
+            let blockLines = [];
+
+            let blockPicks = 0;
+
+            for (
+                let j =
+                    start - 1;
+                j < end;
+                j++
+            ) {
+
+                if (
+                    weftLines[j]
+                ) {
+
+                    let lineItem =
+                        Object.assign(
+                            {},
+                            weftLines[j]
+                        );
+
+                    lineItem.lineNo =
+                        j + 1;
+
+                    blockLines.push(
+                        lineItem
+                    );
+
+                    blockPicks +=
+                        parseFloat(
+                            weftLines[j].picks
+                        ) || 0;
+                }
+            }
+
+            let total =
+                blockPicks * set;
+
+            totalPicksPattern +=
+                total;
+
+            blockLines.forEach(
+                (item, index) => {
+
+                    let colorTamil =
+                        typeof translateColorToTamil ===
+                        'function'
+
+                            ? translateColorToTamil(
+                                item.color
+                            )
+
+                            : item.color;
+
+                    blockHtml += `
+
+                        <tr>
+
+                            <td
+                                style="${tdStyle}font-weight:700;color:#4A554A;">
+                                ${item.lineNo}
+                            </td>
+
+                            <td style="${tdStyle}">
+                                ${escapeHTML(
+                                    item.count ||
+                                    '-'
+                                )}
+                            </td>
+
+                            <td style="${tdStyleColor}">
+                                ${escapeHTML(
+                                    colorTamil ||
+                                    '-'
+                                )}
+                            </td>
+
+                            <td
+                                style="${tdStyle}font-weight:bold;">
+                                ${item.picks}
+                            </td>
+                    `;
+
+                    if (
+                        index === 0
+                    ) {
+
+                        blockHtml += `
+
+                            <td
+                                rowspan="${blockLines.length}"
+                                style="${tdStyleLast}">
+
+                                <div
+                                    style="
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:flex-start;
+                                        gap:4px;
+                                        font-weight:700;
+                                    ">
+
+                                    <span
+                                        style="
+                                            font-size:${Math.max(
+                                                blockLines.length * 18,
+                                                20
+                                            )}px;
+                                            font-weight:300;
+                                            line-height:0.5;
+                                            display:inline-block;
+                                        ">
+                                        }
+                                    </span>
+
+                                    <span>
+                                        X ${set}
+                                        =
+                                        <span
+                                            style="color:#D97706">
+                                            ${total}
+                                        </span>
+                                    </span>
+
+                                </div>
+
+                            </td>
+                        `;
+                    }
+
+                    blockHtml +=
+                        `</tr>`;
+                }
+            );
+
+            i = end;
+
+            blockLineCount =
+                blockLines.length;
+
+        } else {
+
+            let item =
+                Object.assign(
+                    {},
+                    weftLines[i]
+                );
+
+            item.lineNo =
+                i + 1;
+
+            totalPicksPattern +=
+                parseFloat(
+                    item.picks
+                ) || 0;
+
+            let colorTamil =
+                typeof translateColorToTamil ===
+                'function'
+
+                    ? translateColorToTamil(
+                        item.color
+                    )
+
+                    : item.color;
+
+            blockHtml = `
+
+                <tr>
+
+                    <td
+                        style="${tdStyle}font-weight:700;color:#4A554A;">
+                        ${item.lineNo}
+                    </td>
+
+                    <td style="${tdStyle}">
+                        ${escapeHTML(
+                            item.count ||
+                            '-'
+                        )}
+                    </td>
+
+                    <td style="${tdStyleColor}">
+                        ${escapeHTML(
+                            colorTamil ||
+                            '-'
+                        )}
+                    </td>
+
+                    <td
+                        style="${tdStyle}font-weight:bold;">
+                        ${item.picks}
+                    </td>
+
+                    <td style="${tdStyleLast}"></td>
+
+                </tr>
+            `;
+
+            i++;
+
+            blockLineCount = 1;
+        }
 
         if (
             currentLinesInCol1 +
@@ -3963,8 +4002,6 @@ function previewWeftPattern() {
             col2Html +=
                 blockHtml;
         }
-
-        i = endIdx + 1;
     }
 
     let html =
@@ -4008,7 +4045,7 @@ function previewWeftPattern() {
                     text-transform:uppercase;
                     font-size:10px;
                     border-bottom:2px solid #4A7C59;
-                    width:18%;
+                    width:25%;
                 ">
                 Colour
             </th>
@@ -4027,7 +4064,6 @@ function previewWeftPattern() {
             </th>
 
             <th
-                colspan="${layout.levels}"
                 style="
                     padding:8px;
                     text-align:left;
@@ -4036,7 +4072,7 @@ function previewWeftPattern() {
                     text-transform:uppercase;
                     font-size:10px;
                     border-bottom:2px solid #4A7C59;
-                    width:42%;
+                    width:35%;
                 ">
                 Set
             </th>
