@@ -1262,6 +1262,18 @@ function checkUserPermission() {
    PAGE LOAD
 ============================================================ */
 
+// Refresh the Design Number dropdown after cloud data has been synced locally.
+// This fixes the timing issue where the page initially reads local storage
+// before the first online Supabase sync has completed.
+window.addEventListener('erp-cloud-synced', function () {
+    const designSelect = document.getElementById('designNo');
+    if (!designSelect || !window.StorageDB) return;
+
+    // loadDesignDropdown() reads the locally cached design lists and restores
+    // selected_design_number, then loads the selected design as usual.
+    loadDesignDropdown();
+});
+
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
 
