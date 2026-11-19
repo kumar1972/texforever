@@ -2346,13 +2346,18 @@ function draw3DWeave(layerMode = "all"){
         const scaleReed = isSeparateLayer ? reed / 2 : reed;
         const scalePick = isSeparateLayer ? pick / 2 : pick;
 
-        const physW_mm = (scaleEnds / Math.max(scaleReed, 0.0001)) * 25.4;
-        const physH_mm = (scalePicks / Math.max(scalePick, 0.0001)) * 25.4;
+        // Double Cloth layer scale: the layer-specific finished reed/pick
+        // values are expressed as ends/cm and picks/cm. Do not apply the
+        // single-cloth inch conversion (25.4 mm), which inflated each layer.
+        // Keep the existing single-cloth and combined-view scale unchanged.
+        const layerScaleFactor = isSeparateLayer ? 10 : 25.4;
+        const physW_mm = (scaleEnds / Math.max(scaleReed, 0.0001)) * layerScaleFactor;
+        const physH_mm = (scalePicks / Math.max(scalePick, 0.0001)) * layerScaleFactor;
 
         const singleWarpVal = isSeparateLayer ? measuredEnds : baseWarp.length;
         const singleWeftVal = isSeparateLayer ? measuredPicks : baseWeft.length;
-        singleW_mm = (singleWarpVal / Math.max(scaleReed, 0.0001)) * 25.4;
-        singleH_mm = (singleWeftVal / Math.max(scalePick, 0.0001)) * 25.4;
+        singleW_mm = (singleWarpVal / Math.max(scaleReed, 0.0001)) * layerScaleFactor;
+        singleH_mm = (singleWeftVal / Math.max(scalePick, 0.0001)) * layerScaleFactor;
         singleW_cm = singleW_mm / 10;
         singleH_cm = singleH_mm / 10;
         const physW_cm = physW_mm / 10;
