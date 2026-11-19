@@ -172,6 +172,19 @@
             box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
         }
 
+        /* Keep the native Weave picker tappable in Android offline mode. */
+        #infoWeave {
+            display: block;
+            position: relative;
+            z-index: 2;
+            pointer-events: auto;
+            touch-action: manipulation;
+            -webkit-appearance: menulist;
+            appearance: auto;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
         .input-group-btn {
             display: flex;
             gap: 10px;
@@ -1261,18 +1274,6 @@ function checkUserPermission() {
 /* ============================================================
    PAGE LOAD
 ============================================================ */
-
-// Refresh the Design Number dropdown after cloud data has been synced locally.
-// This fixes the timing issue where the page initially reads local storage
-// before the first online Supabase sync has completed.
-window.addEventListener('erp-cloud-synced', function () {
-    const designSelect = document.getElementById('designNo');
-    if (!designSelect || !window.StorageDB) return;
-
-    // loadDesignDropdown() reads the locally cached design lists and restores
-    // selected_design_number, then loads the selected design as usual.
-    loadDesignDropdown();
-});
 
 document.addEventListener('DOMContentLoaded', async function() {
     if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
