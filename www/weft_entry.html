@@ -920,14 +920,15 @@
 
             <div class="form-group">
                 <label>Weave</label>
-                <input type="text" id="infoWeave" list="fabricTypeList" value="Plain" placeholder="Select or Type">
-                <datalist id="fabricTypeList">
-                    <option value="Plain"></option>
-                    <option value="Twill"></option>
-                    <option value="Dobby"></option>
-                    <option value="Double Cloth"></option>
-                    <option value="Seersucker"></option>
-                </datalist>
+                <select id="infoWeave">
+                    <option value="">Select Weave</option>
+                    <option value="Plain">Plain</option>
+                    <option value="Twill">Twill</option>
+                    <option value="Dobby">Dobby</option>
+                    <option value="Dobby check">Dobby check</option>
+                    <option value="Double Cloth">Double Cloth</option>
+                    <option value="Seersucker">Seersucker</option>
+                </select>
             </div>
 
         </div>
@@ -1597,6 +1598,19 @@ function loadDesignDropdown() {
    LOAD DESIGN DATA
 ============================================================ */
 
+function setWeftWeaveValue(value) {
+    const select = document.getElementById('infoWeave');
+    if (!select) return;
+    const selected = String(value || '');
+    if (selected && !Array.from(select.options).some(option => option.value === selected)) {
+        const option = document.createElement('option');
+        option.value = selected;
+        option.textContent = selected;
+        select.appendChild(option);
+    }
+    select.value = selected;
+}
+
 function loadWeftDesignData() {
 
     let select =
@@ -1851,7 +1865,7 @@ function loadWeftDesignData() {
         document.getElementById('infoWeft2').value = foundMaster.weft2 || resolvedWeft2;
         document.getElementById('infoPick').value = foundMaster.weftPick || autoPick;
         document.getElementById('infoWeftMtrs').value = foundMaster.weftMtrs || sp.weftMtrs || calculatedWeftMtrs;
-        document.getElementById('infoWeave').value = foundMaster.weaveType || resolvedWeave;
+        setWeftWeaveValue(foundMaster.weaveType || resolvedWeave);
 
         effectiveLines.forEach(l => {
             addWeftLine(
@@ -1878,7 +1892,7 @@ function loadWeftDesignData() {
         document.getElementById('infoWeft2').value = resolvedWeft2;
         document.getElementById('infoPick').value = autoPick;
         document.getElementById('infoWeftMtrs').value = sp.weftMtrs || calculatedWeftMtrs;
-        document.getElementById('infoWeave').value = resolvedWeave;
+        setWeftWeaveValue(resolvedWeave);
 
         loadDefaultRow();
     }
