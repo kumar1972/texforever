@@ -1171,7 +1171,8 @@ function normLine(x, warp) {
         ply: yarnInfo.ply, 
         thicknessMultiplier: yarnInfo.thicknessMultiplier, 
         diameter_mm: yarnInfo.diameter_mm, 
-        shadeTag: shadeTag 
+        shadeTag: shadeTag,
+        beam: String(lowerX.beam || lowerX.beamtype || lowerX.warpbeam || "").trim()
     };
 }
 function sanitizeDesignObj(d) {
@@ -1338,7 +1339,7 @@ function renderUIWithData(w=[], f=[]) {
                     ${countPrefix}<span class="col-name-label">${rawOrigName}</span>${shadeTagBadge}
                 </div>
                 ${pantoneRowHTML('warp', i+1)}
-                <input type="color" id="wC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" data-seer="${x.isSeer?'1':'0'}" style="display:none;">
+                <input type="color" id="wC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" data-seer="${x.isSeer?'1':'0'}" data-beam="${escapeColourText(x.beam || 'Ground')}" style="display:none;">
                 <input type="number" id="wE${i+1}" value="${x.amount||''}" min="0" inputmode="numeric" oninput="updateYarnSummary('warp'); autoRefresh3D();">
                 <div class="set-box" style="display:none;">
                     <input type="number" id="wSpan${i+1}" value="${spanVal}">
@@ -2205,7 +2206,7 @@ function draw3DWeave(layerMode = "all"){
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, W, H); 
         
-        let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = [];
+        let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = []; let baseWarpBeamMap = [];
         while(w_idx <= currentWarpCount){
             const co = $("wC"+w_idx); const e = $("wE"+w_idx); const sInp = $("wSpan"+w_idx); const rInp = $("wRep"+w_idx);
             if(!co || !e){ w_idx++; continue; }
@@ -2222,7 +2223,7 @@ function draw3DWeave(layerMode = "all"){
             const rgbColor = hexToRgb(hexVal);
             
             if(span > 1 && repeat > 1){
-                const setSequence = []; const setSeerSeq = []; const setInfoSeq = [];
+                const setSequence = []; const setSeerSeq = []; const setInfoSeq = []; const setBeamSeq = [];
                 for(let s = 0; s < span; s++){
                     const currIdx = w_idx + s; if(currIdx > currentWarpCount) break;
                     const rCo = $("wC"+currIdx); const rE = $("wE"+currIdx);
@@ -2235,21 +2236,27 @@ function draw3DWeave(layerMode = "all"){
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, rOrig, rHex);
                         const rIsSeer = rInfo.isSpecialSeer || isSeersuckerThread(rHex, rOrig, rCnt);
-                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setSeerSeq.push(rIsSeer); setInfoSeq.push(rInfo); }
+                        const rBeam = String(rCo.getAttribute("data-beam") || "").trim().toLowerCase();
+                        const rLayer = !rBeam ? "legacy" : ((rBeam.includes("top") || rBeam.includes("dobby") || rBeam.includes("double") || rBeam.includes("seer")) ? "top" : (rBeam.includes("ground") ? "bottom" : "legacy"));
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setSeerSeq.push(rIsSeer); setInfoSeq.push(rInfo); setBeamSeq.push(rLayer); }
                     }
                 }
                 for(let rep = 0; rep < repeat; rep++){ 
                     baseWarp.push(...setSequence); 
                     warpSeerMap.push(...setSeerSeq); 
                     baseWarpYarnInfo.push(...setInfoSeq);
+                    baseWarpBeamMap.push(...setBeamSeq);
                 }
                 w_idx += span;
             } else {
                 if(n > 0){ 
+                    const beamValue = String(co.getAttribute("data-beam") || "").trim().toLowerCase();
+                    const beamLayer = !beamValue ? "legacy" : ((beamValue.includes("top") || beamValue.includes("dobby") || beamValue.includes("double") || beamValue.includes("seer")) ? "top" : (beamValue.includes("ground") ? "bottom" : "legacy"));
                     for(let j = 0; j < n; j++){ 
                         baseWarp.push(rgbColor); 
                         warpSeerMap.push(isSeer); 
                         baseWarpYarnInfo.push(yInfo);
+                        baseWarpBeamMap.push(beamLayer);
                     } 
                 }
                 w_idx++;
@@ -2304,21 +2311,23 @@ function draw3DWeave(layerMode = "all"){
         if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
         if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
         
-        let warp = []; let seerMap = []; let warpYarnInfos = [];
+        let warp = []; let seerMap = []; let warpYarnInfos = []; let warpBeamMap = [];
         let weft = []; let weftYarnInfos = [];
 
         for (let rep = 0; rep < simulationRepeatFactor; rep++) {
             warp.push(...baseWarp);
             seerMap.push(...warpSeerMap);
             warpYarnInfos.push(...baseWarpYarnInfo);
+            warpBeamMap.push(...baseWarpBeamMap);
             weft.push(...baseWeft);
             weftYarnInfos.push(...baseWeftYarnInfo);
         }
 
         const realWarpLength = warp.length; 
         const realWeftLength = weft.length;
-        const topEnds = Math.ceil(realWarpLength / 2);
-        const bottomEnds = Math.floor(realWarpLength / 2);
+        const hasBeamAssignments = warpBeamMap.some(v => v === "top" || v === "bottom");
+        const topEnds = hasBeamAssignments ? warpBeamMap.filter(v => v === "top").length : Math.ceil(realWarpLength / 2);
+        const bottomEnds = hasBeamAssignments ? warpBeamMap.filter(v => v === "bottom").length : Math.floor(realWarpLength / 2);
         const topPicks = Math.ceil(realWeftLength / 2);
         const bottomPicks = Math.floor(realWeftLength / 2);
         if(isDoubleClothSimulation()){
@@ -2428,12 +2437,15 @@ function draw3DWeave(layerMode = "all"){
         // but compress those selected ends into the full cloth width.
         let layerWarpPositions = warpPositions;
         if(renderKey === "top" || renderKey === "bottom"){
-            const parity = renderKey === "top" ? 0 : 1;
-            const selected = warpPositions.filter(wp => wp.colIndex < 0 || (wp.colIndex % 2) === parity);
+            const wantedLayer = renderKey;
+            const selected = hasBeamAssignments
+                ? warpPositions.filter(wp => wp.colIndex < 0 || warpBeamMap[wp.colIndex] === wantedLayer)
+                : warpPositions.filter(wp => wp.colIndex < 0 || (wp.colIndex % 2) === (wantedLayer === "top" ? 0 : 1));
             const firstSelectedX = selected.find(wp => !wp.isEmpty)?.x ?? left;
+            const layerStretch = realWarpLength / Math.max(1, measuredEnds);
             layerWarpPositions = selected.map(wp=>{
-                if(wp.isEmpty) return {...wp, x: left + (wp.x - firstSelectedX) * 2, w: wp.w * 2};
-                return {...wp, x: left + (wp.x - firstSelectedX) * 2, w: wp.w * 2, baseW: (wp.baseW || wp.w) * 2};
+                if(wp.isEmpty) return {...wp, x: left + (wp.x - firstSelectedX) * layerStretch, w: wp.w * layerStretch};
+                return {...wp, x: left + (wp.x - firstSelectedX) * layerStretch, w: wp.w * layerStretch, baseW: (wp.baseW || wp.w) * layerStretch};
             });
         }
 
