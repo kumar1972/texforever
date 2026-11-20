@@ -170,7 +170,7 @@ function getPrintJobName(customContent, fallbackArea) {
   return heading || pageTitle || 'TEXFOREVER Print';
 }
 
-window.appPrint = async function (customContent) {
+window.appPrint = async function (customContent, explicitJobName) {
 
   const area = document.querySelector(
     '.main-card, .invoice-container, .print-area, #printable-section'
@@ -178,8 +178,20 @@ window.appPrint = async function (customContent) {
 
   const content = customContent || area.innerHTML;
 
-  // முக்கியமான FIX
-  const jobName = getPrintJobName(customContent, area);
+  // Prefer the explicit filename supplied by Design Sheet Print.
+  // printPreview() already passes the selected design number as argument 2.
+  // The previous version ignored that argument and Chrome used TEXFOREVER.
+  const explicitName = String(explicitJobName || '').trim();
+  const jobName = explicitName
+    ? explicitName
+        .replace(/^#\s*/, '')
+        .replace(/[\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, '_')
+    : getPrintJobName(customContent, area);
+
+  // Keep the parent page title and the isolated print document title identical.
+  // Chrome/Android PDF save dialogs use the print document title as the suggested filename.
+  document.title = jobName;
 
   const html = buildPrintHtml(jobName, content);
 
