@@ -1,3 +1,4 @@
+
 /**
  * TEXFOREVER - Universal Printer Utility
  * Windows (Electron) / Android APK (Capacitor) / Browser
@@ -64,14 +65,14 @@ function buildPrintHtml(jobName, content) {
       display:none !important;
     }
     .page-break{
-    display:block !important;
-    height:0 !important;
-    margin:0 !important;
-    padding:0 !important;
-    border:0 !important;
-    page-break-before:auto !important;
-    break-before:auto !important;
-}
+      display:block !important;
+      height:0 !important;
+      margin:0 !important;
+      padding:0 !important;
+      border:0 !important;
+      page-break-before:auto !important;
+      break-before:auto !important;
+    }
   `;
 
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
@@ -86,13 +87,10 @@ function buildPrintHtml(jobName, content) {
          '</div></div></div>' +
          '</body></html>';
 }
-// Print/PDF filename: current HTML page filename-ஐ முதலில் பயன்படுத்தும்.
+
+// Print/PDF filename
 function getPrintJobName(customContent, fallbackArea) {
 
-  // Page thaniya print peyar set panna (example: Design Number) - window.TEX_PRINT_JOB_NAME
-  if (window.TEX_PRINT_JOB_NAME) return String(window.TEX_PRINT_JOB_NAME);
-
-  // Dashboard-ல் இருந்து page open ஆனாலும், current page filename மாறாது.
   const file = (window.location.pathname.split('/').pop() || '')
     .replace(/\.html?$/i, '')
     .replace(/[_-]+/g, ' ')
@@ -102,13 +100,12 @@ function getPrintJobName(customContent, fallbackArea) {
     return file.replace(/\b\w/g, ch => ch.toUpperCase());
   }
 
-  // index.html போன்ற generic filename இருந்தால் page title பயன்படுத்தும்.
   const pageTitle = (document.title || '').trim();
+
   if (pageTitle && !/^dashboard(?:\s|$)/i.test(pageTitle)) {
     return pageTitle;
   }
 
-  // கடைசி fallback: print content heading.
   const selectors = [
     '.preview-title',
     '.card-header',
@@ -135,36 +132,28 @@ function getPrintJobName(customContent, fallbackArea) {
         if (value) return value;
       }
     }
+
     return '';
   }
 
   if (typeof customContent === 'string' && customContent.trim()) {
-    const parsed = new DOMParser().parseFromString(customContent, 'text/html');
+    const parsed = new DOMParser().parseFromString(
+      customContent,
+      'text/html'
+    );
+
     const heading = readHeading(parsed);
     if (heading) return heading;
   }
 
   const heading = readHeading(fallbackArea || document);
+
   return heading || pageTitle || 'TEXFOREVER Print';
 }
 
-// PDF save filename = print aagura PAGE oda peyar (top window title-um set pannum)
-function setPrintTitles(name) {
-  const saved = [];
-  [window, window.parent, window.top].forEach(function (w) {
-    try {
-      if (!w || !w.document) return;
-      if (saved.some(function (p) { return p.d === w.document; })) return;
-      saved.push({ d: w.document, t: w.document.title });
-      w.document.title = name;
-    } catch (e) {}
-  });
-  return function restoreTitles() {
-    saved.forEach(function (p) { try { p.d.title = p.t; } catch (e) {} });
-  };
-}
 
-window.appPrint = async function (customContent) {
+// MAIN PRINT FUNCTION
+window.appPrint = async function (customContent, customJobName) {
 
   const area = document.querySelector(
     '.main-card, .invoice-container, .print-area, #printable-section'
@@ -172,11 +161,14 @@ window.appPrint = async function (customContent) {
 
   const content = customContent || area.innerHTML;
 
-  // முக்கியமான FIX
-  const jobName = getPrintJobName(customContent, area);
+  // Custom Design Number takes priority
+  const jobName = (
+    typeof customJobName === 'string' && customJobName.trim()
+  )
+    ? customJobName.trim()
+    : getPrintJobName(customContent, area);
 
   const html = buildPrintHtml(jobName, content);
-  const restoreTitles = setPrintTitles(jobName);
 
   // 1. Windows desktop (Electron)
   if (window.desktopPrint) {
@@ -191,10 +183,10 @@ window.appPrint = async function (customContent) {
       alert('Print error: ' + e.message);
     }
 
-    restoreTitles();
     return;
   }
-    // 2. Android APK (Capacitor)
+
+  // 2. Android APK (Capacitor)
   const cap = window.Capacitor;
 
   if (
@@ -218,7 +210,6 @@ window.appPrint = async function (customContent) {
 
     }
 
-    restoreTitles();
     return;
   }
 
@@ -241,7 +232,7 @@ window.appPrint = async function (customContent) {
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
 
-    setTimeout(() => { iframe.remove(); restoreTitles(); }, 10000);
+    setTimeout(() => iframe.remove(), 1000);
 
   }, 500);
 };
@@ -306,15 +297,3 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
-
-// Page-la irundhu direct window.print() call panna-um page peyar PDF name-ah varum
-(function () {
-  let restore = null;
-  window.addEventListener('beforeprint', function () {
-    if (restore) return;
-    restore = setPrintTitles(getPrintJobName('', document));
-  });
-  window.addEventListener('afterprint', function () {
-    if (restore) { restore(); restore = null; }
-  });
-})();

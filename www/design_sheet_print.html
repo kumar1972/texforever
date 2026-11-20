@@ -2435,27 +2435,28 @@ function closePreviewModal(){
 
 function printPreview(){
 
-    // Use the selected design number as the suggested PDF/print filename.
+    // The design picker is searchable; its visible input is the reliable
+    // current selection, while the hidden select is kept as a fallback.
+    let visibleDesignInput = document.getElementById("designSearchInput");
     let designSelect = document.getElementById("designNumber");
-    let designNumber = designSelect && designSelect.value
-        ? designSelect.value.trim()
-        : (localStorage.getItem("selected_design_number") || "").trim();
 
-    if (designNumber) {
-        let safeDesignNumber = designNumber
-            .replace(/[\\\\/:*?"<>|]/g, "-")
-            .replace(/\\s+/g, "_");
-        document.title = safeDesignNumber;
-    }
+    let designNumber =
+        (visibleDesignInput && visibleDesignInput.value.trim()) ||
+        (designSelect && designSelect.value.trim()) ||
+        (localStorage.getItem("selected_design_number") || "").trim();
 
-    let content =
-        document.getElementById("previewContent");
+    let safeDesignNumber = designNumber
+        ? designNumber.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "_")
+        : "Design_Sheet_Print";
 
-    let html =
-        content ? content.innerHTML : "";
+    // Keep the browser page title in sync, and explicitly pass the PDF job name.
+    document.title = safeDesignNumber;
 
-    if(window.appPrint){
-        window.appPrint(html || undefined);
+    let content = document.getElementById("previewContent");
+    let html = content ? content.innerHTML : "";
+
+    if (window.appPrint) {
+        window.appPrint(html || undefined, safeDesignNumber);
     } else {
         window.print();
     }
