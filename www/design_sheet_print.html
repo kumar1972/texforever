@@ -2461,6 +2461,26 @@ function printPreview(){
     document.title = jobName;
     window.TEX_PRINT_JOB_NAME = jobName;
 
+    // This page opens inside the dashboard iframe, so the Save dialog takes
+    // the PARENT page title ("TEXFOREVER"). Set the parent/top title too,
+    // then restore it after printing.
+    let _parentDocs = [];
+    try {
+        [window.parent, window.top].forEach(function(w){
+            if (w && w !== window && _parentDocs.every(function(x){ return x.doc !== w.document; })) {
+                _parentDocs.push({ doc: w.document, old: w.document.title });
+                w.document.title = jobName;
+            }
+        });
+    } catch (e) {}
+    if (_parentDocs.length) {
+        setTimeout(function(){
+            _parentDocs.forEach(function(x){
+                try { x.doc.title = x.old; } catch (e) {}
+            });
+        }, 8000);
+    }
+
     let content = document.getElementById("previewContent");
     let html = content ? content.innerHTML : "";
 
