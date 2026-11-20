@@ -10,8 +10,6 @@
 <script src="https://www.gstatic.com/supabasejs/9.0.0/supabase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script src="printer.js"></script>
-<!-- Pre-Stock JS Link -->
-<script src="pre_stock.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
@@ -328,6 +326,7 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
                     <button onclick="copyFullGraph()" style="background:#F59E0B; color:#000;">📋 Copy Graph</button>
                     <button onclick="pasteFullGraph()" style="background:#10B981; color:#fff;">📋 Paste Graph</button>
                     <button onclick="saveGraphDataOnly()" style="background:#10B981; color:#fff;">💾 Save Graph</button>
+                    <button onclick="saveWeaveToLibrary()" style="background:#0F766E; color:#fff;">＋ Save to Weave Library</button>
                 </div>
                 
                 <div style="margin-bottom:10px; background:#F8FAF8; padding:10px; border-radius:8px; border:1px solid #E2E8E2;">
@@ -421,6 +420,213 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
     let allCloudDesigns = [];
     let activeDesignObj = null;
     let copiedColData = null;
+
+    // Unified weave library: built-in patterns + user-saved Pre-Stock designs.
+    // Uses the same Supabase/local key as the previous Pre-Stock editor for compatibility.
+    const PRE_STOCK_BITMAP_CLOUD_KEY = "pre_stock_bitmap_designs";
+    const preDefinedDesigns = (() => {
+        const designs = {};
+        const add = (key, name, shafts, formula, matrix, type) => {
+            designs[key] = { name, formula, matrix, category: type || "Advanced Weaves", shafts };
+        };
+        const twill = (n, warpUp) => Array.from({ length: n }, (_, r) =>
+            Array.from({ length: n }, (_, c) => ((c - r + n) % n) < warpUp ? 1 : 0)
+        );
+        const satin = (n, step) => Array.from({ length: n }, (_, r) =>
+            Array.from({ length: n }, (_, c) => c === ((r * step) % n) ? 1 : 0)
+        );
+        const brokenTwill = (n, warpUp) => {
+            const offsets = [0, 1, 2, 1, 0, n - 1, n - 2, n - 1];
+            return Array.from({ length: n }, (_, r) =>
+                Array.from({ length: n }, (_, c) =>
+                    ((c - offsets[r % offsets.length] + n) % n) < warpUp ? 1 : 0
+                )
+            );
+        };
+        const doubleCloth = (n, upperPickCount) => {
+            const topEnds = Math.floor(n / 2);
+            const bottomEnds = n - topEnds;
+            const matrix = [];
+            for (let r = 0; r < upperPickCount; r++) {
+                const row = new Array(n).fill(0);
+                for (let c = 0; c < topEnds; c++) {
+                    row[c] = ((c - r + topEnds) % topEnds) < Math.max(1, Math.floor(topEnds / 2)) ? 1 : 0;
+                }
+                // Periodic layer-interchange stitch: bottom warp binds to the upper weft.
+                row[topEnds + ((r * 2) % bottomEnds)] = 1;
+                matrix.push(row);
+            }
+            for (let r = 0; r < n - upperPickCount; r++) {
+                const row = new Array(n).fill(1);
+                for (let c = 0; c < topEnds; c++) row[c] = 1;
+                for (let c = 0; c < bottomEnds; c++) {
+                    row[topEnds + c] = ((c - r + bottomEnds) % bottomEnds) < Math.max(1, Math.floor(bottomEnds / 2)) ? 1 : 0;
+                }
+                // Complementary stitch point secures the lower layer.
+                row[(r * 2) % topEnds] = 0;
+                matrix.push(row);
+            }
+            return matrix;
+        };
+
+        // A conventional woven interlacement needs at least two independently controlled shafts.
+        // Two-shaft and higher structures are listed below; no misleading one-shaft weave is fabricated.
+        add("adv_02_plain", "02 Shaft | Balanced Plain Weave", 2, "(1-2)", [[1,0],[0,1]], "Foundation");
+        add("adv_02_basket", "02 Shaft | Extended Basket Rib", 2, "(1-4)", [[1,1],[1,1],[0,0],[0,0]], "Texture");
+
+        add("adv_03_twill", "03 Shaft | 2/1 Steep Twill", 3, "(1-3)", twill(3,2), "Twill");
+        add("adv_03_reverse", "03 Shaft | Reversed 1/2 Twill", 3, "(1-3)", twill(3,1), "Twill");
+
+        add("adv_04_twill", "04 Shaft | 2/2 Broken Twill", 4, "(1-4)", brokenTwill(4,2), "Twill");
+        add("adv_04_diamond", "04 Shaft | Diamond Twill", 4, "(1-8)", [
+            [1,1,0,0],[1,0,0,1],[0,0,1,1],[0,1,1,0],
+            [0,0,1,1],[0,1,1,0],[1,1,0,0],[1,0,0,1]
+        ], "Decorative");
+
+        add("adv_05_twill", "05 Shaft | 3/2 Steep Twill", 5, "(1-5)", twill(5,3), "Twill");
+        add("adv_05_satin", "05 Shaft | Regular 5-End Satin (M2)", 5, "(1-5)", satin(5,2), "Satin");
+
+        add("adv_06_twill", "06 Shaft | 3/3 Broken Twill", 6, "(1-6)", brokenTwill(6,3), "Twill");
+        add("adv_06_satin", "06 Shaft | 5-End Float Satin (M5)", 6, "(1-6)", satin(6,5), "Satin");
+
+        add("adv_07_twill", "07 Shaft | 5/2 Steep Twill", 7, "(1-7)", twill(7,5), "Twill");
+        add("adv_07_satin", "07 Shaft | Regular 7-End Satin (M3)", 7, "(1-7)", satin(7,3), "Satin");
+
+        add("adv_08_twill", "08 Shaft | 5/3 Steep Twill", 8, "(1-8)", twill(8,5), "Twill");
+        add("adv_08_satin", "08 Shaft | Regular 8-End Satin (M3)", 8, "(1-8)", satin(8,3), "Satin");
+        add("adv_08_honeycomb", "08 Shaft | Honeycomb Texture", 8, "(1-8)", [
+            [1,0,0,0,0,0,0,1],[1,1,0,0,0,0,1,1],[1,1,1,0,0,1,1,1],[1,1,1,1,1,1,1,1],
+            [1,1,1,0,0,1,1,1],[1,1,0,0,0,0,1,1],[1,0,0,0,0,0,0,1],[0,1,1,1,1,1,1,0]
+        ], "Texture");
+
+        add("adv_09_twill", "09 Shaft | 5/4 Diamond Twill", 9, "(1-9)", twill(9,5), "Twill");
+        add("adv_09_satin", "09 Shaft | Regular 9-End Satin (M2)", 9, "(1-9)", satin(9,2), "Satin");
+
+        add("adv_10_twill", "10 Shaft | 6/4 Steep Twill", 10, "(1-10)", twill(10,6), "Twill");
+        add("adv_10_satin", "10 Shaft | Regular 10-End Satin (M3)", 10, "(1-10)", satin(10,3), "Satin");
+        add("adv_10_crepe", "10 Shaft | Broken Crepe Texture", 10, "(1-10)", brokenTwill(10,4), "Texture");
+
+        add("adv_11_twill", "11 Shaft | 6/5 Twill", 11, "(1-11)", twill(11,6), "Twill");
+        add("adv_11_satin", "11 Shaft | Regular 11-End Satin (M3)", 11, "(1-11)", satin(11,3), "Satin");
+
+        add("adv_12_twill", "12 Shaft | 8/4 Steep Twill", 12, "(1-12)", twill(12,8), "Twill");
+        add("adv_12_satin", "12 Shaft | Regular 12-End Satin (M5)", 12, "(1-12)", satin(12,5), "Satin");
+        add("adv_12_honeycomb", "12 Shaft | Extended Honeycomb", 12, "(1-12)", [
+            [1,0,0,0,0,0,0,0,0,0,0,1],[1,1,0,0,0,0,0,0,0,0,1,1],
+            [1,1,1,0,0,0,0,0,0,1,1,1],[1,1,1,1,0,0,0,0,1,1,1,1],
+            [1,1,1,1,1,0,0,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,0,0,1,1,1,1,1],[1,1,1,1,0,0,0,0,1,1,1,1],
+            [1,1,1,0,0,0,0,0,0,1,1,1],[1,1,0,0,0,0,0,0,0,0,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,1],[0,1,1,1,1,1,1,1,1,1,1,0]
+        ], "Texture");
+
+        add("adv_13_twill", "13 Shaft | 7/6 Pointed Twill", 13, "(1-13)", brokenTwill(13,7), "Twill");
+        add("adv_13_satin", "13 Shaft | Regular 13-End Satin (M5)", 13, "(1-13)", satin(13,5), "Satin");
+
+        add("adv_14_twill", "14 Shaft | 9/5 Steep Twill", 14, "(1-14)", twill(14,9), "Twill");
+        add("adv_14_satin", "14 Shaft | Regular 14-End Satin (M5)", 14, "(1-14)", satin(14,5), "Satin");
+        add("adv_14_broken", "14 Shaft | Advanced Broken Twill", 14, "(1-14)", brokenTwill(14,7), "Texture");
+
+        add("dbl_08_11", "DOUBLE CLOTH | 08 Shaft | 1:1 Interchange Stitch", 8, "(1-8)", doubleCloth(8,4), "Double Cloth");
+        add("dbl_10_pocket", "DOUBLE CLOTH | 10 Shaft | Pocket / Tubular", 10, "(1-10)", doubleCloth(10,5), "Double Cloth");
+        add("dbl_12_21", "DOUBLE CLOTH | 12 Shaft | 2:1 Pick Ratio", 12, "(1-12)", doubleCloth(12,8), "Double Cloth");
+        add("dbl_14_rev", "DOUBLE CLOTH | 14 Shaft | Reversible 1:1", 14, "(1-14)", doubleCloth(14,7), "Double Cloth");
+
+        return designs;
+    })();
+
+    function normalizeDentingWeaveMatrix(matrix) {
+        if (!Array.isArray(matrix) || !matrix.length) return [[0, 1], [1, 0]];
+        const rows = matrix.slice(0, 64).map(row => {
+            if (!Array.isArray(row)) row = [];
+            return row.slice(0, 32).map(value => Number(value) === 1 ? 1 : 0);
+        });
+        const width = Math.max(2, Math.min(32, ...rows.map(row => row.length)));
+        rows.forEach(row => { while (row.length < width) row.push(0); });
+        while (rows.length < 2) rows.push(new Array(width).fill(0));
+        return rows;
+    }
+
+    function mergeSavedPreStockDesigns(saved) {
+        if (!saved || typeof saved !== "object" || Array.isArray(saved)) return;
+        Object.entries(saved).forEach(([key, design]) => {
+            if (!key || !design || typeof design !== "object" ||
+                !Array.isArray(design.matrix) || !design.matrix.length) return;
+            if (Object.prototype.hasOwnProperty.call(preDefinedDesigns, key) &&
+                !preDefinedDesigns[key]?.__userSaved) return;
+            preDefinedDesigns[key] = {
+                name: String(design.name || key),
+                formula: String(design.formula || `(1-${design.matrix.length})`),
+                matrix: normalizeDentingWeaveMatrix(design.matrix),
+                __userSaved: true
+            };
+        });
+    }
+
+    function loadSavedPreStockDesignsLocal() {
+        try {
+            const saved = typeof window.firebaseLoad === "function"
+                ? window.firebaseLoad(PRE_STOCK_BITMAP_CLOUD_KEY, {}) : {};
+            mergeSavedPreStockDesigns(saved);
+        } catch (error) {
+            console.warn("Saved weave library local load skipped:", error);
+        }
+    }
+
+    async function loadSavedPreStockDesignsCloud() {
+        try {
+            if (typeof window.firebaseLoadCloud !== "function" || !navigator.onLine) return;
+            const saved = await window.firebaseLoadCloud(PRE_STOCK_BITMAP_CLOUD_KEY, null);
+            if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+                mergeSavedPreStockDesigns(saved);
+            }
+        } catch (error) {
+            console.warn("Saved weave library cloud load fallback:", error);
+        }
+    }
+
+    async function saveWeaveToLibrary() {
+        const entered = prompt("New weave design name:");
+        if (!entered || !entered.trim()) return;
+        const name = entered.trim();
+        const matrix = normalizeDentingWeaveMatrix(weavePatterns.custom);
+        const formula = document.getElementById("pickPatternInput")?.value.trim() ||
+            `(1-${matrix.length})`;
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32) || "design";
+        const key = `w_user_${slug}_${Date.now().toString(36)}`;
+        const saved = typeof window.firebaseLoad === "function"
+            ? window.firebaseLoad(PRE_STOCK_BITMAP_CLOUD_KEY, {}) : {};
+        const library = saved && typeof saved === "object" && !Array.isArray(saved)
+            ? { ...saved } : {};
+        library[key] = { name, formula, matrix };
+
+        let stored = false;
+        try {
+            if (typeof window.firebaseSave === "function") {
+                stored = await window.firebaseSave(PRE_STOCK_BITMAP_CLOUD_KEY, library);
+            } else {
+                TFDB.set(PRE_STOCK_BITMAP_CLOUD_KEY, JSON.stringify(library));
+                stored = true;
+            }
+        } catch (error) {
+            console.error("Weave library save failed:", error);
+        }
+        if (!stored) {
+            alert("❌ Weave save failed. Please try again.");
+            return;
+        }
+
+        preDefinedDesigns[key] = { name, formula, matrix, __userSaved: true };
+        populateWeaveTypeDropdown(key);
+        document.getElementById("weaveType").value = key;
+        document.getElementById("pickPatternInput").value = formula;
+        weavePatterns.custom = JSON.parse(JSON.stringify(matrix));
+        buildGridEditor();
+        updateAll();
+        alert(navigator.onLine
+            ? "✅ Weave saved locally. Supabase sync has been queued/completed."
+            : "💾 Weave saved locally. Supabase sync will retry when online.");
+    }
 
     let weavePatterns = {
         custom: [[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]
@@ -762,9 +968,9 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
 
     function onWeaveChange() {
         let t = document.getElementById("weaveType").value;
-        if (t !== "custom" && typeof preDefinedDesigns !== 'undefined' && preDefinedDesigns[t]) {
+        if (t !== "custom" && preDefinedDesigns[t]) {
             weavePatterns.custom = JSON.parse(JSON.stringify(preDefinedDesigns[t].matrix));
-            syncPickFormulaWithRowCount();
+            document.getElementById("pickPatternInput").value = preDefinedDesigns[t].formula || `(1-${weavePatterns.custom.length})`;
             
             let mCols = weavePatterns.custom[0]?.length || 4;
             let autoArr = [];
@@ -1564,6 +1770,8 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
     window.onload = async () => {
         if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
         loadDesignList();
+        loadSavedPreStockDesignsLocal();
+        await loadSavedPreStockDesignsCloud();
         populateWeaveTypeDropdown();
         if(!activeDesignObj) {
             if(TFDB.get("saved_denting_pattern")) document.getElementById("dentingPatternInput").value = TFDB.get("saved_denting_pattern");

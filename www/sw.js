@@ -19,7 +19,7 @@
 // ============================================================
 // VERSION (Updated to v10 so Chrome detects changes)
 // ============================================================
-const CACHE_VERSION = "v20"; 
+const CACHE_VERSION = "v22"; 
 const CACHE_NAME = "texforever-erp-" + CACHE_VERSION;
 const APP_SHELL_CACHE = "texforever-shell-" + CACHE_VERSION;
 
@@ -64,8 +64,6 @@ const APP_SHELL = [
     "./kora_yarn.html",
     "./manifest.json",
     "./Party_Orders.html",
-    "./pre_stock.js",
-    "./pre_stock_graph.html",
     "./preload.js",
     "./printer.js",
     "./process_matrix.html",
