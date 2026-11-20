@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TEX FOR EVER ">
 
-<title>Dashboard - TEXFOREVER </title>
+<title>TEXFOREVER </title>
 
 <!-- IMPORTANT: config.js and translator.js already exist -->
 <script src="config.js" defer></script>
@@ -1363,51 +1363,47 @@ body.dashboard-modern .menu-btn.modern-only{ display:none !important; }
 body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !important; }
 
 /* =========================================================
-   COMPACT FULL-WIDTH CARDS (13 - 17)
+   UNIFORM MENU CARDS 1–17 — equal dimensions on every row
+   Preserve each card's existing background, border and colour.
 ========================================================= */
-.menu-grid{ gap:12px; }
-.full-span,
-.btn-m-all,
-.btn-matrix{
-    min-height:78px;
-    padding:10px 18px;
-    gap:14px;
-    font-size:17px;
+.menu-grid{
+    gap:12px;
+    grid-auto-rows:92px;
+    align-items:stretch;
 }
-.full-span .tab-icon,
-.btn-m-all .tab-icon,
-.btn-matrix .tab-icon{
-    width:60px;
-    min-width:60px;
-    height:60px;
+.menu-grid > .menu-btn{
+    grid-column:auto !important;
+    width:100%;
+    height:92px;
+    min-height:92px;
+    max-height:92px;
+    box-sizing:border-box;
+    padding:8px 10px;
+    gap:8px;
+    font-size:13px;
+    line-height:1.25;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
 }
-.full-span .tab-icon img,
-.btn-m-all .tab-icon img,
-.btn-matrix .tab-icon img{
-    width:52px !important;
-    height:52px !important;
+.menu-grid > .menu-btn .tab-icon{
+    width:46px;
+    min-width:46px;
+    height:46px;
 }
-.full-span .tab-icon span{ font-size:40px !important; }
-
-/* 13,14,15 = one row (3 cards) | 16,17 = one row (2 cards) */
-@media(min-width:769px){
-    .menu-grid{ grid-template-columns:repeat(6,1fr); }
-    .menu-btn{ grid-column:span 2; }
-    .full-span,
-    .btn-m-all,
-    .btn-matrix{ grid-column:span 2; }
-    .menu-grid > .menu-btn.full-span:nth-last-child(1),
-    .menu-grid > .menu-btn.full-span:nth-last-child(2){ grid-column:span 3; }
-    .btn-m-all .tab-icon,
-    .btn-matrix .tab-icon,
-    .full-span:nth-last-child(3) .tab-icon{ width:44px; min-width:44px; height:44px; }
-    .btn-m-all .tab-icon img,
-    .btn-matrix .tab-icon img,
-    .full-span:nth-last-child(3) .tab-icon img{ width:40px !important; height:40px !important; }
-    .full-span:nth-last-child(3) .tab-icon span{ font-size:32px !important; }
-    .btn-m-all,
-    .btn-matrix,
-    .full-span:nth-last-child(3){ font-size:14px; gap:10px; padding:10px 12px; }
+.menu-grid > .menu-btn .tab-icon img,
+.menu-grid > .menu-btn .tab-icon .emoji-icon{
+    width:44px !important;
+    height:44px !important;
+    object-fit:contain;
+}
+.menu-grid > .menu-btn .tab-icon span{
+    font-size:38px !important;
+    line-height:1;
+}
+.menu-grid > .menu-btn > span:last-child{
+    min-width:0;
+    overflow-wrap:anywhere;
 }
 
 
@@ -1933,6 +1929,23 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
 
             </span>
 
+        </button>
+
+        <!-- 16 : PREDEFINED WEAVE BITMAP DESIGN EDITOR -->
+        <button
+            class="menu-btn full-span"
+            onclick="navigateToPage('pre_stock_graph.html')"
+            style="
+                background:linear-gradient(135deg,#102a43,#164e63,#0f766e);
+                border:2px solid #5eead4;
+                box-shadow:0 0 15px rgba(45,212,191,.28);
+            ">
+            <span class="tab-icon">
+                <span style="font-size:56px;filter:drop-shadow(0 4px 7px rgba(0,0,0,.45));">🧵</span>
+            </span>
+            <span style="color:#ccfbf1;text-shadow:0 2px 4px rgba(0,0,0,.45);">
+                16 ~ PREDEFINED WEAVE BITMAP DESIGN EDITOR
+            </span>
         </button>
 
 
