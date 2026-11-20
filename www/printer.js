@@ -1,4 +1,3 @@
-
 /**
  * TEXFOREVER - Universal Printer Utility
  * Windows (Electron) / Android APK (Capacitor) / Browser
@@ -65,14 +64,14 @@ function buildPrintHtml(jobName, content) {
       display:none !important;
     }
     .page-break{
-      display:block !important;
-      height:0 !important;
-      margin:0 !important;
-      padding:0 !important;
-      border:0 !important;
-      page-break-before:auto !important;
-      break-before:auto !important;
-    }
+    display:block !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    page-break-before:auto !important;
+    break-before:auto !important;
+}
   `;
 
   return '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
@@ -87,10 +86,35 @@ function buildPrintHtml(jobName, content) {
          '</div></div></div>' +
          '</body></html>';
 }
-
-// Print/PDF filename
+// Print/PDF filename: current HTML page filename-ஐ முதலில் பயன்படுத்தும்.
 function getPrintJobName(customContent, fallbackArea) {
 
+  // DESIGN SHEET PRINT: use the currently selected design number first.
+  // Do not use the company name (TEXFOREVER) or generic page title here.
+  const designSelect = document.getElementById('designNumber');
+  const designInput = document.getElementById('designSearchInput');
+  const designHeader = document.getElementById('hdrDesign');
+  const weftDesignHeader = document.getElementById('weftHdrDesign');
+
+  // Only apply this override on the Design Sheet Print page.
+  if (designSelect || designInput || designHeader || weftDesignHeader) {
+    let selectedDesign =
+      (designSelect && designSelect.value ? designSelect.value : '') ||
+      (designInput && designInput.value ? designInput.value : '') ||
+      (designHeader && designHeader.textContent ? designHeader.textContent : '') ||
+      (weftDesignHeader && weftDesignHeader.textContent ? weftDesignHeader.textContent : '') ||
+      (localStorage.getItem('selected_design_number') || '');
+
+    selectedDesign = String(selectedDesign).trim().replace(/^#\s*/, '');
+
+    if (selectedDesign && selectedDesign !== '-') {
+      return selectedDesign
+        .replace(/[\\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, '_');
+    }
+  }
+
+  // Dashboard-ல் இருந்து page open ஆனாலும், current page filename மாறாது.
   const file = (window.location.pathname.split('/').pop() || '')
     .replace(/\.html?$/i, '')
     .replace(/[_-]+/g, ' ')
@@ -100,12 +124,13 @@ function getPrintJobName(customContent, fallbackArea) {
     return file.replace(/\b\w/g, ch => ch.toUpperCase());
   }
 
+  // index.html போன்ற generic filename இருந்தால் page title பயன்படுத்தும்.
   const pageTitle = (document.title || '').trim();
-
   if (pageTitle && !/^dashboard(?:\s|$)/i.test(pageTitle)) {
     return pageTitle;
   }
 
+  // கடைசி fallback: print content heading.
   const selectors = [
     '.preview-title',
     '.card-header',
@@ -132,28 +157,20 @@ function getPrintJobName(customContent, fallbackArea) {
         if (value) return value;
       }
     }
-
     return '';
   }
 
   if (typeof customContent === 'string' && customContent.trim()) {
-    const parsed = new DOMParser().parseFromString(
-      customContent,
-      'text/html'
-    );
-
+    const parsed = new DOMParser().parseFromString(customContent, 'text/html');
     const heading = readHeading(parsed);
     if (heading) return heading;
   }
 
   const heading = readHeading(fallbackArea || document);
-
   return heading || pageTitle || 'TEXFOREVER Print';
 }
 
-
-// MAIN PRINT FUNCTION
-window.appPrint = async function (customContent, customJobName) {
+window.appPrint = async function (customContent) {
 
   const area = document.querySelector(
     '.main-card, .invoice-container, .print-area, #printable-section'
@@ -161,12 +178,8 @@ window.appPrint = async function (customContent, customJobName) {
 
   const content = customContent || area.innerHTML;
 
-  // Custom Design Number takes priority
-  const jobName = (
-    typeof customJobName === 'string' && customJobName.trim()
-  )
-    ? customJobName.trim()
-    : getPrintJobName(customContent, area);
+  // முக்கியமான FIX
+  const jobName = getPrintJobName(customContent, area);
 
   const html = buildPrintHtml(jobName, content);
 
@@ -185,8 +198,7 @@ window.appPrint = async function (customContent, customJobName) {
 
     return;
   }
-
-  // 2. Android APK (Capacitor)
+    // 2. Android APK (Capacitor)
   const cap = window.Capacitor;
 
   if (
