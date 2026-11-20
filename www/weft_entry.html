@@ -2805,7 +2805,7 @@ function buildRangeLayout(lineCount, ranges) {
     });
 
     valid.forEach(function (node) { node._allNodes = valid; });
-    return { nodes: valid, mult: mult, levels: Math.max(1, laneEnds.length) };
+    return { nodes: valid, mult: mult, levels: Math.max(1, laneNodes.length) };
 }
 
 function rangeNodeTotal(node, base, mult) {
