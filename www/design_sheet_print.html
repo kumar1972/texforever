@@ -2435,6 +2435,19 @@ function closePreviewModal(){
 
 function printPreview(){
 
+    // Use the selected design number as the suggested PDF/print filename.
+    let designSelect = document.getElementById("designNumber");
+    let designNumber = designSelect && designSelect.value
+        ? designSelect.value.trim()
+        : (localStorage.getItem("selected_design_number") || "").trim();
+
+    if (designNumber) {
+        let safeDesignNumber = designNumber
+            .replace(/[\\\\/:*?"<>|]/g, "-")
+            .replace(/\\s+/g, "_");
+        document.title = safeDesignNumber;
+    }
+
     let content =
         document.getElementById("previewContent");
 
