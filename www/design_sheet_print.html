@@ -1345,6 +1345,51 @@ function loadDesignDetails(){
     let sp =
         specKey ? specs[specKey] : {};
 
+    // Read the latest saved Entry records first for this design.
+    // Warp/Weft Entry Save already writes to these shared StorageDB keys.
+    function readEntryList(key) {
+        let raw = storeRaw(key);
+        if (!raw) return [];
+        try {
+            let parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && typeof parsed === "object") {
+                return Object.keys(parsed).map(function(k) {
+                    let value = parsed[k];
+                    return value && typeof value === "object"
+                        ? Object.assign({ designNo: k }, value)
+                        : null;
+                }).filter(Boolean);
+            }
+        } catch (e) {
+            console.warn("Could not read " + key, e);
+        }
+        return [];
+    }
+
+    function latestEntryForDesign(list) {
+        for (let i = list.length - 1; i >= 0; i--) {
+            let entry = list[i];
+            let entryName = entry && (
+                entry.name || entry.designNo || entry.designNumber ||
+                entry.design_no || entry.design_number
+            );
+            if (entry && cleanDesignName(entryName) === cleanDNo) return entry;
+        }
+        return {};
+    }
+
+    const latestWarpEntry = latestEntryForDesign(readEntryList("warp_entry_data"));
+    const latestWeftEntry = latestEntryForDesign(readEntryList("weft_entry_data"));
+
+    // Entry-specific saved values override older Master/Specs snapshots.
+    foundMaster = Object.assign({}, foundMaster, latestWarpEntry, latestWeftEntry);
+
+    if (latestWarpEntry.onloomReed) foundMaster.onloomReed = latestWarpEntry.onloomReed;
+    if (latestWarpEntry.onloomPick) foundMaster.onloomPick = latestWarpEntry.onloomPick;
+    if (latestWarpEntry.onloomWidth) foundMaster.onloomWidth = latestWarpEntry.onloomWidth;
+    if (latestWeftEntry.weftPick) foundMaster.onloomPick = latestWeftEntry.weftPick;
+
     let orders =
         JSON.parse(
             storeRaw(
@@ -2087,10 +2132,15 @@ function renderSplitPreviewTable(
             parseFloat(onloomPick) ||
             60;
 
+        let calculatedPatternPicks = totalMultiplierSum + remainderSum;
+        if (calculatedPatternPicks === 0) {
+            calculatedPatternPicks = pureSum;
+        }
+
         summaryHtml += `
             <div class="line-1">
                 Total Pattern Picks:
-                <b>${pureSum}</b>
+                <b>${calculatedPatternPicks}</b>
             </div>
             <div>
                 Weft Width ${storedWidthVal} X Pick ${pickNum} = <b>${finalGrandTotal.toFixed(2)} Total Pick</b>
