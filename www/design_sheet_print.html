@@ -2445,18 +2445,33 @@ function printPreview(){
         (designSelect && designSelect.value.trim()) ||
         (localStorage.getItem("selected_design_number") || "").trim();
 
+    // Keep the original selected design text for the PDF filename.
+    // The hidden preview-title is a fallback for older printer.js versions
+    // that do not read appPrint's second (explicitJobName) argument.
     let safeDesignNumber = designNumber
-        ? designNumber.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "_")
+        ? designNumber.replace(/[\\/:*?"<>|]/g, "-").trim()
         : "Design_Sheet_Print";
 
-    // Keep the browser page title in sync, and explicitly pass the PDF job name.
-    document.title = safeDesignNumber;
+    const jobName = safeDesignNumber && safeDesignNumber !== "Design_Sheet_Print"
+        ? safeDesignNumber.replace(/^#\s*/, "") + "_Design_Print"
+        : "Design_Sheet_Print";
+
+    // Android Chrome may use the current page title when the printer helper
+    // is an older cached version. Set it before opening the print dialog.
+    document.title = jobName;
+    window.TEX_PRINT_JOB_NAME = jobName;
 
     let content = document.getElementById("previewContent");
     let html = content ? content.innerHTML : "";
 
+    // printer.js versions that infer the name from print content can now
+    // identify the design number without changing any visible print layout.
+    html = '<div class="preview-title" style="display:none">' +
+        jobName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+        '</div>' + html;
+
     if (window.appPrint) {
-        window.appPrint(html || undefined, safeDesignNumber);
+        window.appPrint(html || undefined, jobName);
     } else {
         window.print();
     }
