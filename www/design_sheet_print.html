@@ -305,7 +305,7 @@ th{
 }
 
 .col-color{
-    width:25%;
+    width:35%;
     text-align:left;
     padding-left:6px;
     padding-right:0px !important;
@@ -327,15 +327,11 @@ td.col-color{
 }
 
 .col-set{
-    width:30%;
+    width:20%;
     text-align:center;
     font-weight:700;
     white-space:nowrap;
     border-left:1px dashed #D1DED1;
-}
-
-.col-set.col-set-n{
-    border-left:none !important;
 }
 
 .dash-sep{
@@ -821,7 +817,7 @@ td.col-color{
                         <!-- Custom Dropdown List Box -->
             <div
                 id="designDropdownList"
-                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 620px; overflow-y: auto; background: #38BDF8; border: 1px solid #ffffff; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #38BDF8; border: 1px solid #ffffff; border-radius: 8px; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px;">
             </div>
 
             <!-- Hidden select to support background logic -->
@@ -1345,51 +1341,6 @@ function loadDesignDetails(){
     let sp =
         specKey ? specs[specKey] : {};
 
-    // Read the latest saved Entry records first for this design.
-    // Warp/Weft Entry Save already writes to these shared StorageDB keys.
-    function readEntryList(key) {
-        let raw = storeRaw(key);
-        if (!raw) return [];
-        try {
-            let parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-            if (Array.isArray(parsed)) return parsed;
-            if (parsed && typeof parsed === "object") {
-                return Object.keys(parsed).map(function(k) {
-                    let value = parsed[k];
-                    return value && typeof value === "object"
-                        ? Object.assign({ designNo: k }, value)
-                        : null;
-                }).filter(Boolean);
-            }
-        } catch (e) {
-            console.warn("Could not read " + key, e);
-        }
-        return [];
-    }
-
-    function latestEntryForDesign(list) {
-        for (let i = list.length - 1; i >= 0; i--) {
-            let entry = list[i];
-            let entryName = entry && (
-                entry.name || entry.designNo || entry.designNumber ||
-                entry.design_no || entry.design_number
-            );
-            if (entry && cleanDesignName(entryName) === cleanDNo) return entry;
-        }
-        return {};
-    }
-
-    const latestWarpEntry = latestEntryForDesign(readEntryList("warp_entry_data"));
-    const latestWeftEntry = latestEntryForDesign(readEntryList("weft_entry_data"));
-
-    // Entry-specific saved values override older Master/Specs snapshots.
-    foundMaster = Object.assign({}, foundMaster, latestWarpEntry, latestWeftEntry);
-
-    if (latestWarpEntry.onloomReed) foundMaster.onloomReed = latestWarpEntry.onloomReed;
-    if (latestWarpEntry.onloomPick) foundMaster.onloomPick = latestWarpEntry.onloomPick;
-    if (latestWarpEntry.onloomWidth) foundMaster.onloomWidth = latestWarpEntry.onloomWidth;
-    if (latestWeftEntry.weftPick) foundMaster.onloomPick = latestWeftEntry.weftPick;
-
     let orders =
         JSON.parse(
             storeRaw(
@@ -1714,50 +1665,6 @@ function loadDesignDetails(){
 
 }
 
-/* ===== NESTED RANGE (BRACKET) HELPERS ===== */
-function buildRangeLayout(lineCount, ranges){
-    const valid = [];
-    (Array.isArray(ranges) ? ranges : []).forEach(function(r){
-        const st = parseInt(r.start), en = Math.min(parseInt(r.end), lineCount);
-        let set = parseFloat(r.set); if(!(set > 0)) set = 1;
-        if(st >= 1 && en >= st) valid.push({ start: st, end: en, set: set });
-    });
-    valid.sort(function(a, b){ return a.start - b.start || b.end - a.end; });
-    const nodes = [], stack = [], ignored = [];
-    valid.forEach(function(r){
-        while(stack.length && r.start > stack[stack.length - 1].end) stack.pop();
-        const top = stack.length ? stack[stack.length - 1] : null;
-        if(top && (r.end > top.end || (r.start === top.start && r.end === top.end))){ ignored.push(r); return; }
-        r.parent = top; r.children = [];
-        r.depth = top ? top.depth + 1 : 0;
-        r.outerMult = top ? top.outerMult * top.set : 1;
-        if(top) top.children.push(r);
-        nodes.push(r); stack.push(r);
-    });
-    const mult = [];
-    for(let i = 0; i < lineCount; i++) mult.push(1);
-    nodes.forEach(function(n){ for(let i = n.start - 1; i <= n.end - 1; i++) mult[i] *= n.set; });
-    let levels = 1;
-    nodes.forEach(function(n){ if(n.depth + 1 > levels) levels = n.depth + 1; });
-    return { nodes: nodes, ignored: ignored, mult: mult, levels: levels };
-}
-
-function rangeNodeTotal(node, base, mult){
-    let sum = 0;
-    for(let i = node.start - 1; i <= node.end - 1; i++) sum += (base[i] || 0) * mult[i];
-    return Math.round((sum / node.outerMult) * 100) / 100;
-}
-
-function printBracketCell(node, rowsCount, total, isFirstCol){
-    const label = node.parent
-        ? "X " + node.set
-        : (Math.round((total / node.set) * 100) / 100) + " X " + node.set + " = " + total;
-    return '<td rowspan="' + rowsCount + '" class="col-set' + (isFirstCol ? '' : ' col-set-n') + '" style="position:relative;vertical-align:middle;text-align:left;white-space:nowrap;width:1%;">'
-        + '<div style="position:absolute;left:4px;top:4px;bottom:4px;width:7px;border:1.5px solid #4A7C59;border-left:none;border-radius:0 7px 7px 0;"></div>'
-        + '<div style="position:absolute;left:11px;top:50%;width:5px;border-top:1.5px solid #4A7C59;"></div>'
-        + '<div style="margin-left:22px;font-weight:700;line-height:1.15;color:#000;">' + label + '</div></td>';
-}
-
 function renderSplitPreviewTable(
     type,
     lines,
@@ -1802,9 +1709,45 @@ function renderSplitPreviewTable(
         return;
     }
 
-    let layout = buildRangeLayout(lines.length, ranges);
+    let rangeMap = {};
 
-    let baseVals = [];
+    if(
+        Array.isArray(ranges) &&
+        ranges.length > 0
+    ){
+
+        ranges.forEach(function(r){
+
+            let start =
+                parseInt(r.start) || 0;
+
+            let end =
+                parseInt(r.end) || 0;
+
+            let set =
+                parseFloat(r.set) || 1;
+
+            for(
+                let j=start;
+                j<=end;
+                j++
+            ){
+
+                rangeMap[j] = {
+
+                    start:start,
+                    end:end,
+                    set:set,
+                    isStart:j === start,
+                    isEnd:j === end
+
+                };
+
+            }
+
+        });
+
+    }
 
     let rowsData = [];
 
@@ -1827,11 +1770,32 @@ function renderSplitPreviewTable(
     
     let patternTopEnds = 0;
 
-    layout.nodes.forEach(function(n){
-        for(let k = n.start; k <= n.end; k++){
-            rangeLineIndices.add(k);
-        }
-    });
+    if(
+        Array.isArray(ranges) &&
+        ranges.length > 0
+    ){
+
+        ranges.forEach(function(r){
+
+            let start =
+                parseInt(r.start) || 0;
+
+            let end =
+                parseInt(r.end) || 0;
+
+            for(
+                let k=start;
+                k<=end;
+                k++
+            ){
+
+                rangeLineIndices.add(k);
+
+            }
+
+        });
+
+    }
 
     lines.forEach(function(item,index){
 
@@ -1846,8 +1810,6 @@ function renderSplitPreviewTable(
 
         pureSum += val;
 
-        baseVals.push(val);
-
         if(
             rangeLineIndices.has(rowNum)
         ){
@@ -1861,34 +1823,16 @@ function renderSplitPreviewTable(
     remainderSum =
         pureSum - rangeCoveredSum;
 
-    function setCellsFor(index){
-        let cells = "";
-        for(let c = 0; c < layout.levels; c++){
-            let depth = layout.levels - 1 - c;
-            let starting = layout.nodes.find(function(n){ return n.depth === depth && n.start - 1 === index; });
-            if(starting){
-                cells += printBracketCell(
-                    starting,
-                    starting.end - starting.start + 1,
-                    rangeNodeTotal(starting, baseVals, layout.mult),
-                    c === 0
-                );
-                continue;
-            }
-            let covered = layout.nodes.some(function(n){ return n.depth === depth && n.start - 1 < index && n.end - 1 >= index; });
-            if(!covered){
-                cells += '<td class="col-set' + (c === 0 ? '' : ' col-set-n') + '" style="width:1%;"></td>';
-            }
-        }
-        return cells;
-    }
-
     lines.forEach(function(item,index){
 
         let rowNum =
             index + 1;
 
-        let val = baseVals[index];
+        let rawVal = type === "warp" 
+            ? (item.ends !== undefined ? item.ends : (item.Ends || item.warp || item.val || item.value || 0))
+            : (item.picks !== undefined ? item.picks : (item.Picks || item.weft || item.val || item.value || 0));
+
+        let val = parseFloat(rawVal) || 0;
 
         let rawCount = item.count !== undefined ? item.count : (item.Count || item.yarn || item.yarnCount || "");
         let cText = rawCount ? String(rawCount).trim() : "-";
@@ -1908,12 +1852,95 @@ function renderSplitPreviewTable(
             }
         }
 
-        let effectiveVal = val * layout.mult[index];
+        let setHtml = "";
 
-        countTotals[cText] =
-            (
-                countTotals[cText] || 0
-            ) + effectiveVal;
+        let rInfo =
+            rangeMap[rowNum];
+
+        let effectiveVal = val;
+
+        if(rInfo){
+
+            effectiveVal = val * rInfo.set;
+
+            if(rInfo.isStart){
+
+                let rangeSum = 0;
+
+                for(
+                    let k=rInfo.start;
+                    k<=rInfo.end;
+                    k++
+                ){
+
+                    let subItem =
+                        lines[k-1];
+
+                    let subVal = type === "warp" 
+                        ? (subItem.ends !== undefined ? subItem.ends : (subItem.Ends || subItem.warp || subItem.val || subItem.value || 0))
+                        : (subItem.picks !== undefined ? subItem.picks : (subItem.Picks || subItem.weft || subItem.val || subItem.value || 0));
+
+                    rangeSum += parseFloat(subVal) || 0;
+
+                }
+
+                let totalProduct =
+                    rangeSum * rInfo.set;
+
+                totalMultiplierSum +=
+                    totalProduct;
+
+                totalSetsSum +=
+                    rInfo.set;
+
+                let spanRows =
+                    (
+                        rInfo.end -
+                        rInfo.start
+                    ) + 1;
+
+                setHtml = `
+                    <td
+                        rowspan="${spanRows}"
+                        class="col-set"
+                        style="vertical-align:middle;">
+                        <div style="display:flex; align-items:center; justify-content:center;">
+                            <span style="font-size:32px; font-weight:300; margin-right:4px; line-height:0.7; padding-bottom:2px;">}</span>
+                            <div style="display:flex; flex-direction:column; text-align:left; line-height:1.1; font-size:inherit;">
+                                <b>X ${rInfo.set}</b>
+                                <b>= ${totalProduct}</b>
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+            }
+            else{
+
+                setHtml = null;
+
+            }
+
+            countTotals[cText] =
+                (
+                    countTotals[cText] || 0
+                ) +
+                (
+                    val * rInfo.set
+                );
+
+        }
+        else{
+
+            setHtml =
+                `<td class="col-set"></td>`;
+
+            countTotals[cText] =
+                (
+                    countTotals[cText] || 0
+                ) + val;
+
+        }
 
         if(type === "warp") {
             if(isTopBeam) {
@@ -1929,20 +1956,13 @@ function renderSplitPreviewTable(
             count:cText,
             color:clrText,
             val:val,
-            setHtml:setCellsFor(index),
+            setHtml:setHtml,
             type:type,
             isTopBeam:isTopBeam,
-            hasSet:rangeLineIndices.has(rowNum)
+            hasSet:Boolean(rInfo)
 
         });
 
-    });
-
-    layout.nodes.forEach(function(n){
-        if(!n.parent){
-            totalMultiplierSum += rangeNodeTotal(n, baseVals, layout.mult);
-            totalSetsSum += n.set;
-        }
     });
 
     let headerHtml = `
@@ -1968,7 +1988,7 @@ function renderSplitPreviewTable(
                 }
             </th>
 
-            <th class="col-set" colspan="${layout.levels}">
+            <th class="col-set">
                 SET
             </th>
 
@@ -1978,30 +1998,10 @@ function renderSplitPreviewTable(
     let splitLimit = 35; 
     let finalHtml = "";
 
-    let blocksList = [];
-    let bi = 0;
-    while(bi < rowsData.length){
-        let topNode = layout.nodes.find(function(n){ return !n.parent && n.start - 1 === bi; });
-        let endI = topNode ? Math.min(topNode.end - 1, rowsData.length - 1) : bi;
-        blocksList.push(rowsData.slice(bi, endI + 1));
-        bi = endI + 1;
-    }
-
-    let columnsList = [];
-    let curCol = [];
-    blocksList.forEach(function(blk){
-        if(curCol.length > 0 && curCol.length + blk.length > splitLimit){
-            columnsList.push(curCol);
-            curCol = [];
-        }
-        curCol = curCol.concat(blk);
-    });
-    if(curCol.length > 0) columnsList.push(curCol);
-
-    for(let i = 0; i < columnsList.length; i += 2) {
-
-        let col1 = columnsList[i];
-        let col2 = columnsList[i + 1] || [];
+    for(let i = 0; i < rowsData.length; i += (splitLimit * 2)) {
+        
+        let col1 = rowsData.slice(i, i + splitLimit);
+        let col2 = rowsData.slice(i + splitLimit, i + splitLimit * 2);
 
         let t1 = buildTableRowsHtml(col1);
         let t2 = buildTableRowsHtml(col2);
@@ -2132,15 +2132,10 @@ function renderSplitPreviewTable(
             parseFloat(onloomPick) ||
             60;
 
-        let calculatedPatternPicks = totalMultiplierSum + remainderSum;
-        if (calculatedPatternPicks === 0) {
-            calculatedPatternPicks = pureSum;
-        }
-
         summaryHtml += `
             <div class="line-1">
                 Total Pattern Picks:
-                <b>${calculatedPatternPicks}</b>
+                <b>${pureSum}</b>
             </div>
             <div>
                 Weft Width ${storedWidthVal} X Pick ${pickNum} = <b>${finalGrandTotal.toFixed(2)} Total Pick</b>
@@ -2433,32 +2428,69 @@ function closePreviewModal(){
 
 }
 
-function printPreview(){
+async function printPreview(){
 
-    // The design picker is searchable; its visible input is the reliable
-    // current selection, while the hidden select is kept as a fallback.
-    let visibleDesignInput = document.getElementById("designSearchInput");
-    let designSelect = document.getElementById("designNumber");
+    let content =
+        document.getElementById("previewContent");
 
-    let designNumber =
-        (visibleDesignInput && visibleDesignInput.value.trim()) ||
-        (designSelect && designSelect.value.trim()) ||
-        (localStorage.getItem("selected_design_number") || "").trim();
+    let html =
+        content ? content.innerHTML : "";
 
-    let safeDesignNumber = designNumber
-        ? designNumber.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "_")
+    // Weave 3D print logic: selected Design Number becomes the PDF job name.
+    let designNo = "";
+    try {
+        const designHeader = document.getElementById("hdrDesign");
+        const weftHeader = document.getElementById("weftHdrDesign");
+        const designSelect = document.getElementById("designNumber");
+
+        designNo = (designHeader && designHeader.textContent || "").trim();
+        if (!designNo || designNo === "-") {
+            designNo = (weftHeader && weftHeader.textContent || "").trim();
+        }
+        if (!designNo || designNo === "-") {
+            designNo = (designSelect && designSelect.value || "").trim();
+        }
+        designNo = designNo.replace(/[\\\/:*?"<>|]+/g, "-").trim();
+    } catch (e) {}
+
+    const jobName = designNo && designNo !== "Unnamed"
+        ? designNo + "_Design_Print"
         : "Design_Sheet_Print";
 
-    // Keep the browser page title in sync, and explicitly pass the PDF job name.
-    document.title = safeDesignNumber;
+    // Match Weave 3D: temporarily set the top-level page title too.
+    // Chrome Android may use the parent page title for the Save as PDF filename.
+    const savedTitles = [];
+    [window, window.parent, window.top].forEach(function (w) {
+        try {
+            if (!w || !w.document || savedTitles.some(function (x) { return x.d === w.document; })) return;
+            savedTitles.push({ d: w.document, t: w.document.title });
+            w.document.title = jobName;
+        } catch (e) {}
+    });
 
-    let content = document.getElementById("previewContent");
-    let html = content ? content.innerHTML : "";
+    window.TEX_PRINT_JOB_NAME = jobName;
 
-    if (window.appPrint) {
-        window.appPrint(html || undefined, safeDesignNumber);
-    } else {
-        window.print();
+    try {
+        if (window.appPrint) {
+            // printer.js accepts the explicit job name as its second argument.
+            await window.appPrint(html || undefined, jobName);
+        } else {
+            window.print();
+        }
+
+        // Weave 3D keeps the temporary title until Android/Chrome reads the print job.
+        setTimeout(function () {
+            savedTitles.forEach(function (x) {
+                try { x.d.title = x.t; } catch (e) {}
+            });
+        }, 10000);
+    } catch (err) {
+        savedTitles.forEach(function (x) {
+            try { x.d.title = x.t; } catch (e) {}
+        });
+        throw err;
+    } finally {
+        window.TEX_PRINT_JOB_NAME = "";
     }
 
 }
