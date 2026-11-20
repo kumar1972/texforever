@@ -1786,7 +1786,7 @@ function loadWeftDesignData() {
     ) || 0;
 
     let autoWeftWidth = onloomWidth > 0 ? (onloomWidth + 3).toFixed(2) : '';
-    let autoPick = onloomPick > 0 ? (onloomPick - 4) : '';
+    let autoPick = onloomPick > 0 ? onloomPick : '';
 
     let resolvedWeft1 =
         sp.weftCount ||
@@ -1860,7 +1860,7 @@ function loadWeftDesignData() {
         document.getElementById('infoWeftWidth').value = finalWeftWidth;
         document.getElementById('infoWeft1').value = foundMaster.weftCount || resolvedWeft1;
         document.getElementById('infoWeft2').value = foundMaster.weft2 || resolvedWeft2;
-        document.getElementById('infoPick').value = foundMaster.weftPick || autoPick;
+        document.getElementById('infoPick').value = autoPick !== '' ? autoPick : (foundMaster.weftPick || '');
         document.getElementById('infoWeftMtrs').value = foundMaster.weftMtrs || sp.weftMtrs || calculatedWeftMtrs;
         document.getElementById('infoWeave').value = foundMaster.weaveType || resolvedWeave;
 
@@ -2776,16 +2776,27 @@ function buildRangeLayout(lineCount, ranges) {
         if (node.parent) node.parent.children.push(node);
     });
 
-    // Allocate a separate bracket lane whenever two ranges overlap, so no
-    // entered bracket is hidden by a rowspan from another set.
-    const laneEnds = [];
+    // Bracket order: innermost/smallest range is nearest to PICKS (left),
+    // and its containing outer range is placed to the right.
+    // Every overlapping or identical entered range receives its own lane.
+    const laneNodes = [];
     valid.slice().sort(function (a, b) {
-        return a.start - b.start || b.end - a.end || a.order - b.order;
+        const aLength = a.end - a.start;
+        const bLength = b.end - b.start;
+        return aLength - bLength || a.start - b.start ||
+            a.end - b.end || a.order - b.order;
     }).forEach(function (node) {
-        let lane = laneEnds.findIndex(function (lastEnd) { return lastEnd < node.start; });
-        if (lane === -1) lane = laneEnds.length;
+        let lane = laneNodes.findIndex(function (assigned) {
+            return assigned.every(function (other) {
+                return other.end < node.start || other.start > node.end;
+            });
+        });
+        if (lane === -1) {
+            lane = laneNodes.length;
+            laneNodes.push([]);
+        }
         node.lane = lane;
-        laneEnds[lane] = node.end;
+        laneNodes[lane].push(node);
     });
 
     const mult = Array(lineCount).fill(1);
