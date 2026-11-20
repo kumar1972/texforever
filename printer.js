@@ -89,6 +89,31 @@ function buildPrintHtml(jobName, content) {
 // Print/PDF filename: current HTML page filename-ஐ முதலில் பயன்படுத்தும்.
 function getPrintJobName(customContent, fallbackArea) {
 
+  // DESIGN SHEET PRINT: use the currently selected design number first.
+  // Do not use the company name (TEXFOREVER) or generic page title here.
+  const designSelect = document.getElementById('designNumber');
+  const designInput = document.getElementById('designSearchInput');
+  const designHeader = document.getElementById('hdrDesign');
+  const weftDesignHeader = document.getElementById('weftHdrDesign');
+
+  // Only apply this override on the Design Sheet Print page.
+  if (designSelect || designInput || designHeader || weftDesignHeader) {
+    let selectedDesign =
+      (designSelect && designSelect.value ? designSelect.value : '') ||
+      (designInput && designInput.value ? designInput.value : '') ||
+      (designHeader && designHeader.textContent ? designHeader.textContent : '') ||
+      (weftDesignHeader && weftDesignHeader.textContent ? weftDesignHeader.textContent : '') ||
+      (localStorage.getItem('selected_design_number') || '');
+
+    selectedDesign = String(selectedDesign).trim().replace(/^#\s*/, '');
+
+    if (selectedDesign && selectedDesign !== '-') {
+      return selectedDesign
+        .replace(/[\\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, '_');
+    }
+  }
+
   // Dashboard-ல் இருந்து page open ஆனாலும், current page filename மாறாது.
   const file = (window.location.pathname.split('/').pop() || '')
     .replace(/\.html?$/i, '')
@@ -145,22 +170,6 @@ function getPrintJobName(customContent, fallbackArea) {
   return heading || pageTitle || 'TEXFOREVER Print';
 }
 
-// PDF save filename = print aagura PAGE oda peyar (top window title-um set pannum)
-function setPrintTitles(name) {
-  const saved = [];
-  [window, window.parent, window.top].forEach(function (w) {
-    try {
-      if (!w || !w.document) return;
-      if (saved.some(function (p) { return p.d === w.document; })) return;
-      saved.push({ d: w.document, t: w.document.title });
-      w.document.title = name;
-    } catch (e) {}
-  });
-  return function restoreTitles() {
-    saved.forEach(function (p) { try { p.d.title = p.t; } catch (e) {} });
-  };
-}
-
 window.appPrint = async function (customContent) {
 
   const area = document.querySelector(
@@ -173,7 +182,6 @@ window.appPrint = async function (customContent) {
   const jobName = getPrintJobName(customContent, area);
 
   const html = buildPrintHtml(jobName, content);
-  const restoreTitles = setPrintTitles(jobName);
 
   // 1. Windows desktop (Electron)
   if (window.desktopPrint) {
@@ -188,7 +196,6 @@ window.appPrint = async function (customContent) {
       alert('Print error: ' + e.message);
     }
 
-    restoreTitles();
     return;
   }
     // 2. Android APK (Capacitor)
@@ -215,7 +222,6 @@ window.appPrint = async function (customContent) {
 
     }
 
-    restoreTitles();
     return;
   }
 
@@ -238,7 +244,7 @@ window.appPrint = async function (customContent) {
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
 
-    setTimeout(() => { iframe.remove(); restoreTitles(); }, 10000);
+    setTimeout(() => iframe.remove(), 1000);
 
   }, 500);
 };
@@ -303,15 +309,3 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
-
-// Page-la irundhu direct window.print() call panna-um page peyar PDF name-ah varum
-(function () {
-  let restore = null;
-  window.addEventListener('beforeprint', function () {
-    if (restore) return;
-    restore = setPrintTitles(getPrintJobName('', document));
-  });
-  window.addEventListener('afterprint', function () {
-    if (restore) { restore(); restore = null; }
-  });
-})();
