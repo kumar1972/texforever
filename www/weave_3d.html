@@ -1380,20 +1380,63 @@ function renderUIWithData(w=[], f=[]) {
     } catch(err) { console.error("UI Render Error:", err); }
 }
 
+/* ===== FIX: nested set (range) support - same logic as warp_entry / weft_entry ===== */
+function w3dGetRanges(type, count) {
+    const key = type === "warp" ? "warpRanges" : "weftRanges";
+    let src = (activeDesignObj && Array.isArray(activeDesignObj[key])) ? activeDesignObj[key] : [];
+    if (!src.length) {
+        const spanId = type === "warp" ? "wSpan" : "weftSpan"; const repId = type === "warp" ? "wRep" : "weftRep";
+        for (let i = 1; i <= count; i++) {
+            const span = parseInt($(spanId + i)?.value) || 1; const rep = parseInt($(repId + i)?.value) || 1;
+            if (span > 1 && rep > 1) src.push({ start: i, end: i + span - 1, set: rep });
+        }
+    }
+    const out = [];
+    src.forEach(r => {
+        const st = parseInt(r.start, 10), en = parseInt(r.end, 10), set = Math.round(parseFloat(r.set));
+        if (Number.isFinite(st) && Number.isFinite(en) && Number.isFinite(set) && st >= 1 && en >= st && en <= count && set > 1) out.push({ start: st, end: en, set: set });
+    });
+    return out;
+}
+
+// Returns row numbers (1-based) in the real order they run, with nested sets expanded.
+function w3dExpandRows(type, count) {
+    const nodes = w3dGetRanges(type, count);
+    const build = (lo, hi, used) => {
+        const arr = []; let i = lo;
+        while (i <= hi) {
+            let cand = null;
+            nodes.forEach(n => { if (!used.has(n) && n.start === i && n.end <= hi && (!cand || n.end > cand.end)) cand = n; });
+            if (cand) {
+                const u = new Set(used); u.add(cand);
+                const inner = build(cand.start, cand.end, u);
+                for (let r = 0; r < cand.set; r++) arr.push(...inner);
+                i = cand.end + 1;
+            } else { arr.push(i); i++; }
+        }
+        return arr;
+    };
+    return build(1, count, new Set());
+}
+
+// Ranges saved by warp_entry / weft_entry (same priority as those pages: entry data, then master, then cloud).
+function w3dFindEntryRanges(selectedClean, kind) {
+    const key = kind + "Ranges";
+    const toArr = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
+    const sources = [toArr(safeJSON(kind + "_entry_data", [])), toArr(safeJSON("design_masters_data", [])), Array.isArray(allCloudDesigns) ? allCloudDesigns : []];
+    for (const list of sources) {
+        const rec = list.find(d => d && typeof d === "object" && cleanDesignName(designName(d)) === selectedClean);
+        if (rec && Array.isArray(rec[key])) return clone(rec[key]);
+    }
+    return null;
+}
+
 function calculateYarnDetails(type) {
     let count = type === "warp" ? currentWarpCount : currentWeftCount;
-    let pId = type === "warp" ? "wE" : "weftP"; let spanId = type === "warp" ? "wSpan" : "weftSpan"; let repId = type === "warp" ? "wRep" : "weftRep";
-    let totalYarns = 0; let activeRows = 0; let i = 1;
-    while(i <= count) {
-        let e = $(pId + i); let sInp = $(spanId + i); let rInp = $(repId + i);
-        if(!e) { i++; continue; }
-        let n = Math.max(0, parseInt(e.value)||0); if(n > 0) activeRows++; 
-        let span = Math.max(1, parseInt(sInp?.value)||1); let repeat = Math.max(1, parseInt(rInp?.value)||1);
-        if (span > 1 && repeat > 1) {
-            let setTotal = 0; for(let s=0; s<span; s++) { let rIdx = i + s; let rE = $(pId + rIdx); if(rE) setTotal += Math.max(0, parseInt(rE.value)||0); }
-            totalYarns += (setTotal * repeat); i += span; 
-        } else { totalYarns += n; i++; }
-    }
+    let pId = type === "warp" ? "wE" : "weftP";
+    let totalYarns = 0; let activeRows = 0;
+    for (let i = 1; i <= count; i++) { const e = $(pId + i); if (e && (parseInt(e.value) || 0) > 0) activeRows++; }
+    w3dExpandRows(type, count).forEach(i => { const e = $(pId + i); if (e) totalYarns += Math.max(0, parseInt(e.value) || 0); });
     return { totalYarns, activeRows, count };
 }
 
@@ -1658,6 +1701,11 @@ function loadSelectedDesign(){
         
         activeDesignObj.warpLines = warpLinesData;
         activeDesignObj.weftLines = weftLinesData;
+        // FIX: nested set ranges always follow warp_entry / weft_entry data
+        ["warp", "weft"].forEach(kind => {
+            const er = w3dFindEntryRanges(selectedClean, kind);
+            if (er) activeDesignObj[kind + "Ranges"] = er;
+        });
 
         let dName = designName(activeDesignObj);
         if($("activeDesignText")) {
@@ -2207,11 +2255,11 @@ function draw3DWeave(layerMode = "all"){
         ctx.clearRect(0, 0, W, H); 
         
         let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = []; let baseWarpBeamMap = [];
-        while(w_idx <= currentWarpCount){
+        for(let w_idx of w3dExpandRows("warp", currentWarpCount)){
             const co = $("wC"+w_idx); const e = $("wE"+w_idx); const sInp = $("wSpan"+w_idx); const rInp = $("wRep"+w_idx);
             if(!co || !e){ w_idx++; continue; }
             
-            const n = Math.max(0, parseInt(e.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const n = Math.max(0, parseInt(e.value) || 0); const span = 1, repeat = 1; /* sets are expanded by w3dExpandRows */
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase(); 
             let hexVal = (co.value || "").toLowerCase();
             if(!hexVal || hexVal === "#000000" || hexVal === "null") {
@@ -2264,11 +2312,11 @@ function draw3DWeave(layerMode = "all"){
         }
         
         let baseWeft = []; let f_idx = 1; let baseWeftYarnInfo = [];
-        while(f_idx <= currentWeftCount){
+        for(let f_idx of w3dExpandRows("weft", currentWeftCount)){
             const co = $("weftC"+f_idx); const p = $("weftP"+f_idx); const sInp = $("weftSpan"+f_idx); const rInp = $("weftRep"+f_idx);
             if(!co || !p){ f_idx++; continue; }
             
-            const n = Math.max(0, parseInt(p.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const n = Math.max(0, parseInt(p.value) || 0); const span = 1, repeat = 1; /* sets are expanded by w3dExpandRows */
             const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase();
             let hexVal = (co.value || "").toLowerCase();
@@ -3163,10 +3211,10 @@ async function executePrintPdf() {
 async function executeRealA4Print(isPdfMode = false) {
     try {
         let baseWarp = []; let w_idx = 1; let warpSeerMap = []; let baseWarpYarnInfo = [];
-        while(w_idx <= currentWarpCount){
+        for(let w_idx of w3dExpandRows("warp", currentWarpCount)){
             const co = $("wC"+w_idx); const e = $("wE"+w_idx); const sInp = $("wSpan"+w_idx); const rInp = $("wRep"+w_idx);
             if(!co || !e){ w_idx++; continue; }
-            const n = Math.max(0, parseInt(e.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const n = Math.max(0, parseInt(e.value) || 0); const span = 1, repeat = 1; /* sets are expanded by w3dExpandRows */
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase(); 
             let hexVal = (co.value || "").toLowerCase();
             if(!hexVal || hexVal === "#000000" || hexVal === "null") {
@@ -3212,11 +3260,11 @@ async function executeRealA4Print(isPdfMode = false) {
         }
         
         let baseWeft = []; let f_idx = 1; let baseWeftYarnInfo = [];
-        while(f_idx <= currentWeftCount){
+        for(let f_idx of w3dExpandRows("weft", currentWeftCount)){
             const co = $("weftC"+f_idx); const p = $("weftP"+f_idx); const sInp = $("weftSpan"+f_idx); const rInp = $("weftRep"+f_idx);
             if(!co || !p){ f_idx++; continue; }
             
-            const n = Math.max(0, parseInt(p.value) || 0); const span = Math.max(1, parseInt(sInp?.value) || 1); const repeat = Math.max(1, parseInt(rInp?.value) || 1);
+            const n = Math.max(0, parseInt(p.value) || 0); const span = 1, repeat = 1; /* sets are expanded by w3dExpandRows */
             const cntStr = (co.getAttribute("data-cnt") || "").toLowerCase();
             const origStr = (co.getAttribute("data-orig") || "").toLowerCase();
             let hexVal = (co.value || "").toLowerCase();
@@ -3601,36 +3649,30 @@ function printShadeTag(tag) {
 
 function buildWarpTable(lines) {
     if(!lines || !lines.length) return "<div style='font-size:8px;text-align:center;padding:5px;border:1px solid #ccc;'>No Yarns</div>";
-    
-    let expandedGroups = [];
-    let ranges = activeDesignObj?.warpRanges || [];
-    let i = 0;
-    
-    while(i < lines.length) {
-        let lineNum = i + 1;
-        let range = ranges.find(r => Number(r.start) === lineNum);
-        if(range && Number(range.end) >= Number(range.start) && Number(range.set) > 1) {
-            let setRows = [];
-            let span = Number(range.end) - Number(range.start) + 1;
-            for(let j = 0; j < span && (i+j) < lines.length; j++) {
-                setRows.push(lines[i+j]);
-            }
-            expandedGroups.push({
-                isSet: true,
-                setStart: range.start,
-                setEnd: range.end,
-                totalRepeats: range.set,
-                rows: setRows
-            });
-            i += span;
-        } else {
-            expandedGroups.push({
-                isSet: false,
-                row: lines[i]
-            });
-            i++;
+
+    // Nested sets (same logic as warp_entry): inner range nearest to the table, outer range to its right.
+    const nodes = w3dGetRanges("warp", lines.length).map((n, i) => ({ start: n.start, end: n.end, set: n.set, order: i, lane: 0 }));
+    const laneNodes = [];
+    nodes.slice().sort((x, y) => (x.end - x.start) - (y.end - y.start) || x.start - y.start || x.end - y.end || x.order - y.order).forEach(node => {
+        let lane = laneNodes.findIndex(as => as.every(o => o.end < node.start || o.start > node.end));
+        if (lane === -1) { lane = laneNodes.length; laneNodes.push([]); }
+        node.lane = lane; laneNodes[lane].push(node);
+    });
+    const levels = laneNodes.length;
+    const amtOf = i => parseInt(lines[i - 1]?.ends) || 0;
+    const nodeTotal = node => {
+        let sum = 0;
+        for (let i = node.start; i <= node.end; i++) {
+            let m = node.set;
+            nodes.forEach(o => { if (o !== node && o.start >= node.start && o.end <= node.end && (o.start > node.start || o.end < node.end) && i >= o.start && i <= o.end) m *= o.set; });
+            sum += amtOf(i) * m;
         }
-    }
+        return Math.round(sum * 100) / 100;
+    };
+    const bracketCell = (node, rows, total) => `<td rowspan="${rows}" style="position:relative;vertical-align:middle;text-align:left;white-space:nowrap;font-weight:700;font-size:9px;color:#111827;padding:0 4px 0 0;">`
+        + `<div style="position:absolute;left:3px;top:3px;bottom:3px;width:6px;border:1.5px solid #4A7C59;border-left:none;border-radius:0 6px 6px 0;"></div>`
+        + `<div style="position:absolute;left:9px;top:50%;width:4px;border-top:1.5px solid #4A7C59;"></div>`
+        + `<div style="margin-left:17px;">X ${node.set} = <span style="color:#D97706;">${total}</span></div></td>`;
 
     let h = `<table class="yarn-table">
         <thead>
@@ -3639,119 +3681,76 @@ function buildWarpTable(lines) {
                 <th width="8%">Col</th>
                 <th style="text-align:left; padding-left:6px;">Colour Name</th>
                 <th width="12%">Ends</th>
-                <th width="10%">Set</th>
+                <th colspan="${Math.max(1, levels)}">Set</th>
                 <th>Drawing</th>
             </tr>
         </thead>
         <tbody>`;
-    
-    let visualRowIdx = 1;
 
     let rawDraw = document.getElementById("drawingPatternInput")?.value || activeDesignObj?.drawingPatternFormula || activeDesignObj?.drawingPattern || "1,2,3,4";
     let drawArr = expandPattern(rawDraw);
     if (!drawArr || drawArr.length === 0) drawArr = [1,2,3,4];
     let L = drawArr.length;
-    let globalThreadIndex = 0;
+    let tc = 0;                       // running thread count (drawing order position)
+    const tcAtStart = {};
+    const skip = Array(levels).fill(0);
 
-    expandedGroups.forEach((item, idx) => {
-        if(item.isSet) {
-            let totalRep = item.totalRepeats;
-            let spanLen = item.rows.length;
-            let setTotalEnds = 0;
+    for (let r = 1; r <= lines.length; r++) {
+        const l = lines[r - 1];
+        tcAtStart[r] = tc;
+        let rawCol = l.colourName || l.origName || "";
+        let pureColorName = cleanBaseColorName(rawCol);
+        let cleanName = getLocalizedColorName(pureColorName) || pureColorName || "Custom";
+        let amt = parseInt(l.ends) || 0;
+        let assignedDraw = "-";
 
-            item.rows.forEach((l, sIdx) => {
-                let rawCol = l.colourName || l.origName || "";
-                let pureColorName = cleanBaseColorName(rawCol);
-                let cleanName = getLocalizedColorName(pureColorName) || pureColorName || "Custom";
-                
-                let amt = parseInt(l.ends) || 0;
-                setTotalEnds += amt;
-                let assignedDraw = "-";
-                
-                if (amt > 0) {
-                    let shiftedBase = [];
-                    for(let k=0; k<L; k++) shiftedBase.push(drawArr[(globalThreadIndex + k) % L]);
-                    let repeats = Math.floor(amt / L);
-                    let remainder = amt % L;
-                    let remArr = [];
-                    for(let k=0; k<remainder; k++) remArr.push(drawArr[(globalThreadIndex + repeats * L + k) % L]);
-                    
-                    if (repeats >= 2) {
-                        assignedDraw = `(${shiftedBase.join(",")})×${repeats}`;
-                        if (remainder > 0) assignedDraw += "," + remArr.join(",");
-                    } else {
-                        let seq = [];
-                        for(let k=0; k<amt; k++) seq.push(drawArr[(globalThreadIndex + k) % L]);
-                        assignedDraw = seq.join(",");
-                    }
-                    globalThreadIndex = (globalThreadIndex + amt) % L;
-                }
-                
-                let setTd = "";
-                if (sIdx === 0) {
-                    setTd = `<td rowspan="${spanLen}" style="font-size:10px; font-weight:900; color:#b91c1c; background:#fff5f5; vertical-align:middle; text-align:center; padding:2px;">
-                        <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
-                            <div style="font-size:22px; font-weight:300;">}</div>
-                            <div style="font-size:10px;">× ${totalRep}</div>
-                        </div>
-                    </td>`;
-                }
-
-                let drawTd = `<td style="color:#1e3a8a; font-weight:900; font-size:9px; vertical-align:middle; text-align:center; letter-spacing:0.5px; word-break: break-all;">${assignedDraw}</td>`;
-
-                h += `<tr>
-                    <td>${visualRowIdx++}</td>
-                    <td><div class="color-swatch" style="background:${l.hex || l.color};"></div></td>
-                    <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
-                    <td style="font-weight:950; font-size:10px;">${amt}</td>
-                    ${setTd}
-                    ${drawTd}
-                </tr>`;
-            });
-            
-            if (totalRep > 1 && setTotalEnds > 0) {
-                let remainingEnds = (totalRep - 1) * setTotalEnds;
-                globalThreadIndex = (globalThreadIndex + remainingEnds) % L;
+        if (amt > 0) {
+            const g = tc % L;
+            let shiftedBase = [];
+            for(let k=0; k<L; k++) shiftedBase.push(drawArr[(g + k) % L]);
+            let repeats = Math.floor(amt / L);
+            let remainder = amt % L;
+            let remArr = [];
+            for(let k=0; k<remainder; k++) remArr.push(drawArr[(g + repeats * L + k) % L]);
+            if (repeats >= 2) {
+                assignedDraw = `(${shiftedBase.join(",")})×${repeats}`;
+                if (remainder > 0) assignedDraw += "," + remArr.join(",");
+            } else {
+                let seq = [];
+                for(let k=0; k<amt; k++) seq.push(drawArr[(g + k) % L]);
+                assignedDraw = seq.join(",");
             }
-
-        } else {
-            let l = item.row;
-            let rawCol = l.colourName || l.origName || "";
-            let pureColorName = cleanBaseColorName(rawCol);
-            let cleanName = getLocalizedColorName(pureColorName) || pureColorName || "Custom";
-            
-            let amt = parseInt(l.ends) || 0;
-            let assignedDraw = "-";
-            
-            if (amt > 0) {
-                let shiftedBase = [];
-                for(let k=0; k<L; k++) shiftedBase.push(drawArr[(globalThreadIndex + k) % L]);
-                let repeats = Math.floor(amt / L);
-                let remainder = amt % L;
-                let remArr = [];
-                for(let k=0; k<remainder; k++) remArr.push(drawArr[(globalThreadIndex + repeats * L + k) % L]);
-                
-                if (repeats >= 2) {
-                    assignedDraw = `(${shiftedBase.join(",")})×${repeats}`;
-                    if (remainder > 0) assignedDraw += "," + remArr.join(",");
-                } else {
-                    let seq = [];
-                    for(let k=0; k<amt; k++) seq.push(drawArr[(globalThreadIndex + k) % L]);
-                    assignedDraw = seq.join(",");
-                }
-                globalThreadIndex = (globalThreadIndex + amt) % L;
-            }
-            
-            h += `<tr>
-                <td>${visualRowIdx++}</td>
-                <td><div class="color-swatch" style="background:${l.hex || l.color || colorName(l.colourName || l.origName)};"></div></td>
-                <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
-                <td style="font-weight:950; font-size:10px;">${amt}</td>
-                <td style="font-size:10px; color:#9caea4; vertical-align:middle;">-</td>
-                <td style="color:#1e3a8a; font-weight:900; font-size:9px; vertical-align:middle; text-align:center; letter-spacing:0.5px; word-break: break-all;">${assignedDraw}</td>
-            </tr>`;
+            tc += amt;
         }
-    });
+
+        let setCells = "";
+        if (levels === 0) {
+            setCells = `<td style="font-size:10px; color:#9caea4; vertical-align:middle;">-</td>`;
+        } else {
+            const covered = nodes.some(n => r >= n.start && r <= n.end);
+            for (let lane = 0; lane < levels; lane++) {
+                if (r <= skip[lane]) continue;
+                const nd = laneNodes[lane].find(n => n.start === r);
+                if (nd) { skip[lane] = nd.end; setCells += bracketCell(nd, nd.end - nd.start + 1, nodeTotal(nd)); }
+                else setCells += `<td style="font-size:10px; color:#9caea4; vertical-align:middle;">${(!covered && lane === 0) ? "-" : ""}</td>`;
+            }
+        }
+
+        h += `<tr>
+            <td>${r}</td>
+            <td><div class="color-swatch" style="background:${l.hex || l.color || colorName(l.colourName || l.origName)};"></div></td>
+            <td style="text-align:left; padding-left:6px; padding-right:4px; font-weight:800; line-height:1.2; color:#111827 !important;">${cleanName}${printShadeTag(l.shadeTag)}</td>
+            <td style="font-weight:950; font-size:10px;">${amt}</td>
+            ${setCells}
+            <td style="color:#1e3a8a; font-weight:900; font-size:9px; vertical-align:middle; text-align:center; letter-spacing:0.5px; word-break: break-all;">${assignedDraw}</td>
+        </tr>`;
+
+        // sets that finish on this row repeat the thread order they just ran (inner sets first)
+        nodes.filter(n => n.end === r).sort((x, y) => (x.end - x.start) - (y.end - y.start) || x.order - y.order).forEach(n => {
+            const pass = tc - tcAtStart[n.start];
+            tc += (n.set - 1) * pass;
+        });
+    }
 
     h += `</tbody></table>`;
     return h;
