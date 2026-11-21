@@ -238,10 +238,10 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
     </div>
 
     <div class="denting-tabs">
-        <button class="denting-tab active" id="dentTabBtn" onclick="showDentingPane('dent')">📐 Denting</button>
-        <button class="denting-tab" id="drawTabBtn" onclick="showDentingPane('draw')">🧵 Drawing</button>
-        <button class="denting-tab" id="graphTabBtn" onclick="showDentingPane('graph')">🕸️ Weave Graph</button>
-        <button class="denting-tab" id="advTabBtn" onclick="showDentingPane('adv')">📊 Summary</button>
+        <button type="button" class="denting-tab active" id="dentTabBtn" onclick="showDentingPane('dent')">📐 Denting</button>
+        <button type="button" class="denting-tab" id="drawTabBtn" onclick="showDentingPane('draw')">🧵 Drawing</button>
+        <button type="button" class="denting-tab" id="graphTabBtn" onclick="showDentingPane('graph')">🕸️ Weave Graph</button>
+        <button type="button" class="denting-tab" id="advTabBtn" onclick="showDentingPane('adv')">📊 Summary</button>
     </div>
 
     <!-- DENTING PANE -->
@@ -1779,7 +1779,7 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
             onWeaveChange();
         }
         updateAll();
-        showDentingPane('dent');
+        // Keep the selected pane; initial HTML default remains Denting.
         setupGridZoomPan();
         setupFabricPreviewBoxPinchAndPan();
 
