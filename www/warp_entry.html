@@ -725,7 +725,10 @@ function loadDesignData() {
         document.getElementById('infoOrderMtr').value = finalMtrToFill;
         document.getElementById('infoTopBeam').value = (foundWarpEntry && foundWarpEntry.topBeam) || (foundMaster && foundMaster.topBeam) || '';
 
-        document.getElementById('infoType').value = (foundWarpEntry && foundWarpEntry.type) || (foundMaster && foundMaster.type) || (matchedOrder && matchedOrder.weaveType) || currentBaseSpecs.weaveType || currentBaseSpecs.weave || 'Plain';
+        document.getElementById('infoType').value =
+            (foundWarpEntry && (foundWarpEntry.fabricType || foundWarpEntry.weaveType || foundWarpEntry.construction || foundWarpEntry.type)) ||
+            (foundMaster && (foundMaster.fabricType || foundMaster.weaveType || foundMaster.construction || foundMaster.type)) ||
+            (matchedOrder && matchedOrder.weaveType) || currentBaseSpecs.weaveType || currentBaseSpecs.weave || 'Plain';
 
         effectiveLines.forEach(function (l) {
             if (!l) return;
@@ -741,7 +744,10 @@ function loadDesignData() {
     } else {
         if (saveBtn) saveBtn.innerText = "💾 Save";
         if (matchedProdMtr > 0) document.getElementById('infoOrderMtr').value = matchedProdMtr;
-        document.getElementById('infoType').value = (matchedOrder && matchedOrder.weaveType) || currentBaseSpecs.weaveType || currentBaseSpecs.weave || 'Plain';
+        document.getElementById('infoType').value =
+            (foundWarpEntry && (foundWarpEntry.fabricType || foundWarpEntry.weaveType || foundWarpEntry.construction || foundWarpEntry.type)) ||
+            (foundMaster && (foundMaster.fabricType || foundMaster.weaveType || foundMaster.construction || foundMaster.type)) ||
+            (matchedOrder && matchedOrder.weaveType) || currentBaseSpecs.weaveType || currentBaseSpecs.weave || 'Plain';
         loadDefaultRow();
     }
 

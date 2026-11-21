@@ -1626,6 +1626,17 @@ function loadSelectedDesign(){
         const selectedClean = cleanDesignName(selectedVal);
         const rawDigits = selectedVal.replace(/\D/g, '');
 
+        // Warp Pattern Entry is the authoritative source for fabric construction
+        // and Ground / Top Beam assignments. Prefer it over older cached 3D rows.
+        let warpEntryMatch = null;
+        try {
+            const warpEntries = safeJSON("warp_entry_data", []);
+            const warpEntryList = Array.isArray(warpEntries) ? warpEntries :
+                (warpEntries && typeof warpEntries === "object" ? Object.values(warpEntries) : []);
+            warpEntryMatch = warpEntryList.find(d => d && typeof d === "object" &&
+                cleanDesignName(designName(d)) === selectedClean) || null;
+        } catch (e) { console.warn("Warp Entry lookup skipped", e); }
+
         let foundMaster = null;
         let warpLinesData = [];
         let weftLinesData = [];
@@ -1695,9 +1706,24 @@ function loadSelectedDesign(){
         }
 
         let baseObj = foundMaster || { designNo: selectedVal, name: selectedVal };
+        // Do not let a non-empty but older 3D cache replace the latest Warp Entry
+        // lines: its beam assignment determines which cloth layer each end belongs to.
+        if (warpEntryMatch) {
+            if (Array.isArray(warpEntryMatch.warpLines) && warpEntryMatch.warpLines.length) {
+                warpLinesData = clone(warpEntryMatch.warpLines);
+            }
+            baseObj = { ...baseObj, ...warpEntryMatch };
+        }
         activeDesignObj = sanitizeDesignObj(clone(baseObj));
-        // Keep the Warp Entry fabric construction separately; the graph editor may use type="custom".
-        activeDesignObj.fabricType = activeDesignObj.weaveType || activeDesignObj.fabricType || activeDesignObj.type || "Plain";
+        // Keep the construction metadata separate from the graph editor's type="custom".
+        const savedConstruction = warpEntryMatch?.fabricType || warpEntryMatch?.weaveType ||
+            warpEntryMatch?.construction || warpEntryMatch?.type ||
+            activeDesignObj.weaveType || activeDesignObj.fabricType || activeDesignObj.construction ||
+            (activeDesignObj.type !== "custom" ? activeDesignObj.type : "Plain");
+        activeDesignObj.fabricType = savedConstruction;
+        activeDesignObj.weaveType = savedConstruction;
+        activeDesignObj.construction = savedConstruction;
+        activeDesignObj.isDoubleCloth = String(savedConstruction).trim().toLowerCase() === "double cloth";
         
         activeDesignObj.warpLines = warpLinesData;
         activeDesignObj.weftLines = weftLinesData;
@@ -1738,7 +1764,9 @@ function loadSelectedDesign(){
         let sourceObj = {
             ...activeDesignObj,
             ...(masterMatch || {}),
-            ...(dentDrawMatch || {})
+            ...(dentDrawMatch || {}),
+            // Re-apply authoritative Warp Entry construction after legacy master/cache data.
+            ...(warpEntryMatch || {})
         };
 
         // Keep the fabric construction and finished loom densities separate from
@@ -1746,11 +1774,19 @@ function loadSelectedDesign(){
         let designSpecStore = safeJSON("design_specs", {});
         let designSpecKey = Object.keys(designSpecStore || {}).find(k => cleanDesignName(k) === selectedClean);
         let matchedDesignSpec = designSpecKey ? designSpecStore[designSpecKey] : {};
-        activeDesignObj.weaveType = masterMatch?.weaveType || matchedDesignSpec?.weaveType ||
-            sourceObj?.weaveType || (activeDesignObj.type !== "custom" ? activeDesignObj.type : "");
-        activeDesignObj.fabricType = activeDesignObj.weaveType ||
-            (activeDesignObj.fabricType && activeDesignObj.fabricType !== "custom" ? activeDesignObj.fabricType : "") ||
+        const resolvedConstruction = warpEntryMatch?.fabricType || warpEntryMatch?.weaveType ||
+            warpEntryMatch?.construction || warpEntryMatch?.type ||
+            masterMatch?.weaveType || masterMatch?.fabricType || masterMatch?.construction ||
+            matchedDesignSpec?.weaveType || matchedDesignSpec?.fabricType ||
+            sourceObj?.weaveType || sourceObj?.fabricType || sourceObj?.construction ||
             (activeDesignObj.type !== "custom" ? activeDesignObj.type : "Plain");
+        activeDesignObj.weaveType = resolvedConstruction;
+        activeDesignObj.fabricType = resolvedConstruction;
+        activeDesignObj.construction = resolvedConstruction;
+        activeDesignObj.isDoubleCloth = String(resolvedConstruction).trim().toLowerCase() === "double cloth";
+        if (warpEntryMatch && Array.isArray(warpEntryMatch.warpLines) && warpEntryMatch.warpLines.length) {
+            activeDesignObj.warpLines = clone(warpEntryMatch.warpLines);
+        }
         activeDesignObj.finishReed = activeDesignObj.finishReed || masterMatch?.finishReed ||
             masterMatch?.finishedReed || matchedDesignSpec?.finishReed || matchedDesignSpec?.finishedReed || "";
         activeDesignObj.finishPick = activeDesignObj.finishPick || masterMatch?.finishPick ||
@@ -2143,8 +2179,8 @@ let drawFramePending = new Set();
 let doubleClothView = "layers";
 
 function isDoubleClothSimulation(){
-    // First use the saved construction metadata.
-    // Some records store "custom" in type/fabricType while construction is in weaveType.
+    // Detect Double Cloth from any saved construction field. Some older records
+    // store "custom" in fabricType/type while the actual construction is in weaveType.
     const candidates = [
         activeDesignObj?.weaveType,
         activeDesignObj?.fabricType,
@@ -2155,27 +2191,10 @@ function isDoubleClothSimulation(){
         activeDesignObj?.type,
         activeDesignObj?.weave
     ];
-    const metadataSaysDouble = candidates.some(value => {
+    return candidates.some(value => {
         const raw = String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ");
         return raw.includes("double cloth") || raw === "double";
     });
-    if (metadataSaysDouble) return true;
-
-    // Fallback for GitHub/offline copies where the selected design's construction
-    // metadata may not have synced, but Warp Entry still contains Top + Ground beam tags.
-    // renderUIWithData() creates wC1...wCn inputs before draw3DWeave() is called.
-    let hasTopBeam = false;
-    let hasBottomBeam = false;
-    const count = Math.max(0, Number(currentWarpCount) || 0);
-    for (let i = 1; i <= count; i++) {
-        const input = document.getElementById("wC" + i);
-        const beam = String(input?.getAttribute("data-beam") || "").trim().toLowerCase();
-        if (!beam) continue;
-        if (beam.includes("top") || beam.includes("dobby") || beam.includes("double") || beam.includes("seer")) hasTopBeam = true;
-        if (beam.includes("ground") || beam.includes("bottom")) hasBottomBeam = true;
-        if (hasTopBeam && hasBottomBeam) return true;
-    }
-    return false;
 }
 
 function prepareDoubleClothCanvases(){
@@ -2301,7 +2320,7 @@ function draw3DWeave(layerMode = "all"){
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, rOrig, rHex);
                         const rIsSeer = rInfo.isSpecialSeer || isSeersuckerThread(rHex, rOrig, rCnt);
-                        const rBeam = String(rCo.getAttribute("data-beam") || "").trim().toLowerCase();
+                        const rBeam = String(rCo.getAttribute("data-beam") || "").trim().toLowerCase().replace(/[_-]+/g, " ");
                         const rLayer = !rBeam ? "legacy" : ((rBeam.includes("top") || rBeam.includes("dobby") || rBeam.includes("double") || rBeam.includes("seer")) ? "top" : (rBeam.includes("ground") ? "bottom" : "legacy"));
                         for(let j = 0; j < rN; j++){ setSequence.push(rColor); setSeerSeq.push(rIsSeer); setInfoSeq.push(rInfo); setBeamSeq.push(rLayer); }
                     }
@@ -2315,7 +2334,7 @@ function draw3DWeave(layerMode = "all"){
                 w_idx += span;
             } else {
                 if(n > 0){ 
-                    const beamValue = String(co.getAttribute("data-beam") || "").trim().toLowerCase();
+                    const beamValue = String(co.getAttribute("data-beam") || "").trim().toLowerCase().replace(/[_-]+/g, " ");
                     const beamLayer = !beamValue ? "legacy" : ((beamValue.includes("top") || beamValue.includes("dobby") || beamValue.includes("double") || beamValue.includes("seer")) ? "top" : (beamValue.includes("ground") ? "bottom" : "legacy"));
                     for(let j = 0; j < n; j++){ 
                         baseWarp.push(rgbColor); 
