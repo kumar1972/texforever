@@ -2486,8 +2486,22 @@ function draw3DWeave(layerMode = "all"){
         const physW_mm = (scaleEnds / Math.max(scaleReed, 0.0001)) * layerScaleFactor;
         const physH_mm = (scalePicks / Math.max(scalePick, 0.0001)) * layerScaleFactor;
 
-        const singleWarpVal = isSeparateLayer ? measuredEnds : baseWarp.length;
-        const singleWeftVal = isSeparateLayer ? measuredPicks : baseWeft.length;
+        // Measurement labels must always describe ONE design repeat.
+        // The rendered canvas still uses the expanded arrays above so the
+        // selected 1x/2x/3x repeat count continues to enlarge the simulation.
+        const baseHasBeamAssignments = baseWarpBeamMap.some(v => v === "top" || v === "bottom");
+        const oneRepeatTopEnds = baseHasBeamAssignments
+            ? baseWarpBeamMap.filter(v => v === "top").length
+            : Math.ceil(baseWarp.length / 2);
+        const oneRepeatBottomEnds = baseHasBeamAssignments
+            ? baseWarpBeamMap.filter(v => v === "bottom").length
+            : Math.floor(baseWarp.length / 2);
+        const oneRepeatTopPicks = Math.ceil(baseWeft.length / 2);
+        const oneRepeatBottomPicks = Math.floor(baseWeft.length / 2);
+        const oneRepeatEnds = renderKey === "bottom" ? oneRepeatBottomEnds : oneRepeatTopEnds;
+        const oneRepeatPicks = renderKey === "bottom" ? oneRepeatBottomPicks : oneRepeatTopPicks;
+        const singleWarpVal = isSeparateLayer ? oneRepeatEnds : baseWarp.length;
+        const singleWeftVal = isSeparateLayer ? oneRepeatPicks : baseWeft.length;
         singleW_mm = (singleWarpVal / Math.max(scaleReed, 0.0001)) * layerScaleFactor;
         singleH_mm = (singleWeftVal / Math.max(scalePick, 0.0001)) * layerScaleFactor;
         singleW_cm = singleW_mm / 10;
@@ -2815,8 +2829,8 @@ function draw3DWeave(layerMode = "all"){
         ctx.font = "bold 14px Arial, sans-serif";
         ctx.fillText("cm", left - RULER / 2, bottom + RULER / 2);
 
-        const line1 = `Width : ${physW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
-        const line2 = `Height: ${physH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
+        const line1 = `Width : ${singleW_cm.toFixed(2)} cm (${singleW_mm.toFixed(1)} mm/rep)`;
+        const line2 = `Height: ${singleH_cm.toFixed(2)} cm (${singleH_mm.toFixed(1)} mm/rep)`;
 
         // Width -> X-axis ruler strip, Height -> Y-axis ruler strip (fit inside ruler)
         ctx.save();
