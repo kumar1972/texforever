@@ -1779,7 +1779,7 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
             onWeaveChange();
         }
         updateAll();
-        // Keep the selected pane; initial HTML default remains Denting.
+        // Do not force the Denting pane after initialization; preserve the user's selected tab.
         setupGridZoomPan();
         setupFabricPreviewBoxPinchAndPan();
 
