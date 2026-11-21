@@ -1637,6 +1637,38 @@ function loadSelectedDesign(){
                 cleanDesignName(designName(d)) === selectedClean) || null;
         } catch (e) { console.warn("Warp Entry lookup skipped", e); }
 
+        // Weft Entry is the authoritative source for weft colours and picks.
+        // Older 3D cache/master rows can contain stale or partial weftLines, so
+        // resolve the selected design from weft_entry_data independently.
+        let weftEntryMatch = null;
+        try {
+            const rawWeftEntries = safeJSON("weft_entry_data", []);
+            let weftEntryList = [];
+            if (Array.isArray(rawWeftEntries)) {
+                weftEntryList = rawWeftEntries;
+            } else if (rawWeftEntries && typeof rawWeftEntries === "object") {
+                if (rawWeftEntries.designNo || rawWeftEntries.design_no || rawWeftEntries.designNumber || rawWeftEntries.name) {
+                    weftEntryList = [rawWeftEntries];
+                } else {
+                    weftEntryList = Object.entries(rawWeftEntries).map(([key, value]) => {
+                        if (Array.isArray(value)) return { designNo: key, weftLines: value };
+                        if (value && typeof value === "object") return {
+                            ...value,
+                            designNo: value.designNo || value.design_no || value.designNumber || value.name || key
+                        };
+                        return null;
+                    }).filter(Boolean);
+                }
+            }
+            weftEntryMatch = weftEntryList.find(d => d && typeof d === "object" &&
+                cleanDesignName(designName(d)) === selectedClean) || null;
+            if (weftEntryMatch && !Array.isArray(weftEntryMatch.weftLines)) {
+                const candidate = weftEntryMatch.lines || weftEntryMatch.rows ||
+                    weftEntryMatch.entries || weftEntryMatch.items || weftEntryMatch.yarns;
+                if (Array.isArray(candidate)) weftEntryMatch = { ...weftEntryMatch, weftLines: candidate };
+            }
+        } catch (e) { console.warn("Weft Entry lookup skipped", e); }
+
         let foundMaster = null;
         let warpLinesData = [];
         let weftLinesData = [];
@@ -1714,6 +1746,10 @@ function loadSelectedDesign(){
             }
             baseObj = { ...baseObj, ...warpEntryMatch };
         }
+        if (weftEntryMatch) {
+            const authoritativeWeftLines = extractLinesFromObj(weftEntryMatch, "weft");
+            if (authoritativeWeftLines.length) weftLinesData = clone(authoritativeWeftLines);
+        }
         activeDesignObj = sanitizeDesignObj(clone(baseObj));
         // Keep the construction metadata separate from the graph editor's type="custom".
         const savedConstruction = warpEntryMatch?.fabricType || warpEntryMatch?.weaveType ||
@@ -1727,6 +1763,9 @@ function loadSelectedDesign(){
         
         activeDesignObj.warpLines = warpLinesData;
         activeDesignObj.weftLines = weftLinesData;
+        if (weftEntryMatch && Array.isArray(weftEntryMatch.weftRanges)) {
+            activeDesignObj.weftRanges = clone(weftEntryMatch.weftRanges);
+        }
         // FIX: nested set ranges always follow warp_entry / weft_entry data
         ["warp", "weft"].forEach(kind => {
             const er = w3dFindEntryRanges(selectedClean, kind);
