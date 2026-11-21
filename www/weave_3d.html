@@ -3138,6 +3138,23 @@ function autoFitToA4() {
     if($("cadScaleRange")) $("cadScaleRange").value = fitVal;
     updateCadPrintScale(fitVal);
 }
+/* ===== FIX: force PDF/print file name = design number (page, dashboard parent and top titles) ===== */
+function w3dForceTitles(name) {
+    const saved = [];
+    const apply = function () {
+        [window, window.parent, window.top].forEach(function (w) {
+            try {
+                if (!w || !w.document) return;
+                if (!saved.some(function (x) { return x.d === w.document; })) saved.push({ d: w.document, t: w.document.title });
+                w.document.title = name;
+            } catch (e) {}
+        });
+    };
+    apply();
+    [150, 350, 700].forEach(function (ms) { setTimeout(apply, ms); }); // in case another script resets the title
+    return function () { saved.forEach(function (x) { try { x.d.title = x.t; } catch (e) {} }); };
+}
+
 function printHtmlSmart(html, jobName) {
     // PDF save name = page name (Print PDF option maadhiri), "Dashboard - TEXFOREVER" varaama
     if (typeof getPrintJobName === "function") { try { jobName = getPrintJobName("", document) || jobName; } catch (e) {} }
@@ -3169,6 +3186,7 @@ function printHtmlSmart(html, jobName) {
         });
         restoreTitles = function () { savedT.forEach(function (x) { try { x.d.title = x.t; } catch (e) {} }); };
     }
+    { const _r1 = restoreTitles; const _r2 = w3dForceTitles(jobName); restoreTitles = function () { try { _r1(); } catch (e) {} _r2(); }; }
     const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PrintPlugin;
 
     // APK: Android print dialog (printer தேர்வு / Save as PDF)
@@ -3940,7 +3958,9 @@ async function triggerRealPrint() {
                     if (dn && dn !== "Unnamed") window.TEX_PRINT_JOB_NAME = dn + "_Design_Print";
                 }
             } catch (e) {}
-            try { await window.appPrint(box.outerHTML); } finally { window.TEX_PRINT_JOB_NAME = ""; }
+            let _restoreT = function () {};
+            if (window.TEX_PRINT_JOB_NAME) _restoreT = w3dForceTitles(window.TEX_PRINT_JOB_NAME);
+            try { await window.appPrint(box.outerHTML, window.TEX_PRINT_JOB_NAME); } finally { window.TEX_PRINT_JOB_NAME = ""; setTimeout(_restoreT, 10000); }
         } else {
             alert("Print module load ஆகல. printer.js script இருக்கான்னு பாருங்க.");
         }
