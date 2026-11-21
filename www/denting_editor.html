@@ -171,13 +171,25 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
 .canvas-container{
     width:146px;height:146px;border-radius:6px;
     border:1px solid #D1DED1;overflow:hidden;background:#000;
-    position:relative;
+    position:relative;touch-action:none;user-select:none;
 }
 .fabric-preview-wrap canvas{
     width:100%;height:100%;display:block;
     pointer-events:none;image-rendering:pixelated;
 }
 .fabric-preview-wrap.minimized .canvas-container{display:none;}
+.fp-expand-btn{background:#2F4F38;border:0;color:#fff;font-size:12px;cursor:pointer;padding:3px 7px;font-weight:700;border-radius:4px;line-height:1.2;margin-left:4px;}
+#liveWeaveOverlay{display:none;position:fixed;inset:0;z-index:99999;background:rgba(3,10,7,.96);padding:12px;box-sizing:border-box;overflow:auto;touch-action:pan-x pan-y;}
+#liveWeaveOverlay.active{display:flex;flex-direction:column;gap:10px;}
+#liveWeaveOverlay .live-full-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff;font-weight:700;font-size:14px;}
+#liveWeaveOverlay .live-full-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+#liveWeaveOverlay .live-full-controls button{border:0;border-radius:9px;padding:10px 18px;background:#10B981;color:#fff;font-weight:800;font-size:15px;}
+#liveWeaveOverlay .live-full-controls button.close{background:#EF4444;}
+#liveWeaveOverlay .fabric-preview-wrap{position:relative!important;inset:auto!important;left:auto!important;top:auto!important;right:auto!important;width:100%!important;max-width:none!important;margin:0 auto;padding:8px;box-sizing:border-box;transform:none!important;}
+#liveWeaveOverlay .fp-drag-handle{display:none;}
+#liveWeaveOverlay .canvas-container{width:100%!important;height:62vh!important;max-height:calc(100vh - 180px);margin:auto;overflow:auto;background:#000;}
+#liveWeaveOverlay .fabric-preview-wrap canvas{width:100%;height:100%;object-fit:contain;}
+@media (orientation:landscape){#liveWeaveOverlay .canvas-container{height:68vh!important;}}
 .fabric-preview-wrap.minimized{width:auto;padding:4px 8px;}
 
 .print-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000000;justify-content:center;align-items:center;padding:10px;}
@@ -343,7 +355,7 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
                     <div class="fabric-preview-wrap" id="fabricPreviewWrap">
                         <div class="fp-drag-handle" id="fpDragHandle">
                             <span>⠿ Live Weave</span>
-                            <button class="fp-toggle-btn" onclick="toggleLivePreview(event)" title="Minimize / Open">−</button>
+                            <span><button class="fp-expand-btn" type="button" onclick="openLiveWeaveFullScreen(event)" title="Full screen preview">⛶</button> <button class="fp-toggle-btn" onclick="toggleLivePreview(event)" title="Minimize / Open">−</button></span>
                         </div>
                         <div class="canvas-container" id="fpCanvasBox">
                             <canvas id="fabricPreviewCanvas" width="220" height="220"></canvas>
@@ -1041,6 +1053,39 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         }
     }
 
+    // Canonical Double-Cloth warp order: Top 1 -> Bottom 1 -> Top 2 -> Bottom 2.
+    // Denting and drawing formulas remain independently editable and are mapped per warp end.
+    function buildWarpEndPlan(totalEnds, dentArr, drawArr) {
+        const plan = [];
+        const dentPattern = (Array.isArray(dentArr) && dentArr.length) ? dentArr : [4];
+        const drawingPattern = (Array.isArray(drawArr) && drawArr.length) ? drawArr : [1,2,3,4];
+        let endNo = 0, dentNo = 0, guard = 0;
+        while (endNo < totalEnds && guard < 50000) {
+            const capacity = Math.max(0, Number(dentPattern[dentNo % dentPattern.length]) || 0);
+            dentNo++;
+            if (capacity === 0) {
+                plan.push({ dentNo, endInDent: 0, empty: true });
+                guard++;
+                continue;
+            }
+            for (let slot = 1; slot <= capacity && endNo < totalEnds; slot++) {
+                const layerIndex = endNo % 4;
+                const layer = (layerIndex === 0 || layerIndex === 2) ? 'top' : 'bottom';
+                plan.push({
+                    warpEnd: endNo + 1,
+                    dentNo,
+                    endInDent: slot,
+                    layer,
+                    layerPosition: layerIndex < 2 ? 1 : 2,
+                    frameNo: Math.max(1, Number(drawingPattern[endNo % drawingPattern.length]) || 1)
+                });
+                endNo++;
+            }
+            guard++;
+        }
+        return plan;
+    }
+
     function getCompleteDesignState(d) {
         const dentStr = document.getElementById("dentingPatternInput").value.trim() || "2";
         const drawStr = document.getElementById("drawingPatternInput").value.trim() || "1,2,3,4";
@@ -1048,6 +1093,9 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         const wType = document.getElementById("weaveType").value || "custom";
         const matrix = JSON.parse(JSON.stringify(weavePatterns.custom));
         const totalWarp = parseInt(document.getElementById("totalWarpEnds").value) || 0;
+        const dentArr = expandPattern(dentStr);
+        const drawArr = expandPattern(drawStr);
+        const warpEndPlan = buildWarpEndPlan(totalWarp, dentArr, drawArr);
 
         return {
             ...d,
@@ -1059,6 +1107,8 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
             type: wType,
             customMatrix: matrix,
             totalWarpEnds: totalWarp,
+            warpEndPlan,
+            warpLayerOrder: "top1,bottom1,top2,bottom2",
             timestamp: new Date().toISOString(),
             _savedAt: Date.now()
         };
@@ -1243,6 +1293,89 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         drawFabricPreview();
     }
 
+    let liveWeaveOriginalParent = null;
+    let liveWeaveOriginalNext = null;
+    let liveWeaveZoom = 1;
+
+    function ensureLiveWeaveOverlay() {
+        let overlay = document.getElementById("liveWeaveOverlay");
+        if (overlay) return overlay;
+        overlay = document.createElement("div");
+        overlay.id = "liveWeaveOverlay";
+        overlay.innerHTML = `
+            <div class="live-full-toolbar"><span>⠿ Live Weave — Full Screen</span><button class="close" style="border:0;border-radius:8px;padding:8px 12px;background:#EF4444;color:#fff;font-weight:800" onclick="closeLiveWeaveFullScreen()">✕ Close</button></div>
+            <div class="live-full-controls">
+                <button type="button" onclick="changeLiveWeaveZoom(1.25)">＋ Zoom</button>
+                <button type="button" onclick="changeLiveWeaveZoom(0.8)">－ Zoom</button>
+                <button type="button" onclick="resetLiveWeaveZoom()">Fit</button>
+            </div>
+            <div id="liveWeaveOverlayMount" style="width:100%;display:flex;justify-content:center;align-items:flex-start;"></div>`;
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+
+    function openLiveWeaveFullScreen(e) {
+        if (e) e.stopPropagation();
+        const wrap = document.getElementById("fabricPreviewWrap");
+        if (!wrap) return;
+        const overlay = ensureLiveWeaveOverlay();
+        if (!liveWeaveOriginalParent) {
+            liveWeaveOriginalParent = wrap.parentElement;
+            liveWeaveOriginalNext = wrap.nextSibling;
+        }
+        overlay.classList.add("active");
+        document.body.style.overflow = "hidden";
+        document.getElementById("liveWeaveOverlayMount").appendChild(wrap);
+        wrap.classList.remove("minimized");
+        liveWeaveZoom = 1;
+        applyLiveWeaveZoom();
+        drawFabricPreview();
+    }
+
+    function closeLiveWeaveFullScreen() {
+        const wrap = document.getElementById("fabricPreviewWrap");
+        const overlay = document.getElementById("liveWeaveOverlay");
+        if (wrap && liveWeaveOriginalParent) {
+            if (liveWeaveOriginalNext && liveWeaveOriginalNext.parentNode === liveWeaveOriginalParent) {
+                liveWeaveOriginalParent.insertBefore(wrap, liveWeaveOriginalNext);
+            } else {
+                liveWeaveOriginalParent.appendChild(wrap);
+            }
+            wrap.style.width = "";
+            const canvasBox = document.getElementById("fpCanvasBox");
+            const canvas = document.getElementById("fabricPreviewCanvas");
+            if (canvasBox) { canvasBox.style.width = ""; canvasBox.style.height = ""; canvasBox.style.maxHeight = ""; }
+            if (canvas) { canvas.style.width = ""; canvas.style.height = ""; }
+        }
+        if (overlay) overlay.classList.remove("active");
+        document.body.style.overflow = "";
+        liveWeaveZoom = 1;
+    }
+
+    function applyLiveWeaveZoom() {
+        const canvasBox = document.getElementById("fpCanvasBox");
+        if (!canvasBox) return;
+        canvasBox.style.setProperty("width", "100%", "important");
+        canvasBox.style.setProperty("height", "62vh", "important");
+        const canvas = document.getElementById("fabricPreviewCanvas");
+        if (canvas) {
+            canvas.style.setProperty("width", (100 * liveWeaveZoom) + "%", "important");
+            canvas.style.setProperty("height", (62 * liveWeaveZoom) + "vh", "important");
+        }
+    }
+
+    function changeLiveWeaveZoom(factor) {
+        liveWeaveZoom = Math.max(0.65, Math.min(2.5, liveWeaveZoom * factor));
+        applyLiveWeaveZoom();
+    }
+
+    function resetLiveWeaveZoom() {
+        liveWeaveZoom = 1;
+        applyLiveWeaveZoom();
+        const overlay = document.getElementById("liveWeaveOverlay");
+        if (overlay) overlay.scrollTop = 0;
+    }
+
     function toggleLivePreview(e) {
         if(e) e.stopPropagation();
         const wrap = document.getElementById("fabricPreviewWrap");
@@ -1251,8 +1384,7 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         btn.textContent = wrap.classList.contains("minimized") ? "+" : "−";
     }
 
-    // Live Weave: restore drag + pinch/zoom behavior for the floating preview.
-    // Dragging is limited to the title bar so the preview canvas remains usable.
+    // Live Weave: movable floating preview + independent two-finger pinch zoom.
     function setupFabricPreviewBoxPinchAndPan() {
         const wrap = document.getElementById("fabricPreviewWrap");
         const handle = document.getElementById("fpDragHandle");
@@ -1260,95 +1392,78 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         if (!wrap || !handle || wrap.dataset.dragBound === "1") return;
         wrap.dataset.dragBound = "1";
 
-        let dragging = false;
-        let startX = 0, startY = 0, startLeft = 0, startTop = 0;
-        let scale = 1;
-        let pinchStartDistance = 0;
-        let pinchStartScale = 1;
-        const activePointers = new Map();
+        const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+        const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
-        const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
+        // Drag the preview by its title bar (one finger / mouse).
+        const dragPointers = new Map();
+        let dragOrigin = null;
         handle.addEventListener("pointerdown", (e) => {
             if (e.target.closest(".fp-toggle-btn")) return;
             if (e.pointerType === "mouse" && e.button !== 0) return;
-
             e.preventDefault();
-            handle.setPointerCapture(e.pointerId);
-            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
+            try { handle.setPointerCapture(e.pointerId); } catch (_) {}
             const parent = wrap.parentElement;
             const parentRect = parent.getBoundingClientRect();
-            const wrapRect = wrap.getBoundingClientRect();
-
-            // Convert the original top/right placement to left/top only on first drag.
+            const rect = wrap.getBoundingClientRect();
             if (wrap.style.left === "") {
-                wrap.style.left = (wrapRect.left - parentRect.left) + "px";
-                wrap.style.top = (wrapRect.top - parentRect.top) + "px";
+                wrap.style.left = (rect.left - parentRect.left) + "px";
+                wrap.style.top = (rect.top - parentRect.top) + "px";
                 wrap.style.right = "auto";
             }
-
-            dragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            startLeft = parseFloat(wrap.style.left) || 0;
-            startTop = parseFloat(wrap.style.top) || 0;
+            dragPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            dragOrigin = {
+                x: e.clientX, y: e.clientY,
+                left: parseFloat(wrap.style.left) || 0,
+                top: parseFloat(wrap.style.top) || 0
+            };
         });
-
         handle.addEventListener("pointermove", (e) => {
-            if (!activePointers.has(e.pointerId)) return;
-            activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-            if (!dragging || activePointers.size !== 1) return;
-
+            if (!dragPointers.has(e.pointerId) || !dragOrigin) return;
             const parent = wrap.parentElement;
             const maxLeft = Math.max(0, parent.clientWidth - wrap.offsetWidth);
             const maxTop = Math.max(0, parent.clientHeight - wrap.offsetHeight);
-            wrap.style.left = clamp(startLeft + e.clientX - startX, 0, maxLeft) + "px";
-            wrap.style.top = clamp(startTop + e.clientY - startY, 0, maxTop) + "px";
+            wrap.style.left = clamp(dragOrigin.left + e.clientX - dragOrigin.x, 0, maxLeft) + "px";
+            wrap.style.top = clamp(dragOrigin.top + e.clientY - dragOrigin.y, 0, maxTop) + "px";
         });
-
         const endDrag = (e) => {
-            activePointers.delete(e.pointerId);
-            if (activePointers.size === 0) dragging = false;
+            dragPointers.delete(e.pointerId);
+            if (!dragPointers.size) dragOrigin = null;
         };
-        handle.addEventListener("pointerup", endDrag);
-        handle.addEventListener("pointercancel", endDrag);
-        handle.addEventListener("lostpointercapture", endDrag);
+        ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => handle.addEventListener(type, endDrag));
 
-        // Two-finger pinch on the preview canvas changes only the preview size.
+        // Pinch only inside the preview canvas; it resizes the floating box.
         if (canvasBox) {
-            const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+            const pinchPointers = new Map();
+            let startDistance = 0;
+            let startScale = 1;
+            let scale = 1;
             canvasBox.addEventListener("pointerdown", (e) => {
                 if (e.pointerType === "mouse") return;
-                canvasBox.setPointerCapture(e.pointerId);
-                activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                if (activePointers.size === 2) {
-                    const pts = [...activePointers.values()];
-                    pinchStartDistance = distance(pts[0], pts[1]);
-                    pinchStartScale = scale;
+                e.preventDefault();
+                try { canvasBox.setPointerCapture(e.pointerId); } catch (_) {}
+                pinchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                if (pinchPointers.size === 2) {
+                    const pts = [...pinchPointers.values()];
+                    startDistance = Math.max(1, distance(pts[0], pts[1]));
+                    startScale = scale;
                 }
             });
             canvasBox.addEventListener("pointermove", (e) => {
-                if (!activePointers.has(e.pointerId)) return;
-                activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                if (activePointers.size === 2 && pinchStartDistance > 0) {
-                    const pts = [...activePointers.values()];
-                    scale = clamp(pinchStartScale * distance(pts[0], pts[1]) / pinchStartDistance, 0.75, 2.5);
-                    wrap.style.width = (160 * scale) + "px";
-                    const canvas = wrap.querySelector(".canvas-container");
-                    if (canvas) {
-                        canvas.style.width = (146 * scale) + "px";
-                        canvas.style.height = (146 * scale) + "px";
-                    }
-                }
+                if (!pinchPointers.has(e.pointerId)) return;
+                pinchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                if (pinchPointers.size !== 2 || !startDistance) return;
+                const pts = [...pinchPointers.values()];
+                scale = clamp(startScale * distance(pts[0], pts[1]) / startDistance, 0.75, 2.8);
+                wrap.style.width = (160 * scale) + "px";
+                canvasBox.style.width = (146 * scale) + "px";
+                canvasBox.style.height = (146 * scale) + "px";
             });
             const endPinch = (e) => {
-                activePointers.delete(e.pointerId);
-                if (activePointers.size < 2) pinchStartDistance = 0;
+                pinchPointers.delete(e.pointerId);
+                if (pinchPointers.size < 2) startDistance = 0;
             };
-            canvasBox.addEventListener("pointerup", endPinch);
-            canvasBox.addEventListener("pointercancel", endPinch);
-            canvasBox.addEventListener("lostpointercapture", endPinch);
+            ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => canvasBox.addEventListener(type, endPinch));
         }
     }
 
@@ -1364,11 +1479,15 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         const m = weavePatterns.custom;
         if(!Array.isArray(m) || !m.length || !m[0].length) return;
 
-        const mRows = m.length;   
-        const mCols = m[0].length; 
-
-        let warpSeq = [];
-        for(let f = 0; f < mCols; f++) warpSeq.push(f);
+        const mRows = m.length;
+        const mCols = m[0].length;
+        const totalEnds = Math.max(1, parseInt(document.getElementById("totalWarpEnds")?.value) || mCols);
+        const dentArr = expandPattern(document.getElementById("dentingPatternInput")?.value || "4");
+        const drawArr = expandPattern(document.getElementById("drawingPatternInput")?.value || "1,2,3,4");
+        const endPlan = buildWarpEndPlan(totalEnds, dentArr, drawArr);
+        // Keep the complete end order in the preview; each end selects its assigned frame column.
+        const warpSeq = endPlan.filter(x => !x.empty).map(x => Math.max(0, x.frameNo - 1) % mCols);
+        if (!warpSeq.length) for(let f = 0; f < mCols; f++) warpSeq.push(f);
         
         let pickSeq = [];
         for(let r = 0; r < mRows; r++) pickSeq.push(r);
@@ -1748,14 +1867,19 @@ body.full-graph-mode .matrix-grid-container{flex:1;height:auto;max-height:none;}
         let m = weavePatterns.custom;
         let mCols = (m && m[0] && Array.isArray(m[0])) ? m[0].length : 4;
         let framesRequired = Math.max(...drawArr, mCols);
+        const endPlan = buildWarpEndPlan(totalEnds, dentArr, drawArr);
+        const topWarpEnds = endPlan.filter(x => x.layer === "top").length;
+        const bottomWarpEnds = endPlan.filter(x => x.layer === "bottom").length;
 
         resultContainer.innerHTML = `
           <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Total Warp Ends</b><span style="font-size:14px;font-weight:800;color:#2F4F38;">${totalEnds}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Top Cloth Warp Ends</b><span style="font-size:14px;font-weight:800;color:#2F4F38;">${topWarpEnds}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Bottom Cloth Warp Ends</b><span style="font-size:14px;font-weight:800;color:#2F4F38;">${bottomWarpEnds}</span></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Required Dents</b><span style="font-size:14px;font-weight:800;color:#2F4F38;">${dentsUsed}</span></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #E2E8E2;padding-bottom:8px;"><b>Missing / Empty Dents</b><span style="color:#D97706;font-size:14px;font-weight:800;">${emptyDents}</span></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><b>Frames Required</b><span style="font-size:14px;font-weight:800;color:#10B981;">${framesRequired}</span></div>
           <div style="font-size:11px;color:#4A554A;margin-top:15px;line-height:1.6;background:#fff;padding:12px;border-radius:8px;border:1px solid #D1DED1;font-weight:600;">
-            <b style="color:#2F4F38;">Denting Logic:</b> ${dentArr.join(", ")}<br><br><b style="color:#2F4F38;">Drawing Logic:</b> ${drawArr.join(", ")}
+            <b style="color:#2F4F38;">Double Cloth Warp Order:</b> Top 1 → Bottom 1 → Top 2 → Bottom 2<br><br><b style="color:#2F4F38;">Denting Logic:</b> ${dentArr.join(", ")}<br><br><b style="color:#2F4F38;">Drawing Logic:</b> ${drawArr.join(", ")}
           </div>`;
     }
 
