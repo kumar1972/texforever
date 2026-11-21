@@ -1172,7 +1172,8 @@ function normLine(x, warp) {
         thicknessMultiplier: yarnInfo.thicknessMultiplier, 
         diameter_mm: yarnInfo.diameter_mm, 
         shadeTag: shadeTag,
-        beam: String(lowerX.beam || lowerX.beamtype || lowerX.warpbeam || "").trim()
+        beam: String(lowerX.beam || lowerX.beamtype || lowerX.warpbeam || "").trim(),
+        clothLayer: String(lowerX.clothlayer || lowerX.layer || lowerX.cloth || "auto").trim().toLowerCase()
     };
 }
 function sanitizeDesignObj(d) {
@@ -1365,7 +1366,7 @@ function renderUIWithData(w=[], f=[]) {
                     ${countPrefix}<span class="col-name-label">${rawOrigName}</span>${shadeTagBadge}
                 </div>
                 ${pantoneRowHTML('weft', i+1)}
-                <input type="color" id="weftC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" style="display:none;">
+                <input type="color" id="weftC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" data-cloth-layer="${escapeColourText(x.clothLayer || 'auto')}" style="display:none;">
                 <input type="number" id="weftP${i+1}" value="${x.amount||''}" min="0" inputmode="numeric" oninput="updateYarnSummary('weft'); autoRefresh3D();">
                 <div class="set-box" style="display:none;">
                     <input type="number" id="weftSpan${i+1}" value="${spanVal}">
@@ -2386,7 +2387,7 @@ function draw3DWeave(layerMode = "all"){
             }
         }
         
-        let baseWeft = []; let f_idx = 1; let baseWeftYarnInfo = [];
+        let baseWeft = []; let baseWeftYarnInfo = []; let baseWeftLayerMap = []; let f_idx = 1;
         for(let f_idx of w3dExpandRows("weft", currentWeftCount)){
             const co = $("weftC"+f_idx); const p = $("weftP"+f_idx); const sInp = $("weftSpan"+f_idx); const rInp = $("weftRep"+f_idx);
             if(!co || !p){ f_idx++; continue; }
@@ -2400,7 +2401,7 @@ function draw3DWeave(layerMode = "all"){
             const rgbColor = hexToRgb(hexVal);
             
             if(span > 1 && repeat > 1){
-                const setSequence = []; const setInfoSeq = [];
+                const setSequence = []; const setInfoSeq = []; const setLayerSeq = [];
                 for(let s = 0; s < span; s++){
                     const currIdx = f_idx + s; if(currIdx > currentWeftCount) break;
                     const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
@@ -2412,12 +2413,13 @@ function draw3DWeave(layerMode = "all"){
                         const rColor = hexToRgb(rHex);
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, "", rHex);
-                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); }
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); const lv = String(rCo.getAttribute("data-cloth-layer") || "auto").toLowerCase(); setLayerSeq.push(lv === "top" || lv === "bottom" ? lv : ((setSequence.length % 2 === 1) ? "top" : "bottom")); }
                     }
                 }
                 for(let rep = 0; rep < repeat; rep++){ 
                     baseWeft.push(...setSequence); 
                     baseWeftYarnInfo.push(...setInfoSeq);
+                    baseWeftLayerMap.push(...setLayerSeq);
                 }
                 f_idx += span;
             } else {
@@ -2425,6 +2427,8 @@ function draw3DWeave(layerMode = "all"){
                     for(let j = 0; j < n; j++){ 
                         baseWeft.push(rgbColor); 
                         baseWeftYarnInfo.push(yInfo);
+                        const layerValue = String(co.getAttribute("data-cloth-layer") || "auto").toLowerCase();
+                        baseWeftLayerMap.push(layerValue === "top" || layerValue === "bottom" ? layerValue : (baseWeft.length % 2 === 1 ? "top" : "bottom"));
                     } 
                 }
                 f_idx++;
@@ -2432,10 +2436,10 @@ function draw3DWeave(layerMode = "all"){
         }
         
         if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
-        if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
+        if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; baseWeftLayerMap = ["top", "bottom"]; }
         
         let warp = []; let seerMap = []; let warpYarnInfos = []; let warpBeamMap = [];
-        let weft = []; let weftYarnInfos = [];
+        let weft = []; let weftYarnInfos = []; let weftLayerMap = [];
 
         for (let rep = 0; rep < simulationRepeatFactor; rep++) {
             warp.push(...baseWarp);
@@ -2444,6 +2448,7 @@ function draw3DWeave(layerMode = "all"){
             warpBeamMap.push(...baseWarpBeamMap);
             weft.push(...baseWeft);
             weftYarnInfos.push(...baseWeftYarnInfo);
+            weftLayerMap.push(...baseWeftLayerMap);
         }
 
         const realWarpLength = warp.length; 
@@ -2451,8 +2456,8 @@ function draw3DWeave(layerMode = "all"){
         const hasBeamAssignments = warpBeamMap.some(v => v === "top" || v === "bottom");
         const topEnds = hasBeamAssignments ? warpBeamMap.filter(v => v === "top").length : Math.ceil(realWarpLength / 2);
         const bottomEnds = hasBeamAssignments ? warpBeamMap.filter(v => v === "bottom").length : Math.floor(realWarpLength / 2);
-        const topPicks = Math.ceil(realWeftLength / 2);
-        const bottomPicks = Math.floor(realWeftLength / 2);
+        const topPicks = weftLayerMap.filter(v => v === "top").length;
+        const bottomPicks = weftLayerMap.filter(v => v === "bottom").length;
         if(isDoubleClothSimulation()){
             const topLabel = $("doubleTopPanel")?.firstElementChild;
             const bottomLabel = $("doubleBottomPanel")?.firstElementChild;
@@ -2496,8 +2501,8 @@ function draw3DWeave(layerMode = "all"){
         const oneRepeatBottomEnds = baseHasBeamAssignments
             ? baseWarpBeamMap.filter(v => v === "bottom").length
             : Math.floor(baseWarp.length / 2);
-        const oneRepeatTopPicks = Math.ceil(baseWeft.length / 2);
-        const oneRepeatBottomPicks = Math.floor(baseWeft.length / 2);
+        const oneRepeatTopPicks = baseWeftLayerMap.filter(v => v === "top").length;
+        const oneRepeatBottomPicks = baseWeftLayerMap.filter(v => v === "bottom").length;
         const oneRepeatEnds = renderKey === "bottom" ? oneRepeatBottomEnds : oneRepeatTopEnds;
         const oneRepeatPicks = renderKey === "bottom" ? oneRepeatBottomPicks : oneRepeatTopPicks;
         const singleWarpVal = isSeparateLayer ? oneRepeatEnds : baseWarp.length;
@@ -2622,8 +2627,8 @@ function draw3DWeave(layerMode = "all"){
         const effectiveCellH = renderCellH * scale;
 
         for(let r = realWeftLength - 1; r >= 0; r--){
-            if(renderKey === "top" && (r % 2 !== 0)) continue;
-            if(renderKey === "bottom" && (r % 2 !== 1)) continue;
+            if(renderKey === "top" && (weftLayerMap[r] || (r % 2 === 0 ? "top" : "bottom")) !== "top") continue;
+            if(renderKey === "bottom" && (weftLayerMap[r] || (r % 2 === 0 ? "top" : "bottom")) !== "bottom") continue;
             const layerRow = Math.floor(r / 2);
             const y = bottom - (((renderKey === "top" || renderKey === "bottom") ? (layerRow + 1) * renderCellH : (r + 1) * cellH));
             const rowHeight = renderCellH;
@@ -3366,7 +3371,7 @@ async function executeRealA4Print(isPdfMode = false) {
             }
         }
         
-        let baseWeft = []; let f_idx = 1; let baseWeftYarnInfo = [];
+        let baseWeft = []; let baseWeftYarnInfo = []; let baseWeftLayerMap = []; let f_idx = 1;
         for(let f_idx of w3dExpandRows("weft", currentWeftCount)){
             const co = $("weftC"+f_idx); const p = $("weftP"+f_idx); const sInp = $("weftSpan"+f_idx); const rInp = $("weftRep"+f_idx);
             if(!co || !p){ f_idx++; continue; }
@@ -3380,7 +3385,7 @@ async function executeRealA4Print(isPdfMode = false) {
             const rgbColor = hexToRgb(hexVal);
             
             if(span > 1 && repeat > 1){
-                const setSequence = []; const setInfoSeq = [];
+                const setSequence = []; const setInfoSeq = []; const setLayerSeq = [];
                 for(let s = 0; s < span; s++){
                     const currIdx = f_idx + s; if(currIdx > currentWeftCount) break;
                     const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
@@ -3392,12 +3397,13 @@ async function executeRealA4Print(isPdfMode = false) {
                         const rColor = hexToRgb(rHex);
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, "", rHex);
-                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); }
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); const lv = String(rCo.getAttribute("data-cloth-layer") || "auto").toLowerCase(); setLayerSeq.push(lv === "top" || lv === "bottom" ? lv : ((setSequence.length % 2 === 1) ? "top" : "bottom")); }
                     }
                 }
                 for(let rep = 0; rep < repeat; rep++){ 
                     baseWeft.push(...setSequence); 
                     baseWeftYarnInfo.push(...setInfoSeq);
+                    baseWeftLayerMap.push(...setLayerSeq);
                 }
                 f_idx += span;
             } else {
@@ -3405,6 +3411,8 @@ async function executeRealA4Print(isPdfMode = false) {
                     for(let j = 0; j < n; j++){ 
                         baseWeft.push(rgbColor); 
                         baseWeftYarnInfo.push(yInfo);
+                        const layerValue = String(co.getAttribute("data-cloth-layer") || "auto").toLowerCase();
+                        baseWeftLayerMap.push(layerValue === "top" || layerValue === "bottom" ? layerValue : (baseWeft.length % 2 === 1 ? "top" : "bottom"));
                     } 
                 }
                 f_idx++;
@@ -3412,7 +3420,7 @@ async function executeRealA4Print(isPdfMode = false) {
         }
 
         if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
-        if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
+        if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; baseWeftLayerMap = ["top", "bottom"]; }
 
         const singleWarp = baseWarp.slice();
         const singleWeft = baseWeft.slice();
@@ -3426,6 +3434,7 @@ async function executeRealA4Print(isPdfMode = false) {
             warpYarnInfos.push(...baseWarpYarnInfo);
             weft.push(...baseWeft);
             weftYarnInfos.push(...baseWeftYarnInfo);
+            weftLayerMap.push(...baseWeftLayerMap);
         }
 
         const realWarpLength = warp.length;

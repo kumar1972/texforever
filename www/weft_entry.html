@@ -252,7 +252,7 @@
 
         .header-grid {
             display: grid;
-            grid-template-columns: 30px 1fr 1.2fr 1fr 65px;
+            grid-template-columns: 30px 1fr 1.2fr 1fr 1fr 65px;
             gap: 6px;
             padding: 8px 0;
             font-size: 10px;
@@ -264,7 +264,7 @@
 
         .row-grid {
             display: grid;
-            grid-template-columns: 30px 1fr 1.2fr 1fr 65px;
+            grid-template-columns: 30px 1fr 1.2fr 1fr 1fr 65px;
             gap: 6px;
             margin-bottom: 10px;
             align-items: center;
@@ -983,6 +983,7 @@
                     <div>Count</div>
                     <div>Colour</div>
                     <div>Picks</div>
+                    <div>Cloth</div>
                     <div>Action</div>
                 </div>
 
@@ -1868,7 +1869,9 @@ function loadWeftDesignData() {
             addWeftLine(
                 l.count || '',
                 l.color || l.colour || '', 
-                l.picks || l.pick || ''
+                l.picks || l.pick || '',
+                null,
+                l.clothLayer || l.layer || l.cloth || 'auto'
             );
         });
 
@@ -2046,6 +2049,7 @@ async function copyToNewDesign() {
                 row.querySelector(
                     '.inp-picks'
                 ).value.trim();
+            let clothLayer = row.querySelector('.inp-cloth-layer')?.value || 'top';
 
             if (
                 count ||
@@ -2058,7 +2062,8 @@ async function copyToNewDesign() {
                     color: color,
                     picks:
                         parseFloat(picks) ||
-                        0
+                        0,
+                    clothLayer
                 });
             }
         });
@@ -2367,7 +2372,8 @@ function addWeftLine(
     count = '',
     color = '',
     picks = '',
-    insertAfterElem = null
+    insertAfterElem = null,
+    clothLayer = 'top'
 ) {
     if (!count) {
         const w1 = document.getElementById('infoWeft1');
@@ -2408,6 +2414,12 @@ function addWeftLine(
             class="inp-picks"
             placeholder="Picks"
             value="${escapeHTML(picks)}">
+
+        <select class="inp-cloth-layer" aria-label="Cloth layer">
+            <option value="top" ${clothLayer === 'top' ? 'selected' : ''}>Top Cloth</option>
+            <option value="bottom" ${clothLayer === 'bottom' ? 'selected' : ''}>Bottom Cloth</option>
+            <option value="auto" ${clothLayer === 'auto' ? 'selected' : ''}>Auto</option>
+        </select>
 
         <div class="action-cell-row">
 
@@ -2528,6 +2540,7 @@ function addWeftLine(
                 row.querySelector(
                     '.inp-picks'
                 ).value = '';
+                row.querySelector('.inp-cloth-layer').value = 'top';
 
             } else {
 
@@ -2998,6 +3011,7 @@ function collectWeftLines() {
                 row.querySelector(
                     '.inp-picks'
                 ).value.trim();
+            let clothLayer = row.querySelector('.inp-cloth-layer')?.value || 'top';
 
             if (
                 count ||
@@ -3011,7 +3025,8 @@ function collectWeftLines() {
                     picks:
                         parseFloat(
                             picks
-                        ) || 0
+                        ) || 0,
+                    clothLayer
                 });
             }
         });
