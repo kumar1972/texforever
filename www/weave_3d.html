@@ -2143,8 +2143,8 @@ let drawFramePending = new Set();
 let doubleClothView = "layers";
 
 function isDoubleClothSimulation(){
-    // Detect Double Cloth from any saved construction field. Some older records
-    // store "custom" in fabricType/type while the actual construction is in weaveType.
+    // First use the saved construction metadata.
+    // Some records store "custom" in type/fabricType while construction is in weaveType.
     const candidates = [
         activeDesignObj?.weaveType,
         activeDesignObj?.fabricType,
@@ -2155,10 +2155,27 @@ function isDoubleClothSimulation(){
         activeDesignObj?.type,
         activeDesignObj?.weave
     ];
-    return candidates.some(value => {
+    const metadataSaysDouble = candidates.some(value => {
         const raw = String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ");
         return raw.includes("double cloth") || raw === "double";
     });
+    if (metadataSaysDouble) return true;
+
+    // Fallback for GitHub/offline copies where the selected design's construction
+    // metadata may not have synced, but Warp Entry still contains Top + Ground beam tags.
+    // renderUIWithData() creates wC1...wCn inputs before draw3DWeave() is called.
+    let hasTopBeam = false;
+    let hasBottomBeam = false;
+    const count = Math.max(0, Number(currentWarpCount) || 0);
+    for (let i = 1; i <= count; i++) {
+        const input = document.getElementById("wC" + i);
+        const beam = String(input?.getAttribute("data-beam") || "").trim().toLowerCase();
+        if (!beam) continue;
+        if (beam.includes("top") || beam.includes("dobby") || beam.includes("double") || beam.includes("seer")) hasTopBeam = true;
+        if (beam.includes("ground") || beam.includes("bottom")) hasBottomBeam = true;
+        if (hasTopBeam && hasBottomBeam) return true;
+    }
+    return false;
 }
 
 function prepareDoubleClothCanvases(){
