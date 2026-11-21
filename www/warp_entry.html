@@ -729,7 +729,9 @@ function loadDesignData() {
 
         effectiveLines.forEach(function (l) {
             if (!l) return;
-            addWarpLine(l.count || '', warpLineColorName(l), l.beam || 'Ground', l.seer || '', l.ends || '');
+            // Keep the beam/layer assignment explicit for the 3D simulator.
+            const savedBeam = l.beam || l.beamType || l.warpBeam || 'Ground';
+            addWarpLine(l.count || '', warpLineColorName(l), savedBeam, l.seer || '', l.ends || '');
         });
 
         effectiveRanges.forEach(function (r) {
@@ -1040,7 +1042,8 @@ window.saveWarpDesign = async function () {
         const ends = endsElement.value.trim();
 
         if (count || color || ends) {
-            lines.push({ count: count, color: color, beam: beam, seer: sskr, ends: ends });
+            // Store one canonical beam value plus compatible aliases used by older 3D builds.
+            lines.push({ count: count, color: color, beam: beam, beamType: beam, warpBeam: beam, seer: sskr, ends: ends });
         }
     });
 
@@ -1059,6 +1062,21 @@ window.saveWarpDesign = async function () {
         }
     });
 
+    // Double Cloth must contain both layer assignments; Top Beam and Seer sucker
+    // belong to the upper layer, while Ground belongs to the lower layer.
+    const selectedFabricType = document.getElementById('infoType').value;
+    if (String(selectedFabricType).trim().toLowerCase() === 'double cloth') {
+        const hasGroundLayer = lines.some(line => String(line.beam || '').trim().toLowerCase() === 'ground');
+        const hasTopLayer = lines.some(line => {
+            const beamName = String(line.beam || '').trim().toLowerCase();
+            return beamName === 'top beam' || beamName === 'seer sucker';
+        });
+        if (!hasGroundLayer || !hasTopLayer) {
+            alert('Double Cloth simulationக்கு Ground மற்றும் Top Beam இரண்டும் தேவை. Warp Pattern-ல் இரண்டு layer-களுக்கும் line assign செய்து மீண்டும் Save செய்யவும்.');
+            return;
+        }
+    }
+
     const saveBtn = document.getElementById('saveBtnTxt');
     const originalText = saveBtn ? saveBtn.innerText : "💾 Save";
     if (saveBtn) { saveBtn.innerText = "⏳ Saving to Cloud..."; saveBtn.disabled = true; }
@@ -1071,7 +1089,13 @@ window.saveWarpDesign = async function () {
         weft2: document.getElementById('infoWeft2').value.trim(),
         orderMtr: document.getElementById('infoOrderMtr').value.trim(),
         topBeam: document.getElementById('infoTopBeam').value.trim(),
-        type: document.getElementById('infoType').value,
+        type: selectedFabricType,
+        // Explicit construction metadata lets 3D/Graph pages identify Double Cloth
+        // consistently even when they read different local/cloud design collections.
+        fabricType: selectedFabricType,
+        weaveType: selectedFabricType,
+        construction: selectedFabricType,
+        isDoubleCloth: String(selectedFabricType).trim().toLowerCase() === 'double cloth',
         onloomReed: document.getElementById('infoReed').value.trim(),
         onloomPick: document.getElementById('infoPick').value.trim(),
         onloomWidth: document.getElementById('infoWidth').value.trim(),
