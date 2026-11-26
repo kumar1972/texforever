@@ -1174,35 +1174,62 @@ async function saveSupabaseConfig() {
         return;
     }
 
-    // 1. LocalStorage மற்றும் IndexedDB-ல் பாதுகாப்பாக சேமித்தல்
-    safeSave("database_provider", provider);
-    safeSave("database_server_url", url);
-    safeSave("database_api_key", key);
+    try {
+        // Keep connection credentials local to this browser/device.
+        safeSave("database_provider", provider);
+        safeSave("database_server_url", url);
+        safeSave("database_api_key", key);
+        await idbSet("database_provider", provider);
+        await idbSet("database_server_url", url);
+        await idbSet("database_api_key", key);
 
-    await idbSet("database_provider", provider);
-    await idbSet("database_server_url", url);
-    await idbSet("database_api_key", key);
+        if (provider === "supabase") {
+            safeSave("custom_supabase_url", url);
+            safeSave("custom_supabase_key", key);
+            await idbSet("custom_supabase_url", url);
+            await idbSet("custom_supabase_key", key);
+        }
 
-    if (provider === "supabase") {
-        safeSave("custom_supabase_url", url);
-        safeSave("custom_supabase_key", key);
-        await idbSet("custom_supabase_url", url);
-        await idbSet("custom_supabase_key", key);
+        saveCloudToggleState(true);
+
+        // Cloud Auto-Sync OFF: save credentials locally only; do not attempt a cloud connection.
+        if (typeof window.isCloudSyncActive === "function" && !window.isCloudSyncActive()) {
+            status("📴 Cloud Sync Disabled");
+            toast("Database settings saved locally. Cloud Auto-Sync is OFF.", true);
+            return;
+        }
+
+        // Rebuild the actual Supabase client using the newly saved credentials.
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+        if (typeof window.refreshSupabaseConfig === "function") window.refreshSupabaseConfig();
+        window.supabaseClient = null;
+        window.supabaseConnected = false;
+        window.cloudSyncReady = false;
+        window.supabaseInitializing = false;
+        window.supabaseInitStarted = false;
+        window.cloudSyncPromise = null;
+        window.__cloudFullSyncStarted = false;
+
+        const connected = await Promise.race([
+            window.initializeSupabase(true),
+            new Promise(resolve => setTimeout(() => resolve("timeout"), 20000))
+        ]);
+
+        if (connected === true) {
+            status("✅ Database Connection & Cloud Sync Updated!");
+            toast("Database Connection & Sync Updated!", true);
+        } else if (connected === "timeout") {
+            status("⚠️ Settings saved. Connection check timed out; please retry.");
+            toast("Settings saved, but connection timed out.", false);
+        } else {
+            status("⚠️ Settings saved locally. Supabase connection failed; check URL, API key and internet.");
+            toast("Settings saved, but Supabase connection failed.", false);
+        }
+    } catch (error) {
+        console.error("saveSupabaseConfig error:", error);
+        status("❌ Could not save database settings: " + (error.message || error));
+        toast("Database settings could not be saved.", false);
     }
-
-    // 2. 'true' கொடுப்பதால் முதல் டோஸ்ட் மெசேஜ் (Double Toast) தடுக்கப்படும்
-    saveCloudToggleState(true);
-
-    // 3. பேஜை Reload செய்யாமல் config.js-ல் உள்ள Supabase கிளையண்டை அப்டேட் செய்ய (இருந்தால்)
-    if (typeof window.initSupabase === "function") {
-        window.initSupabase();
-    } else if (typeof window.reinitCloudConnection === "function") {
-        window.reinitCloudConnection();
-    }
-
-    // 4. Status மற்றும் ஒரே ஒரு Toast மட்டும் காட்டுதல் (No Page Reload = No Blink!)
-    status("✅ Database Connection & Sync Updated!");
-    toast("Database Connection & Sync Updated!", true);
 }
 
 /* SAVE ALL SETTINGS */

@@ -2323,23 +2323,29 @@ body::before,
 
         if (!status) return;
 
-        if (navigator.onLine) {
+        const cloudSyncEnabled =
+            (typeof window.isCloudSyncActive === "function")
+                ? window.isCloudSyncActive()
+                : localStorage.getItem("erp_cloud_sync_enabled") !== "false";
+
+        if (!cloudSyncEnabled) {
+
+            status.className = "offline";
+            status.textContent = "📴 Cloud Sync Disabled";
+
+        } else if (navigator.onLine) {
 
             status.className = "online";
-
             status.textContent =
                 "🟢 Online — Cloud Sync Available";
 
             setTimeout(function () {
-
                 status.className = "";
-
             }, 2500);
 
         } else {
 
             status.className = "offline";
-
             status.textContent =
                 "🔴 Offline Mode — Local Data";
 
