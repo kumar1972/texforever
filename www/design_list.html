@@ -158,6 +158,15 @@ function cleanDesignName(str) {
     return str ? str.toString().replace(/[#_\s]/g, '').trim().toLowerCase() : '';
 }
 
+// Hide only these orphan/dummy entries on Design List page.
+// This is a display-only filter; it does not delete data from other pages or storage.
+const DESIGN_LIST_HIDDEN_DUMMY_NAMES = new Set([
+    'plaid4',
+    'midsummermadras1',
+    'uobl282mh',
+    '7704/1'
+]);
+
 function exportToExcel() {
     let table = document.querySelector("table");
     if(!table) { alert("No data to export!"); return; }
@@ -249,6 +258,8 @@ window.renderDesignList = function() {
         let seenD = new Set();
         let designs = [...preDesigns, ...masterNames, ...warpNames, ...weftNames, ...keysFromSpecs, ...orderDesigns]
             .filter(d => { if (!d || typeof d !== 'string' && typeof d !== 'number') return false; const k = cleanDesignName(d); if (!k || k === 'unnamed' || seenD.has(k)) return false; seenD.add(k); return true; });
+        // These four empty entries were appearing as S.No. 46–49 in this page only.
+        designs = designs.filter(d => !DESIGN_LIST_HIDDEN_DUMMY_NAMES.has(cleanDesignName(d)));
 
         if(designs.length === 0) {
             listContainer.innerHTML = '<div class="empty-msg">No Saved Designs Found!</div>';
