@@ -377,6 +377,7 @@
         <label class="weave-option"><span>Seersucker check</span><input type="radio" name="weaveSelection" value="Seersucker check"></label>
         <label class="weave-option"><span>Twill Checks</span><input type="radio" name="weaveSelection" value="Twill Checks"></label>
         <label class="weave-option"><span>Twill Stripes</span><input type="radio" name="weaveSelection" value="Twill Stripes"></label>
+        <label class="weave-option"><span>Double Cloth</span><input type="radio" name="weaveSelection" value="Double Cloth"></label>
     </div>
 </div>
 
@@ -1032,6 +1033,17 @@
 
     const ENTRY_TABLES = ['warp_entry_data', 'weft_entry_data', 'weave_designs', 'denting_drawing_data'];
 
+    // Replace EVERY design-name field that still holds the old name (not just the first one),
+    // so no record keeps the old number after a rename.
+    function renameDesignFields(obj, oldC, newNo) {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+        let out = { ...obj };
+        ['designNo', 'design_no', 'designNumber', 'designName', 'design', 'name'].forEach(f => {
+            if (typeof out[f] === 'string' && cleanDesignName(out[f]) === oldC) out[f] = newNo;
+        });
+        return out;
+    }
+
     function migrateDesignEntries(oldNo, newNo) {
         let oldC = cleanDesignName(oldNo);
         let changed = {};
@@ -1044,16 +1056,15 @@
             if (Array.isArray(data)) {
                 data = data.map(item => {
                     if (!item || typeof item !== 'object') return item;
-                    let f = ['designNo', 'design_no', 'designName', 'design', 'name']
-                        .find(x => item[x] !== undefined && cleanDesignName(item[x]) === oldC);
-                    if (!f) return item;
+                    let renamedItem = renameDesignFields(item, oldC, newNo);
+                    if (JSON.stringify(renamedItem) === JSON.stringify(item)) return item;
                     touched = true;
-                    return { ...item, [f]: newNo };
+                    return renamedItem;
                 });
             } else if (data && typeof data === 'object') {
                 let oldKey = Object.keys(data).find(x => cleanDesignName(x) === oldC);
                 if (oldKey) {
-                    data[newNo] = data[oldKey];
+                    data[newNo] = renameDesignFields(data[oldKey], oldC, newNo);
                     delete data[oldKey];
                     touched = true;
                 }
@@ -1111,7 +1122,7 @@
             }
 
             delete designSpecs[oldKey];
-            designSpecs[newKey] = updatedSpecs;
+            designSpecs[newKey] = renameDesignFields(updatedSpecs, cleanOld, newDesignNo);
 
             designList = designList.filter(d => { let c = cleanDesignName(d); return c !== cleanOld && c !== cleanNew; });
             designList.push(newDesignNo);
@@ -1128,7 +1139,7 @@
             designMasters = designMasters.filter(m => { let c = cleanDesignName(m.name || m.designNo); return c !== cleanOld && c !== cleanNew; });
 
             if (oldMasterRec) {
-                let copyRec = JSON.parse(JSON.stringify(oldMasterRec));
+                let copyRec = renameDesignFields(JSON.parse(JSON.stringify(oldMasterRec)), cleanOld, newDesignNo);
                 copyRec.name = newDesignNo;
                 copyRec.designNo = newDesignNo;
                 designMasters.push(copyRec);
@@ -1148,7 +1159,13 @@
                     if (window.supabaseSave) await window.supabaseSave(k, changedEntries[k]);
                 }
                 let oldC = cleanDesignName(oldDesignNo);
-                await cloudPruneDesign([oldKey, oldDesignNo, oldDesignNo.replace(/#/g, '').trim()], x => cleanDesignName(x) === oldC);
+                let oldNames = [oldKey, oldDesignNo, oldDesignNo.replace(/#/g, '').trim()];
+                let pruneRes = await cloudPruneDesign(oldNames, x => cleanDesignName(x) === oldC);
+                if (!pruneRes.ok) {
+                    let pend = getPendingCloudDeletes().filter(p => cleanDesignName(p.name) !== oldC);
+                    pend.push({ name: oldDesignNo, names: oldNames });
+                    setPendingCloudDeletes(pend);
+                }
             }
 
             tempBitmapData = "";

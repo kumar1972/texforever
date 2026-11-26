@@ -2039,7 +2039,19 @@ body.dashboard-modern #connectionStatusIndicator.modern-only{ display:block !imp
     <script>
         (function(){
             var ind = document.getElementById("connectionStatusIndicator");
-            if(!navigator.onLine && ind){
+            if(!ind) return;
+
+            // Read the saved setting directly because config.js is loaded with defer.
+            // This inline script runs before deferred scripts are available.
+            var cloudSyncDisabled = false;
+            try {
+                cloudSyncDisabled = localStorage.getItem("erp_cloud_sync_enabled") === "false";
+            } catch(e) {}
+
+            if(cloudSyncDisabled){
+                ind.style.color = "#FCD34D";
+                ind.textContent = "● Cloud Sync Disabled";
+            } else if(!navigator.onLine){
                 ind.style.color = "#ff3333";
                 ind.textContent = "● OFFLINE Work Mode";
             }
@@ -2204,15 +2216,26 @@ function escapeHTML(value){
 
 function setSyncStatus(message, error){
 
+    const cloudSyncDisabled =
+        (function(){
+            try {
+                if(localStorage.getItem("erp_cloud_sync_enabled") === "false") return true;
+            } catch(e) {}
+            return typeof window.isCloudSyncActive === "function" && !window.isCloudSyncActive();
+        })();
+
     const el = document.getElementById("syncStatus");
     if(el){
-        el.textContent = message;
-        el.classList.toggle("error", Boolean(error));
+        el.textContent = cloudSyncDisabled ? "📴 Cloud Sync Disabled" : message;
+        el.classList.toggle("error", cloudSyncDisabled ? false : Boolean(error));
     }
 
     const indicator = document.getElementById("connectionStatusIndicator");
     if(indicator){
-        if(error || !navigator.onLine){
+        if(cloudSyncDisabled){
+            indicator.style.color = "#FCD34D";
+            indicator.textContent = "● Cloud Sync Disabled";
+        } else if(error || !navigator.onLine){
             indicator.style.color = "#ff3333";
             indicator.textContent = "● OFFLINE Work Mode";
         } else if(message.includes("Connected")){
@@ -3813,6 +3836,19 @@ function waitForCloudSync(timeout){
 
         function check(){
 
+            if(
+                (function(){
+                    try {
+                        if(localStorage.getItem("erp_cloud_sync_enabled") === "false") return true;
+                    } catch(e) {}
+                    return typeof window.isCloudSyncActive === "function" && !window.isCloudSyncActive();
+                })()
+            ){
+                setSyncStatus("📴 Cloud Sync Disabled");
+                resolve(false);
+                return;
+            }
+
             if(!navigator.onLine){
                 setSyncStatus("⚠️ Offline / Local Data", true);
                 resolve(false);
@@ -4009,6 +4045,10 @@ window.addEventListener(
 ========================================================= */
 
 window.addEventListener('online', () => {
+    if(localStorage.getItem("erp_cloud_sync_enabled") === "false"){
+        setSyncStatus("📴 Cloud Sync Disabled");
+        return;
+    }
     setSyncStatus("☁️ Supabase Connected");
 });
 

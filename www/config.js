@@ -512,7 +512,7 @@ function updateNetworkStatus() {
 
     let text, bg, fg = "#FFFFFF";
     if (!window.isCloudSyncActive()) {
-        text = "📴 OFFLINE MODE — Cloud Sync Disabled in Settings"; bg = "#64748B";
+        text = "📴 Cloud Sync Disabled"; bg = "#64748B";
     } else if (window.supabaseConnected === true) {
         text = "🟢 ONLINE — Supabase Cloud Connected"; bg = "#10B981";
     } else if (navigator.onLine === true) {
@@ -1002,38 +1002,74 @@ async function syncAllCloudData() {
     return true;
 }
 
-// Manual: Cloud -> This device (replaces local copy of every ERP key that exists in cloud)
+// Manual: Cloud -> This device (safe pull; never overwrites unsynced local edits)
 window.pullCloudToLocal = async function () {
+    if (!window.isCloudSyncActive()) {
+        return { ok: false, msg: "Cloud Sync OFF. Enable it in Settings before pulling Cloud data." };
+    }
     if (!navigator.onLine) { return { ok: false, msg: "Offline" }; }
     if (!window.supabaseClient) { await window.initializeSupabase(false); }
     if (!window.supabaseClient) { return { ok: false, msg: "Supabase connect ஆகவில்லை" }; }
-    let n = 0;
+
+    let n = 0, skippedDirty = 0;
     for (const key of window.erpCloudKeys) {
         try {
-            const d = await cloudLoad(key, null);
-            if (d !== null && d !== undefined) { window.localSave(key, d); clearLocalDirty(key); n++; }
-        } catch (e) {}
+            if (window.isCloudExcludedKey && window.isCloudExcludedKey(key)) continue;
+            // Preserve local edits that have not yet reached Cloud.
+            if (isLocalDirty(key)) { skippedDirty++; continue; }
+
+            const cloudData = await cloudLoad(key, null);
+            if (cloudData === null || cloudData === undefined) continue;
+
+            const localData = window.localLoad(key, null);
+            let safeData = cloudData;
+            if (window.ERP_MERGE_KEYS.indexOf(key) !== -1 && Array.isArray(localData) && Array.isArray(cloudData)) {
+                safeData = mergeDesignArrays(localData, cloudData);
+            } else if (key === "purchased_bills_data" && Array.isArray(localData) && Array.isArray(cloudData)) {
+                safeData = mergePurchasedBills(localData, cloudData);
+            }
+            window.localSave(key, safeData);
+            n++;
+        } catch (e) { console.warn("Safe Cloud pull skipped:", key, e); }
     }
     try { window.dispatchEvent(new CustomEvent("erp-cloud-synced", { detail: { synced: n } })); } catch (e) {}
-    return { ok: true, count: n };
+    return { ok: true, count: n, skippedDirty: skippedDirty };
 };
 
-// Manual: This device -> Cloud (only keys that actually have data; empty {} / [] are skipped)
+// Manual: This device -> Cloud (safe push; only locally changed keys are uploaded)
 window.pushLocalToCloud = async function () {
+    if (!window.isCloudSyncActive()) {
+        return { ok: false, msg: "Cloud Sync OFF. Enable it in Settings before pushing Local data." };
+    }
     if (!navigator.onLine) { return { ok: false, msg: "Offline" }; }
     if (!window.supabaseClient) { await window.initializeSupabase(false); }
     if (!window.supabaseClient) { return { ok: false, msg: "Supabase connect ஆகவில்லை" }; }
-    let n = 0;
+
+    let n = 0, skippedClean = 0;
     for (const key of window.erpCloudKeys) {
         try {
-            const d = window.localLoad(key, null);
-            if (d === null || d === undefined || d === "") continue;
-            if (Array.isArray(d) && d.length === 0) continue;
-            if (typeof d === "object" && !Array.isArray(d) && Object.keys(d).length === 0) continue;
-            if (await cloudSave(key, d)) n++;
-        } catch (e) {}
+            if (window.isCloudExcludedKey && window.isCloudExcludedKey(key)) continue;
+            // Never bulk-overwrite Cloud with potentially stale local cache data.
+            if (!isLocalDirty(key)) { skippedClean++; continue; }
+
+            const localData = window.localLoad(key, null);
+            if (localData === null || localData === undefined || localData === "") continue;
+            if (Array.isArray(localData) && localData.length === 0) continue;
+            if (typeof localData === "object" && !Array.isArray(localData) && Object.keys(localData).length === 0) continue;
+
+            let safeData = localData;
+            if (window.ERP_MERGE_KEYS.indexOf(key) !== -1 && Array.isArray(localData)) {
+                const cloudData = await cloudLoad(key, null);
+                if (Array.isArray(cloudData)) safeData = mergeDesignArrays(localData, cloudData);
+            } else if (key === "purchased_bills_data" && Array.isArray(localData)) {
+                const cloudData = await cloudLoad(key, null);
+                if (Array.isArray(cloudData)) safeData = mergePurchasedBills(localData, cloudData);
+            }
+
+            if (await cloudSave(key, safeData)) n++;
+        } catch (e) { console.warn("Safe Local push skipped:", key, e); }
     }
-    return { ok: true, count: n };
+    return { ok: true, count: n, skippedClean: skippedClean };
 };
 
 // ============================================================
