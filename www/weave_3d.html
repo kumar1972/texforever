@@ -307,7 +307,8 @@ input, select {
     border-radius: 6px;
     padding: 4px 6px;
     display: grid;
-    grid-template-columns: 28px 36px 1fr 50px; 
+    /* W label | swatch | yarn name | Warp Entry beam label | ends */
+    grid-template-columns: 28px 36px minmax(0, 1fr) minmax(72px, 0.55fr) 50px;
     align-items: center;
     gap: 6px;
 }
@@ -329,6 +330,22 @@ input, select {
     cursor: pointer;
     text-align: left;
     padding-left: 2px;
+}
+
+.yarn-beam-display {
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 4px 3px;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .yarn-color-btn {
@@ -1158,6 +1175,15 @@ function normLine(x, warp) {
         finalColor = colorName(name).toLowerCase();
     }
 
+    const savedClothLayer = lowerX.clothlayer ?? lowerX.cloth_layer ?? lowerX.layer ?? lowerX.cloth ?? "auto";
+    // Display the original beam designation from Warp Pattern Entry (no layer regrouping).
+    const beamLabel = lowerX.beam ?? lowerX.beamname ?? lowerX.beam_name ??
+        lowerX.beamtype ?? lowerX.beam_type ?? lowerX.warpbeam ?? lowerX.warp_beam ??
+        lowerX.beamlayer ?? lowerX.beam_layer ?? lowerX.beamdesignation ??
+        lowerX.beam_designation ?? lowerX.beamselection ?? lowerX.beam_selection ??
+        lowerX.warpbeamname ?? lowerX.warp_beam_name ?? lowerX.beamcategory ??
+        lowerX.beam_category ?? "";
+
     return { 
         origName: cleanBaseColorName(originalDisplayString), 
         rawColorInput: originalDisplayString,
@@ -1172,8 +1198,9 @@ function normLine(x, warp) {
         thicknessMultiplier: yarnInfo.thicknessMultiplier, 
         diameter_mm: yarnInfo.diameter_mm, 
         shadeTag: shadeTag,
-        beam: String(lowerX.beam || lowerX.beamtype || lowerX.warpbeam || "").trim(),
-        clothLayer: String(lowerX.clothlayer || lowerX.layer || lowerX.cloth || "auto").trim().toLowerCase()
+        beam: String(beamLabel || "").trim(),
+        // Keep the actual Weft Entry Top/Bottom selection through normalization.
+        clothLayer: String(savedClothLayer || "auto").trim().toLowerCase()
     };
 }
 function sanitizeDesignObj(d) {
@@ -1339,8 +1366,9 @@ function renderUIWithData(w=[], f=[]) {
                 <div class="yarn-name-display" id="wNameDisp${i+1}" onclick="openColourPickerForEntry('warp', ${i+1})" title="${rawOrigName}">
                     ${countPrefix}<span class="col-name-label">${rawOrigName}</span>${shadeTagBadge}
                 </div>
+                <div class="yarn-beam-display" title="Beam: ${escapeColourText(x.beam || 'Not specified')}">${escapeColourText(x.beam || '—')}</div>
                 ${pantoneRowHTML('warp', i+1)}
-                <input type="color" id="wC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" data-seer="${x.isSeer?'1':'0'}" data-beam="${escapeColourText(x.beam || 'Ground')}" style="display:none;">
+                <input type="color" id="wC${i+1}" value="${x.hex}" data-orig-hex="${x.hex}" data-orig="${safeOrig}" data-tag="${escapeColourText(x.shadeTag)}" data-cnt="${escapeColourText(countVal)}" data-name="${escapeColourText(x.origName)}" data-seer="${x.isSeer?'1':'0'}" data-beam="${escapeColourText(x.beam || 'Auto')}" style="display:none;">
                 <input type="number" id="wE${i+1}" value="${x.amount||''}" min="0" inputmode="numeric" oninput="updateYarnSummary('warp'); autoRefresh3D();">
                 <div class="set-box" style="display:none;">
                     <input type="number" id="wSpan${i+1}" value="${spanVal}">
@@ -1595,6 +1623,42 @@ async function importFromFirebase(manual = false) {
                 if (resM && !resM.error && Array.isArray(resM.data)) cloudData.push(...resM.data);
                 if (resW && !resW.error && Array.isArray(resW.data)) cloudData.push(...resW.data);
 
+                // Restore this page's independent 3D edit/cache keys from the same
+                // Supabase sync table used by config.js firebaseSave().
+                try {
+                    const res3D = await supabaseClient
+                        .from("erp_sync_data")
+                        .select("id, json_data")
+                        .in("id", ["w3d_local_edits", "w3d_designs_cache"]);
+                    if (res3D && !res3D.error && Array.isArray(res3D.data)) {
+                        const cloudEditsRow = res3D.data.find(row => row.id === "w3d_local_edits");
+                        const cloudCacheRow = res3D.data.find(row => row.id === "w3d_designs_cache");
+                        if (cloudEditsRow && cloudEditsRow.json_data && typeof cloudEditsRow.json_data === "object") {
+                            let localEdits = {};
+                            try { localEdits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}") || {}; } catch (e) {}
+                            const cloudEdits = cloudEditsRow.json_data;
+                            Object.keys(cloudEdits).forEach(cloudKey => {
+                                const normalized = cleanDesignName(cloudKey);
+                                const localKey = Object.keys(localEdits).find(key => cleanDesignName(key) === normalized);
+                                if (!localKey) localEdits[cloudKey] = clone(cloudEdits[cloudKey]);
+                                else {
+                                    const localTime = Date.parse(localEdits[localKey]?.timestamp || "") || 0;
+                                    const cloudTime = Date.parse(cloudEdits[cloudKey]?.timestamp || "") || 0;
+                                    if (cloudTime > localTime) localEdits[localKey] = clone(cloudEdits[cloudKey]);
+                                }
+                            });
+                            const rawEdits = JSON.stringify(localEdits);
+                            if (window.StorageDB?.setItem) window.StorageDB.setItem("w3d_local_edits", rawEdits, true);
+                            else localStorage.setItem("w3d_local_edits", rawEdits);
+                        }
+                        if (cloudCacheRow && Array.isArray(cloudCacheRow.json_data)) {
+                            cloudData.push(...cloudCacheRow.json_data);
+                        }
+                    }
+                } catch (restore3DError) {
+                    console.warn("3D cloud cache restore skipped", restore3DError);
+                }
+
                 if (cloudData.length > 0) {
                     allCloudDesigns = mergeDesigns(allCloudDesigns.concat(cloudData));
                     localStorage.setItem("w3d_designs_cache", JSON.stringify(allCloudDesigns));
@@ -1673,6 +1737,7 @@ function loadSelectedDesign(){
         let foundMaster = null;
         let warpLinesData = [];
         let weftLinesData = [];
+        let w3dEditWarpLines = null, w3dEditWeftLines = null;
 
         // 1. Check 3D specific local edits cache first (highest priority for 3D view simulations)
         try {
@@ -1685,6 +1750,8 @@ function loadSelectedDesign(){
                 let ed = editsCache[edKey];
                 if(ed.warpLines && ed.warpLines.length) warpLinesData = clone(ed.warpLines);
                 if(ed.weftLines && ed.weftLines.length) weftLinesData = clone(ed.weftLines);
+                if(ed.warpLines && ed.warpLines.length) w3dEditWarpLines = clone(ed.warpLines);
+                if(ed.weftLines && ed.weftLines.length) w3dEditWeftLines = clone(ed.weftLines);
                 if(ed.customMatrix) weavePatterns.custom = clone(ed.customMatrix);
                 foundMaster = ed;
             }
@@ -1751,6 +1818,14 @@ function loadSelectedDesign(){
             const authoritativeWeftLines = extractLinesFromObj(weftEntryMatch, "weft");
             if (authoritativeWeftLines.length) weftLinesData = clone(authoritativeWeftLines);
         }
+        // Saved 3D colour changes (w3d_local_edits) stay on top of the entry-page lines.
+        [[warpLinesData, w3dEditWarpLines], [weftLinesData, w3dEditWeftLines]].forEach(([target, edit]) => {
+            if(!Array.isArray(target) || !Array.isArray(edit) || target.length !== edit.length) return;
+            target.forEach((ln, i) => {
+                const h = String((edit[i] && (edit[i].hex || edit[i].colour || edit[i].color)) || "").trim();
+                if(ln && /^#[0-9a-f]{3,6}$/i.test(h)) ln.hex = h.toLowerCase();
+            });
+        });
         activeDesignObj = sanitizeDesignObj(clone(baseObj));
         // Keep the construction metadata separate from the graph editor's type="custom".
         const savedConstruction = warpEntryMatch?.fabricType || warpEntryMatch?.weaveType ||
@@ -1865,46 +1940,7 @@ function loadSelectedDesign(){
     }
 }
 
-async function saveCurrentDesign() {
-    try {
-        setStatus("⏳ Saving 3D Weave edits...");
-        let currentInputs = getCurrentData();
-        let name = activeDesignObj ? designName(activeDesignObj) : null;
-        if(!name || name === "Unnamed") {
-            name = prompt("Design Number / Name", "Design_01");
-        }
-        if(!name) { setStatus("⚡ Ready"); return; }
 
-        let editData = {
-            designNo: name,
-            name: name,
-            warpLines: currentInputs.warpLines,
-            weftLines: currentInputs.weftLines,
-            customMatrix: currentInputs.customMatrix,
-            type: currentInputs.type,
-            dentingPattern: currentInputs.dentingPattern,
-            drawingPattern: currentInputs.drawingPattern,
-            dentingPatternFormula: currentInputs.dentingPatternFormula,
-            drawingPatternFormula: currentInputs.drawingPatternFormula,
-            timestamp: new Date().toISOString()
-        };
-
-        // Save strictly to local_edits_cache (IndexDB / LocalStorage simulation cache) without altering warp_entry.html or weft_entry.html master tables.
-        let edits = {};
-        try { edits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}"); } catch(e) {}
-        edits[String(name).trim()] = editData;
-        localStorage.setItem("w3d_local_edits", JSON.stringify(edits));
-
-        localStorage.setItem("w3d_last_edit_ts", Date.now().toString());
-        window._lastEditStamp = localStorage.getItem("w3d_last_edit_ts");
-
-        setStatus("✅ Saved Locally (Independent 3D Cache)");
-        alert("✅ 3D Weave தனியாக Successful-ஆக Save ஆகிவிட்டது! மற்ற பக்கங்கள் மாறாது.");
-    } catch(error) {
-        alert("Error: " + error.message);
-        setStatus("❌ Error saving");
-    }
-}
 
 function getCurrentData() {
     let w = []; let f = []; let wRanges = []; let fRanges = []; 
@@ -1928,7 +1964,8 @@ function getCurrentData() {
                 ends: parseInt(e.value)||0, 
                 span: span, 
                 repeat: rep, 
-                shadeTag: shadeTag 
+                shadeTag: shadeTag,
+                beam: String(c.getAttribute('data-beam') || '')
             });
             if(span > 1 && rep > 1) { wRanges.push({ start: wCurrentLine, end: wCurrentLine + span - 1, set: rep }); }
             wCurrentLine++;
@@ -1954,7 +1991,8 @@ function getCurrentData() {
                 picks: parseInt(p.value)||0, 
                 span: span, 
                 repeat: rep, 
-                shadeTag: shadeTag 
+                shadeTag: shadeTag,
+                clothLayer: String(c.getAttribute('data-cloth-layer') || 'auto').toLowerCase()
             });
             if(span > 1 && rep > 1) { fRanges.push({ start: fCurrentLine, end: fCurrentLine + span - 1, set: rep }); }
             fCurrentLine++;
@@ -1976,13 +2014,13 @@ function getCurrentData() {
 
 async function saveCurrentDesign() {
     try {
-        setStatus("⏳ Saving...");
-        let currentInputs = getCurrentData();
-        let data = activeDesignObj ? clone(activeDesignObj) : {}; 
-        
+        setStatus("⏳ Saving 3D Weave edits...");
+        const currentInputs = getCurrentData();
+        const data = activeDesignObj ? clone(activeDesignObj) : {};
+
         Object.assign(data, {
-            warpLines: currentInputs.warpLines,       
-            weftLines: currentInputs.weftLines,       
+            warpLines: currentInputs.warpLines,
+            weftLines: currentInputs.weftLines,
             customMatrix: currentInputs.customMatrix,
             type: currentInputs.type,
             dentingPattern: currentInputs.dentingPattern,
@@ -1990,49 +2028,121 @@ async function saveCurrentDesign() {
             dentingPatternFormula: currentInputs.dentingPatternFormula,
             drawingPatternFormula: currentInputs.drawingPatternFormula
         });
-        
+
         let name = activeDesignObj ? designName(activeDesignObj) : null;
-        if(!name || name === "Unnamed") {
-            name = prompt("Design Number / Name", "Design_01");
-        }
-        if(!name) { setStatus("⚡ Ready"); return; }
-        
-        if(activeDesignObj?.id) data.id = activeDesignObj.id;
+        if (!name || name === "Unnamed") name = prompt("Design Number / Name", "Design_01");
+        if (!name) { setStatus("⚡ Ready"); return; }
 
-        data.designNo = name; 
-        data.name = name; 
+        name = String(name).trim();
+        if (!name) { setStatus("⚡ Ready"); return; }
+        if (activeDesignObj?.id) data.id = activeDesignObj.id;
+        data.designNo = name;
+        data.name = name;
         data.timestamp = new Date().toISOString();
-        let cleanName = cleanDesignName(name);
 
-        try {
-            let edits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}");
-            edits[String(name).trim()] = clone(data);
-            localStorage.setItem("w3d_local_edits", JSON.stringify(edits));
-        } catch(e) {}
+        const cleanName = cleanDesignName(name);
+        const edits = (() => {
+            try { return JSON.parse(localStorage.getItem("w3d_local_edits") || "{}") || {}; }
+            catch (e) { return {}; }
+        })();
 
-        localStorage.setItem("w3d_last_edit_ts", Date.now().toString());
+        // Replace any differently-spelled key for the same normalized design name.
+        Object.keys(edits).forEach(key => {
+            if (cleanDesignName(key) === cleanName) delete edits[key];
+        });
+        edits[name] = clone(data);
+
+        const cache = mergeDesigns(
+            (Array.isArray(allCloudDesigns) ? allCloudDesigns : [])
+                .filter(item => cleanDesignName(designName(item)) !== cleanName)
+                .concat([clone(data)])
+        );
+
+        // Durable local-first: write both independent 3D keys before attempting cloud sync.
+        const localWrite = async (key, value) => {
+            const raw = JSON.stringify(value);
+            if (window.StorageDB?.ready) await window.StorageDB.ready;
+            if (window.StorageDB?.db) {
+                await new Promise((resolve, reject) => {
+                    try {
+                        const tx = window.StorageDB.db.transaction("store", "readwrite");
+                        tx.objectStore("store").put(raw, key);
+                        tx.oncomplete = resolve;
+                        tx.onerror = () => reject(tx.error || new Error("IndexedDB write failed"));
+                        tx.onabort = () => reject(tx.error || new Error("IndexedDB write aborted"));
+                    } catch (storageError) { reject(storageError); }
+                });
+                window.StorageDB.cache[key] = raw;
+            } else {
+                localStorage.setItem(key, raw);
+            }
+        };
+        await localWrite("w3d_local_edits", edits);
+        await localWrite("w3d_designs_cache", cache);
+        localStorage.setItem("w3d_last_edit_ts", String(Date.now()));
+        localStorage.setItem("w3d_last_design_name", name);
         window._lastEditStamp = localStorage.getItem("w3d_last_edit_ts");
 
-        let cache = Array.isArray(allCloudDesigns) ? allCloudDesigns.filter(x => String(designName(x)).trim() !== String(name).trim()) : []; 
-        cache.push(clone(data));
-        allCloudDesigns = mergeDesigns(cache); 
-        
-        localStorage.setItem("w3d_designs_cache", JSON.stringify(allCloudDesigns));
-        activeDesignObj = clone(data); 
-        localStorage.setItem("w3d_last_design_name", name);
-        
-        if(document.getElementById("activeDesignText")) {
-            document.getElementById("activeDesignText").textContent = "Active Design: " + name; 
+        allCloudDesigns = cache;
+        activeDesignObj = clone(data);
+        const activeLabel = document.getElementById("activeDesignText");
+        if (activeLabel) activeLabel.textContent = "Active Design: " + name;
+        draw3DWeave();
+
+        // Save each independent 3D key directly to the configured cloud table
+        // after both local writes. Avoid firebaseSave() here because config.js
+        // also auto-syncs StorageDB.setItem(), which would issue duplicate upserts.
+        const cloudEnabled = typeof window.isCloudSyncActive === "function"
+            ? window.isCloudSyncActive() : true;
+        let cloudAllSaved = !cloudEnabled;
+        if (cloudEnabled) {
+            const queue = window.offlineSyncQueue || (window.offlineSyncQueue = {});
+            const persistQueue = () => {
+                const rawQueue = JSON.stringify(queue);
+                if (window.StorageDB?.setItem) window.StorageDB.setItem("__texforever_offline_queue__", rawQueue, true);
+                else localStorage.setItem("__texforever_offline_queue__", rawQueue);
+            };
+            const syncOne3DKey = async (key, value) => {
+                if (!navigator.onLine) {
+                    queue[key] = clone(value);
+                    persistQueue();
+                    return false;
+                }
+                try {
+                    if (!window.supabaseClient && typeof window.initializeSupabase === "function") {
+                        await window.initializeSupabase(false);
+                    }
+                    const client = window.supabaseClient;
+                    if (!client) throw new Error("Supabase client unavailable");
+                    const { error } = await client.from("erp_sync_data").upsert({ id: key, json_data: value });
+                    if (error) throw error;
+                    delete queue[key];
+                    persistQueue();
+                    return true;
+                } catch (syncError) {
+                    console.warn("3D cloud sync pending:", key, syncError);
+                    queue[key] = clone(value);
+                    persistQueue();
+                    return false;
+                }
+            };
+            const editsSaved = await syncOne3DKey("w3d_local_edits", edits);
+            const cacheSaved = await syncOne3DKey("w3d_designs_cache", cache);
+            cloudAllSaved = editsSaved && cacheSaved;
         }
-        
-        draw3DWeave(); 
 
-        setStatus("✅ Saved ( only)");
-        alert("✅ 3D Design & Colors வெற்றிகரமாக Save ஆகிவிட்டது!");
-
-    } catch(error) { 
-        alert("Error: " + error.message);
+        if (cloudAllSaved) {
+            setStatus(cloudEnabled ? "✅ 3D edits saved locally + cloud" : "💾 3D edits saved locally (cloud disabled)");
+            alert(cloudEnabled ? "✅ 3D Design & Colours saved locally and synced to cloud!" :
+                "💾 3D Design saved locally. Cloud sync is disabled in Settings.");
+        } else {
+            setStatus("💾 3D edits saved locally — cloud sync pending");
+            alert("💾 3D Design saved locally. Cloud sync pending; it will retry when connected.");
+        }
+    } catch (error) {
+        console.error("Weave 3D save error:", error);
         setStatus("❌ Error saving");
+        alert("Error saving 3D design: " + error.message);
     }
 }
             
@@ -2186,7 +2296,12 @@ function isWarpUp(pickRow, warpIndex, type, draftArr, pickSeq){
         pickIndex = pickRow % mRows;
     }
 
-    const matrixRow = (mRows - 1) - (pickIndex % mRows);
+    // The graph editor displays matrix row 0 at the TOP and the last matrix
+    // row at the BOTTOM. Simulation/print coordinates start at the fabric
+    // bottom, so invert the visual row index here. This keeps a mark drawn
+    // on the bottom graph row at the bottom of both live and printed cloth.
+    const visualRowIndex = ((pickIndex % mRows) + mRows) % mRows;
+    const matrixRow = mRows - 1 - visualRowIndex;
 
     let frame = 1;
     if(draftArr && draftArr.length > 0){
@@ -2235,6 +2350,60 @@ function isDoubleClothSimulation(){
         const raw = String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ");
         return raw.includes("double cloth") || raw === "double";
     });
+}
+
+// Double Cloth weft logic: 1 pick of the Top cloth weft colour, then 1 pick of the
+// Bottom cloth weft colour (alternating). Works only on the 3D simulation arrays.
+function w3dInterleaveDoubleClothWeft(weftArr, infoArr, layerArr){
+    // Preserve the exact Weft Entry / graph pick sequence. The layer map controls
+    // which cloth owns each pick; it must not reorder picks across the width/height.
+    const layers = weftArr.map((_, i) => {
+        const rawLayer = String(layerArr?.[i] || "").trim().toLowerCase();
+        return rawLayer.includes("bottom") ? "bottom" :
+            (rawLayer.includes("top") ? "top" : (i % 2 === 0 ? "top" : "bottom"));
+    });
+    return { weft: weftArr.slice(), info: (infoArr || []).slice(), layers };
+}
+
+// Resolve the layer selected for one saved Weft Entry row.
+// Explicit Top/Bottom selection always wins; only legacy/Auto rows use
+// the entry-row fallback (row 1 = Top, row 2 = Bottom, and so on).
+function w3dWeftEntryLayer(input, rowIndex){
+    const attrValue = input?.getAttribute("data-cloth-layer") ??
+        input?.getAttribute("data-layer") ?? input?.getAttribute("data-cloth");
+    let rawValue = attrValue;
+
+    // If a legacy UI element has no layer attribute, consult the authoritative
+    // saved Weft Entry row before falling back to the row sequence.
+    if(rawValue === null || rawValue === undefined || String(rawValue).trim() === ""){
+        const savedRows = Array.isArray(activeDesignObj?.weftLines) ? activeDesignObj.weftLines : [];
+        const savedRow = savedRows[Math.max(0, Number(rowIndex) - 1)];
+        rawValue = savedRow?.clothLayer ?? savedRow?.cloth_layer ?? savedRow?.layer ?? savedRow?.cloth ?? "auto";
+    }
+
+    const raw = String(rawValue || "auto").trim().toLowerCase().replace(/[_-]+/g, " ");
+    if(raw.includes("bottom") || raw.includes("ground") || raw.includes("lower") || raw === "beam 2" || raw === "beam2") return "bottom";
+    if(raw.includes("top") || raw.includes("upper") || raw === "beam 1" || raw === "beam1") return "top";
+    return (Number(rowIndex) % 2 === 1) ? "top" : "bottom";
+}
+
+// Normalize the saved Warp Entry beam name into the simulation cloth layer.
+// Warp Entry may store "Top Beam", "Ground", "Bottom Beam", "Lower Beam",
+// or older localized/legacy values. Unknown values stay legacy for safe balancing.
+function w3dNormalizeBeamLayer(value){
+    const raw = String(value ?? "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+    if(!raw || raw === "auto" || raw === "legacy" || raw === "none") return "legacy";
+    if(raw.includes("ground") || raw.includes("bottom") || raw.includes("lower") ||
+       raw === "beam 2" || raw === "beam2") return "bottom";
+    if(raw.includes("top") || raw.includes("upper") || raw === "beam 1" || raw === "beam1") return "top";
+    return "legacy";
+}
+
+// Double Cloth warp logic: preserve Warp Entry / denting end order.
+function w3dDoubleClothOrder(layerArr){
+    // Keep warp ends in the same left-to-right order as Warp Entry / denting.
+    // Top/Ground is a layer label, not an instruction to regroup ends.
+    return layerArr.map((_, i) => i);
 }
 
 function prepareDoubleClothCanvases(){
@@ -2360,8 +2529,7 @@ function draw3DWeave(layerMode = "all"){
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, rOrig, rHex);
                         const rIsSeer = rInfo.isSpecialSeer || isSeersuckerThread(rHex, rOrig, rCnt);
-                        const rBeam = String(rCo.getAttribute("data-beam") || "").trim().toLowerCase().replace(/[_-]+/g, " ");
-                        const rLayer = !rBeam ? "legacy" : ((rBeam.includes("top") || rBeam.includes("dobby") || rBeam.includes("double") || rBeam.includes("seer")) ? "top" : (rBeam.includes("ground") ? "bottom" : "legacy"));
+                        const rLayer = w3dNormalizeBeamLayer(rCo.getAttribute("data-beam"));
                         for(let j = 0; j < rN; j++){ setSequence.push(rColor); setSeerSeq.push(rIsSeer); setInfoSeq.push(rInfo); setBeamSeq.push(rLayer); }
                     }
                 }
@@ -2374,8 +2542,7 @@ function draw3DWeave(layerMode = "all"){
                 w_idx += span;
             } else {
                 if(n > 0){ 
-                    const beamValue = String(co.getAttribute("data-beam") || "").trim().toLowerCase().replace(/[_-]+/g, " ");
-                    const beamLayer = !beamValue ? "legacy" : ((beamValue.includes("top") || beamValue.includes("dobby") || beamValue.includes("double") || beamValue.includes("seer")) ? "top" : (beamValue.includes("ground") ? "bottom" : "legacy"));
+                    const beamLayer = w3dNormalizeBeamLayer(co.getAttribute("data-beam"));
                     for(let j = 0; j < n; j++){ 
                         baseWarp.push(rgbColor); 
                         warpSeerMap.push(isSeer); 
@@ -2384,6 +2551,34 @@ function draw3DWeave(layerMode = "all"){
                     } 
                 }
                 w_idx++;
+            }
+        }
+        
+        // Double Cloth beam normalization: keep explicit Top/Ground assignments,
+        // and distribute legacy/unassigned ends to the currently lighter layer.
+        // Previously a mixed explicit + legacy sequence left legacy ends out of
+        // both separated layer canvases. Single-cloth rendering is untouched.
+        if(isDoubleClothSimulation() && baseWarp.length){
+            const hasExplicitLayer = baseWarpBeamMap.some(v => v === "top" || v === "bottom");
+            if(!hasExplicitLayer){
+                baseWarpBeamMap = baseWarpBeamMap.map((v, k) => (k % 2 === 0 ? "top" : "bottom"));
+            } else {
+                let topCount = baseWarpBeamMap.filter(v => v === "top").length;
+                let bottomCount = baseWarpBeamMap.filter(v => v === "bottom").length;
+                let tieLayer = "top";
+                baseWarpBeamMap = baseWarpBeamMap.map(v => {
+                    if(v === "top" || v === "bottom") return v;
+                    const layer = topCount < bottomCount ? "top" :
+                        (bottomCount < topCount ? "bottom" : tieLayer);
+                    if(topCount === bottomCount) tieLayer = tieLayer === "top" ? "bottom" : "top";
+                    if(layer === "top") topCount++; else bottomCount++;
+                    return layer;
+                });
+            }
+            if(baseWarpBeamMap.includes("top") && baseWarpBeamMap.includes("bottom")){
+                const dcOrd = w3dDoubleClothOrder(baseWarpBeamMap);
+                baseWarp = dcOrd.map(k => baseWarp[k]); warpSeerMap = dcOrd.map(k => warpSeerMap[k]);
+                baseWarpYarnInfo = dcOrd.map(k => baseWarpYarnInfo[k]); baseWarpBeamMap = dcOrd.map(k => baseWarpBeamMap[k]);
             }
         }
         
@@ -2405,6 +2600,7 @@ function draw3DWeave(layerMode = "all"){
                 for(let s = 0; s < span; s++){
                     const currIdx = f_idx + s; if(currIdx > currentWeftCount) break;
                     const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
+                    const rowLayer = w3dWeftEntryLayer(rCo, currIdx);
                     if(rCo && rP){
                         const rN = Math.max(0, parseInt(rP.value) || 0);
                         let rHex = (rCo.value || "").toLowerCase();
@@ -2413,7 +2609,7 @@ function draw3DWeave(layerMode = "all"){
                         const rColor = hexToRgb(rHex);
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, "", rHex);
-                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); const lv = String(rCo.getAttribute("data-cloth-layer") || "auto").toLowerCase(); setLayerSeq.push(lv === "top" || lv === "bottom" ? lv : ((setSequence.length % 2 === 1) ? "top" : "bottom")); }
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); setLayerSeq.push(rowLayer); }
                     }
                 }
                 for(let rep = 0; rep < repeat; rep++){ 
@@ -2427,14 +2623,17 @@ function draw3DWeave(layerMode = "all"){
                     for(let j = 0; j < n; j++){ 
                         baseWeft.push(rgbColor); 
                         baseWeftYarnInfo.push(yInfo);
-                        const layerValue = String(co.getAttribute("data-cloth-layer") || "auto").toLowerCase();
-                        baseWeftLayerMap.push(layerValue === "top" || layerValue === "bottom" ? layerValue : (baseWeft.length % 2 === 1 ? "top" : "bottom"));
+                        // Every pick count in this entry row belongs to its selected cloth.
+                        // The completed top/bottom sequences are interleaved one pick at a time below.
+                        baseWeftLayerMap.push(w3dWeftEntryLayer(co, f_idx));
                     } 
                 }
                 f_idx++;
             }
         }
         
+        if(isDoubleClothSimulation() && baseWeft.length){ const dcW = w3dInterleaveDoubleClothWeft(baseWeft, baseWeftYarnInfo, baseWeftLayerMap); baseWeft = dcW.weft; baseWeftYarnInfo = dcW.info; baseWeftLayerMap = dcW.layers; }
+
         if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
         if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; baseWeftLayerMap = ["top", "bottom"]; }
         
@@ -2458,6 +2657,27 @@ function draw3DWeave(layerMode = "all"){
         const bottomEnds = hasBeamAssignments ? warpBeamMap.filter(v => v === "bottom").length : Math.floor(realWarpLength / 2);
         const topPicks = weftLayerMap.filter(v => v === "top").length;
         const bottomPicks = weftLayerMap.filter(v => v === "bottom").length;
+
+        // Map each interleaved pick to its own cloth-local row number.
+        // This remains correct even when Top and Bottom pick totals differ.
+        const weftLayerRowMap = new Array(realWeftLength);
+        const layerPickCounters = { top: 0, bottom: 0 };
+        for(let i = 0; i < realWeftLength; i++){
+            const layer = weftLayerMap[i] === "bottom" ? "bottom" :
+                (weftLayerMap[i] === "top" ? "top" : (i % 2 === 0 ? "top" : "bottom"));
+            weftLayerRowMap[i] = layerPickCounters[layer]++;
+        }
+
+        // Each cloth owns its own graph columns. In combined view, using the
+        // global interleaved end index shifted graph marks onto the wrong side.
+        const warpLayerColMap = new Array(realWarpLength);
+        const layerWarpCounters = { top: 0, bottom: 0 };
+        for(let i = 0; i < realWarpLength; i++){
+            const layer = warpBeamMap[i] === "bottom" ? "bottom" :
+                (warpBeamMap[i] === "top" ? "top" : (i % 2 === 0 ? "top" : "bottom"));
+            warpLayerColMap[i] = layerWarpCounters[layer]++;
+        }
+
         if(isDoubleClothSimulation()){
             const topLabel = $("doubleTopPanel")?.firstElementChild;
             const bottomLabel = $("doubleBottomPanel")?.firstElementChild;
@@ -2478,16 +2698,16 @@ function draw3DWeave(layerMode = "all"){
         const isSeparateLayer = isDoubleClothSimulation() && (renderKey === "top" || renderKey === "bottom");
         const measuredEnds = renderKey === "bottom" ? bottomEnds : topEnds;
         const measuredPicks = renderKey === "bottom" ? bottomPicks : topPicks;
-        const scaleEnds = isSeparateLayer ? measuredEnds : realWarpLength;
-        const scalePicks = isSeparateLayer ? measuredPicks : realWeftLength;
-        const scaleReed = isSeparateLayer ? reed / 2 : reed;
-        const scalePick = isSeparateLayer ? pick / 2 : pick;
+        const scaleEnds = realWarpLength;
+        const scalePicks = realWeftLength;
+        const scaleReed = reed;
+        const scalePick = pick;
 
         // Double Cloth layer scale: the layer-specific finished reed/pick
         // values are expressed as ends/cm and picks/cm. Do not apply the
         // single-cloth inch conversion (25.4 mm), which inflated each layer.
         // Keep the existing single-cloth and combined-view scale unchanged.
-        const layerScaleFactor = isSeparateLayer ? 10 : 25.4;
+        const layerScaleFactor = 25.4;
         const physW_mm = (scaleEnds / Math.max(scaleReed, 0.0001)) * layerScaleFactor;
         const physH_mm = (scalePicks / Math.max(scalePick, 0.0001)) * layerScaleFactor;
 
@@ -2505,8 +2725,8 @@ function draw3DWeave(layerMode = "all"){
         const oneRepeatBottomPicks = baseWeftLayerMap.filter(v => v === "bottom").length;
         const oneRepeatEnds = renderKey === "bottom" ? oneRepeatBottomEnds : oneRepeatTopEnds;
         const oneRepeatPicks = renderKey === "bottom" ? oneRepeatBottomPicks : oneRepeatTopPicks;
-        const singleWarpVal = isSeparateLayer ? oneRepeatEnds : baseWarp.length;
-        const singleWeftVal = isSeparateLayer ? oneRepeatPicks : baseWeft.length;
+        const singleWarpVal = baseWarp.length;
+        const singleWeftVal = baseWeft.length;
         singleW_mm = (singleWarpVal / Math.max(scaleReed, 0.0001)) * layerScaleFactor;
         singleH_mm = (singleWeftVal / Math.max(scalePick, 0.0001)) * layerScaleFactor;
         singleW_cm = singleW_mm / 10;
@@ -2591,6 +2811,9 @@ function draw3DWeave(layerMode = "all"){
             const layerEndWidth = drawW / Math.max(1, selectedCount);
             layerWarpPositions = selected.map((wp, index) => ({
                 ...wp,
+                // Use a cloth-local warp index for draft mapping, while keeping
+                // colIndex unchanged for the original yarn colour / beam lookup.
+                layerColIndex: index,
                 x: left + index * layerEndWidth,
                 w: layerEndWidth,
                 baseW: layerEndWidth
@@ -2624,24 +2847,65 @@ function draw3DWeave(layerMode = "all"){
 
         const puff = rawSeer / 100;
         const effectiveCellW = (drawW / realWarpLength) * scale;
-        const effectiveCellH = renderCellH * scale;
 
-        for(let r = realWeftLength - 1; r >= 0; r--){
-            if(renderKey === "top" && (weftLayerMap[r] || (r % 2 === 0 ? "top" : "bottom")) !== "top") continue;
-            if(renderKey === "bottom" && (weftLayerMap[r] || (r % 2 === 0 ? "top" : "bottom")) !== "bottom") continue;
-            const layerRow = Math.floor(r / 2);
-            const y = bottom - (((renderKey === "top" || renderKey === "bottom") ? (layerRow + 1) * renderCellH : (r + 1) * cellH));
-            const rowHeight = renderCellH;
+        const isCombinedDouble = isDoubleClothSimulation() && renderKey === "combined";
+        // In Single Cloth View, compose the two real cloth layers at the same
+        // fabric area: bottom first with low opacity, then top as the clear,
+        // dominant surface. Each layer uses its own pick and warp indices.
+        const combinedRows = isCombinedDouble
+            ? Array.from({length: realWeftLength}, (_, r) => r).sort((a, b) => {
+                const la = weftLayerMap[a] || (a % 2 === 0 ? "top" : "bottom");
+                const lb = weftLayerMap[b] || (b % 2 === 0 ? "top" : "bottom");
+                if(la !== lb) return la === "bottom" ? -1 : 1;
+                return (weftLayerRowMap[b] || 0) - (weftLayerRowMap[a] || 0);
+            })
+            : null;
+        const rowsToRender = combinedRows || Array.from({length: realWeftLength}, (_, i) => realWeftLength - 1 - i);
+
+        for(const r of rowsToRender){
+            const rowLayer = weftLayerMap[r] || (r % 2 === 0 ? "top" : "bottom");
+            if(renderKey === "top" && rowLayer !== "top") continue;
+            if(renderKey === "bottom" && rowLayer !== "bottom") continue;
+
+            const layerRow = (isSeparateLayer || isCombinedDouble) ? weftLayerRowMap[r] : r;
+            const layerPickCount = rowLayer === "bottom" ? bottomPicks : topPicks;
+            const rowHeight = (isSeparateLayer || isCombinedDouble)
+                ? (drawH / Math.max(1, layerPickCount))
+                : cellH;
+            const y = bottom - ((layerRow + 1) * rowHeight);
+            const effectiveCellH = rowHeight * scale;
             if(y + rowHeight < visibleMinY || y > visibleMaxY) continue;
 
-            const weftColor = weft[r % weft.length];
-            const flowIndex = realWeftLength - r;
+            // Combined Single Cloth View: render the bottom cloth first with
+            // enough opacity to retain its colour, then draw the top cloth
+            // stronger but semi-transparent so the lower weave remains visible.
+            // Separate 2-Layer View is unchanged.
+            ctx.globalAlpha = isCombinedDouble ? (rowLayer === "bottom" ? 0.82 : 0.62) : 1;
+            const rowWarpPositions = isCombinedDouble
+                ? (() => {
+                    const selected = hasBeamAssignments
+                        ? warpPositions.filter(wp => !wp.isEmpty && wp.colIndex >= 0 && warpBeamMap[wp.colIndex] === rowLayer)
+                        : warpPositions.filter(wp => !wp.isEmpty && wp.colIndex >= 0 &&
+                            (wp.colIndex % 2) === (rowLayer === "top" ? 0 : 1));
+                    const width = drawW / Math.max(1, selected.length);
+                    return selected.map((wp, index) => ({...wp, layerColIndex:index, x:left + index * width, w:width, baseW:width}));
+                })()
+                : layerWarpPositions;
 
-            for(let wpIdx = 0; wpIdx < layerWarpPositions.length; wpIdx++){
-                const wp = layerWarpPositions[wpIdx];
+            const weftColor = weft[r % weft.length];
+            const flowIndex = (isSeparateLayer || isCombinedDouble) ? (layerRow + 1) : (realWeftLength - r);
+
+            for(let wpIdx = 0; wpIdx < rowWarpPositions.length; wpIdx++){
+                const wp = rowWarpPositions[wpIdx];
                 if(wp.isEmpty || wp.x + wp.w < visibleMinX || wp.x > visibleMaxX) continue;
 
-                const up = isWarpUp(r, wp.colIndex, type, drawArr, pickSeq);
+                const patternPickRow = isDoubleClothSimulation()
+                    ? weftLayerRowMap[r]
+                    : (isSeparateLayer ? layerRow : r);
+                const patternWarpCol = isDoubleClothSimulation()
+                    ? (warpLayerColMap[wp.colIndex] ?? wp.layerColIndex ?? wp.colIndex)
+                    : (isSeparateLayer ? wp.layerColIndex : wp.colIndex);
+                const up = isWarpUp(patternPickRow, patternWarpCol, type, drawArr, pickSeq);
                 const warpColor = warp[wp.colIndex % warp.length];
                 const isThreadSeer = Boolean(wp.isSeer);
 
@@ -2702,6 +2966,7 @@ function draw3DWeave(layerMode = "all"){
                 }
             }
         }
+        ctx.globalAlpha = 1;
         
         ctx.restore();
 
@@ -3389,6 +3654,7 @@ async function executeRealA4Print(isPdfMode = false) {
                 for(let s = 0; s < span; s++){
                     const currIdx = f_idx + s; if(currIdx > currentWeftCount) break;
                     const rCo = $("weftC"+currIdx); const rP = $("weftP"+currIdx);
+                    const rowLayer = w3dWeftEntryLayer(rCo, currIdx);
                     if(rCo && rP){
                         const rN = Math.max(0, parseInt(rP.value) || 0);
                         let rHex = (rCo.value || "").toLowerCase();
@@ -3397,7 +3663,7 @@ async function executeRealA4Print(isPdfMode = false) {
                         const rColor = hexToRgb(rHex);
                         const rCnt = (rCo.getAttribute("data-cnt") || "").toLowerCase();
                         const rInfo = parseYarnInfo(rCnt, "", rHex);
-                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); const lv = String(rCo.getAttribute("data-cloth-layer") || "auto").toLowerCase(); setLayerSeq.push(lv === "top" || lv === "bottom" ? lv : ((setSequence.length % 2 === 1) ? "top" : "bottom")); }
+                        for(let j = 0; j < rN; j++){ setSequence.push(rColor); setInfoSeq.push(rInfo); setLayerSeq.push(rowLayer); }
                     }
                 }
                 for(let rep = 0; rep < repeat; rep++){ 
@@ -3411,13 +3677,16 @@ async function executeRealA4Print(isPdfMode = false) {
                     for(let j = 0; j < n; j++){ 
                         baseWeft.push(rgbColor); 
                         baseWeftYarnInfo.push(yInfo);
-                        const layerValue = String(co.getAttribute("data-cloth-layer") || "auto").toLowerCase();
-                        baseWeftLayerMap.push(layerValue === "top" || layerValue === "bottom" ? layerValue : (baseWeft.length % 2 === 1 ? "top" : "bottom"));
+                        // Every pick count in this entry row belongs to its selected cloth.
+                        // The completed top/bottom sequences are interleaved one pick at a time below.
+                        baseWeftLayerMap.push(w3dWeftEntryLayer(co, f_idx));
                     } 
                 }
                 f_idx++;
             }
         }
+
+        if(isDoubleClothSimulation() && baseWeft.length){ const dcW = w3dInterleaveDoubleClothWeft(baseWeft, baseWeftYarnInfo, baseWeftLayerMap); baseWeft = dcW.weft; baseWeftYarnInfo = dcW.info; baseWeftLayerMap = dcW.layers; }
 
         if(!baseWarp.length){ baseWarp = [{r:30,g:58,b:138}, {r:255,g:255,b:255}]; warpSeerMap = [false, false]; baseWarpYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; }
         if(!baseWeft.length){ baseWeft = [{r:239,g:68,b:68}, {r:30,g:58,b:138}]; baseWeftYarnInfo = [{thicknessMultiplier: 1.0, diameter_mm: 0.14}, {thicknessMultiplier: 1.0, diameter_mm: 0.14}]; baseWeftLayerMap = ["top", "bottom"]; }
@@ -3426,7 +3695,7 @@ async function executeRealA4Print(isPdfMode = false) {
         const singleWeft = baseWeft.slice();
 
         const warp = []; const seerMap = []; const warpYarnInfos = [];
-        const weft = []; const weftYarnInfos = [];
+        const weft = []; const weftYarnInfos = []; let weftLayerMap = [];
 
         for (let rep = 0; rep < simulationRepeatFactor; rep++) {
             warp.push(...baseWarp);

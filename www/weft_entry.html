@@ -841,6 +841,17 @@
                 gap: 6px;
             }
         }
+
+        .weave-list {
+            display: none; position: absolute; top: 100%; left: 0; min-width: 100%; width: max-content; max-width: 90vw;
+            margin-top: 4px; background: #FFFFFF; color: #1E2B23; border: 1px solid #D1DED1;
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 9999; overflow: hidden;
+        }
+        .weave-list div {
+            padding: 12px 16px; font-size: 12px; font-weight: 600; border-bottom: 1px solid #E2E8E2; cursor: pointer;
+        }
+        .weave-list div:last-child { border-bottom: none; }
+        .weave-list div:active, .weave-list div.selected { background-color: #F1F6F2; color: #4A7C59; }
     </style>
 </head>
 
@@ -914,16 +925,20 @@
                        placeholder="Mtrs">
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="weaveWrap" style="position: relative;">
                 <label>Weave</label>
-                <input type="text" id="infoWeave" list="fabricTypeList" value="Plain" placeholder="Select or Type">
-                <datalist id="fabricTypeList">
-                    <option value="Plain"></option>
-                    <option value="Twill"></option>
-                    <option value="Dobby"></option>
-                    <option value="Seersucker"></option>
-                    <option value="Double Cloth"></option>
-                </datalist>
+                <input type="text" id="infoWeave" value="Plain" placeholder="Select or Type" autocomplete="off" onfocus="showWeaveList()" onclick="showWeaveList()" oninput="showWeaveList(false)">
+                <div id="weaveList" class="weave-list">
+                    <div onclick="pickWeave('Plain stripe')">Plain stripe</div>
+                    <div onclick="pickWeave('Plain check')">Plain check</div>
+                    <div onclick="pickWeave('Dobby stripe')">Dobby stripe</div>
+                    <div onclick="pickWeave('Dobby check')">Dobby check</div>
+                    <div onclick="pickWeave('Seersucker stripe')">Seersucker stripe</div>
+                    <div onclick="pickWeave('Seersucker check')">Seersucker check</div>
+                    <div onclick="pickWeave('Twill Checks')">Twill Checks</div>
+                    <div onclick="pickWeave('Twill Stripes')">Twill Stripes</div>
+                    <div onclick="pickWeave('Double Cloth')">Double Cloth</div>
+                </div>
             </div>
 
         </div>
@@ -1190,6 +1205,23 @@
 
 
 <script>
+    window.showWeaveList = function(showAll) {
+        let box = document.getElementById('weaveList');
+        let cur = document.getElementById('infoWeave').value.trim().toLowerCase();
+        box.querySelectorAll('div').forEach(d => {
+            let t = d.textContent.toLowerCase();
+            d.style.display = (showAll === false && cur && t.indexOf(cur) === -1) ? 'none' : 'block';
+            d.classList.toggle('selected', t === cur);
+        });
+        box.style.display = 'block';
+    };
+    window.pickWeave = function(val) {
+        document.getElementById('infoWeave').value = val;
+        document.getElementById('weaveList').style.display = 'none';
+    };
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#weaveWrap')) document.getElementById('weaveList').style.display = 'none';
+    });
 
 /* ============================================================
    BASIC HELPERS
@@ -1833,11 +1865,11 @@ function loadWeftDesignData() {
     }
 
     let resolvedWeave =
+        foundMaster.weaveType ||
+        foundMaster.weave ||
         matchedOrder.weaveType ||
         sp.weaveType ||
-        foundMaster.weaveType ||
         sp.weave ||
-        foundMaster.weave ||
         'Plain';
 
     let effectiveLines = (foundWeftEntry && Array.isArray(foundWeftEntry.weftLines) && foundWeftEntry.weftLines.length > 0)
