@@ -1072,6 +1072,33 @@ window.pushLocalToCloud = async function () {
     return { ok: true, count: n, skippedClean: skippedClean };
 };
 
+// One-time local-first migration when Cloud Sync is switched ON.
+// Marks existing local ERP keys dirty, then uses safe push (design arrays merge).
+window.migrateLocalDataToCloud = async function () {
+    if (!window.isCloudSyncActive()) return { ok: false, msg: "Cloud Sync OFF" };
+    if (!navigator.onLine) return { ok: false, msg: "Offline" };
+    if (!window.supabaseClient) {
+        const connected = await window.initializeSupabase(false);
+        if (!connected || !window.supabaseClient) return { ok: false, msg: "Supabase connect ஆகவில்லை" };
+    }
+
+    let marked = 0;
+    for (const key of window.erpCloudKeys) {
+        try {
+            if (window.isCloudExcludedKey && window.isCloudExcludedKey(key)) continue;
+            const data = window.localLoad(key, null);
+            if (data === null || data === undefined || data === "") continue;
+            if (Array.isArray(data) && data.length === 0) continue;
+            if (typeof data === "object" && !Array.isArray(data) && Object.keys(data).length === 0) continue;
+            markLocalDirty(key);
+            marked++;
+        } catch (e) { console.warn("Local migration mark skipped:", key, e); }
+    }
+
+    const result = await window.pushLocalToCloud();
+    return { ok: !!(result && result.ok), marked: marked, uploaded: result ? result.count : 0, skipped: result ? result.skippedClean : 0 };
+};
+
 // ============================================================
 // FULL LOCAL → CLOUD SYNC (GUARDED)
 // ============================================================

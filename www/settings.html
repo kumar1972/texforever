@@ -1146,20 +1146,47 @@ async function saveCompanyLogoSafely() {
 }
 
 /* CLOUD TOGGLE */
-function saveCloudToggleState(silent) {
+async function saveCloudToggleState(silent) {
     const toggle = $("cloudSyncToggle");
     if (!toggle) return;
 
     const isChecked = toggle.checked;
+    const wasEnabled = (localStorage.getItem("erp_cloud_sync_enabled") !== "false");
 
     localStorage.setItem("erp_cloud_sync_enabled", isChecked ? "true" : "false");
-
     if (silent === true) return;
 
-    if (isChecked) {
-        toast("☁️ Cloud Auto-Sync: ENABLED (Online Mode)");
-    } else {
+    if (!isChecked) {
         toast("📴 Cloud Auto-Sync: DISABLED (Full Offline Mode)");
+        return;
+    }
+
+    toast("☁️ Cloud enabled. Local data migration starting...", true);
+    try {
+        if (window.StorageDB && window.StorageDB.ready) await window.StorageDB.ready;
+        if (typeof window.refreshSupabaseConfig === "function") window.refreshSupabaseConfig();
+        const connected = window.supabaseClient
+            ? true
+            : await window.initializeSupabase(false);
+
+        if (!connected || !window.supabaseClient) {
+            toast("Cloud enabled, but connection failed. Local data is safe.", false);
+            return;
+        }
+
+        if (typeof window.migrateLocalDataToCloud === "function") {
+            const result = await window.migrateLocalDataToCloud();
+            if (result && result.ok) {
+                toast("☁️ Local data sync completed: " + result.uploaded + " keys", true);
+            } else {
+                toast("Cloud connected, but migration pending. Local data is safe.", false);
+            }
+        } else {
+            toast("Cloud connected; migration function missing. Please update config.js.", false);
+        }
+    } catch (e) {
+        console.error("Cloud enable migration failed:", e);
+        toast("Cloud sync failed. Local data is still saved.", false);
     }
 }
   
