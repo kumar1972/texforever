@@ -1299,7 +1299,7 @@ function mergeDesigns(items) {
     };
 
     let rawEdits = {};
-    try { rawEdits = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}"); } catch(e) {}
+    try { rawEdits = JSON.parse(dbGet("w3d_local_edits") || "{}"); } catch(e) {}
     Object.keys(rawEdits).forEach(k => {
         if (rawEdits[k]) { const r = clone(rawEdits[k]); if (_isEmptyVal(r.designNo) && _isEmptyVal(r.name)) r.designNo = String(k).trim(); addRec(r); }
     });
@@ -1738,16 +1738,19 @@ function loadSelectedDesign(){
         let warpLinesData = [];
         let weftLinesData = [];
         let w3dEditWarpLines = null, w3dEditWeftLines = null;
+        let w3dEditObj = null;
 
         // 1. Check 3D specific local edits cache first (highest priority for 3D view simulations)
         try {
-            let editsCache = JSON.parse(localStorage.getItem("w3d_local_edits") || "{}");
+            // Read through StorageDB/IndexedDB first; localStorage can be an older mirror.
+            let editsCache = safeJSON("w3d_local_edits", {}) || {};
             // Prefer exact design-name matches first; digit-only matching can select a different
             // design that happens to share the same number (e.g. "JT 82455" vs "JT 82455 FLEX").
             let edKey = Object.keys(editsCache).find(k => k.trim() === selectedVal || cleanDesignName(k) === selectedClean);
             if (!edKey && rawDigits) edKey = Object.keys(editsCache).find(k => k.replace(/\D/g, '') === rawDigits);
             if(edKey && editsCache[edKey]) {
                 let ed = editsCache[edKey];
+                w3dEditObj = clone(ed);
                 if(ed.warpLines && ed.warpLines.length) warpLinesData = clone(ed.warpLines);
                 if(ed.weftLines && ed.weftLines.length) weftLinesData = clone(ed.weftLines);
                 if(ed.warpLines && ed.warpLines.length) w3dEditWarpLines = clone(ed.warpLines);
@@ -1817,6 +1820,14 @@ function loadSelectedDesign(){
         if (weftEntryMatch) {
             const authoritativeWeftLines = extractLinesFromObj(weftEntryMatch, "weft");
             if (authoritativeWeftLines.length) weftLinesData = clone(authoritativeWeftLines);
+        }
+        // A saved 3D edit is the latest user-edited snapshot. Restore the complete
+        // Warp/Weft rows after entry-page sources so old ends/picks cannot overwrite it.
+        if (Array.isArray(w3dEditWarpLines) && w3dEditWarpLines.length) {
+            warpLinesData = clone(w3dEditWarpLines);
+        }
+        if (Array.isArray(w3dEditWeftLines) && w3dEditWeftLines.length) {
+            weftLinesData = clone(w3dEditWeftLines);
         }
         // Saved 3D colour changes (w3d_local_edits) stay on top of the entry-page lines.
         [[warpLinesData, w3dEditWarpLines], [weftLinesData, w3dEditWeftLines]].forEach(([target, edit]) => {
@@ -1907,7 +1918,7 @@ function loadSelectedDesign(){
         activeDesignObj.finishPick = activeDesignObj.finishPick || masterMatch?.finishPick ||
             masterMatch?.finishedPick || matchedDesignSpec?.finishPick || matchedDesignSpec?.finishedPick || "";
 
-        let matrixToUse = dentDrawMatch?.customMatrix || masterMatch?.customMatrix || sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph || sourceObj.graphGrid || sourceObj.graphMatrix;
+        let matrixToUse = w3dEditObj?.customMatrix || dentDrawMatch?.customMatrix || masterMatch?.customMatrix || sourceObj.customMatrix || sourceObj.matrix || sourceObj.weaveGraph || sourceObj.graphGrid || sourceObj.graphMatrix;
         if(matrixToUse && Array.isArray(matrixToUse) && matrixToUse.length > 0) {
             weavePatterns.custom = JSON.parse(JSON.stringify(matrixToUse));
             activeDesignObj.customMatrix = weavePatterns.custom;
@@ -1916,13 +1927,13 @@ function loadSelectedDesign(){
         }
 
         let mCols = (weavePatterns.custom && weavePatterns.custom[0]) ? weavePatterns.custom[0].length : 4;
-        let drawVal = dentDrawMatch?.drawingPatternFormula || dentDrawMatch?.drawingPattern || sourceObj.drawingPatternFormula || sourceObj.drawingPattern || "";
+        let drawVal = w3dEditObj?.drawingPatternFormula || w3dEditObj?.drawingPattern || dentDrawMatch?.drawingPatternFormula || dentDrawMatch?.drawingPattern || sourceObj.drawingPatternFormula || sourceObj.drawingPattern || "";
         if (!drawVal) {
             let autoArr = [];
             for(let f=1; f<=mCols; f++) autoArr.push(f);
             drawVal = autoArr.join(",");
         }
-        let dentVal = dentDrawMatch?.dentingPatternFormula || dentDrawMatch?.dentingPattern || sourceObj.dentingPatternFormula || sourceObj.dentingPattern || "2";
+        let dentVal = w3dEditObj?.dentingPatternFormula || w3dEditObj?.dentingPattern || dentDrawMatch?.dentingPatternFormula || dentDrawMatch?.dentingPattern || sourceObj.dentingPatternFormula || sourceObj.dentingPattern || "2";
 
         if($("dentingPatternInput")) $("dentingPatternInput").value = dentVal;
         if($("drawingPatternInput")) $("drawingPatternInput").value = drawVal;
@@ -2015,13 +2026,17 @@ function getCurrentData() {
 async function saveCurrentDesign() {
     try {
         setStatus("⏳ Saving 3D Weave edits...");
+        await dbReady();
+
         const currentInputs = getCurrentData();
         const data = activeDesignObj ? clone(activeDesignObj) : {};
 
         Object.assign(data, {
-            warpLines: currentInputs.warpLines,
-            weftLines: currentInputs.weftLines,
-            customMatrix: currentInputs.customMatrix,
+            warpLines: clone(currentInputs.warpLines),
+            weftLines: clone(currentInputs.weftLines),
+            warpRanges: clone(currentInputs.warpRanges || []),
+            weftRanges: clone(currentInputs.weftRanges || []),
+            customMatrix: clone(currentInputs.customMatrix),
             type: currentInputs.type,
             dentingPattern: currentInputs.dentingPattern,
             drawingPattern: currentInputs.drawingPattern,
@@ -2041,42 +2056,45 @@ async function saveCurrentDesign() {
         data.timestamp = new Date().toISOString();
 
         const cleanName = cleanDesignName(name);
-        const edits = (() => {
-            try { return JSON.parse(localStorage.getItem("w3d_local_edits") || "{}") || {}; }
-            catch (e) { return {}; }
-        })();
 
-        // Replace any differently-spelled key for the same normalized design name.
+        // Read the latest value from the same storage abstraction used by this page.
+        let edits = safeJSON("w3d_local_edits", {}) || {};
+        if (!edits || typeof edits !== "object" || Array.isArray(edits)) edits = {};
+
+        // Remove only aliases of this design; keep every other saved 3D design intact.
         Object.keys(edits).forEach(key => {
             if (cleanDesignName(key) === cleanName) delete edits[key];
         });
         edits[name] = clone(data);
 
-        const cache = mergeDesigns(
-            (Array.isArray(allCloudDesigns) ? allCloudDesigns : [])
-                .filter(item => cleanDesignName(designName(item)) !== cleanName)
-                .concat([clone(data)])
-        );
+        // Replace the old cache record instead of mergeDesigns(), which can keep
+        // stale non-empty fields from an older copy of the same design.
+        let cache = (Array.isArray(allCloudDesigns) ? clone(allCloudDesigns) : []);
+        cache = cache.filter(item => cleanDesignName(designName(item)) !== cleanName);
+        cache.push(clone(data));
 
-        // Durable local-first: write both independent 3D keys before attempting cloud sync.
+        // Local-first save. Use StorageDB's public API (same DB/key format as the
+        // rest of TEX FOREVER), then keep a legacy localStorage mirror.
         const localWrite = async (key, value) => {
             const raw = JSON.stringify(value);
-            if (window.StorageDB?.ready) await window.StorageDB.ready;
-            if (window.StorageDB?.db) {
-                await new Promise((resolve, reject) => {
-                    try {
-                        const tx = window.StorageDB.db.transaction("store", "readwrite");
-                        tx.objectStore("store").put(raw, key);
-                        tx.oncomplete = resolve;
-                        tx.onerror = () => reject(tx.error || new Error("IndexedDB write failed"));
-                        tx.onabort = () => reject(tx.error || new Error("IndexedDB write aborted"));
-                    } catch (storageError) { reject(storageError); }
-                });
-                window.StorageDB.cache[key] = raw;
-            } else {
-                localStorage.setItem(key, raw);
+            if (window.StorageDB?.setItem) {
+                await window.StorageDB.setItem(key, raw, true);
+            }
+            localStorage.setItem(key, raw);
+
+            // Read-back verification prevents showing a success message when the
+            // browser did not actually retain this exact saved value.
+            let check = null;
+            try {
+                check = window.StorageDB?.getItem ? window.StorageDB.getItem(key) : null;
+                if (check && typeof check.then === "function") check = await check;
+            } catch (readError) { check = null; }
+            if (check === null || check === undefined || check === "") check = localStorage.getItem(key);
+            if (typeof check !== "string" || check !== raw) {
+                throw new Error("Local save verification failed for " + key);
             }
         };
+
         await localWrite("w3d_local_edits", edits);
         await localWrite("w3d_designs_cache", cache);
         localStorage.setItem("w3d_last_edit_ts", String(Date.now()));
@@ -2089,9 +2107,7 @@ async function saveCurrentDesign() {
         if (activeLabel) activeLabel.textContent = "Active Design: " + name;
         draw3DWeave();
 
-        // Save each independent 3D key directly to the configured cloud table
-        // after both local writes. Avoid firebaseSave() here because config.js
-        // also auto-syncs StorageDB.setItem(), which would issue duplicate upserts.
+        // Cloud sync happens only after both local keys have been verified.
         const cloudEnabled = typeof window.isCloudSyncActive === "function"
             ? window.isCloudSyncActive() : true;
         let cloudAllSaved = !cloudEnabled;
@@ -2112,7 +2128,7 @@ async function saveCurrentDesign() {
                     if (!window.supabaseClient && typeof window.initializeSupabase === "function") {
                         await window.initializeSupabase(false);
                     }
-                    const client = window.supabaseClient;
+                    const client = window.supabaseClient || supabaseClient;
                     if (!client) throw new Error("Supabase client unavailable");
                     const { error } = await client.from("erp_sync_data").upsert({ id: key, json_data: value });
                     if (error) throw error;
@@ -2142,10 +2158,10 @@ async function saveCurrentDesign() {
     } catch (error) {
         console.error("Weave 3D save error:", error);
         setStatus("❌ Error saving");
-        alert("Error saving 3D design: " + error.message);
+        alert("❌ Save failed: " + error.message);
     }
 }
-            
+
 function onWeaveChange() {
     let t = $("weaveType")?.value || "custom";
     if(t === "plain" || t === "twill") {
